@@ -3,13 +3,18 @@ import subprocess
 import uuid
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
 
-from app.errors import AudioTooLongError, YoutubeUnavailableError
+from app.errors import AudioTooLongError, NoNotesDetectedError, YoutubeUnavailableError
 
 DEFAULT_DURATION_CAP_SECONDS = 600.0
 
+YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"}
+
 
 def _probe_duration_seconds(path: str) -> float:
+    # ffprobe is a system dependency (not pip-installable); it must already
+    # be on the host's PATH -- see backend/README.md.
     result = subprocess.run(
         ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", path],
         capture_output=True,
@@ -20,7 +25,13 @@ def _probe_duration_seconds(path: str) -> float:
 
 
 def _check_duration_cap(path: str, cap_seconds: float) -> None:
-    duration = _probe_duration_seconds(path)
+    try:
+        duration = _probe_duration_seconds(path)
+    except subprocess.CalledProcessError as error:
+        # A corrupt or non-audio upload makes ffprobe exit non-zero. From the
+        # user's point of view this is the same experience as "no notes
+        # detected" -- nothing to practice -- so reuse that error type.
+        raise NoNotesDetectedError("Didn't find any notes in that audio") from error
     if duration > cap_seconds:
         raise AudioTooLongError(duration, cap_seconds)
 
@@ -41,6 +52,10 @@ def acquire_youtube(
     dest_dir: str,
     cap_seconds: float = DEFAULT_DURATION_CAP_SECONDS,
 ) -> str:
+    hostname = urlparse(url).hostname
+    if hostname not in YOUTUBE_HOSTS:
+        raise YoutubeUnavailableError("Not a YouTube URL")
+
     import yt_dlp
 
     output_template = str(Path(dest_dir) / f"{uuid.uuid4()}.%(ext)s")

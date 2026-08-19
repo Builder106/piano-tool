@@ -43,7 +43,10 @@ async def create_job(
 
     upload_bytes = await audio.read() if audio is not None else None
     job_id = store.submit(source, title, upload_bytes=upload_bytes, youtube_url=youtube_url)
-    return _to_response(store.get(job_id))
+    # Build the response from the known state at submission time rather than
+    # re-reading from the store: the job runs on a background thread, so a
+    # re-fetch here can race and report "downloading" instead of "queued".
+    return JobResponse(job_id=job_id, status="queued", error=None, level=None)
 
 
 @router.get("/jobs/{job_id}")

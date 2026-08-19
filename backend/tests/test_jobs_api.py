@@ -51,6 +51,46 @@ def test_job_lifecycle_failure_surfaces_error(monkeypatch):
     assert "notes" in result.json()["error"].lower()
 
 
+def test_post_jobs_response_status_is_queued(monkeypatch):
+    monkeypatch.setattr("app.jobs.acquire_audio", lambda *a, **k: "/tmp/fake.wav")
+    monkeypatch.setattr("app.jobs.transcribe", lambda path: [])
+
+    response = client.post(
+        "/jobs",
+        data={"title": "Test Song", "source": "upload"},
+        files={"audio": ("clip.wav", b"fake-bytes", "audio/wav")},
+    )
+    assert response.status_code == 202
+    assert response.json()["status"] == "queued"
+
+    store.wait(response.json()["job_id"])
+
+
+def test_post_jobs_with_youtube_source_threads_the_url_through(monkeypatch):
+    recorded_urls = []
+
+    def _fake_acquire_audio(source, dest_dir, upload_bytes=None, youtube_url=None):
+        recorded_urls.append(youtube_url)
+        return "/tmp/fake.wav"
+
+    monkeypatch.setattr("app.jobs.acquire_audio", _fake_acquire_audio)
+    monkeypatch.setattr(
+        "app.jobs.transcribe",
+        lambda path: [NoteEvent(pitch=60, start=0.0, end=0.5, velocity=80)],
+    )
+    monkeypatch.setattr("app.jobs.estimate_tempo", lambda path: 120.0)
+
+    youtube_url = "https://www.youtube.com/watch?v=abc123"
+    response = client.post(
+        "/jobs",
+        data={"title": "Test Song", "source": "youtube", "youtube_url": youtube_url},
+    )
+    job_id = response.json()["job_id"]
+    store.wait(job_id)
+
+    assert recorded_urls == [youtube_url]
+
+
 def test_post_jobs_rejects_an_unknown_source():
     response = client.post("/jobs", data={"title": "T", "source": "carrier-pigeon"})
     assert response.status_code == 400

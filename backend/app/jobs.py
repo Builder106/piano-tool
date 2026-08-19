@@ -13,6 +13,13 @@ from app.transcribe import transcribe
 
 JobStatus = Literal["queued", "downloading", "transcribing", "done", "failed"]
 
+# librosa's beat tracker can return 0.0 for audio with no strong detectable
+# pulse (free-tempo intros, rubato solo piano) -- exactly the kind of
+# piano-forward material this pipeline targets. Falling back to a default
+# lets the job still produce a level for the user to judge, instead of
+# failing outright.
+DEFAULT_TEMPO_BPM = 120.0
+
 
 @dataclass
 class Job:
@@ -47,7 +54,13 @@ class JobStore:
         return self._jobs.get(job_id)
 
     def delete(self, job_id: str) -> bool:
-        self._futures.pop(job_id, None)
+        future = self._futures.pop(job_id, None)
+        if future is not None:
+            # Only prevents a job that hasn't started yet (still queued
+            # behind other work) from running. A ThreadPoolExecutor future
+            # can't be interrupted once it has actually started -- .cancel()
+            # is a no-op (returns False) in that case, which is fine.
+            future.cancel()
         return self._jobs.pop(job_id, None) is not None
 
     def wait(self, job_id: str, timeout: float = 30.0) -> None:
@@ -80,6 +93,8 @@ class JobStore:
                     raise NoNotesDetectedError("Didn't find any notes in that audio")
 
                 tempo_bpm = estimate_tempo(audio_path)
+                if tempo_bpm <= 0:
+                    tempo_bpm = DEFAULT_TEMPO_BPM
                 job.level = quantize_notes(
                     note_events, tempo_bpm, level_id=job.job_id, title=title
                 )

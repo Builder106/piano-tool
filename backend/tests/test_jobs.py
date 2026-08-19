@@ -1,3 +1,5 @@
+import time
+
 from app.jobs import JobStore
 from app.quantize import NoteEvent
 
@@ -49,6 +51,42 @@ def test_submit_fails_when_acquisition_raises_a_known_error(monkeypatch):
     job = store.get(job_id)
     assert job.status == "failed"
     assert "700" in job.error
+
+
+def test_submit_falls_back_to_default_tempo_when_estimate_is_zero(monkeypatch):
+    store = JobStore(max_workers=1)
+    monkeypatch.setattr("app.jobs.acquire_audio", lambda *a, **k: "/tmp/fake.wav")
+    monkeypatch.setattr(
+        "app.jobs.transcribe",
+        lambda path: [NoteEvent(pitch=60, start=0.0, end=0.5, velocity=80)],
+    )
+    monkeypatch.setattr("app.jobs.estimate_tempo", lambda path: 0.0)
+
+    job_id = store.submit("upload", "Test Song", upload_bytes=b"fake")
+    store.wait(job_id)
+
+    job = store.get(job_id)
+    assert job.status == "done"
+    assert job.level.tempo == 120
+
+
+def test_delete_prevents_a_queued_but_not_yet_started_job_from_running(monkeypatch):
+    store = JobStore(max_workers=1)
+
+    def _slow_acquire(*args, **kwargs):
+        time.sleep(0.3)
+        return "/tmp/fake.wav"
+
+    monkeypatch.setattr("app.jobs.acquire_audio", _slow_acquire)
+    monkeypatch.setattr("app.jobs.transcribe", lambda path: [])
+
+    first_job_id = store.submit("upload", "First", upload_bytes=b"fake")
+    second_job_id = store.submit("upload", "Second", upload_bytes=b"fake")
+    store.delete(second_job_id)
+
+    assert store.get(second_job_id) is None
+
+    store.wait(first_job_id)
 
 
 def test_get_returns_none_for_an_unknown_job():
