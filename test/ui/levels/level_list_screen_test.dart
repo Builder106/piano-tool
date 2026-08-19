@@ -108,7 +108,7 @@ void main() {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
       // Add an imported level
-      final importedLevel = LevelModel(
+      const importedLevel = LevelModel(
         id: 'imported_1',
         title: 'My Song',
         description: 'Imported from audio',
@@ -129,7 +129,7 @@ void main() {
     testWidgets('imported levels appear after built-in stages', (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
-      final importedLevel = LevelModel(
+      const importedLevel = LevelModel(
         id: 'imported_1',
         title: 'My Song',
         description: 'Imported from audio',
@@ -156,7 +156,7 @@ void main() {
     testWidgets('imported levels appear newest-first', (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
-      final firstImport = LevelModel(
+      const firstImport = LevelModel(
         id: 'imported_1',
         title: 'First Import',
         description: 'Imported earlier',
@@ -165,7 +165,7 @@ void main() {
         totalMeasures: 2,
         measures: [],
       );
-      final secondImport = LevelModel(
+      const secondImport = LevelModel(
         id: 'imported_2',
         title: 'Second Import',
         description: 'Imported later',
@@ -210,7 +210,7 @@ void main() {
     testWidgets('long press on imported level shows delete dialog', (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
-      final importedLevel = LevelModel(
+      const importedLevel = LevelModel(
         id: 'imported_1',
         title: 'My Song',
         description: 'Imported from audio',
@@ -233,7 +233,7 @@ void main() {
     testWidgets('confirming delete removes imported level', (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
-      final importedLevel = LevelModel(
+      const importedLevel = LevelModel(
         id: 'imported_1',
         title: 'My Song',
         description: 'Imported from audio',
@@ -259,7 +259,7 @@ void main() {
     testWidgets('canceling delete keeps imported level', (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
-      final importedLevel = LevelModel(
+      const importedLevel = LevelModel(
         id: 'imported_1',
         title: 'My Song',
         description: 'Imported from audio',

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-import 'package:piano_tool/app_router.dart';
 import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/main.dart';

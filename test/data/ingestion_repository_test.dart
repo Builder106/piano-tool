@@ -124,7 +124,7 @@ void main() {
     });
 
     test('saveLevel persists level and appears in listImportedLevels', () async {
-      final level = LevelModel(
+      const level = LevelModel(
         id: 'imported_1',
         title: 'Imported Song',
         description: 'From audio',
@@ -148,7 +148,7 @@ void main() {
     });
 
     test('deleteImportedLevel removes level from list', () async {
-      final level = LevelModel(
+      const level = LevelModel(
         id: 'imported_1',
         title: 'Imported Song',
         description: 'From audio',

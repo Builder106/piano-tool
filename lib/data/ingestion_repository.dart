@@ -60,7 +60,6 @@ class IngestionJobResult {
 
 /// Repository for audio ingestion operations
 class IngestionRepository {
-  static const _prefix = 'ingestion.';
   static const _levelsKey = 'ingestion.levels';
 
   final http.Client _client;
