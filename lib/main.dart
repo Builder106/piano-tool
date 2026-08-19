@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'ui/practice/practice_screen.dart';
+import 'app_router.dart';
 import 'ui/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -20,13 +20,42 @@ class PianoToolApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
-      title: 'Piano Tool',
-      debugShowCheckedModeBanner: false,
-      theme: PianoTheme.light(),
-      darkTheme: PianoTheme.dark(),
-      themeMode: ThemeMode.system,
-      home: const PracticeScreen(stageId: 'stage_1'),
+    final routerAsync = ref.watch(appRouterProvider);
+    return routerAsync.when(
+      data: (router) => MaterialApp.router(
+        title: 'Piano Tool',
+        debugShowCheckedModeBanner: false,
+        theme: PianoTheme.light(),
+        darkTheme: PianoTheme.dark(),
+        themeMode: ThemeMode.system,
+        routerConfig: router,
+      ),
+      loading: () => MaterialApp(
+        title: 'Piano Tool',
+        debugShowCheckedModeBanner: false,
+        theme: PianoTheme.light(),
+        darkTheme: PianoTheme.dark(),
+        themeMode: ThemeMode.system,
+        home: Scaffold(
+          backgroundColor: PianoTheme.light().colorScheme.surface,
+          body: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+      error: (error, stack) => MaterialApp(
+        title: 'Piano Tool',
+        debugShowCheckedModeBanner: false,
+        theme: PianoTheme.light(),
+        darkTheme: PianoTheme.dark(),
+        themeMode: ThemeMode.system,
+        home: Scaffold(
+          backgroundColor: PianoTheme.light().colorScheme.surface,
+          body: Center(
+            child: Text('Error initializing app: $error'),
+          ),
+        ),
+      ),
     );
   }
 }
