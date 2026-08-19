@@ -153,6 +153,40 @@ void main() {
       expect(builtInStages, findsAtLeastNWidgets(3));
     });
 
+    testWidgets('imported levels appear newest-first', (tester) async {
+      when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
+
+      final firstImport = LevelModel(
+        id: 'imported_1',
+        title: 'First Import',
+        description: 'Imported earlier',
+        tempo: 100,
+        beatsPerMeasure: 4,
+        totalMeasures: 2,
+        measures: [],
+      );
+      final secondImport = LevelModel(
+        id: 'imported_2',
+        title: 'Second Import',
+        description: 'Imported later',
+        tempo: 100,
+        beatsPerMeasure: 4,
+        totalMeasures: 2,
+        measures: [],
+      );
+      levelRepository.addImportedLevel(firstImport);
+      levelRepository.addImportedLevel(secondImport);
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      final secondIndex =
+          tester.getSemantics(find.text('Second Import')).indexInParent as int;
+      final firstIndex =
+          tester.getSemantics(find.text('First Import')).indexInParent as int;
+      expect(secondIndex, lessThan(firstIndex));
+    });
+
     testWidgets('shows progress for completed stages', (tester) async {
       when(mockProgressRepo.read('stage_1')).thenAnswer((_) async => StageProgress(
         stageId: 'stage_1',

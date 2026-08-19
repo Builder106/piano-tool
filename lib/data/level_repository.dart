@@ -261,8 +261,11 @@ class LevelRepository {
   List<StageModel> getAllStages() {
     final stages = _stages.values.toList();
     stages.sort((a, b) => a.order.compareTo(b.order));
+    // Imported stages must render newest-first, so sort descending by
+    // order (order increases with each import, so the latest import has
+    // the highest order value).
     final importedStages = _importedStages.values.toList();
-    importedStages.sort((a, b) => a.order.compareTo(b.order));
+    importedStages.sort((a, b) => b.order.compareTo(a.order));
     return [...stages, ...importedStages];
   }
 
