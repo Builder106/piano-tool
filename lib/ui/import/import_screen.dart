@@ -27,6 +27,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   bool _isRecording = false;
   bool _isSubmitting = false;
   String? _jobId;
+  IngestionJobStatus? _jobStatus;
   Timer? _pollTimer;
 
   @override
@@ -67,6 +68,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         onSubmit: _submit,
         isSubmitting: _isSubmitting,
         jobId: _jobId,
+        jobStatus: _jobStatus,
       ),
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -127,7 +129,10 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       };
 
       if (!mounted) return;
-      setState(() => _jobId = jobId);
+      setState(() {
+        _jobId = jobId;
+        _jobStatus = IngestionJobStatus.queued;
+      });
       _startPolling(jobId);
     } on IngestionException catch (e) {
       if (!mounted) return;
@@ -142,19 +147,28 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       try {
         final repo = await ref.read(ingestionRepositoryProvider.future);
         final result = await repo.pollJob(jobId);
+        if (!mounted) return;
+
         if (result.status == IngestionJobStatus.done) {
           timer.cancel();
-          if (!mounted) return;
-          setState(() => _isSubmitting = false);
+          setState(() {
+            _isSubmitting = false;
+            _jobStatus = result.status;
+          });
           context.push('/review?jobId=$jobId');
         } else if (result.status == IngestionJobStatus.failed) {
           timer.cancel();
-          if (!mounted) return;
           _showError(result.error ?? 'Transcription failed');
           setState(() {
             _jobId = null;
+            _jobStatus = null;
             _isSubmitting = false;
           });
+        } else {
+          // queued / downloading / transcribing: keep polling, but reflect
+          // the current stage so the user isn't staring at a static spinner
+          // for the whole job lifecycle.
+          setState(() => _jobStatus = result.status);
         }
       } on IngestionException catch (e) {
         timer.cancel();
@@ -162,6 +176,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         _showError(e.message);
         setState(() {
           _jobId = null;
+          _jobStatus = null;
           _isSubmitting = false;
         });
       }
@@ -216,6 +231,7 @@ class _BuildImportScreen extends StatelessWidget {
     required this.onSubmit,
     required this.isSubmitting,
     required this.jobId,
+    required this.jobStatus,
   });
 
   final ImportSource selectedSource;
@@ -230,6 +246,7 @@ class _BuildImportScreen extends StatelessWidget {
   final VoidCallback onSubmit;
   final bool isSubmitting;
   final String? jobId;
+  final IngestionJobStatus? jobStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +282,7 @@ class _BuildImportScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: PianoSpacing.lg),
                   if (isSubmitting && jobId != null) ...[
-                    _PollingStatus(jobId: jobId!),
+                    _PollingStatus(jobId: jobId!, status: jobStatus),
                   ] else ...[
                     _SubmitButton(
                       source: selectedSource,
@@ -529,9 +546,10 @@ class _SubmitButton extends StatelessWidget {
 }
 
 class _PollingStatus extends StatelessWidget {
-  const _PollingStatus({required this.jobId});
+  const _PollingStatus({required this.jobId, required this.status});
 
   final String jobId;
+  final IngestionJobStatus? status;
 
   @override
   Widget build(BuildContext context) {
@@ -540,10 +558,20 @@ class _PollingStatus extends StatelessWidget {
         const CircularProgressIndicator(),
         const SizedBox(height: PianoSpacing.md),
         Text(
-          'Processing... (Job: ${jobId.length > 8 ? jobId.substring(0, 8) : jobId}...)',
+          '${_stageLabel(status)} (Job: ${jobId.length > 8 ? jobId.substring(0, 8) : jobId}...)',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
     );
+  }
+
+  static String _stageLabel(IngestionJobStatus? status) {
+    return switch (status) {
+      null || IngestionJobStatus.queued => 'Queued...',
+      IngestionJobStatus.downloading => 'Downloading audio...',
+      IngestionJobStatus.transcribing => 'Transcribing...',
+      IngestionJobStatus.done => 'Done',
+      IngestionJobStatus.failed => 'Failed',
+    };
   }
 }

@@ -54,7 +54,7 @@ void main() {
     tempo: 100,
     beatsPerMeasure: 4,
     totalMeasures: 2,
-    measures: const [],
+    measures: [],
   );
 
   group('ImportScreen', () {
@@ -139,7 +139,7 @@ void main() {
       await tester.pump();
 
       // Polling status is visible while the job is in flight.
-      expect(find.textContaining('Processing'), findsOneWidget);
+      expect(find.textContaining('Queued'), findsOneWidget);
 
       // Let the periodic poll timer fire and resolve.
       await tester.pump(const Duration(seconds: 2));
@@ -148,6 +148,63 @@ void main() {
 
       expect(find.text('Review: job-123'), findsOneWidget);
       verify(mockRepo.submitYoutubeUrl('https://youtube.com/watch?v=abc')).called(1);
+    });
+
+    testWidgets('progresses through downloading and transcribing before done',
+        (tester) async {
+      when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-789');
+
+      // The repository is polled repeatedly; return a different stage on
+      // each call so the test can assert the UI actually reflects each one,
+      // rather than a static message for the whole job lifecycle.
+      final statuses = [
+        IngestionJobStatus.downloading,
+        IngestionJobStatus.transcribing,
+        IngestionJobStatus.done,
+      ];
+      var pollCount = 0;
+      when(mockRepo.pollJob('job-789')).thenAnswer((_) async {
+        final status = statuses[pollCount.clamp(0, statuses.length - 1)];
+        pollCount++;
+        return IngestionJobResult(
+          status: status,
+          level: status == IngestionJobStatus.done ? level : null,
+        );
+      });
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('YouTube'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'YouTube URL'),
+        'https://youtube.com/watch?v=abc',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.textContaining('Queued'), findsOneWidget);
+
+      // First poll tick: downloading.
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+      expect(find.textContaining('Downloading'), findsOneWidget);
+
+      // Second poll tick: transcribing.
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+      expect(find.textContaining('Transcribing'), findsOneWidget);
+
+      // Third poll tick: done, navigates away.
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Review: job-789'), findsOneWidget);
     });
 
     testWidgets('shows an error and resets when the job fails', (tester) async {
