@@ -161,7 +161,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     ),
                     const SizedBox(height: PianoSpacing.xs),
                     Text(
-                      '${_formatTime(_currentBeat)} / ${_formatTime(totalBeats)}',
+                      '${_formatTime(_currentBeat, level.tempo)} / '
+                      '${_formatTime(totalBeats, level.tempo)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: PianoSpacing.lg),
@@ -238,7 +239,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     if (lvl == null) return;
     final totalBeats = (lvl.totalMeasures * lvl.beatsPerMeasure).toDouble();
     const tickRate = Duration(milliseconds: 100);
-    const baseBeatsPerSecond = 2.0; // 120 BPM default
+    // Matches StageEngine's derivation so a preview at 1.0x plays at the
+    // level's actual transcribed tempo instead of a fixed 120 BPM.
+    final baseBeatsPerSecond = lvl.tempo / 60.0;
 
     setState(() => _isPlaying = true);
     _playbackTimer?.cancel();
@@ -299,9 +302,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     context.go('/import');
   }
 
-  String _formatTime(double beats) {
-    final minutes = (beats / 4).floor(); // Assuming 4/4 time
-    final seconds = ((beats % 4) * 15).floor(); // 4 beats = 60 seconds at 120 BPM
+  // Duration display uses the level's own tempo, not the current playback
+  // speed, so "total time" reads as the song's real length regardless of
+  // whether the learner is previewing it sped up or slowed down.
+  String _formatTime(double beats, int tempo) {
+    final totalSeconds = beats * (60.0 / tempo);
+    final minutes = (totalSeconds / 60).floor();
+    final seconds = (totalSeconds % 60).floor();
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 }

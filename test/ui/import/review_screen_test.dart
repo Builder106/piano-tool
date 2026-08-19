@@ -146,6 +146,63 @@ void main() {
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
     });
 
+    testWidgets('shows elapsed and total time derived from the level tempo',
+        (tester) async {
+      // tempo 80 => 60/80 = 0.75s per beat; 8 beats total = 6.0s = "0:06".
+      const slowLevel = LevelModel(
+        id: 'imported_slow',
+        title: 'Slow Song',
+        description: 'Imported from audio',
+        tempo: 80,
+        beatsPerMeasure: 4,
+        totalMeasures: 2,
+        measures: [],
+      );
+      when(mockRepo.pollJob('job-123')).thenAnswer(
+        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: slowLevel),
+      );
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('0:00 / 0:06'), findsOneWidget);
+    });
+
+    testWidgets('playback advances the beat according to the level tempo',
+        (tester) async {
+      // tempo 180 => 180/60 = 3 beats/sec at 1.0x speed.
+      const fastLevel = LevelModel(
+        id: 'imported_fast',
+        title: 'Fast Song',
+        description: 'Imported from audio',
+        tempo: 180,
+        beatsPerMeasure: 4,
+        totalMeasures: 2, // totalBeats = 8
+        measures: [],
+      );
+      when(mockRepo.pollJob('job-123')).thenAnswer(
+        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: fastLevel),
+      );
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pump();
+
+      // One second of playback at 3 beats/sec should land close to beat 3
+      // (of 8 total), not the old fixed 2 beats/sec rate.
+      await tester.pump(const Duration(seconds: 1));
+      final progress = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator),
+      );
+      expect(progress.value, closeTo(3.0 / 8.0, 0.01));
+
+      // Pause so no timer keeps firing after the test ends.
+      await tester.tap(find.byIcon(Icons.pause));
+      await tester.pump();
+    });
+
     testWidgets('speed control cycles through the speed steps', (tester) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
         (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: level),
