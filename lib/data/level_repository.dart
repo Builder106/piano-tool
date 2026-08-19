@@ -12,6 +12,7 @@ import '../models/level_models.dart';
 class LevelRepository {
   final Map<String, StageModel> _stages = {};
   final Map<String, LevelModel> _levels = {};
+  final Map<String, StageModel> _importedStages = {};
 
   LevelRepository() {
     _loadBuiltInLevels();
@@ -229,15 +230,44 @@ class LevelRepository {
   /// Get a stage by ID
   StageModel? getStage(String id) => _stages[id];
 
-  /// Get all stages in order
+  /// Get all levels
+  List<LevelModel> getAllLevels() => _levels.values.toList();
+
+  /// Add an imported level and create a stage wrapper for it
+  void addImportedLevel(LevelModel level) {
+    _levels[level.id] = level;
+    // Create a stage wrapper for the imported level
+    final importedStagesCount = _importedStages.length;
+    final order = 100 + importedStagesCount; // After built-in stages (1-3)
+    _importedStages[level.id] = StageModel(
+      id: 'imported_${level.id}',
+      title: level.title,
+      description: level.description,
+      difficulty: Difficulty.beginner,
+      level: level,
+      order: order,
+      prerequisites: const [],
+      xpReward: 50,
+    );
+  }
+
+  /// Remove an imported level and its stage wrapper
+  void removeImportedLevel(String levelId) {
+    _levels.remove(levelId);
+    _importedStages.remove(levelId);
+  }
+
+  /// Get all stages including imported ones
   List<StageModel> getAllStages() {
     final stages = _stages.values.toList();
     stages.sort((a, b) => a.order.compareTo(b.order));
-    return stages;
+    final importedStages = _importedStages.values.toList();
+    importedStages.sort((a, b) => a.order.compareTo(b.order));
+    return [...stages, ...importedStages];
   }
 
-  /// Get all levels
-  List<LevelModel> getAllLevels() => _levels.values.toList();
+  /// Check if a level is imported (not built-in)
+  bool isImportedLevel(String levelId) => _importedStages.containsKey(levelId);
 }
 
 /// Riverpod provider for the level repository
