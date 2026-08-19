@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -162,6 +163,32 @@ void main() {
 
       final levels = await repository.listImportedLevels();
       expect(levels, isEmpty);
+    });
+
+    test('submitUpload returns jobId on success', () async {
+      final tempFile = File(
+        '${Directory.systemTemp.path}/ingestion_repository_test_${DateTime.now().microsecondsSinceEpoch}.wav',
+      );
+      await tempFile.writeAsBytes([1, 2, 3, 4, 5]);
+      addTearDown(() async {
+        if (await tempFile.exists()) await tempFile.delete();
+      });
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path == '/jobs' && request.method == 'POST') {
+          expect(request.headers['content-type'], contains('multipart/form-data'));
+          return http.Response('{"job_id": "job-upload-1", "status": "queued"}', 202);
+        }
+        return http.Response('Not found', 404);
+      });
+      repository = IngestionRepository(
+        client: mockClient,
+        baseUrl: 'http://test.api',
+        prefs: prefs,
+      );
+
+      final jobId = await repository.submitUpload(tempFile);
+      expect(jobId, 'job-upload-1');
     });
 
     test('submitRecording returns jobId on success', () async {
