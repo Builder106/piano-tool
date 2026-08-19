@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/ingestion_repository.dart';
 import '../../data/level_repository.dart';
 import '../../data/progress_repository.dart';
 import '../../models/level_models.dart';
@@ -20,22 +19,7 @@ class LevelListScreen extends ConsumerStatefulWidget {
 class _LevelListScreenState extends ConsumerState<LevelListScreen> {
   @override
   Widget build(BuildContext context) {
-    final repositoryAsync = ref.watch(levelRepositoryProvider);
-
-    return repositoryAsync.when(
-      data: (repository) => _buildScaffold(context, repository),
-      loading: () => const Scaffold(
-        body: SafeArea(child: Center(child: CircularProgressIndicator())),
-      ),
-      error: (error, stack) => Scaffold(
-        body: SafeArea(
-          child: Center(child: Text('Error loading levels: $error')),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScaffold(BuildContext context, LevelRepository repository) {
+    final repository = ref.watch(levelRepositoryProvider);
     final stages = repository.getAllStages();
 
     return Scaffold(
@@ -83,7 +67,7 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                     isImported: isImported,
                     onTap: () => context.push('/practice/${stage.id}'),
                     onDelete: isImported
-                        ? () => _confirmDelete(context, repository, stage.level.id)
+                        ? () => _confirmDelete(context, stage.level.id)
                         : null,
                   );
                 },
@@ -97,7 +81,6 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
 
   Future<void> _confirmDelete(
     BuildContext context,
-    LevelRepository repository,
     String levelId,
   ) async {
     final confirmed = await showDialog<bool>(
@@ -127,30 +110,14 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
       ),
     );
 
-    if (confirmed != true || !context.mounted) return;
-
-    try {
-      // Both stores must agree: deleting only from the in-memory
-      // LevelRepository left the level in IngestionRepository's persisted
-      // storage, so it reappeared next time levelRepositoryProvider
-      // rehydrated from disk.
-      final ingestionRepo = await ref.read(ingestionRepositoryProvider.future);
-      await ingestionRepo.deleteImportedLevel(levelId);
-    } on IngestionException catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete: ${e.message}')),
-      );
-      return;
+    if (confirmed == true && context.mounted) {
+      final repository = ref.read(levelRepositoryProvider);
+      repository.removeImportedLevel(levelId);
+      // LevelRepository is a plain object (overridden via overrideWithValue
+      // in tests), so mutating it doesn't notify Riverpod listeners on its
+      // own -- force a rebuild explicitly.
+      setState(() {});
     }
-
-    // Mutate the resolved repository directly so the list updates
-    // immediately, then invalidate the provider so a future rebuild
-    // rehydrates from the (now-updated) persisted store rather than reusing
-    // stale state.
-    repository.removeImportedLevel(levelId);
-    ref.invalidate(levelRepositoryProvider);
-    setState(() {});
   }
 }
 

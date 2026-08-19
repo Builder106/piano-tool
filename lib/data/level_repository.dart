@@ -1,6 +1,5 @@
 import 'package:riverpod/riverpod.dart';
 import '../models/level_models.dart';
-import 'ingestion_repository.dart';
 
 /// Repository for loading and managing levels/stages.
 ///
@@ -22,7 +21,7 @@ class LevelRepository {
   /// Load built-in levels as fallback
   void _loadBuiltInLevels() {
     // Level 1: Simple C Major Scale
-    const level1 = LevelModel(
+    final level1 = LevelModel(
       id: 'level_1',
       title: 'C Major Scale',
       description: 'Learn the C major scale with quarter notes',
@@ -78,7 +77,7 @@ class LevelRepository {
     );
 
     // Level 2: Simple melody with half notes
-    const level2 = LevelModel(
+    final level2 = LevelModel(
       id: 'level_2',
       title: 'Ode to Joy (Excerpt)',
       description: 'Play the famous melody with half and quarter notes',
@@ -132,7 +131,7 @@ class LevelRepository {
     );
 
     // Level 3: Mixed rhythms
-    const level3 = LevelModel(
+    final level3 = LevelModel(
       id: 'level_3',
       title: 'Mixed Rhythms',
       description: 'Practice quarter, half, and eighth notes',
@@ -192,7 +191,7 @@ class LevelRepository {
     _levels[level3.id] = level3;
 
     // Create stages
-    _stages['stage_1'] = const StageModel(
+    _stages['stage_1'] = StageModel(
       id: 'stage_1',
       title: 'C Major Scale',
       description: 'Learn the C major scale with quarter notes',
@@ -202,7 +201,7 @@ class LevelRepository {
       xpReward: 100,
     );
 
-    _stages['stage_2'] = const StageModel(
+    _stages['stage_2'] = StageModel(
       id: 'stage_2',
       title: 'Ode to Joy',
       description: 'Play the famous melody with half and quarter notes',
@@ -213,7 +212,7 @@ class LevelRepository {
       xpReward: 150,
     );
 
-    _stages['stage_3'] = const StageModel(
+    _stages['stage_3'] = StageModel(
       id: 'stage_3',
       title: 'Mixed Rhythms',
       description: 'Practice quarter, half, and eighth notes',
@@ -228,24 +227,8 @@ class LevelRepository {
   /// Get a level by ID
   LevelModel? getLevel(String id) => _levels[id];
 
-  /// Get a stage by ID, checking both built-in and imported stages -- must
-  /// mirror the merge that [getAllStages] does, or a stage that only exists
-  /// because it was imported would appear in the list but fail to resolve
-  /// when looked up directly (e.g. by the practice route).
-  ///
-  /// `_importedStages` is keyed by the *level* id, not the stage's own `id`
-  /// field ('imported_<levelId>') -- the two differ, so a plain map lookup
-  /// by stage id would always miss. `getAllStages()` hands out the stage
-  /// objects by their `id` field (e.g. the practice route pushes
-  /// `stage.id`), so this has to search by that field too.
-  StageModel? getStage(String id) {
-    final builtIn = _stages[id];
-    if (builtIn != null) return builtIn;
-    for (final stage in _importedStages.values) {
-      if (stage.id == id) return stage;
-    }
-    return null;
-  }
+  /// Get a stage by ID
+  StageModel? getStage(String id) => _stages[id];
 
   /// Get all levels
   List<LevelModel> getAllLevels() => _levels.values.toList();
@@ -290,21 +273,5 @@ class LevelRepository {
   bool isImportedLevel(String levelId) => _importedStages.containsKey(levelId);
 }
 
-/// Riverpod provider for the level repository.
-///
-/// This is a [FutureProvider], not a plain [Provider], because the
-/// repository must be hydrated from [IngestionRepository.listImportedLevels]
-/// on startup: levels saved via [IngestionRepository.saveLevel] otherwise
-/// never make it into the in-memory catalog [LevelListScreen] reads from.
-/// Callers that save or delete an imported level must
-/// `ref.invalidate(levelRepositoryProvider)` afterwards so this rebuilds
-/// from the persisted store.
-final levelRepositoryProvider = FutureProvider<LevelRepository>((ref) async {
-  final repository = LevelRepository();
-  final ingestion = await ref.watch(ingestionRepositoryProvider.future);
-  final imported = await ingestion.listImportedLevels();
-  for (final level in imported) {
-    repository.addImportedLevel(level);
-  }
-  return repository;
-});
+/// Riverpod provider for the level repository
+final levelRepositoryProvider = Provider<LevelRepository>((ref) => LevelRepository());

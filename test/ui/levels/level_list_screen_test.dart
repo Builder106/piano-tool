@@ -5,36 +5,29 @@ import 'package:go_router/go_router.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
 import 'package:piano_tool/ui/levels/level_list_screen.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
-@GenerateMocks([ProgressRepository, IngestionRepository])
+@GenerateMocks([ProgressRepository])
 import 'level_list_screen_test.mocks.dart';
 
 void main() {
   late MockProgressRepository mockProgressRepo;
-  late MockIngestionRepository mockIngestionRepo;
   late LevelRepository levelRepository;
 
   setUp(() {
     mockProgressRepo = MockProgressRepository();
-    mockIngestionRepo = MockIngestionRepository();
     levelRepository = LevelRepository();
-    // The delete flow reads this to persist the removal; tests that don't
-    // exercise delete never call it.
-    when(mockIngestionRepo.deleteImportedLevel(any)).thenAnswer((_) async {});
   });
 
   Widget createTestWidget() {
     return ProviderScope(
       overrides: [
-        levelRepositoryProvider.overrideWith((ref) async => levelRepository),
+        levelRepositoryProvider.overrideWithValue(levelRepository),
         progressRepositoryProvider.overrideWithValue(mockProgressRepo),
-        ingestionRepositoryProvider.overrideWith((ref) async => mockIngestionRepo),
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
@@ -261,7 +254,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('My Song'), findsNothing);
-      verify(mockIngestionRepo.deleteImportedLevel('imported_1')).called(1);
     });
 
     testWidgets('canceling delete keeps imported level', (tester) async {

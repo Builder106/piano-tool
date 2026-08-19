@@ -28,9 +28,6 @@ void main() {
     when(mockIngestionRepo.pollJob(any)).thenAnswer(
       (_) async => IngestionJobResult(status: IngestionJobStatus.queued),
     );
-    // levelRepositoryProvider (the real, non-overridden definition) hydrates
-    // from this at startup to render LevelListScreen.
-    when(mockIngestionRepo.listImportedLevels()).thenAnswer((_) async => []);
   });
 
   Widget createTestWidget() {

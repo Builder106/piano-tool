@@ -109,16 +109,6 @@ class MockIngestionRepository extends _i1.Mock
       ) as _i3.Future<_i2.IngestionJobResult>);
 
   @override
-  _i3.Future<void> cancelJob(String? jobId) => (super.noSuchMethod(
-        Invocation.method(
-          #cancelJob,
-          [jobId],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-
-  @override
   _i3.Future<void> saveLevel(_i7.LevelModel? level) => (super.noSuchMethod(
         Invocation.method(
           #saveLevel,

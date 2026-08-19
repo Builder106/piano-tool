@@ -28,17 +28,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   bool _isSubmitting = false;
   String? _jobId;
   IngestionJobStatus? _jobStatus;
-  String? _youtubeError;
   Timer? _pollTimer;
-  int _pollAttempts = 0;
-
-  static const _pollInterval = Duration(seconds: 2);
-  static const _pollTimeout = Duration(minutes: 5);
-  // Counting ticks rather than comparing against a wall-clock deadline: the
-  // test suite drives this timer forward with fake time via tester.pump(),
-  // which advances Timer callbacks without advancing DateTime.now().
-  static final _maxPollAttempts =
-      _pollTimeout.inMilliseconds ~/ _pollInterval.inMilliseconds;
 
   @override
   void initState() {
@@ -79,8 +69,6 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         isSubmitting: _isSubmitting,
         jobId: _jobId,
         jobStatus: _jobStatus,
-        youtubeError: _youtubeError,
-        onCancelJob: _cancelJob,
       ),
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -115,17 +103,10 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         }
         break;
       case ImportSource.youtube:
-        final url = _youtubeController.text.trim();
-        if (url.isEmpty) {
+        if (_youtubeController.text.trim().isEmpty) {
           _showError('Please enter a YouTube URL');
           return;
         }
-        final validationError = _validateYoutubeUrl(url);
-        if (validationError != null) {
-          setState(() => _youtubeError = validationError);
-          return;
-        }
-        setState(() => _youtubeError = null);
         break;
       case ImportSource.recording:
         if (_recordedBytes == null) {
@@ -160,41 +141,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     }
   }
 
-  /// Accepts only URLs that look like a youtube.com or youtu.be link -- the
-  /// backend otherwise gets whatever string the user typed, verbatim.
-  String? _validateYoutubeUrl(String url) {
-    final uri = Uri.tryParse(url);
-    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
-      return 'Enter a valid URL';
-    }
-    final host = uri.host.toLowerCase();
-    final isYoutube = host == 'youtube.com' ||
-        host.endsWith('.youtube.com') ||
-        host == 'youtu.be' ||
-        host.endsWith('.youtu.be');
-    if (!isYoutube) {
-      return 'Enter a youtube.com or youtu.be URL';
-    }
-    return null;
-  }
-
   void _startPolling(String jobId) {
     _pollTimer?.cancel();
-    _pollAttempts = 0;
-    _pollTimer = Timer.periodic(_pollInterval, (timer) async {
-      _pollAttempts++;
-      if (_pollAttempts > _maxPollAttempts) {
-        timer.cancel();
-        if (!mounted) return;
-        _showError('Transcription timed out. Please try again.');
-        setState(() {
-          _jobId = null;
-          _jobStatus = null;
-          _isSubmitting = false;
-        });
-        return;
-      }
-
+    _pollTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
       try {
         final repo = await ref.read(ingestionRepositoryProvider.future);
         final result = await repo.pollJob(jobId);
@@ -232,24 +181,6 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         });
       }
     });
-  }
-
-  Future<void> _cancelJob() async {
-    _pollTimer?.cancel();
-    final jobId = _jobId;
-    setState(() {
-      _jobId = null;
-      _jobStatus = null;
-      _isSubmitting = false;
-    });
-    if (jobId == null) return;
-    try {
-      final repo = await ref.read(ingestionRepositoryProvider.future);
-      await repo.cancelJob(jobId);
-    } on IngestionException catch (e) {
-      if (!mounted) return;
-      _showError('Failed to cancel: ${e.message}');
-    }
   }
 
   Future<void> _startRecording() async {
@@ -301,8 +232,6 @@ class _BuildImportScreen extends StatelessWidget {
     required this.isSubmitting,
     required this.jobId,
     required this.jobStatus,
-    this.youtubeError,
-    required this.onCancelJob,
   });
 
   final ImportSource selectedSource;
@@ -318,8 +247,6 @@ class _BuildImportScreen extends StatelessWidget {
   final bool isSubmitting;
   final String? jobId;
   final IngestionJobStatus? jobStatus;
-  final String? youtubeError;
-  final VoidCallback onCancelJob;
 
   @override
   Widget build(BuildContext context) {
@@ -352,15 +279,10 @@ class _BuildImportScreen extends StatelessWidget {
                     onPickFile: onPickFile,
                     onStartRecording: onStartRecording,
                     onStopRecording: onStopRecording,
-                    youtubeError: youtubeError,
                   ),
                   const SizedBox(height: PianoSpacing.lg),
                   if (isSubmitting && jobId != null) ...[
-                    _PollingStatus(
-                      jobId: jobId!,
-                      status: jobStatus,
-                      onCancel: onCancelJob,
-                    ),
+                    _PollingStatus(jobId: jobId!, status: jobStatus),
                   ] else ...[
                     _SubmitButton(
                       source: selectedSource,
@@ -490,7 +412,6 @@ class _SourceInput extends StatelessWidget {
     required this.onPickFile,
     required this.onStartRecording,
     required this.onStopRecording,
-    this.youtubeError,
   });
 
   final ImportSource source;
@@ -501,7 +422,6 @@ class _SourceInput extends StatelessWidget {
   final VoidCallback onPickFile;
   final VoidCallback onStartRecording;
   final VoidCallback onStopRecording;
-  final String? youtubeError;
 
   @override
   Widget build(BuildContext context) {
@@ -530,7 +450,6 @@ class _SourceInput extends StatelessWidget {
             labelText: 'YouTube URL',
             hintText: 'Paste YouTube URL',
             prefixIcon: const Icon(Icons.link),
-            errorText: youtubeError,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(PianoRadius.md),
             ),
@@ -627,11 +546,10 @@ class _SubmitButton extends StatelessWidget {
 }
 
 class _PollingStatus extends StatelessWidget {
-  const _PollingStatus({required this.jobId, required this.status, required this.onCancel});
+  const _PollingStatus({required this.jobId, required this.status});
 
   final String jobId;
   final IngestionJobStatus? status;
-  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -642,11 +560,6 @@ class _PollingStatus extends StatelessWidget {
         Text(
           '${_stageLabel(status)} (Job: ${jobId.length > 8 ? jobId.substring(0, 8) : jobId}...)',
           style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: PianoSpacing.md),
-        OutlinedButton(
-          onPressed: onCancel,
-          child: const Text('Cancel'),
         ),
       ],
     );

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/ingestion_repository.dart';
-import '../../data/level_repository.dart';
 import '../../models/level_models.dart';
 import '../../models/engine_models.dart';
 import '../keyboard/piano_keyboard_view.dart';
@@ -73,16 +72,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       if (!mounted) return;
       setState(() {
         _error = e.message;
-        _isLoading = false;
-      });
-    } catch (e) {
-      // Repository methods are guarded to only throw IngestionException, but
-      // this screen's own state management (mounted checks, setState) can
-      // still surface a stray error here -- without this branch it would
-      // leave _isLoading stuck true and an eternal spinner with no way out.
-      if (!mounted) return;
-      setState(() {
-        _error = '$e';
         _isLoading = false;
       });
     }
@@ -297,10 +286,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       final repo = await ref.read(ingestionRepositoryProvider.future);
       await repo.saveLevel(_level!);
       if (!mounted) return;
-      // LevelListScreen reads levelRepositoryProvider, which is hydrated
-      // once at startup from IngestionRepository -- invalidate it so the
-      // level just saved actually shows up there.
-      ref.invalidate(levelRepositoryProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Level saved successfully')),
       );
