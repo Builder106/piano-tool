@@ -380,7 +380,6 @@ class StageEngine extends ChangeNotifier {
   /// Seek to a specific beat position (for scrubbing)
   void seekToBeat(double beat) {
     final clampedBeat = beat.clamp(0.0, _level.totalMeasures * _level.beatsPerMeasure.toDouble());
-    final elapsedTime = clampedBeat / (_level.tempo / 60.0 * _playbackSpeed);
 
     // Reset note states up to the seek position
     final newStates = List<NoteState>.from(_state.noteStates);

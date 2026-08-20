@@ -22,7 +22,7 @@ class LevelRepository {
   /// Load built-in levels as fallback
   void _loadBuiltInLevels() {
     // Level 1: Simple C Major Scale
-    final level1 = LevelModel(
+    const level1 = LevelModel(
       id: 'level_1',
       title: 'C Major Scale',
       description: 'Learn the C major scale with quarter notes',
@@ -78,7 +78,7 @@ class LevelRepository {
     );
 
     // Level 2: Simple melody with half notes
-    final level2 = LevelModel(
+    const level2 = LevelModel(
       id: 'level_2',
       title: 'Ode to Joy (Excerpt)',
       description: 'Play the famous melody with half and quarter notes',
@@ -132,7 +132,7 @@ class LevelRepository {
     );
 
     // Level 3: Mixed rhythms
-    final level3 = LevelModel(
+    const level3 = LevelModel(
       id: 'level_3',
       title: 'Mixed Rhythms',
       description: 'Practice quarter, half, and eighth notes',
@@ -192,7 +192,7 @@ class LevelRepository {
     _levels[level3.id] = level3;
 
     // Create stages
-    _stages['stage_1'] = StageModel(
+    _stages['stage_1'] = const StageModel(
       id: 'stage_1',
       title: 'C Major Scale',
       description: 'Learn the C major scale with quarter notes',
@@ -202,7 +202,7 @@ class LevelRepository {
       xpReward: 100,
     );
 
-    _stages['stage_2'] = StageModel(
+    _stages['stage_2'] = const StageModel(
       id: 'stage_2',
       title: 'Ode to Joy',
       description: 'Play the famous melody with half and quarter notes',
@@ -213,7 +213,7 @@ class LevelRepository {
       xpReward: 150,
     );
 
-    _stages['stage_3'] = StageModel(
+    _stages['stage_3'] = const StageModel(
       id: 'stage_3',
       title: 'Mixed Rhythms',
       description: 'Practice quarter, half, and eighth notes',
