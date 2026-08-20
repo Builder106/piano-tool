@@ -1,5 +1,0 @@
-[
-  { "name": "Code_Wes", "categories": "Academic, Career", "summary": "Club for students interested in coding.", "embedding": [1, 0, 0] },
-  { "name": "Board Games Club", "categories": "Gaming, Social", "summary": "Meet new friends over board games.", "embedding": [0, 1, 0] },
-  { "name": "Wesleyan Outing Club", "categories": "Social", "summary": "Hiking, biking, and canoeing trips.", "embedding": [0, 0, 1] }
-]
