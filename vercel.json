@@ -7,5 +7,5 @@
   },
   "buildCommand": "pip install -r requirements.txt",
   "devCommand": "uvicorn backend.app.main:app --reload",
-  "ignoreBuildStep": "case \"$VERCEL_GIT_COMMIT_REF\" in main|staging|piano-tool) exit 0 ;; *) echo \"Branch '$VERCEL_GIT_COMMIT_REF' not in allowlist; skipping build\" && exit 1 ;; esac"
+  "ignoreCommand": "case \"$VERCEL_GIT_COMMIT_REF\" in main|staging|piano-tool) exit 1 ;; *) echo \"Branch '$VERCEL_GIT_COMMIT_REF' not in allowlist; skipping build\" && exit 0 ;; esac"
 }
