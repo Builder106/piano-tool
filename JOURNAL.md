@@ -3,6 +3,21 @@
 A dated log of decisions and the reasoning behind them, especially the ones that
 are not obvious from the code.
 
+## 2026-08-20: Audio ingestion backend and app-side flow merged to main
+
+Branch `audio-ingestion-backend` merged into `main` in the standalone
+`Builder106/piano-tool` repository. The app now has a complete ingestion flow:
+`IngestionRepository`, `ImportScreen`, `ReviewScreen`, `LevelListScreen`, and
+`go_router` navigation, backed by a Python FastAPI service in `backend/`.
+
+Verification passed on `ampere-dev`:
+- `flutter test`: 176 tests passed
+- strict `flutter analyze`: no issues
+
+The `code-wes-projects` monorepo consumes this project as a git subtree at
+`apps/piano-tool/`. The canonical source of truth is the standalone repo; the
+monorepo copy is re-imported from `main` when a releaseable milestone is ready.
+
 ## 2026-08-17: UI revamp, phase 1 (visual foundation)
 
 Branch `ui-revamp-foundation`, 13 commits. Spec in
