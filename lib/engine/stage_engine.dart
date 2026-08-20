@@ -14,9 +14,9 @@ class StageEngine extends ChangeNotifier {
 
   double get playbackSpeed => _playbackSpeed;
 
-  StageEngineStateModel _state = StageEngineStateModel(
+  StageEngineStateModel _state = const StageEngineStateModel(
     engineState: StageEngineStatus.idle,
-    level: const LevelModel(
+    level: LevelModel(
       id: '',
       title: '',
       description: '',
@@ -37,7 +37,6 @@ class StageEngine extends ChangeNotifier {
   final List<LevelNote> _allNotes = [];
   final Map<int, NoteHitResult> _noteResults = {};
   int _nextNoteIndex = 0;
-  double _elapsedTime = 0.0; // seconds
 
   StageEngine({
     required LevelModel level,
@@ -87,8 +86,7 @@ class StageEngine extends ChangeNotifier {
   void start() {
     if (_state.engineState == StageEngineStatus.playing) return;
 
-    _elapsedTime = 0.0;
-    _nextNoteIndex = 0;
+        _nextNoteIndex = 0;
     _noteResults.clear();
 
     final initialNoteStates = List.filled(_allNotes.length, NoteState.upcoming);
@@ -136,8 +134,7 @@ class StageEngine extends ChangeNotifier {
   /// Reset the stage to initial state
   void reset() {
     _stopPlaybackTimer();
-    _elapsedTime = 0.0;
-    _nextNoteIndex = 0;
+        _nextNoteIndex = 0;
     _noteResults.clear();
 
     final initialNoteStates = List.filled(_allNotes.length, NoteState.upcoming);
@@ -257,8 +254,7 @@ class StageEngine extends ChangeNotifier {
 
     _playbackTimer = Timer.periodic(tickInterval, (timer) {
       final deltaBeats = beatsPerSecond * (tickInterval.inMilliseconds / 1000.0);
-      _elapsedTime += tickInterval.inMilliseconds / 1000.0;
-      _updatePlayback(deltaBeats);
+            _updatePlayback(deltaBeats);
     });
   }
 
@@ -384,7 +380,6 @@ class StageEngine extends ChangeNotifier {
   /// Seek to a specific beat position (for scrubbing)
   void seekToBeat(double beat) {
     final clampedBeat = beat.clamp(0.0, _level.totalMeasures * _level.beatsPerMeasure.toDouble());
-    _elapsedTime = clampedBeat / (_level.tempo / 60.0 * _playbackSpeed);
 
     // Reset note states up to the seek position
     final newStates = List<NoteState>.from(_state.noteStates);

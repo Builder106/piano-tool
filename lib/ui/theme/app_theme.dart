@@ -31,6 +31,9 @@ abstract final class PianoTheme {
   static PianoColors colorsOf(BuildContext context) =>
       Theme.of(context).extension<PianoColorsExtension>()!.colors;
 
+  static TextTheme textThemeOf(BuildContext context) =>
+      Theme.of(context).textTheme;
+
   static ThemeData _build(PianoColors c, Brightness brightness) {
     // Display is Cormorant, roman only. Body and every metric is Plex Sans.
     //

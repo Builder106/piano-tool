@@ -17,6 +17,7 @@ const Map<String, int> argbLight = {
   'accentInk': 0xFFFDFBF9, // oklch(99%   0.004 72)
   'focus': 0xFF1F5ED9,     // oklch(52%   0.20  262)
   'success': 0xFF067132,   // oklch(48%   0.13  150)
+  'warning': 0xFFF57C00,   // oklch(65%   0.14  72)
   'error': 0xFFB63132,     // oklch(52%   0.17  25)
 };
 
@@ -34,6 +35,7 @@ const Map<String, int> argbDark = {
   'accentInk': 0xFF15110C, // oklch(18% 0.012 68)
   'focus': 0xFF68A1FF,     // oklch(72% 0.17  262)
   'success': 0xFF5DAD70,   // oklch(68% 0.12  150)
+  'warning': 0xFFFFB74D,   // oklch(80%   0.12  72)
   'error': 0xFFD8625C,     // oklch(64% 0.15  25)
 };
 
@@ -67,6 +69,7 @@ class PianoColors {
   Color get accentInk => _c('accentInk');
   Color get focus => _c('focus');
   Color get success => _c('success');
+  Color get warning => _c('warning');
   Color get error => _c('error');
 
   @override
@@ -96,4 +99,12 @@ abstract final class PianoMotion {
   static const Duration short = Duration(milliseconds: 220);
   static const Curve easeOut = Cubic(0.16, 1, 0.3, 1);
   static const Curve easeIn = Cubic(0.7, 0, 0.84, 0);
+}
+
+/// Radius tokens.
+abstract final class PianoRadius {
+  static const double sm = 4;
+  static const double md = 8;
+  static const double lg = 12;
+  static const double xl = 16;
 }

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/models/audio_models.dart';
 import 'package:piano_tool/models/engine_models.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
@@ -13,7 +14,15 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   ProviderContainer harness() => ProviderContainer(
-        overrides: [audioGrantedProvider.overrideWith((ref) async => true)],
+        overrides: [
+          audioGrantedProvider.overrideWith((ref) async => true),
+          // stageControllerProvider reads levelRepositoryProvider
+          // synchronously (requireValue) -- overrideWithValue makes it
+          // resolved immediately instead of leaving it in AsyncLoading,
+          // which is what the default (ingestion-hydrated) definition would
+          // do since nothing here awaits it first.
+          levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+        ],
       );
 
   test('starts idle at beat zero with a real level', () {
@@ -192,6 +201,7 @@ void main() {
     final c = ProviderContainer(overrides: [
       audioGrantedProvider.overrideWith((ref) async => true),
       audioPitchStreamProvider.overrideWith((ref) => pitchController.stream),
+      levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
     ]);
     addTearDown(c.dispose);
 

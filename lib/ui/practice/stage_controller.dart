@@ -223,7 +223,11 @@ class StageController extends StateNotifier<StageUiState> {
 
 final stageControllerProvider =
     StateNotifierProvider.family<StageController, StageUiState, String>((ref, stageId) {
-  final stages = ref.read(levelRepositoryProvider).getAllStages();
+  // By the time a practice route is reachable, LevelListScreen has already
+  // awaited levelRepositoryProvider to render the stage list the user tapped
+  // -- requireValue asserts that instead of silently falling back to an
+  // empty catalog.
+  final stages = ref.read(levelRepositoryProvider).requireValue.getAllStages();
   final stage = stages.cast<StageModel?>().firstWhere(
         (s) => s?.id == stageId,
         orElse: () => null,
