@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/models/engine_models.dart';
 import 'package:piano_tool/ui/keyboard/keyboard_geometry.dart';
 import 'package:piano_tool/ui/keyboard/piano_keyboard_view.dart';
@@ -24,7 +26,14 @@ Widget _screen({double textScale = 1.0}) => MaterialApp(
     );
 
 Widget _harness({double textScale = 1.0}) => ProviderScope(
-      overrides: [audioGrantedProvider.overrideWith((ref) async => true)],
+      overrides: [
+        audioGrantedProvider.overrideWith((ref) async => true),
+        // stageControllerProvider reads levelRepositoryProvider
+        // synchronously (requireValue); PracticeScreen is mounted directly
+        // here, without going through LevelListScreen first, so nothing
+        // else resolves it.
+        levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+      ],
       child: _screen(textScale: textScale),
     );
 
@@ -206,7 +215,14 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final container = ProviderContainer(
-      overrides: [audioGrantedProvider.overrideWith((ref) async => true)],
+      overrides: [
+        audioGrantedProvider.overrideWith((ref) async => true),
+        // stageControllerProvider reads levelRepositoryProvider
+        // synchronously (requireValue); PracticeScreen is mounted directly
+        // here, without going through LevelListScreen first, so nothing
+        // else resolves it.
+        levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+      ],
     );
     addTearDown(container.dispose);
 
@@ -238,7 +254,14 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final container = ProviderContainer(
-      overrides: [audioGrantedProvider.overrideWith((ref) async => true)],
+      overrides: [
+        audioGrantedProvider.overrideWith((ref) async => true),
+        // stageControllerProvider reads levelRepositoryProvider
+        // synchronously (requireValue); PracticeScreen is mounted directly
+        // here, without going through LevelListScreen first, so nothing
+        // else resolves it.
+        levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+      ],
     );
     addTearDown(container.dispose);
 

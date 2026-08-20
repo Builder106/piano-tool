@@ -1,5 +1,6 @@
 import 'package:riverpod/riverpod.dart';
 import '../models/level_models.dart';
+import 'ingestion_repository.dart';
 
 /// Repository for loading and managing levels/stages.
 ///
@@ -227,8 +228,24 @@ class LevelRepository {
   /// Get a level by ID
   LevelModel? getLevel(String id) => _levels[id];
 
-  /// Get a stage by ID
-  StageModel? getStage(String id) => _stages[id];
+  /// Get a stage by ID, checking both built-in and imported stages -- must
+  /// mirror the merge that [getAllStages] does, or a stage that only exists
+  /// because it was imported would appear in the list but fail to resolve
+  /// when looked up directly (e.g. by the practice route).
+  ///
+  /// `_importedStages` is keyed by the *level* id, not the stage's own `id`
+  /// field ('imported_<levelId>') -- the two differ, so a plain map lookup
+  /// by stage id would always miss. `getAllStages()` hands out the stage
+  /// objects by their `id` field (e.g. the practice route pushes
+  /// `stage.id`), so this has to search by that field too.
+  StageModel? getStage(String id) {
+    final builtIn = _stages[id];
+    if (builtIn != null) return builtIn;
+    for (final stage in _importedStages.values) {
+      if (stage.id == id) return stage;
+    }
+    return null;
+  }
 
   /// Get all levels
   List<LevelModel> getAllLevels() => _levels.values.toList();
@@ -273,5 +290,21 @@ class LevelRepository {
   bool isImportedLevel(String levelId) => _importedStages.containsKey(levelId);
 }
 
-/// Riverpod provider for the level repository
-final levelRepositoryProvider = Provider<LevelRepository>((ref) => LevelRepository());
+/// Riverpod provider for the level repository.
+///
+/// This is a [FutureProvider], not a plain [Provider], because the
+/// repository must be hydrated from [IngestionRepository.listImportedLevels]
+/// on startup: levels saved via [IngestionRepository.saveLevel] otherwise
+/// never make it into the in-memory catalog [LevelListScreen] reads from.
+/// Callers that save or delete an imported level must
+/// `ref.invalidate(levelRepositoryProvider)` afterwards so this rebuilds
+/// from the persisted store.
+final levelRepositoryProvider = FutureProvider<LevelRepository>((ref) async {
+  final repository = LevelRepository();
+  final ingestion = await ref.watch(ingestionRepositoryProvider.future);
+  final imported = await ingestion.listImportedLevels();
+  for (final level in imported) {
+    repository.addImportedLevel(level);
+  }
+  return repository;
+});
