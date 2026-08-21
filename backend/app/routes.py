@@ -25,7 +25,7 @@ def _to_response(job: Job) -> JobResponse:
     )
 
 
-@router.post("/jobs", status_code=202)  # type: ignore[untyped-decorator]
+@router.post("/jobs", status_code=202)
 async def create_job(
     title: str = Form(...),
     source: Literal["upload", "youtube"] = Form(...),
@@ -51,7 +51,7 @@ async def create_job(
     return JobResponse(job_id=job_id, status="queued", error=None, level=None)
 
 
-@router.get("/jobs/{job_id}")  # type: ignore[untyped-decorator]
+@router.get("/jobs/{job_id}")
 def get_job(job_id: str) -> JobResponse:
     job = store.get(job_id)
     if job is None:
@@ -59,7 +59,7 @@ def get_job(job_id: str) -> JobResponse:
     return _to_response(job)
 
 
-@router.delete("/jobs/{job_id}", status_code=204)  # type: ignore[untyped-decorator]
+@router.delete("/jobs/{job_id}", status_code=204)
 def delete_job(job_id: str) -> None:
     if not store.delete(job_id):
         raise HTTPException(status_code=404, detail="Job not found")

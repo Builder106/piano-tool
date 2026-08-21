@@ -80,6 +80,10 @@ ignore_missing_imports = true
 namespace_packages = true
 
 [[tool.mypy.overrides]]
+module = ["app.routes", "app.main"]
+disable_error_code = "untyped-decorator"
+
+[[tool.mypy.overrides]]
 module = [
     "numpy",
     "numpy.*",
