@@ -8,7 +8,7 @@ scikit-learn
 scipy>=1.4.1
 typing-extensions
 onnxruntime
-setuptools<81
+setuptools
 fastapi
 uvicorn[standard]
 pydantic>=2
