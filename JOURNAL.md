@@ -3,6 +3,28 @@
 A dated log of decisions and the reasoning behind them, especially the ones that
 are not obvious from the code.
 
+## 2026-08-21: Results flow and Python 3.12 verification
+
+Added a results screen after stage completion, a replay path, an idle practice
+golden, and lifecycle-safe controller shutdown. The backend now accepts the
+optional upload field for YouTube jobs and returns the API's explicit 400
+validation errors instead of FastAPI's 422 errors. Python 3.12 is pinned for
+the backend and CI, with Basic Pitch installed separately through the ONNX
+setup script and setuptools capped for resampy compatibility.
+
+Verification passed on `ampere-dev`:
+- `flutter test`: 187 tests passed
+- backend `pytest`: 39 tests passed
+- `git diff --check`: clean
+
+## 2026-08-21: MVP cleanup and coverage
+
+Updated the README to match the current routed import and practice flow. Added
+scroll and transport coverage, plus tests for the detector threshold and the
+engine's canonical note order. The controller now waits for progress writes,
+and pitch-quality filtering lives in the audio layer instead of being repeated
+in the scoring engine. The Flutter suite passes 182 tests on `ampere-dev`.
+
 ## 2026-08-20: Audio ingestion backend and app-side flow merged to main
 
 Branch `audio-ingestion-backend` merged into `main` in the standalone
