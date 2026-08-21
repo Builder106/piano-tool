@@ -534,7 +534,7 @@ class LevelRepository {
 /// from the persisted store.
 final FutureProvider<LevelRepository> levelRepositoryProvider =
     FutureProvider<LevelRepository>(
-        (final FutureProviderRef<LevelRepository> ref) async {
+        (final Ref ref) async {
   final LevelRepository repository = LevelRepository();
   final IngestionRepository ingestion =
       await ref.watch(ingestionRepositoryProvider.future);

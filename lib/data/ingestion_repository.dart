@@ -281,7 +281,7 @@ class IngestionException implements Exception {
 /// Riverpod provider for IngestionRepository
 final FutureProvider<IngestionRepository> ingestionRepositoryProvider =
     FutureProvider<IngestionRepository>(
-        (final FutureProviderRef<IngestionRepository> ref) async {
+        (final Ref ref) async {
   // Base URL can be configured via --dart-define=INGESTION_API_BASE_URL
   const String baseUrl = String.fromEnvironment(
     'INGESTION_API_BASE_URL',

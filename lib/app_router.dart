@@ -10,7 +10,7 @@ import '../ui/practice/practice_screen.dart';
 
 /// GoRouter configuration for the app
 final FutureProvider<GoRouter> appRouterProvider =
-    FutureProvider<GoRouter>((final FutureProviderRef<GoRouter> ref) async {
+    FutureProvider<GoRouter>((final Ref ref) async {
   await ref.watch(ingestionRepositoryProvider.future);
 
   return GoRouter(
