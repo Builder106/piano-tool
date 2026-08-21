@@ -25,6 +25,7 @@ dependencies = [
     "python-multipart",
     "httpx",
     "yt-dlp",
+    "basic-pitch",
 ]
 
 [project.optional-dependencies]
