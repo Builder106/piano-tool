@@ -15,7 +15,10 @@ pydantic>=2
 python-multipart
 httpx
 pytest
+pytest-asyncio
+pytest-cov
 yt-dlp
 ruff
 black
 mypy
+basic-pitch
