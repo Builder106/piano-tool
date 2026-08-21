@@ -1,6 +1,6 @@
 import numpy as np
 import soundfile as sf
-from fastapi.testclient import TestClient
+from starlette.testclient import TestClient
 
 from app.main import app
 from app.quantize import NoteEvent

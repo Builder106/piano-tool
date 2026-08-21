@@ -48,5 +48,31 @@ void main() {
       final event = detector.processBuffer(silentBuffer);
       expect(event, isNull);
     });
+
+    test('uses the configured volume threshold before emitting a pitch', () {
+      final quietA4 = List<int>.generate(bufferSize, (i) {
+        final t = i / sampleRate;
+        return (math.sin(2 * math.pi * 440.0 * t) * 2000).round();
+      });
+      final permissive = PitchDetector(
+        config: const AudioEngineConfig(
+          sampleRate: sampleRate,
+          bufferSize: bufferSize,
+          minVolumeThreshold: 0.01,
+          minConfidenceThreshold: 0,
+        ),
+      );
+      final restrictive = PitchDetector(
+        config: const AudioEngineConfig(
+          sampleRate: sampleRate,
+          bufferSize: bufferSize,
+          minVolumeThreshold: 0.1,
+          minConfidenceThreshold: 0,
+        ),
+      );
+
+      expect(permissive.processBuffer(quietA4), isNotNull);
+      expect(restrictive.processBuffer(quietA4), isNull);
+    });
   });
 }

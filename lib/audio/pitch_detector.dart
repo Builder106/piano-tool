@@ -112,7 +112,7 @@ class PitchDetector {
             .reduce((final double a, final double b) => a + b) /
         samples.length);
 
-    if (rms < 0.01) {
+    if (rms < config.minVolumeThreshold) {
       return null;
     }
 

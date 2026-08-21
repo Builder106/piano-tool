@@ -1,3 +1,5 @@
+import numpy as np
+import soundfile as sf
 from basic_pitch import ICASSP_2022_MODEL_PATH
 from basic_pitch.inference import predict
 
@@ -5,6 +7,10 @@ from app.quantize import NoteEvent
 
 
 def transcribe(audio_path: str) -> list[NoteEvent]:
+    audio, _ = sf.read(audio_path, always_2d=False)
+    if audio.size == 0 or float(np.max(np.abs(audio))) == 0.0:
+        return []
+
     _, _, note_events = predict(
         # Pass the ICASSP 2022 model path explicitly -- basic-pitch's default
         # model resolution tries to load a TensorFlow SavedModel, and

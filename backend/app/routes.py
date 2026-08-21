@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -28,9 +28,9 @@ def _to_response(job: Job) -> JobResponse:
 @router.post("/jobs", status_code=202)
 async def create_job(
     title: str = Form(...),
-    source: Literal["upload", "youtube"] = Form(...),
+    source: str = Form(...),
     youtube_url: str | None = Form(default=None),
-    audio: UploadFile | None = File(),  # noqa: B008
+    audio: UploadFile | None = File(default=None),  # noqa: B008
 ) -> JobResponse:
     if source not in ("upload", "youtube"):
         raise HTTPException(status_code=400, detail="source must be 'upload' or 'youtube'")
@@ -44,7 +44,12 @@ async def create_job(
         )
 
     upload_bytes = await audio.read() if audio is not None else None
-    job_id = store.submit(source, title, upload_bytes=upload_bytes, youtube_url=youtube_url)
+    job_id = store.submit(
+        cast(Literal["upload", "youtube"], source),
+        title,
+        upload_bytes=upload_bytes,
+        youtube_url=youtube_url,
+    )
     # Build the response from the known state at submission time rather than
     # re-reading from the store: the job runs on a background thread, so a
     # re-fetch here can race and report "downloading" instead of "queued".

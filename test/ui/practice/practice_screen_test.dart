@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/models/engine_models.dart';
 import 'package:piano_tool/ui/keyboard/keyboard_geometry.dart';
@@ -11,6 +14,7 @@ import 'package:piano_tool/ui/practice/practice_hud.dart';
 import 'package:piano_tool/ui/practice/practice_screen.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
 import 'package:piano_tool/ui/practice/transport_column.dart';
+import 'package:piano_tool/ui/results/results_screen.dart';
 import 'package:piano_tool/ui/staff/staff_view.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
@@ -70,6 +74,26 @@ const _sizes = [Size(640, 360), Size(740, 360), Size(915, 412)];
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  // Goldens are byte-exact and font rasterisation differs by host, so this is
+  // generated and verified on Linux, matching the staff golden convention.
+  testWidgets(
+    'golden: practice screen, light, idle',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(740, 360));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(_harness());
+      // The permission gate resolves its granted state after the first build.
+      await tester.pump();
+
+      await expectLater(
+        find.byType(Scaffold),
+        matchesGoldenFile('goldens/practice_screen_light_idle.png'),
+      );
+    },
+    skip: !Platform.isLinux,
+  );
+
   for (final size in _sizes) {
     testWidgets('renders without overflow at ${size.width}x${size.height}',
         (tester) async {
@@ -111,6 +135,8 @@ void main() {
     // 580 is the header's usable width on the narrowest phone once the
     // transport column is taken out.
     await tester.pumpWidget(_hud(textScale: 3.0, width: 580));
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump();
     await tester.pump();
 
     expect(tester.takeException(), isNull);
@@ -125,6 +151,8 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(_hud(textScale: 1.0, width: 580));
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump();
     await tester.pump();
     expect(tester.getSize(find.byType(PracticeHud)).height,
         greaterThanOrEqualTo(PracticeHud.minHeight));
@@ -215,7 +243,71 @@ void main() {
     }
   });
 
-  testWidgets('finishing a stage shows a completion SnackBar', (tester) async {
+  testWidgets('transport controls drive play, pause, stop, and replay states',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(740, 360));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final container = ProviderContainer(
+      overrides: [
+        audioGrantedProvider.overrideWith((ref) async => true),
+        levelRepositoryProvider
+            .overrideWith((ref) => SynchronousFuture(LevelRepository())),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: _screen()),
+    );
+    await tester.pump();
+
+    expect(container.read(engineStatusProvider('stage_1')),
+        StageEngineStatus.idle);
+    expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.play_arrow));
+    await tester.pump();
+    expect(container.read(engineStatusProvider('stage_1')),
+        StageEngineStatus.playing);
+    expect(find.byIcon(Icons.pause), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pump();
+    final positionBeforePause =
+        container.read(currentBeatProvider('stage_1'));
+    expect(positionBeforePause, greaterThan(0));
+
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+    expect(container.read(engineStatusProvider('stage_1')),
+        StageEngineStatus.paused);
+    expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.play_arrow));
+    await tester.pump();
+    expect(container.read(engineStatusProvider('stage_1')),
+        StageEngineStatus.playing);
+
+    await tester.tap(find.byIcon(Icons.stop));
+    await tester.pump();
+    expect(container.read(engineStatusProvider('stage_1')),
+        StageEngineStatus.stopped);
+    expect(container.read(currentBeatProvider('stage_1')),
+        closeTo(positionBeforePause, 0.2));
+
+    await tester.tap(find.byIcon(Icons.replay));
+    await tester.pump();
+    expect(container.read(engineStatusProvider('stage_1')),
+        StageEngineStatus.playing);
+    expect(container.read(currentBeatProvider('stage_1')), 0);
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump();
+    await tester.pump();
+    container.dispose();
+  });
+
+  testWidgets('finishing a stage routes to its results', (tester) async {
     await tester.binding.setSurfaceSize(const Size(740, 360));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -232,8 +324,34 @@ void main() {
     );
     addTearDown(container.dispose);
 
+    final router = GoRouter(
+      initialLocation: '/practice/stage_1',
+      routes: [
+        GoRoute(
+          path: '/practice/:stageId',
+          name: 'practice',
+          builder: (_, state) =>
+              PracticeScreen(stageId: state.pathParameters['stageId']!),
+        ),
+        GoRoute(
+          path: '/results/:stageId',
+          name: 'results',
+          builder: (_, state) => ResultsScreen(
+            result: state.extra! as StageResult,
+            onReplay: () {},
+            onReturnToLevels: () {},
+          ),
+        ),
+      ],
+    );
     await tester.pumpWidget(
-      UncontrolledProviderScope(container: container, child: _screen()),
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          theme: PianoTheme.light(),
+          routerConfig: router,
+        ),
+      ),
     );
     // The permission gate resolves a frame after the first build.
     await tester.pump();
@@ -246,13 +364,13 @@ void main() {
     await tester.pump(const Duration(seconds: 13));
     await tester.pump();
 
-    expect(container.read(engineStatusProvider('stage_1')),
-        StageEngineStatus.completed);
-    // The legacy screen's "Stage Completed!" dialog was deleted along with
-    // it and nothing replaced it; this SnackBar is the smallest thing that
-    // closes that regression.
-    expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.textContaining('Stage complete'), findsOneWidget);
+    expect(find.byType(ResultsScreen), findsOneWidget);
+    expect(find.text('Stage complete'), findsOneWidget);
+    expect(find.text('0%'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump();
+    await tester.pump();
+    container.dispose();
   });
 
   testWidgets('leaving the screen stops the engine', (tester) async {
@@ -286,6 +404,7 @@ void main() {
     // Navigating away must not leave a periodic timer marking notes missed.
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
     expect(container.read(engineStatusProvider('stage_1')),
         StageEngineStatus.stopped);
   });

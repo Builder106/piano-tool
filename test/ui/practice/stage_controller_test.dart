@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:piano_tool/data/level_repository.dart';
+import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/audio_models.dart';
 import 'package:piano_tool/models/engine_models.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
@@ -13,7 +14,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  ProviderContainer harness() => ProviderContainer(
+  ProviderContainer harness({ProgressRepository? progressRepository}) =>
+      ProviderContainer(
         overrides: [
           audioGrantedProvider.overrideWith((ref) async => true),
           // stageControllerProvider reads levelRepositoryProvider
@@ -23,8 +25,29 @@ void main() {
           // do since nothing here awaits it first.
           levelRepositoryProvider
               .overrideWith((ref) => SynchronousFuture(LevelRepository())),
+          if (progressRepository != null)
+            progressRepositoryProvider.overrideWithValue(progressRepository),
         ],
       );
+
+  test('start awaits persistence of the last played stage', () async {
+    final writeGate = Completer<void>();
+    final progressRepository = _DelayedProgressRepository(writeGate);
+    final c = harness(progressRepository: progressRepository);
+    addTearDown(c.dispose);
+    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+    final started = ctrl.start();
+    final observed = started.then((_) => progressRepository.startCompleted = true);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(progressRepository.recordedLastPlayedStageId, 'stage_1');
+    expect(progressRepository.startCompleted, isFalse);
+
+    writeGate.complete();
+    await observed;
+    expect(progressRepository.startCompleted, isTrue);
+  });
 
   test('starts idle at beat zero with a real level', () {
     final c = harness();
@@ -52,12 +75,12 @@ void main() {
     expect(c.read(stageControllerProvider('stage_1')).speed, 0.5);
   });
 
-  test('stop holds position while replay returns to the start', () {
+  test('stop holds position while replay returns to the start', () async {
     final c = harness();
     addTearDown(c.dispose);
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-    ctrl.start();
+    await ctrl.start();
     ctrl.seekTo(4);
     expect(c.read(stageControllerProvider('stage_1')).currentBeat, 4);
 
@@ -93,12 +116,12 @@ void main() {
     expect(() => c.read(stageControllerProvider('nope')), throwsStateError);
   });
 
-  test('stop clears sounding, and a pitch afterward does not relight it', () {
+  test('stop clears sounding, and a pitch afterward does not relight it', () async {
     final c = harness();
     addTearDown(c.dispose);
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-    ctrl.start();
+    await ctrl.start();
     ctrl.onPitch(const PitchEvent(
       frequency: 440,
       confidence: 1.0,
@@ -131,7 +154,7 @@ void main() {
     addTearDown(c.dispose);
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-    ctrl.start();
+    await ctrl.start();
     ctrl.onPitch(const PitchEvent(
       frequency: 440,
       confidence: 1.0,
@@ -150,12 +173,12 @@ void main() {
         reason: 'the note must not stay lit forever after going silent');
   });
 
-  test('a paused transport does not light the keyboard from a stray pitch', () {
+  test('a paused transport does not light the keyboard from a stray pitch', () async {
     final c = harness();
     addTearDown(c.dispose);
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-    ctrl.start();
+    await ctrl.start();
     ctrl.pause();
     ctrl.onPitch(const PitchEvent(
       frequency: 440,
@@ -167,12 +190,12 @@ void main() {
     expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty);
   });
 
-  test('pause clears an already-lit key, same as stop', () {
+  test('pause clears an already-lit key, same as stop', () async {
     final c = harness();
     addTearDown(c.dispose);
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-    ctrl.start();
+    await ctrl.start();
     ctrl.onPitch(const PitchEvent(
       frequency: 440,
       confidence: 1.0,
@@ -206,7 +229,7 @@ void main() {
     addTearDown(c.dispose);
 
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
-    ctrl.start();
+    await ctrl.start();
 
     pitchController.addError(Exception('device disconnected'));
     await Future<void>.delayed(Duration.zero);
@@ -231,4 +254,18 @@ void main() {
 
     expect(c.read(stageControllerProvider('stage_1')).sounding, {69});
   });
+}
+
+class _DelayedProgressRepository extends ProgressRepository {
+  _DelayedProgressRepository(this._writeGate);
+
+  final Completer<void> _writeGate;
+  String? recordedLastPlayedStageId;
+  bool startCompleted = false;
+
+  @override
+  Future<void> setLastPlayed(String stageId) async {
+    recordedLastPlayedStageId = stageId;
+    await _writeGate.future;
+  }
 }

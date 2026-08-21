@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../models/engine_models.dart';
 import '../../models/level_models.dart';
@@ -9,6 +10,7 @@ import '../keyboard/piano_keyboard_view.dart';
 import '../staff/staff_geometry.dart';
 import '../staff/staff_painter.dart';
 import '../staff/staff_view.dart';
+import '../results/results_screen.dart';
 import 'mic_permission_gate.dart';
 import 'practice_hud.dart';
 import 'stage_controller.dart';
@@ -39,24 +41,27 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   /// dispose runs.
   late final StageController _controller;
   StreamSubscription<StageEvent>? _completionSub;
+  var _showingResults = false;
 
   @override
   void initState() {
     super.initState();
     _controller = ref.read(stageControllerProvider(widget.stageId).notifier);
 
-    // The legacy screen showed a "Stage Completed!" dialog; nothing replaced
-    // it once that screen was deleted, so the transport just went silent at
-    // the end. This listens to the same completion signal the controller
-    // already uses to write progress, and gives the learner a lightweight
-    // acknowledgement instead of a proper results screen, which is Plan 3's job.
     _completionSub = _controller.events.listen((event) {
       event.whenOrNull(stageCompleted: (accuracy, score, totalNotes, hitNotes) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Stage complete — score $score, ${(accuracy * 100).round()}% accuracy'),
+        if (!mounted || _showingResults) return;
+        _showingResults = true;
+        context.goNamed(
+          'results',
+          pathParameters: {'stageId': widget.stageId},
+          extra: StageResult(
+            stageId: widget.stageId,
+            title: _controller.state.level.title,
+            score: score,
+            accuracy: accuracy,
+            totalNotes: totalNotes,
+            hitNotes: hitNotes,
           ),
         );
       });
@@ -70,7 +75,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     // is not autoDispose, so leaving mid-song would keep the song running,
     // marking notes missed and eventually recording a completion the learner
     // never played.
-    if (_controller.mounted) _controller.stop();
+    if (_controller.mounted) _controller.stop(notify: false);
     super.dispose();
   }
 

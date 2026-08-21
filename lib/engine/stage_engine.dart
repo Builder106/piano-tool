@@ -155,7 +155,6 @@ class StageEngine extends ChangeNotifier {
   /// Process a pitch event from the audio engine
   void processPitchEvent(PitchEvent event) {
     if (_state.engineState != StageEngineStatus.playing) return;
-    if (event.confidence < 0.7 || event.volume < 0.1) return;
 
     final currentBeat = _state.currentBeat;
     _tryMatchNote(event.midiNote, currentBeat);

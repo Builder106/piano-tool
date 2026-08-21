@@ -97,6 +97,7 @@ class StageController extends StateNotifier<StageUiState> {
   final String _stageId;
   final ProgressRepository _progress;
   StreamSubscription<StageEvent>? _sub;
+  Future<void> _progressWrites = Future<void>.value();
 
   /// The engine's own event stream, exposed so the screen can react to the
   /// same completion signal that [_onEvent] already uses to write progress,
@@ -114,10 +115,10 @@ class StageController extends StateNotifier<StageUiState> {
   static const double minSpeed = 0.5;
   static const double maxSpeed = 2.0;
 
-  void start() {
+  Future<void> start() async {
     _engine.start();
-    _progress.setLastPlayed(_stageId);
     _sync();
+    await _progress.setLastPlayed(_stageId);
   }
 
   void pause() {
@@ -133,11 +134,11 @@ class StageController extends StateNotifier<StageUiState> {
   }
 
   /// Halts and holds position. Distinct from [replay], which rewinds.
-  void stop() {
+  void stop({final bool notify = true}) {
     _engine.stop();
-    _sync();
+    if (notify) _sync();
     // Nothing is being listened for once stopped, so no key should stay lit.
-    _clearSounding();
+    _clearSounding(notify: notify);
   }
 
   /// A detected pitch both scores against the level and lights the keyboard.
@@ -145,8 +146,7 @@ class StageController extends StateNotifier<StageUiState> {
   /// The microphone keeps listening across Stop and Pause -- [stop] only
   /// halts the [StageEngine], not the audio engine -- so without this guard a
   /// stray tail of a decaying note (or a hand still on the keys) would relight
-  /// a key on a keyboard whose transport reads "stopped." Mirrors the same
-  /// check [StageEngine.processPitchEvent] already applies internally.
+  /// a key on a keyboard whose transport reads "stopped."
   void onPitch(PitchEvent event) {
     if (state.status != StageEngineStatus.playing) return;
     _engine.processPitchEvent(event);
@@ -162,15 +162,16 @@ class StageController extends StateNotifier<StageUiState> {
   /// fires without a fresh detection refreshing it.
   void _dropSounding(int note) {
     _soundingTimers.remove(note);
-    if (!state.sounding.contains(note)) return;
+    if (!mounted || !state.sounding.contains(note)) return;
     state = state.copyWith(sounding: {...state.sounding}..remove(note));
   }
 
-  void _clearSounding() {
+  void _clearSounding({final bool notify = true}) {
     for (final timer in _soundingTimers.values) {
       timer.cancel();
     }
     _soundingTimers.clear();
+    if (!notify || !mounted) return;
     state = state.copyWith(sounding: const {});
   }
 
@@ -194,12 +195,20 @@ class StageController extends StateNotifier<StageUiState> {
 
   void _onEvent(StageEvent event) {
     _sync();
-    event.whenOrNull(stageCompleted: (accuracy, score, totalNotes, hitNotes) {
-      _progress.record(stageId: _stageId, accuracy: accuracy, score: score);
-    });
+    event.whenOrNull(
+      stageCompleted: (accuracy, score, totalNotes, hitNotes) =>
+          _progressWrites = _progressWrites.then(
+            (_) => _progress.record(
+              stageId: _stageId,
+              accuracy: accuracy,
+              score: score,
+            ),
+          ),
+    );
   }
 
   void _sync() {
+    if (!mounted) return;
     final s = _engine.state;
     state = state.copyWith(
       noteStates: List.of(s.noteStates),
@@ -241,17 +250,13 @@ final stageControllerProvider =
   }
 
   final engine = StageEngine(level: stage.level);
-  final notes = [
-    for (final m in stage.level.measures) ...m.notes,
-  ]..sort((a, b) => a.startBeat.compareTo(b.startBeat));
-
   final controller = StageController(
     engine,
     stageId,
     ref.read(progressRepositoryProvider),
     StageUiState(
       level: stage.level,
-      notes: notes,
+      notes: engine.allNotes,
       noteStates: List.of(engine.state.noteStates),
       currentBeat: 0,
       score: 0,
