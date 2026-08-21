@@ -32,7 +32,7 @@ class Job:
 class JobStore:
     def __init__(self, max_workers: int = 2):
         self._jobs: dict[str, Job] = {}
-        self._futures: dict[str, Future] = {}
+        self._futures: dict[str, Future[None]] = {}
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
 
     def submit(
@@ -90,14 +90,12 @@ class JobStore:
                 job.status = "transcribing"
                 note_events = transcribe(audio_path)
                 if not note_events:
-                    raise NoNotesDetectedError("Didn't find any notes in that audio")
+                    raise NoNotesDetectedError()
 
                 tempo_bpm = estimate_tempo(audio_path)
                 if tempo_bpm <= 0:
                     tempo_bpm = DEFAULT_TEMPO_BPM
-                job.level = quantize_notes(
-                    note_events, tempo_bpm, level_id=job.job_id, title=title
-                )
+                job.level = quantize_notes(note_events, tempo_bpm, level_id=job.job_id, title=title)
                 job.status = "done"
         except (AudioTooLongError, YoutubeUnavailableError, NoNotesDetectedError) as error:
             job.status = "failed"

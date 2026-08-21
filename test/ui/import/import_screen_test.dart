@@ -67,7 +67,8 @@ void main() {
       expect(find.text('Record'), findsOneWidget);
     });
 
-    testWidgets('defaults to the file source with submit disabled', (tester) async {
+    testWidgets('defaults to the file source with submit disabled',
+        (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -89,7 +90,8 @@ void main() {
       expect(find.widgetWithText(TextField, 'YouTube URL'), findsOneWidget);
     });
 
-    testWidgets('submit is disabled until a YouTube URL is entered', (tester) async {
+    testWidgets('submit is disabled until a YouTube URL is entered',
+        (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -113,7 +115,8 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('submitting a YouTube URL polls and navigates to ReviewScreen on success',
+    testWidgets(
+        'submitting a YouTube URL polls and navigates to ReviewScreen on success',
         (tester) async {
       when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-123');
       when(mockRepo.pollJob('job-123')).thenAnswer(
@@ -147,7 +150,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Review: job-123'), findsOneWidget);
-      verify(mockRepo.submitYoutubeUrl('https://youtube.com/watch?v=abc')).called(1);
+      verify(mockRepo.submitYoutubeUrl('https://youtube.com/watch?v=abc'))
+          .called(1);
     });
 
     testWidgets('progresses through downloading and transcribing before done',
@@ -241,7 +245,8 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('shows an error when the submission itself throws', (tester) async {
+    testWidgets('shows an error when the submission itself throws',
+        (tester) async {
       when(mockRepo.submitYoutubeUrl(any))
           .thenThrow(IngestionException('Failed to submit YouTube URL: 500'));
 
@@ -262,7 +267,8 @@ void main() {
       expect(find.text('Failed to submit YouTube URL: 500'), findsOneWidget);
     });
 
-    testWidgets('shows a validation error for a non-YouTube URL and does not submit',
+    testWidgets(
+        'shows a validation error for a non-YouTube URL and does not submit',
         (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
@@ -285,7 +291,8 @@ void main() {
     testWidgets('accepts a youtu.be short URL', (tester) async {
       when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-short');
       when(mockRepo.pollJob('job-short')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: level),
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -311,8 +318,10 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('cancel button stops polling and calls cancelJob', (tester) async {
-      when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-cancel');
+    testWidgets('cancel button stops polling and calls cancelJob',
+        (tester) async {
+      when(mockRepo.submitYoutubeUrl(any))
+          .thenAnswer((_) async => 'job-cancel');
       when(mockRepo.pollJob('job-cancel')).thenAnswer(
         (_) async => IngestionJobResult(status: IngestionJobStatus.queued),
       );
@@ -343,8 +352,10 @@ void main() {
       expect(find.widgetWithText(FilledButton, 'Submit'), findsOneWidget);
     });
 
-    testWidgets('polling times out and shows an error after the deadline', (tester) async {
-      when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-timeout');
+    testWidgets('polling times out and shows an error after the deadline',
+        (tester) async {
+      when(mockRepo.submitYoutubeUrl(any))
+          .thenAnswer((_) async => 'job-timeout');
       when(mockRepo.pollJob('job-timeout')).thenAnswer(
         (_) async => IngestionJobResult(status: IngestionJobStatus.queued),
       );
@@ -369,14 +380,16 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(find.text('Transcription timed out. Please try again.'), findsOneWidget);
+      expect(find.text('Transcription timed out. Please try again.'),
+          findsOneWidget);
       final button = tester.widget<FilledButton>(
         find.widgetWithText(FilledButton, 'Submit'),
       );
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('record source is gated behind MicPermissionGate', (tester) async {
+    testWidgets('record source is gated behind MicPermissionGate',
+        (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -386,7 +399,8 @@ void main() {
       expect(find.text('Start Recording'), findsOneWidget);
     });
 
-    testWidgets('record source shows the denied state when the mic is unavailable',
+    testWidgets(
+        'record source shows the denied state when the mic is unavailable',
         (tester) async {
       await tester.pumpWidget(
         ProviderScope(

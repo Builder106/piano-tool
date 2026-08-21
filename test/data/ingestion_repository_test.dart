@@ -24,7 +24,8 @@ void main() {
     setUp(() {
       final mockClient = MockClient((request) async {
         if (request.url.path == '/jobs' && request.method == 'POST') {
-          return http.Response('{"job_id": "job-123", "status": "queued"}', 202);
+          return http.Response(
+              '{"job_id": "job-123", "status": "queued"}', 202);
         }
         if (request.url.path.startsWith('/jobs/') && request.method == 'GET') {
           return http.Response(
@@ -77,8 +78,10 @@ void main() {
         if (request.url.path == '/jobs' && request.method == 'POST') {
           final body = request.body;
           expect(body, contains('"source":"youtube"'));
-          expect(body, contains('"youtube_url":"https://youtube.com/watch?v=abc"'));
-          return http.Response('{"job_id": "job-456", "status": "queued"}', 202);
+          expect(body,
+              contains('"youtube_url":"https://youtube.com/watch?v=abc"'));
+          return http.Response(
+              '{"job_id": "job-456", "status": "queued"}', 202);
         }
         return http.Response('Not found', 404);
       });
@@ -88,18 +91,21 @@ void main() {
         prefs: prefs,
       );
 
-      final jobId = await repository.submitYoutubeUrl('https://youtube.com/watch?v=abc');
+      final jobId =
+          await repository.submitYoutubeUrl('https://youtube.com/watch?v=abc');
       expect(jobId, 'job-456');
     });
 
-    test('pollJob returns IngestionJobResult with done status and level', () async {
+    test('pollJob returns IngestionJobResult with done status and level',
+        () async {
       final status = await repository.pollJob('job-123');
       expect(status.status, IngestionJobStatus.done);
       expect(status.level, isNotNull);
       expect(status.level!.title, 'Test Level');
     });
 
-    test('pollJob returns IngestionJobResult with failed status and error', () async {
+    test('pollJob returns IngestionJobResult with failed status and error',
+        () async {
       final mockClient = MockClient((request) async {
         if (request.url.path == '/jobs/job-123' && request.method == 'GET') {
           return http.Response(
@@ -123,7 +129,8 @@ void main() {
       expect(status.error, 'No notes detected');
     });
 
-    test('saveLevel persists level and appears in listImportedLevels', () async {
+    test('saveLevel persists level and appears in listImportedLevels',
+        () async {
       const level = LevelModel(
         id: 'imported_1',
         title: 'Imported Song',
@@ -142,7 +149,8 @@ void main() {
       expect(levels.first.title, 'Imported Song');
     });
 
-    test('listImportedLevels returns empty list when no levels saved', () async {
+    test('listImportedLevels returns empty list when no levels saved',
+        () async {
       final levels = await repository.listImportedLevels();
       expect(levels, isEmpty);
     });
@@ -176,8 +184,10 @@ void main() {
 
       final mockClient = MockClient((request) async {
         if (request.url.path == '/jobs' && request.method == 'POST') {
-          expect(request.headers['content-type'], contains('multipart/form-data'));
-          return http.Response('{"job_id": "job-upload-1", "status": "queued"}', 202);
+          expect(
+              request.headers['content-type'], contains('multipart/form-data'));
+          return http.Response(
+              '{"job_id": "job-upload-1", "status": "queued"}', 202);
         }
         return http.Response('Not found', 404);
       });
@@ -223,7 +233,8 @@ void main() {
       );
     });
 
-    test('submitYoutubeUrl wraps a ClientException as an IngestionException', () async {
+    test('submitYoutubeUrl wraps a ClientException as an IngestionException',
+        () async {
       final mockClient = MockClient((request) async {
         throw http.ClientException('Connection refused');
       });
@@ -239,7 +250,8 @@ void main() {
       );
     });
 
-    test('submitUpload uses a content type derived from the file extension', () async {
+    test('submitUpload uses a content type derived from the file extension',
+        () async {
       final tempFile = File(
         '${Directory.systemTemp.path}/ingestion_repository_test_mp3_${DateTime.now().microsecondsSinceEpoch}.mp3',
       );
@@ -254,7 +266,8 @@ void main() {
         final body = utf8.decode(request.bodyBytes);
         // Multipart body uses lowercase 'content-type:' header
         expect(body, contains('content-type: audio/mpeg'));
-        return http.Response('{"job_id": "job-mp3-1", "status": "queued"}', 202);
+        return http.Response(
+            '{"job_id": "job-mp3-1", "status": "queued"}', 202);
       });
       repository = IngestionRepository(
         client: mockClient,
@@ -266,7 +279,8 @@ void main() {
       expect(jobId, 'job-mp3-1');
     });
 
-    test('submitUpload falls back to octet-stream for an unknown extension', () async {
+    test('submitUpload falls back to octet-stream for an unknown extension',
+        () async {
       final tempFile = File(
         '${Directory.systemTemp.path}/ingestion_repository_test_xyz_${DateTime.now().microsecondsSinceEpoch}.xyz',
       );
@@ -278,7 +292,8 @@ void main() {
       final mockClient = MockClient((request) async {
         final body = utf8.decode(request.bodyBytes);
         expect(body, contains('content-type: application/octet-stream'));
-        return http.Response('{"job_id": "job-xyz-1", "status": "queued"}', 202);
+        return http.Response(
+            '{"job_id": "job-xyz-1", "status": "queued"}', 202);
       });
       repository = IngestionRepository(
         client: mockClient,
@@ -324,8 +339,10 @@ void main() {
       final mockClient = MockClient((request) async {
         if (request.url.path == '/jobs' && request.method == 'POST') {
           // For multipart requests, body is not JSON - just verify it's a multipart request
-          expect(request.headers['content-type'], contains('multipart/form-data'));
-          return http.Response('{"job_id": "job-789", "status": "queued"}', 202);
+          expect(
+              request.headers['content-type'], contains('multipart/form-data'));
+          return http.Response(
+              '{"job_id": "job-789", "status": "queued"}', 202);
         }
         return http.Response('Not found', 404);
       });
@@ -335,7 +352,8 @@ void main() {
         prefs: prefs,
       );
 
-      final jobId = await repository.submitRecording(Uint8List.fromList([1, 2, 3, 4, 5]));
+      final jobId =
+          await repository.submitRecording(Uint8List.fromList([1, 2, 3, 4, 5]));
       expect(jobId, 'job-789');
     });
   });

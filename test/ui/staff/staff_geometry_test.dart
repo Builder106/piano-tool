@@ -10,8 +10,8 @@ void main() {
   });
 
   test('lines run top to bottom at even spacing', () {
-    expect(g.lineY(0), 10);   // top line
-    expect(g.lineY(4), 90);   // bottom line
+    expect(g.lineY(0), 10); // top line
+    expect(g.lineY(4), 90); // bottom line
     expect(g.topLineY, 10);
     expect(g.bottomLineY, 90);
   });

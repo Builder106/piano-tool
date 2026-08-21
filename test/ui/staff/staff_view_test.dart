@@ -7,16 +7,22 @@ import 'package:piano_tool/ui/staff/staff_painter.dart';
 import 'package:piano_tool/ui/staff/staff_view.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
-const _treble = (clef: Clef.treble, notes: <PlacedNote>[
-  (midi: 60, startBeat: 0, state: NoteState.hitPerfect),
-  (midi: 64, startBeat: 1, state: NoteState.missed),
-  (midi: 67, startBeat: 2, state: NoteState.active),
-  (midi: 72, startBeat: 3, state: NoteState.upcoming),
-]);
-const _bass = (clef: Clef.bass, notes: <PlacedNote>[
-  (midi: 48, startBeat: 0, state: NoteState.hitGood),
-  (midi: 55, startBeat: 2, state: NoteState.upcoming),
-]);
+const _treble = (
+  clef: Clef.treble,
+  notes: <PlacedNote>[
+    (midi: 60, startBeat: 0, state: NoteState.hitPerfect),
+    (midi: 64, startBeat: 1, state: NoteState.missed),
+    (midi: 67, startBeat: 2, state: NoteState.active),
+    (midi: 72, startBeat: 3, state: NoteState.upcoming),
+  ]
+);
+const _bass = (
+  clef: Clef.bass,
+  notes: <PlacedNote>[
+    (midi: 48, startBeat: 0, state: NoteState.hitGood),
+    (midi: 55, startBeat: 2, state: NoteState.upcoming),
+  ]
+);
 
 Widget _harness(ThemeData theme, List<StaffSystem> systems) => MaterialApp(
       theme: theme,
@@ -96,7 +102,8 @@ void main() {
 
   testWidgets('renders a grand staff without overflow', (tester) async {
     await _pinSurfaceSize(tester);
-    await tester.pumpWidget(_harness(PianoTheme.light(), const [_treble, _bass]));
+    await tester
+        .pumpWidget(_harness(PianoTheme.light(), const [_treble, _bass]));
     expect(tester.takeException(), isNull);
   });
 
@@ -130,7 +137,8 @@ void main() {
     'golden: grand staff, light',
     (tester) async {
       await _pinSurfaceSize(tester);
-      await tester.pumpWidget(_harness(PianoTheme.light(), const [_treble, _bass]));
+      await tester
+          .pumpWidget(_harness(PianoTheme.light(), const [_treble, _bass]));
       await expectLater(find.byType(StaffView),
           matchesGoldenFile('goldens/staff_grand_light.png'));
     },

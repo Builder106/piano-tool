@@ -10,7 +10,8 @@ def transcribe(audio_path: str) -> list[NoteEvent]:
         # model resolution tries to load a TensorFlow SavedModel, and
         # TensorFlow is deliberately never installed on this VM (see
         # requirements.txt and scripts/install_basic_pitch.sh).
-        audio_path, model_or_model_path=str(ICASSP_2022_MODEL_PATH)
+        audio_path,
+        model_or_model_path=str(ICASSP_2022_MODEL_PATH),
     )
     return [
         NoteEvent(

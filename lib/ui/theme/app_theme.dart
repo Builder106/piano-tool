@@ -13,7 +13,8 @@ class PianoColorsExtension extends ThemeExtension<PianoColorsExtension> {
       PianoColorsExtension(colors ?? this.colors);
 
   @override
-  PianoColorsExtension lerp(ThemeExtension<PianoColorsExtension>? other, double t) {
+  PianoColorsExtension lerp(
+      ThemeExtension<PianoColorsExtension>? other, double t) {
     if (other is! PianoColorsExtension) return this;
     final a = colors.argb;
     final b = other.colors.argb;
@@ -46,7 +47,9 @@ abstract final class PianoTheme {
           fontFamily: 'CormorantGaramond',
           fontWeight: FontWeight.values.firstWhere((w) => w.value == weight),
           fontVariations: [FontVariation('wght', weight.toDouble())],
-          fontSize: size, height: height, color: c.ink,
+          fontSize: size,
+          height: height,
+          color: c.ink,
         );
 
     TextStyle body(double size, int weight, double height, Color color,
@@ -55,9 +58,10 @@ abstract final class PianoTheme {
           fontFamily: 'IBMPlexSans',
           fontWeight: FontWeight.values.firstWhere((w) => w.value == weight),
           fontVariations: [FontVariation('wght', weight.toDouble())],
-          fontSize: size, height: height, color: color,
-          fontFeatures:
-              tabular ? const [FontFeature.tabularFigures()] : null,
+          fontSize: size,
+          height: height,
+          color: color,
+          fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
         );
 
     final text = TextTheme(
@@ -96,8 +100,10 @@ abstract final class PianoTheme {
       // Depth is weight and lightness, never shadow.
       cardTheme: const CardThemeData(elevation: 0, margin: EdgeInsets.zero),
       appBarTheme: AppBarTheme(
-          elevation: 0, scrolledUnderElevation: 0,
-          backgroundColor: c.paper2, foregroundColor: c.ink),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          backgroundColor: c.paper2,
+          foregroundColor: c.ink),
       dividerTheme: DividerThemeData(color: c.rule, thickness: 1, space: 1),
       extensions: [PianoColorsExtension(c)],
     );

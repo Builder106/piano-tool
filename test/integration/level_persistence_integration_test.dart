@@ -35,7 +35,8 @@ void main() {
         // real http.Client for one that can't hit a network in tests -- the
         // repository itself, and levelRepositoryProvider's hydration logic,
         // are the real production code.
-        ingestionRepositoryProvider.overrideWith((ref) async => ingestionRepository),
+        ingestionRepositoryProvider
+            .overrideWith((ref) async => ingestionRepository),
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
@@ -47,8 +48,8 @@ void main() {
             ),
             GoRoute(
               path: '/practice/:stageId',
-              builder: (_, state) =>
-                  Scaffold(body: Text('Practice: ${state.pathParameters['stageId']}')),
+              builder: (_, state) => Scaffold(
+                  body: Text('Practice: ${state.pathParameters['stageId']}')),
             ),
           ],
         ),
@@ -82,7 +83,8 @@ void main() {
     expect(find.text('Imported'), findsOneWidget);
   });
 
-  testWidgets('deleting an imported level removes it from IngestionRepository storage too',
+  testWidgets(
+      'deleting an imported level removes it from IngestionRepository storage too',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();

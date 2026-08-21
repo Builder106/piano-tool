@@ -24,8 +24,9 @@ void main() {
 
     // U+E050 gClef, U+E062 fClef in the SMuFL private-use range.
     for (final code in [0xE050, 0xE062]) {
-      final builder = ui.ParagraphBuilder(ui.ParagraphStyle(fontFamily: 'Bravura'))
-        ..addText(String.fromCharCode(code));
+      final builder =
+          ui.ParagraphBuilder(ui.ParagraphStyle(fontFamily: 'Bravura'))
+            ..addText(String.fromCharCode(code));
       final paragraph = builder.build()
         ..layout(const ui.ParagraphConstraints(width: 200));
       expect(paragraph.maxIntrinsicWidth, greaterThan(0),
@@ -37,8 +38,8 @@ void main() {
     final data = await rootBundle.load('assets/fonts/IBMPlexSans.ttf');
     final bytes = data.buffer.asUint8List();
     // 'fvar' table tag in the font directory.
-    final hasFvar = String.fromCharCodes(bytes.sublist(0, 4096))
-        .contains('fvar');
+    final hasFvar =
+        String.fromCharCodes(bytes.sublist(0, 4096)).contains('fvar');
     expect(hasFvar, isTrue);
   });
 }

@@ -43,25 +43,23 @@ def quantize_notes(
             title=title,
             description="Imported from audio",
             tempo=round(tempo_bpm),
-            beats_per_measure=beats_per_measure,
-            total_measures=0,
+            beatsPerMeasure=beats_per_measure,
+            totalMeasures=0,
             measures=[],
         )
 
-    last_measure_index = max(
-        int(start_beat // beats_per_measure) for _, start_beat, _ in placed
-    )
+    last_measure_index = max(int(start_beat // beats_per_measure) for _, start_beat, _ in placed)
     measures: list[LevelMeasure] = []
     for measure_index in range(last_measure_index + 1):
         measure_start_beat = float(measure_index * beats_per_measure)
         measure_end_beat = measure_start_beat + beats_per_measure
         notes_in_measure = [
             LevelNote(
-                midi_note=pitch,
-                start_beat=start_beat,
-                duration_beats=duration_beats,
-                measure_index=measure_index,
-                beat_index=int(math.floor(start_beat - measure_start_beat)),
+                midiNote=pitch,
+                startBeat=start_beat,
+                durationBeats=duration_beats,
+                measureIndex=measure_index,
+                beatIndex=math.floor(start_beat - measure_start_beat),
             )
             for pitch, start_beat, duration_beats in placed
             if measure_start_beat <= start_beat < measure_end_beat
@@ -69,8 +67,8 @@ def quantize_notes(
         measures.append(
             LevelMeasure(
                 index=measure_index,
-                start_beat=measure_start_beat,
-                beats_per_measure=beats_per_measure,
+                startBeat=measure_start_beat,
+                beatsPerMeasure=beats_per_measure,
                 notes=notes_in_measure,
             )
         )
@@ -80,7 +78,7 @@ def quantize_notes(
         title=title,
         description="Imported from audio",
         tempo=round(tempo_bpm),
-        beats_per_measure=beats_per_measure,
-        total_measures=len(measures),
+        beatsPerMeasure=beats_per_measure,
+        totalMeasures=len(measures),
         measures=measures,
     )

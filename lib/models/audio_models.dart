@@ -14,7 +14,8 @@ sealed class PitchEvent with _$PitchEvent {
     required double volume, // RMS volume 0.0 - 1.0
   }) = _PitchEvent;
 
-  factory PitchEvent.fromJson(Map<String, dynamic> json) => _$PitchEventFromJson(json);
+  factory PitchEvent.fromJson(Map<String, dynamic> json) =>
+      _$PitchEventFromJson(json);
 }
 
 /// Audio engine configuration
@@ -23,12 +24,15 @@ sealed class AudioEngineConfig with _$AudioEngineConfig {
   const factory AudioEngineConfig({
     @Default(44100) int sampleRate,
     @Default(2048) int bufferSize,
-    @Default(0.1) double minVolumeThreshold, // minimum volume to consider as note
-    @Default(0.7) double minConfidenceThreshold, // minimum confidence for pitch detection
+    @Default(0.1)
+    double minVolumeThreshold, // minimum volume to consider as note
+    @Default(0.7)
+    double minConfidenceThreshold, // minimum confidence for pitch detection
     @Default(440.0) double referenceFrequency, // A4 reference
   }) = _AudioEngineConfig;
 
-  factory AudioEngineConfig.fromJson(Map<String, dynamic> json) => _$AudioEngineConfigFromJson(json);
+  factory AudioEngineConfig.fromJson(Map<String, dynamic> json) =>
+      _$AudioEngineConfigFromJson(json);
 }
 
 /// Audio engine state
@@ -53,7 +57,8 @@ sealed class AudioEngineStatus with _$AudioEngineStatus {
     @Default(0) int currentMidiNote,
   }) = _AudioEngineStatus;
 
-  factory AudioEngineStatus.fromJson(Map<String, dynamic> json) => _$AudioEngineStatusFromJson(json);
+  factory AudioEngineStatus.fromJson(Map<String, dynamic> json) =>
+      _$AudioEngineStatusFromJson(json);
 }
 
 /// Result of a pitch detection attempt
@@ -73,10 +78,11 @@ sealed class PitchDetectionResult with _$PitchDetectionResult {
     @Default(0.0) double volume,
   }) = _PitchDetectionResultFailure;
 
-  factory PitchDetectionResult.fromJson(Map<String, dynamic> json) => _$PitchDetectionResultFromJson(json);
+  factory PitchDetectionResult.fromJson(Map<String, dynamic> json) =>
+      _$PitchDetectionResultFromJson(json);
 
   bool get isSuccess => switch (this) {
-    _PitchDetectionResultSuccess() => true,
-    _PitchDetectionResultFailure() => false,
-  };
+        _PitchDetectionResultSuccess() => true,
+        _PitchDetectionResultFailure() => false,
+      };
 }

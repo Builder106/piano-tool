@@ -627,7 +627,8 @@ class _SubmitButton extends StatelessWidget {
 }
 
 class _PollingStatus extends StatelessWidget {
-  const _PollingStatus({required this.jobId, required this.status, required this.onCancel});
+  const _PollingStatus(
+      {required this.jobId, required this.status, required this.onCancel});
 
   final String jobId;
   final IngestionJobStatus? status;

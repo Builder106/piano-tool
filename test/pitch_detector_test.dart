@@ -15,7 +15,8 @@ void main() {
       ),
     );
 
-    test('Detects A4 (440 Hz) pitch and MIDI note 69 from synthetic sine wave', () {
+    test('Detects A4 (440 Hz) pitch and MIDI note 69 from synthetic sine wave',
+        () {
       final buffer = List<int>.generate(bufferSize, (i) {
         final t = i / sampleRate;
         final sample = math.sin(2 * math.pi * 440.0 * t);

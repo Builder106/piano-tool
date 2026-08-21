@@ -17,7 +17,8 @@ sealed class LevelNote with _$LevelNote {
     @Default(0) int voiceIndex,
   }) = _LevelNote;
 
-  factory LevelNote.fromJson(Map<String, dynamic> json) => _$LevelNoteFromJson(json);
+  factory LevelNote.fromJson(Map<String, dynamic> json) =>
+      _$LevelNoteFromJson(json);
 }
 
 /// Represents a measure in a level
@@ -30,7 +31,8 @@ sealed class LevelMeasure with _$LevelMeasure {
     required List<LevelNote> notes,
   }) = _LevelMeasure;
 
-  factory LevelMeasure.fromJson(Map<String, dynamic> json) => _$LevelMeasureFromJson(json);
+  factory LevelMeasure.fromJson(Map<String, dynamic> json) =>
+      _$LevelMeasureFromJson(json);
 }
 
 /// Represents a complete level/stage
@@ -48,7 +50,8 @@ sealed class LevelModel with _$LevelModel {
     @Default(0) int transpose, // semitones to transpose
   }) = _LevelModel;
 
-  factory LevelModel.fromJson(Map<String, dynamic> json) => _$LevelModelFromJson(json);
+  factory LevelModel.fromJson(Map<String, dynamic> json) =>
+      _$LevelModelFromJson(json);
 }
 
 /// Difficulty levels for stages
@@ -73,7 +76,8 @@ sealed class StageModel with _$StageModel {
     @Default(0) int xpReward,
   }) = _StageModel;
 
-  factory StageModel.fromJson(Map<String, dynamic> json) => _$StageModelFromJson(json);
+  factory StageModel.fromJson(Map<String, dynamic> json) =>
+      _$StageModelFromJson(json);
 }
 
 /// Game progress for a stage
@@ -90,5 +94,6 @@ sealed class StageProgress with _$StageProgress {
     DateTime? lastAttemptAt,
   }) = _StageProgress;
 
-  factory StageProgress.fromJson(Map<String, dynamic> json) => _$StageProgressFromJson(json);
+  factory StageProgress.fromJson(Map<String, dynamic> json) =>
+      _$StageProgressFromJson(json);
 }

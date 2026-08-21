@@ -2,24 +2,28 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:piano_tool/models/audio_models.dart';
+import '../models/audio_models.dart';
 
 class PitchDetector {
   final AudioEngineConfig config;
-  final _pitchController = StreamController<PitchEvent>.broadcast();
+  final StreamController<PitchEvent> _pitchController =
+      StreamController<PitchEvent>.broadcast();
   bool _isRunning = false;
   FlutterSoundRecorder? _recorder;
   StreamController<Uint8List>? _recordingDataController;
-  StreamSubscription? _recordingSubscription;
-  final List<int> _sampleBuffer = [];
+  StreamSubscription<Uint8List>? _recordingSubscription;
+  final List<int> _sampleBuffer = <int>[];
 
   Stream<PitchEvent> get pitchStream => _pitchController.stream;
   bool get isRunning => _isRunning;
 
-  PitchDetector({AudioEngineConfig? config}) : config = config ?? const AudioEngineConfig();
+  PitchDetector({final AudioEngineConfig? config})
+      : config = config ?? const AudioEngineConfig();
 
   Future<void> start() async {
-    if (_isRunning) return;
+    if (_isRunning) {
+      return;
+    }
 
     _recorder = FlutterSoundRecorder();
     await _recorder!.openRecorder();
@@ -27,9 +31,8 @@ class PitchDetector {
     _sampleBuffer.clear();
     _recordingDataController = StreamController<Uint8List>();
 
-    _recordingSubscription = _recordingDataController!.stream.listen((bytes) {
-      _handleIncomingPcmBytes(bytes);
-    });
+    _recordingSubscription =
+        _recordingDataController!.stream.listen(_handleIncomingPcmBytes);
 
     await _recorder!.startRecorder(
       toStream: _recordingDataController!.sink,
@@ -39,25 +42,28 @@ class PitchDetector {
     );
 
     _isRunning = true;
-    debugPrint('PitchDetector: Started audio streaming at ${config.sampleRate}Hz');
+    debugPrint(
+        'PitchDetector: Started audio streaming at ${config.sampleRate}Hz');
   }
 
-  void _handleIncomingPcmBytes(Uint8List bytes) {
-    if (!_isRunning || bytes.isEmpty) return;
+  void _handleIncomingPcmBytes(final Uint8List bytes) {
+    if (!_isRunning || bytes.isEmpty) {
+      return;
+    }
 
     try {
-      final byteData = ByteData.sublistView(bytes);
-      final sampleCount = bytes.length ~/ 2;
+      final ByteData byteData = ByteData.sublistView(bytes);
+      final int sampleCount = bytes.length ~/ 2;
       for (int i = 0; i < sampleCount; i++) {
         _sampleBuffer.add(byteData.getInt16(i * 2, Endian.little));
       }
 
-      final bufferSize = config.bufferSize;
-      final hopSize = bufferSize ~/ 2;
+      final int bufferSize = config.bufferSize;
+      final int hopSize = bufferSize ~/ 2;
 
       while (_sampleBuffer.length >= bufferSize) {
-        final chunk = _sampleBuffer.sublist(0, bufferSize);
-        final event = processBuffer(chunk);
+        final List<int> chunk = _sampleBuffer.sublist(0, bufferSize);
+        final PitchEvent? event = processBuffer(chunk);
         if (event != null) {
           _pitchController.add(event);
         }
@@ -73,7 +79,9 @@ class PitchDetector {
   }
 
   Future<void> stop() async {
-    if (!_isRunning) return;
+    if (!_isRunning) {
+      return;
+    }
 
     await _recordingSubscription?.cancel();
     _recordingSubscription = null;
@@ -89,30 +97,41 @@ class PitchDetector {
   }
 
   /// Process raw PCM buffer for pitch detection using YIN algorithm
-  PitchEvent? processBuffer(List<int> buffer) {
-    if (buffer.length < config.bufferSize) return null;
+  PitchEvent? processBuffer(final List<int> buffer) {
+    if (buffer.length < config.bufferSize) {
+      return null;
+    }
 
-    final samples = buffer
+    final List<double> samples = buffer
         .take(config.bufferSize)
-        .map((v) => v / 32768.0)
+        .map((final int v) => v / 32768.0)
         .toList();
 
-    final rms = math.sqrt(samples.map((s) => s * s).reduce((a, b) => a + b) / samples.length);
+    final double rms = math.sqrt(samples
+            .map((final double s) => s * s)
+            .reduce((final double a, final double b) => a + b) /
+        samples.length);
 
-    if (rms < 0.01) return null;
+    if (rms < 0.01) {
+      return null;
+    }
 
-    final frequency = _yin(samples, config.sampleRate);
+    final double? frequency = _yin(samples, config.sampleRate);
 
     if (frequency == null || frequency < 80.0 || frequency > 1000.0) {
       return null;
     }
 
-    final confidence = _calculateConfidence(samples, frequency, config.sampleRate);
+    final double confidence =
+        _calculateConfidence(samples, frequency, config.sampleRate);
 
-    if (confidence < config.minConfidenceThreshold) return null;
+    if (confidence < config.minConfidenceThreshold) {
+      return null;
+    }
 
     // Convert frequency to MIDI note
-    final midiNote = (69 + 12 * math.log(frequency / 440.0) / math.ln2).round();
+    final int midiNote =
+        (69 + 12 * math.log(frequency / 440.0) / math.ln2).round();
 
     return PitchEvent(
       frequency: frequency,
@@ -123,29 +142,29 @@ class PitchDetector {
     );
   }
 
-  static double? _yin(List<double> signal, int sampleRate) {
-    final bufferSize = signal.length;
-    final halfSize = bufferSize ~/ 2;
-    final tauMax = halfSize;
+  static double? _yin(final List<double> signal, final int sampleRate) {
+    final int bufferSize = signal.length;
+    final int halfSize = bufferSize ~/ 2;
+    final int tauMax = halfSize;
 
-    final difference = List<double>.filled(tauMax, 0.0);
+    final List<double> difference = List<double>.filled(tauMax, 0.0);
     for (int tau = 1; tau < tauMax; tau++) {
       double sum = 0.0;
       for (int i = 0; i < halfSize; i++) {
-        final delta = signal[i] - signal[i + tau];
+        final double delta = signal[i] - signal[i + tau];
         sum += delta * delta;
       }
       difference[tau] = sum;
     }
 
-    final cmnd = List<double>.filled(tauMax, 1.0);
+    final List<double> cmnd = List<double>.filled(tauMax, 1.0);
     double runningSum = 0.0;
     for (int tau = 1; tau < tauMax; tau++) {
       runningSum += difference[tau];
       cmnd[tau] = difference[tau] * tau / runningSum;
     }
 
-    const threshold = 0.1;
+    const double threshold = 0.1;
     int tau = 1;
     while (tau < tauMax) {
       if (cmnd[tau] < threshold) {
@@ -157,27 +176,34 @@ class PitchDetector {
       tau++;
     }
 
-    if (tau >= tauMax) return null;
+    if (tau >= tauMax) {
+      return null;
+    }
 
     double betterTau;
     if (tau > 0 && tau < tauMax - 1) {
-      final alpha = cmnd[tau - 1];
-      final beta = cmnd[tau];
-      final gamma = cmnd[tau + 1];
-      final p = (alpha - gamma) / (2 * (alpha - 2 * beta + gamma));
+      final double alpha = cmnd[tau - 1];
+      final double beta = cmnd[tau];
+      final double gamma = cmnd[tau + 1];
+      final double p = (alpha - gamma) / (2 * (alpha - 2 * beta + gamma));
       betterTau = tau + p;
     } else {
       betterTau = tau.toDouble();
     }
 
-    if (betterTau <= 0) return null;
+    if (betterTau <= 0) {
+      return null;
+    }
 
     return sampleRate / betterTau;
   }
 
-  static double _calculateConfidence(List<double> signal, double frequency, int sampleRate) {
-    final period = sampleRate / frequency;
-    if (period < 2 || period > signal.length / 2) return 0.0;
+  static double _calculateConfidence(
+      final List<double> signal, final double frequency, final int sampleRate) {
+    final double period = sampleRate / frequency;
+    if (period < 2 || period > signal.length / 2) {
+      return 0.0;
+    }
 
     int tau = period.round();
     double sum = 0.0;
@@ -188,7 +214,9 @@ class PitchDetector {
       sumSq += signal[i] * signal[i];
     }
 
-    if (sumSq == 0) return 0.0;
+    if (sumSq == 0) {
+      return 0.0;
+    }
     return (sum / sumSq).clamp(0.0, 1.0);
   }
 

@@ -21,7 +21,8 @@ void main() {
           // resolved immediately instead of leaving it in AsyncLoading,
           // which is what the default (ingestion-hydrated) definition would
           // do since nothing here awaits it first.
-          levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+          levelRepositoryProvider
+              .overrideWith((ref) => SynchronousFuture(LevelRepository())),
         ],
       );
 
@@ -149,8 +150,7 @@ void main() {
         reason: 'the note must not stay lit forever after going silent');
   });
 
-  test('a paused transport does not light the keyboard from a stray pitch',
-      () {
+  test('a paused transport does not light the keyboard from a stray pitch', () {
     final c = harness();
     addTearDown(c.dispose);
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
@@ -194,14 +194,14 @@ void main() {
 
     final originalDebugPrint = debugPrint;
     final logs = <String>[];
-    debugPrint =
-        (String? message, {int? wrapWidth}) => logs.add(message ?? '');
+    debugPrint = (String? message, {int? wrapWidth}) => logs.add(message ?? '');
     addTearDown(() => debugPrint = originalDebugPrint);
 
     final c = ProviderContainer(overrides: [
       audioGrantedProvider.overrideWith((ref) async => true),
       audioPitchStreamProvider.overrideWith((ref) => pitchController.stream),
-      levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+      levelRepositoryProvider
+          .overrideWith((ref) => SynchronousFuture(LevelRepository())),
     ]);
     addTearDown(c.dispose);
 

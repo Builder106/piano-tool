@@ -35,12 +35,14 @@ void main() {
   });
 
   testWidgets('surfaces a failure instead of hanging', (tester) async {
-    await tester.pumpWidget(_harness((ref) async => throw Exception('no device')));
+    await tester
+        .pumpWidget(_harness((ref) async => throw Exception('no device')));
     await tester.pumpAndSettle();
     expect(find.textContaining('microphone'), findsWidgets);
   });
 
-  testWidgets('shows progress while the request is outstanding', (tester) async {
+  testWidgets('shows progress while the request is outstanding',
+      (tester) async {
     final completer = Completer<bool>();
     await tester.pumpWidget(_harness((ref) => completer.future));
     await tester.pump();

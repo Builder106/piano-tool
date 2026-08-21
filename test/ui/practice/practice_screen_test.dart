@@ -32,7 +32,8 @@ Widget _harness({double textScale = 1.0}) => ProviderScope(
         // synchronously (requireValue); PracticeScreen is mounted directly
         // here, without going through LevelListScreen first, so nothing
         // else resolves it.
-        levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+        levelRepositoryProvider
+            .overrideWith((ref) => SynchronousFuture(LevelRepository())),
       ],
       child: _screen(textScale: textScale),
     );
@@ -85,20 +86,21 @@ void main() {
   }
 
   for (final scale in [2.0, 3.0]) {
-  testWidgets('renders without overflow at a text scale of $scale', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(640, 360));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    testWidgets('renders without overflow at a text scale of $scale',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(640, 360));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    // An accessibility text scale doubles the width of every metric. The
-    // header must absorb that rather than throw.
-    await tester.pumpWidget(_harness(textScale: scale));
-    await tester.pump();
+      // An accessibility text scale doubles the width of every metric. The
+      // header must absorb that rather than throw.
+      await tester.pumpWidget(_harness(textScale: scale));
+      await tester.pump();
 
-    expect(tester.takeException(), isNull);
-    expect(find.textContaining('BPM'), findsOneWidget);
-    expect(find.textContaining('Score'), findsOneWidget);
-    expect(find.textContaining('Acc'), findsOneWidget);
-  });
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('BPM'), findsOneWidget);
+      expect(find.textContaining('Score'), findsOneWidget);
+      expect(find.textContaining('Acc'), findsOneWidget);
+    });
   }
 
   testWidgets('the header absorbs a large text scale instead of overflowing',
@@ -134,7 +136,8 @@ void main() {
         greaterThan(PracticeHud.minHeight + 20));
   });
 
-  testWidgets('shows the staff, the keyboard, and the transport', (tester) async {
+  testWidgets('shows the staff, the keyboard, and the transport',
+      (tester) async {
     await tester.binding.setSurfaceSize(const Size(740, 360));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -194,10 +197,12 @@ void main() {
     expect(find.text('1.0x'), findsOneWidget);
 
     // The label is small; the target is not.
-    final target = tester.getSize(find.ancestor(
-      of: find.text('1.0x'),
-      matching: find.byType(Container),
-    ).first);
+    final target = tester.getSize(find
+        .ancestor(
+          of: find.text('1.0x'),
+          matching: find.byType(Container),
+        )
+        .first);
     expect(target.width, greaterThanOrEqualTo(48));
     expect(target.height, greaterThanOrEqualTo(48));
 
@@ -221,7 +226,8 @@ void main() {
         // synchronously (requireValue); PracticeScreen is mounted directly
         // here, without going through LevelListScreen first, so nothing
         // else resolves it.
-        levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+        levelRepositoryProvider
+            .overrideWith((ref) => SynchronousFuture(LevelRepository())),
       ],
     );
     addTearDown(container.dispose);
@@ -260,7 +266,8 @@ void main() {
         // synchronously (requireValue); PracticeScreen is mounted directly
         // here, without going through LevelListScreen first, so nothing
         // else resolves it.
-        levelRepositoryProvider.overrideWith((ref) => SynchronousFuture(LevelRepository())),
+        levelRepositoryProvider
+            .overrideWith((ref) => SynchronousFuture(LevelRepository())),
       ],
     );
     addTearDown(container.dispose);

@@ -26,7 +26,14 @@ void main() {
     final t = entry.value;
 
     test('$name: text tokens clear 4.5:1 on paper', () {
-      for (final key in ['ink', 'ink2', 'muted', 'accent', 'success', 'error']) {
+      for (final key in [
+        'ink',
+        'ink2',
+        'muted',
+        'accent',
+        'success',
+        'error'
+      ]) {
         expect(_contrast(t[key]!, t['paper']!), greaterThanOrEqualTo(4.5),
             reason: '$name.$key on paper');
       }
@@ -37,7 +44,8 @@ void main() {
     });
 
     test('$name: accentInk is readable on accent', () {
-      expect(_contrast(t['accentInk']!, t['accent']!), greaterThanOrEqualTo(4.5));
+      expect(
+          _contrast(t['accentInk']!, t['accent']!), greaterThanOrEqualTo(4.5));
     });
 
     test('$name: every token is fully opaque', () {

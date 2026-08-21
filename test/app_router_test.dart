@@ -36,7 +36,8 @@ void main() {
   Widget createTestWidget() {
     return ProviderScope(
       overrides: [
-        ingestionRepositoryProvider.overrideWith((ref) async => mockIngestionRepo),
+        ingestionRepositoryProvider
+            .overrideWith((ref) async => mockIngestionRepo),
         progressRepositoryProvider.overrideWithValue(mockProgressRepo),
         audioGrantedProvider.overrideWith((ref) async => true),
       ],
@@ -73,7 +74,8 @@ void main() {
       GoRouter.of(context).push('/review?jobId=job-42');
       await tester.pumpAndSettle();
 
-      final reviewScreen = tester.widget<ReviewScreen>(find.byType(ReviewScreen));
+      final reviewScreen =
+          tester.widget<ReviewScreen>(find.byType(ReviewScreen));
       expect(reviewScreen.jobId, 'job-42');
     });
 

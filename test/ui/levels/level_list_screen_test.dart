@@ -34,7 +34,8 @@ void main() {
       overrides: [
         levelRepositoryProvider.overrideWith((ref) async => levelRepository),
         progressRepositoryProvider.overrideWithValue(mockProgressRepo),
-        ingestionRepositoryProvider.overrideWith((ref) async => mockIngestionRepo),
+        ingestionRepositoryProvider
+            .overrideWith((ref) async => mockIngestionRepo),
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
@@ -49,7 +50,8 @@ void main() {
             ),
             GoRoute(
               path: '/practice/:stageId',
-              builder: (_, state) => Scaffold(body: Text('Practice: ${state.pathParameters['stageId']}')),
+              builder: (_, state) => Scaffold(
+                  body: Text('Practice: ${state.pathParameters['stageId']}')),
             ),
           ],
         ),
@@ -71,9 +73,12 @@ void main() {
       expect(find.text('Mixed Rhythms'), findsOneWidget);
 
       // Check order
-      final scaleIndex = tester.getSemantics(find.text('C Major Scale')).indexInParent as int;
-      final odeIndex = tester.getSemantics(find.text('Ode to Joy')).indexInParent as int;
-      final mixedIndex = tester.getSemantics(find.text('Mixed Rhythms')).indexInParent as int;
+      final scaleIndex =
+          tester.getSemantics(find.text('C Major Scale')).indexInParent as int;
+      final odeIndex =
+          tester.getSemantics(find.text('Ode to Joy')).indexInParent as int;
+      final mixedIndex =
+          tester.getSemantics(find.text('Mixed Rhythms')).indexInParent as int;
       expect(scaleIndex, lessThan(odeIndex));
       expect(odeIndex, lessThan(mixedIndex));
     });
@@ -87,7 +92,8 @@ void main() {
       expect(find.byIcon(Icons.add_rounded), findsOneWidget);
     });
 
-    testWidgets('tapping import button navigates to import screen', (tester) async {
+    testWidgets('tapping import button navigates to import screen',
+        (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
       await tester.pumpWidget(createTestWidget());
@@ -154,8 +160,8 @@ void main() {
       final builtInStages = find.byWidgetPredicate((widget) {
         return widget is Text &&
             (widget.data?.contains('C Major Scale') == true ||
-             widget.data?.contains('Ode to Joy') == true ||
-             widget.data?.contains('Mixed Rhythms') == true);
+                widget.data?.contains('Ode to Joy') == true ||
+                widget.data?.contains('Mixed Rhythms') == true);
       });
       expect(builtInStages, findsAtLeastNWidgets(3));
     });
@@ -195,16 +201,17 @@ void main() {
     });
 
     testWidgets('shows progress for completed stages', (tester) async {
-      when(mockProgressRepo.read('stage_1')).thenAnswer((_) async => StageProgress(
-        stageId: 'stage_1',
-        bestAccuracy: 0.95,
-        bestScore: 1000,
-        attempts: 3,
-        completed: true,
-        unlocked: true,
-        completedAt: DateTime.now(),
-        lastAttemptAt: DateTime.now(),
-      ));
+      when(mockProgressRepo.read('stage_1'))
+          .thenAnswer((_) async => StageProgress(
+                stageId: 'stage_1',
+                bestAccuracy: 0.95,
+                bestScore: 1000,
+                attempts: 3,
+                completed: true,
+                unlocked: true,
+                completedAt: DateTime.now(),
+                lastAttemptAt: DateTime.now(),
+              ));
       when(mockProgressRepo.read('stage_2')).thenAnswer((_) async => null);
       when(mockProgressRepo.read('stage_3')).thenAnswer((_) async => null);
 
@@ -214,7 +221,8 @@ void main() {
       expect(find.text('95%'), findsOneWidget);
     });
 
-    testWidgets('long press on imported level shows delete dialog', (tester) async {
+    testWidgets('long press on imported level shows delete dialog',
+        (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
       const importedLevel = LevelModel(

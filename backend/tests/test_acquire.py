@@ -56,18 +56,14 @@ def test_acquire_youtube_wraps_download_errors(tmp_path, monkeypatch):
     monkeypatch.setattr(yt_dlp, "YoutubeDL", _FailingDownloader)
 
     with pytest.raises(YoutubeUnavailableError):
-        acquire_audio(
-            "youtube", str(tmp_path), youtube_url="https://example.com/watch?v=nope"
-        )
+        acquire_audio("youtube", str(tmp_path), youtube_url="https://example.com/watch?v=nope")
 
 
 def test_acquire_youtube_rejects_a_non_youtube_host(tmp_path):
     # No monkeypatch of yt_dlp here -- the rejection must happen before any
     # yt_dlp code runs, proving this is a genuine gate, not a mock intercept.
     with pytest.raises(YoutubeUnavailableError):
-        acquire_audio(
-            "youtube", str(tmp_path), youtube_url="https://example.com/not-youtube"
-        )
+        acquire_audio("youtube", str(tmp_path), youtube_url="https://example.com/not-youtube")
 
 
 @pytest.mark.parametrize(

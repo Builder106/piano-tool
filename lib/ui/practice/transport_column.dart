@@ -96,8 +96,8 @@ class TransportColumn extends StatelessWidget {
                   minHeight: kMinInteractiveDimension,
                 ),
                 alignment: Alignment.center,
-                child: Text(_label,
-                    style: Theme.of(context).textTheme.labelSmall),
+                child:
+                    Text(_label, style: Theme.of(context).textTheme.labelSmall),
               ),
             ),
           ),

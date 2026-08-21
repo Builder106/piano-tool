@@ -17,39 +17,44 @@ class ProgressRepository {
   static const double completionThreshold = 0.9;
 
   Future<StageProgress?> read(String stageId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     return _decode(stageId, prefs.getString('$_prefix$stageId'));
   }
 
   Future<Map<String, StageProgress>> readAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    final out = <String, StageProgress>{};
-    for (final key in prefs.getKeys()) {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final Map<String, StageProgress> out = <String, StageProgress>{};
+    for (final String key in prefs.getKeys()) {
       if (!key.startsWith(_prefix) || key == _lastPlayedKey) continue;
-      final id = key.substring(_prefix.length);
-      final progress = _decode(id, prefs.getString(key));
+      final String id = key.substring(_prefix.length);
+      final StageProgress? progress = _decode(id, prefs.getString(key));
       if (progress != null) out[id] = progress;
     }
     return out;
   }
 
   Future<void> record({
-    required String stageId,
-    required double accuracy,
-    required int score,
+    required final String stageId,
+    required final double accuracy,
+    required final int score,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final previous = _decode(stageId, prefs.getString('$_prefix$stageId'));
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final StageProgress? previous =
+        _decode(stageId, prefs.getString('$_prefix$stageId'));
 
     // Bests only ever climb; a bad run still counts as an attempt, and
     // clearing a stage once is permanent.
     final next = StageProgress(
       stageId: stageId,
-      bestAccuracy:
-          accuracy > (previous?.bestAccuracy ?? 0) ? accuracy : (previous?.bestAccuracy ?? 0),
-      bestScore: score > (previous?.bestScore ?? 0) ? score : (previous?.bestScore ?? 0),
+      bestAccuracy: accuracy > (previous?.bestAccuracy ?? 0)
+          ? accuracy
+          : (previous?.bestAccuracy ?? 0),
+      bestScore: score > (previous?.bestScore ?? 0)
+          ? score
+          : (previous?.bestScore ?? 0),
       attempts: (previous?.attempts ?? 0) + 1,
-      completed: (previous?.completed ?? false) || accuracy >= completionThreshold,
+      completed:
+          (previous?.completed ?? false) || accuracy >= completionThreshold,
       unlocked: true,
       completedAt: previous?.completedAt ??
           (accuracy >= completionThreshold ? DateTime.now() : null),
@@ -62,10 +67,11 @@ class ProgressRepository {
   Future<String?> lastPlayedStageId() async =>
       (await SharedPreferences.getInstance()).getString(_lastPlayedKey);
 
-  Future<void> setLastPlayed(String stageId) async =>
-      (await SharedPreferences.getInstance()).setString(_lastPlayedKey, stageId);
+  Future<void> setLastPlayed(final String stageId) async =>
+      (await SharedPreferences.getInstance())
+          .setString(_lastPlayedKey, stageId);
 
-  StageProgress? _decode(String stageId, String? raw) {
+  StageProgress? _decode(final String stageId, final String? raw) {
     if (raw == null) return null;
     try {
       return StageProgress.fromJson(jsonDecode(raw) as Map<String, dynamic>);

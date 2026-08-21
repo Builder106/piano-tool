@@ -5,7 +5,8 @@ import 'package:piano_tool/ui/staff/staff_geometry.dart';
 import 'package:piano_tool/ui/staff/staff_painter.dart';
 import 'package:piano_tool/ui/theme/tokens.dart';
 
-StaffPainter _painter({Clef clef = Clef.treble, double beat = 0}) => StaffPainter(
+StaffPainter _painter({Clef clef = Clef.treble, double beat = 0}) =>
+    StaffPainter(
       clef: clef,
       notes: const [
         (midi: 60, startBeat: 0, state: NoteState.hitPerfect),

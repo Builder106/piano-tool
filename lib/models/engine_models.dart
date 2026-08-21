@@ -38,21 +38,22 @@ sealed class NoteHitResult with _$NoteHitResult {
     required int noteIndex,
   }) = _NoteHitResultMissed;
 
-  factory NoteHitResult.fromJson(Map<String, dynamic> json) => _$NoteHitResultFromJson(json);
+  factory NoteHitResult.fromJson(Map<String, dynamic> json) =>
+      _$NoteHitResultFromJson(json);
 
   NoteState get noteState => switch (this) {
-    _NoteHitResultPerfect() => NoteState.hitPerfect,
-    _NoteHitResultGood() => NoteState.hitGood,
-    _NoteHitResultOkay() => NoteState.hitOkay,
-    _NoteHitResultMissed() => NoteState.missed,
-  };
+        _NoteHitResultPerfect() => NoteState.hitPerfect,
+        _NoteHitResultGood() => NoteState.hitGood,
+        _NoteHitResultOkay() => NoteState.hitOkay,
+        _NoteHitResultMissed() => NoteState.missed,
+      };
 
   double get score => switch (this) {
-    _NoteHitResultPerfect() => 100.0,
-    _NoteHitResultGood() => 75.0,
-    _NoteHitResultOkay() => 50.0,
-    _NoteHitResultMissed() => 0.0,
-  };
+        _NoteHitResultPerfect() => 100.0,
+        _NoteHitResultGood() => 75.0,
+        _NoteHitResultOkay() => 50.0,
+        _NoteHitResultMissed() => 0.0,
+      };
 }
 
 /// Events emitted by the stage engine
@@ -86,7 +87,8 @@ sealed class StageEvent with _$StageEvent {
     required StageEngineStatus state,
   }) = _StageEventStateChanged;
 
-  factory StageEvent.fromJson(Map<String, dynamic> json) => _$StageEventFromJson(json);
+  factory StageEvent.fromJson(Map<String, dynamic> json) =>
+      _$StageEventFromJson(json);
 }
 
 /// Stage engine state (enum for internal state machine)
@@ -102,7 +104,8 @@ enum StageEngineStatus {
 @freezed
 sealed class StageEngineConfig with _$StageEngineConfig {
   const factory StageEngineConfig({
-    @Default(0.1) double perfectWindow, // beats (early/late tolerance for perfect)
+    @Default(0.1)
+    double perfectWindow, // beats (early/late tolerance for perfect)
     @Default(0.2) double goodWindow, // beats for good
     @Default(0.3) double okayWindow, // beats for okay
     @Default(0.5) double missWindow, // beats after which note is missed
@@ -110,7 +113,8 @@ sealed class StageEngineConfig with _$StageEngineConfig {
     @Default(1.0) double playbackSpeed, // speed multiplier
   }) = _StageEngineConfig;
 
-  factory StageEngineConfig.fromJson(Map<String, dynamic> json) => _$StageEngineConfigFromJson(json);
+  factory StageEngineConfig.fromJson(Map<String, dynamic> json) =>
+      _$StageEngineConfigFromJson(json);
 }
 
 /// Current state of the stage engine
@@ -131,15 +135,16 @@ sealed class StageEngineStateModel with _$StageEngineStateModel {
     @Default(0) int okayCount,
   }) = _StageEngineStateModel;
 
-  factory StageEngineStateModel.fromJson(Map<String, dynamic> json) => _$StageEngineStateModelFromJson(json);
+  factory StageEngineStateModel.fromJson(Map<String, dynamic> json) =>
+      _$StageEngineStateModelFromJson(json);
 
   double get progress => level.totalMeasures > 0
-      ? (currentBeat / (level.totalMeasures * level.beatsPerMeasure)).clamp(0.0, 1.0)
+      ? (currentBeat / (level.totalMeasures * level.beatsPerMeasure))
+          .clamp(0.0, 1.0)
       : 0.0;
 
-  double get accuracy => (hitCount + missCount) > 0
-      ? hitCount / (hitCount + missCount)
-      : 0.0;
+  double get accuracy =>
+      (hitCount + missCount) > 0 ? hitCount / (hitCount + missCount) : 0.0;
 }
 
 /// Provider state for the current game

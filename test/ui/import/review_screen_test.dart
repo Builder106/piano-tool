@@ -76,7 +76,8 @@ void main() {
   );
 
   group('ReviewScreen', () {
-    testWidgets('shows a loading indicator while the job is polled', (tester) async {
+    testWidgets('shows a loading indicator while the job is polled',
+        (tester) async {
       final completer = Completer<IngestionJobResult>();
       when(mockRepo.pollJob('job-123')).thenAnswer((_) => completer.future);
 
@@ -92,9 +93,11 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('shows the level title and controls once loaded', (tester) async {
+    testWidgets('shows the level title and controls once loaded',
+        (tester) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: level),
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -123,7 +126,8 @@ void main() {
     testWidgets('play/pause toggles the icon and advances the playhead',
         (tester) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: level),
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -159,7 +163,8 @@ void main() {
         measures: [],
       );
       when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: slowLevel),
+        (_) async => IngestionJobResult(
+            status: IngestionJobStatus.done, level: slowLevel),
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -181,7 +186,8 @@ void main() {
         measures: [],
       );
       when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: fastLevel),
+        (_) async => IngestionJobResult(
+            status: IngestionJobStatus.done, level: fastLevel),
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -205,7 +211,8 @@ void main() {
 
     testWidgets('speed control cycles through the speed steps', (tester) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: level),
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -219,9 +226,11 @@ void main() {
       expect(find.text('1.5x'), findsOneWidget);
     });
 
-    testWidgets('save calls saveLevel and navigates to the level list', (tester) async {
+    testWidgets('save calls saveLevel and navigates to the level list',
+        (tester) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: level),
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
       );
       when(mockRepo.saveLevel(level)).thenAnswer((_) async {});
 
@@ -237,7 +246,8 @@ void main() {
 
     testWidgets('shows an error snackbar when save fails', (tester) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: level),
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
       );
       when(mockRepo.saveLevel(level))
           .thenThrow(IngestionException('Failed to save: 500'));
@@ -255,7 +265,8 @@ void main() {
 
     testWidgets('discard navigates back to the import screen', (tester) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(status: IngestionJobStatus.done, level: level),
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
       );
 
       await tester.pumpWidget(createTestWidget());

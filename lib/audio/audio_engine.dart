@@ -1,21 +1,23 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:piano_tool/audio/pitch_detector.dart';
-import 'package:piano_tool/models/audio_models.dart';
+import '../models/audio_models.dart';
+import 'pitch_detector.dart';
 
 class AudioEngine {
   final PitchDetector _pitchDetector;
   StreamSubscription<PitchEvent>? _pitchSubscription;
-  final _pitchController = StreamController<PitchEvent>.broadcast();
+  final StreamController<PitchEvent> _pitchController =
+      StreamController<PitchEvent>.broadcast();
 
   Stream<PitchEvent> get pitchStream => _pitchController.stream;
   bool get isRunning => _pitchDetector.isRunning;
 
-  AudioEngine({AudioEngineConfig? config}) : _pitchDetector = PitchDetector(config: config);
+  AudioEngine({final AudioEngineConfig? config})
+      : _pitchDetector = PitchDetector(config: config);
 
   Future<bool> initialize() async {
-    final status = await Permission.microphone.request();
+    final PermissionStatus status = await Permission.microphone.request();
     if (!status.isGranted) {
       debugPrint('AudioEngine: Microphone permission denied');
       return false;
@@ -26,12 +28,14 @@ class AudioEngine {
   }
 
   Future<void> start() async {
-    if (_pitchDetector.isRunning) return;
+    if (_pitchDetector.isRunning) {
+      return;
+    }
 
     await _pitchDetector.start();
     _pitchSubscription = _pitchDetector.pitchStream.listen(
-      (event) => _pitchController.add(event),
-      onError: (Object error, StackTrace stackTrace) {
+      _pitchController.add,
+      onError: (final Object error, final StackTrace stackTrace) {
         debugPrint('AudioEngine: Pitch stream error: $error');
         // Forwarded, not just logged: a listener on [pitchStream] (the
         // provider that feeds the practice screen) otherwise has no way to

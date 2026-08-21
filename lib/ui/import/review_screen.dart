@@ -213,7 +213,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           state: _currentBeat >= note.startBeat &&
                   _currentBeat < note.startBeat + note.durationBeats
               ? NoteState.active
-              : (_currentBeat < note.startBeat ? NoteState.upcoming : NoteState.missed),
+              : (_currentBeat < note.startBeat
+                  ? NoteState.upcoming
+                  : NoteState.missed),
         ));
       }
     }

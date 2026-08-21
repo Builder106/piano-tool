@@ -93,9 +93,12 @@ class StaffPainter extends CustomPainter {
     final barPaint = Paint()
       ..color = colors.staff.withValues(alpha: 0.55)
       ..strokeWidth = 1.0;
-    for (var beat = beatsPerMeasure; beat <= totalBeats; beat += beatsPerMeasure) {
+    for (var beat = beatsPerMeasure;
+        beat <= totalBeats;
+        beat += beatsPerMeasure) {
       final x = _xForBeat(beat.toDouble(), g);
-      canvas.drawLine(Offset(x, g.topLineY), Offset(x, g.bottomLineY), barPaint);
+      canvas.drawLine(
+          Offset(x, g.topLineY), Offset(x, g.bottomLineY), barPaint);
     }
 
     for (final note in notes) {
@@ -122,7 +125,8 @@ class StaffPainter extends CustomPainter {
     canvas.drawLine(
         Offset(playheadX, 0), Offset(playheadX, size.height), playheadPaint);
     if (showPlayheadCap) {
-      canvas.drawCircle(Offset(playheadX, 0), 3.5, Paint()..color = colors.accent);
+      canvas.drawCircle(
+          Offset(playheadX, 0), 3.5, Paint()..color = colors.accent);
     }
 
     canvas.restore();
@@ -146,18 +150,25 @@ class StaffPainter extends CustomPainter {
   static int _clefCodepoint(Clef clef) =>
       switch (clef) { Clef.treble => 0xE050, Clef.bass => 0xE062 };
 
-  void _paintGlyph(
-      Canvas canvas, int codepoint, double fontSize, Offset anchor, Color color) {
+  void _paintGlyph(Canvas canvas, int codepoint, double fontSize, Offset anchor,
+      Color color) {
     final painter = TextPainter(
       text: TextSpan(
         text: String.fromCharCode(codepoint),
-        style: TextStyle(fontFamily: 'Bravura', fontSize: fontSize, color: color),
+        style:
+            TextStyle(fontFamily: 'Bravura', fontSize: fontSize, color: color),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     // Bravura's glyph origin sits on its reference staff line, so the anchor
     // is the baseline rather than the visual centre.
-    painter.paint(canvas, Offset(anchor.dx, anchor.dy - painter.computeDistanceToActualBaseline(TextBaseline.alphabetic)));
+    painter.paint(
+        canvas,
+        Offset(
+            anchor.dx,
+            anchor.dy -
+                painter
+                    .computeDistanceToActualBaseline(TextBaseline.alphabetic)));
   }
 
   void _paintTimeSignature(Canvas canvas, StaffGeometry g) {

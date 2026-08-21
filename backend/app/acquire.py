@@ -62,9 +62,7 @@ def acquire_youtube(
     options = {
         "format": "bestaudio/best",
         "outtmpl": output_template,
-        "postprocessors": [
-            {"key": "FFmpegExtractAudio", "preferredcodec": "wav"}
-        ],
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "wav"}],
         "quiet": True,
         "no_warnings": True,
     }
@@ -76,9 +74,7 @@ def acquire_youtube(
 
     downloaded_path = Path(output_template % {"ext": "wav"})
     if not downloaded_path.exists():
-        raise YoutubeUnavailableError(
-            f"yt-dlp reported success but produced no file for {url}"
-        )
+        raise YoutubeUnavailableError(f"yt-dlp reported success but produced no file for {url}")
 
     _check_duration_cap(str(downloaded_path), cap_seconds)
     return str(downloaded_path)

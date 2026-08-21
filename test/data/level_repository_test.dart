@@ -44,7 +44,10 @@ void main() {
 
   test('note beats are ordered within each level', () {
     for (final stage in LevelRepository().getAllStages()) {
-      final beats = stage.level.measures.expand((m) => m.notes).map((n) => n.startBeat).toList();
+      final beats = stage.level.measures
+          .expand((m) => m.notes)
+          .map((n) => n.startBeat)
+          .toList();
       final sorted = [...beats]..sort();
       expect(beats, sorted, reason: stage.id);
     }

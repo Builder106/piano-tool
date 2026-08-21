@@ -87,7 +87,8 @@ class StageUiState {
 }
 
 class StageController extends StateNotifier<StageUiState> {
-  StageController(this._engine, this._stageId, this._progress, StageUiState initial)
+  StageController(
+      this._engine, this._stageId, this._progress, StageUiState initial)
       : super(initial) {
     _sub = _engine.events.listen(_onEvent);
   }
@@ -222,7 +223,8 @@ class StageController extends StateNotifier<StageUiState> {
 }
 
 final stageControllerProvider =
-    StateNotifierProvider.family<StageController, StageUiState, String>((ref, stageId) {
+    StateNotifierProvider.family<StageController, StageUiState, String>(
+        (ref, stageId) {
   // By the time a practice route is reachable, LevelListScreen has already
   // awaited levelRepositoryProvider to render the stage list the user tapped
   // -- requireValue asserts that instead of silently falling back to an
@@ -285,17 +287,18 @@ final stageControllerProvider =
 
 // Narrow slices. A widget watching one of these does not rebuild when an
 // unrelated field changes, which is the whole point of this file.
-final currentBeatProvider = Provider.family<double, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.currentBeat)));
+final currentBeatProvider = Provider.family<double, String>((ref, id) =>
+    ref.watch(stageControllerProvider(id).select((s) => s.currentBeat)));
 final scoreProvider = Provider.family<int, String>(
     (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.score)));
-final accuracyProvider = Provider.family<double, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.accuracy)));
+final accuracyProvider = Provider.family<double, String>((ref, id) =>
+    ref.watch(stageControllerProvider(id).select((s) => s.accuracy)));
 final engineStatusProvider = Provider.family<StageEngineStatus, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.status)));
-final noteStatesProvider = Provider.family<List<NoteState>, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.noteStates)));
+    (ref, id) =>
+        ref.watch(stageControllerProvider(id).select((s) => s.status)));
+final noteStatesProvider = Provider.family<List<NoteState>, String>((ref, id) =>
+    ref.watch(stageControllerProvider(id).select((s) => s.noteStates)));
 final playbackSpeedProvider = Provider.family<double, String>(
     (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.speed)));
-final soundingProvider = Provider.family<Set<int>, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.sounding)));
+final soundingProvider = Provider.family<Set<int>, String>((ref, id) =>
+    ref.watch(stageControllerProvider(id).select((s) => s.sounding)));

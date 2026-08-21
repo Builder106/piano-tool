@@ -1,3 +1,5 @@
+from typing import Any, Literal
+
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
@@ -11,7 +13,7 @@ class JobResponse(BaseModel):
     job_id: str
     status: str
     error: str | None = None
-    level: dict | None = None
+    level: dict[str, Any] | None = None
 
 
 def _to_response(job: Job) -> JobResponse:
@@ -23,12 +25,12 @@ def _to_response(job: Job) -> JobResponse:
     )
 
 
-@router.post("/jobs", status_code=202)
+@router.post("/jobs", status_code=202)  # type: ignore[untyped-decorator]
 async def create_job(
     title: str = Form(...),
-    source: str = Form(...),
+    source: Literal["upload", "youtube"] = Form(...),
     youtube_url: str | None = Form(default=None),
-    audio: UploadFile | None = File(default=None),
+    audio: UploadFile | None = File(),  # noqa: B008
 ) -> JobResponse:
     if source not in ("upload", "youtube"):
         raise HTTPException(status_code=400, detail="source must be 'upload' or 'youtube'")
@@ -49,7 +51,7 @@ async def create_job(
     return JobResponse(job_id=job_id, status="queued", error=None, level=None)
 
 
-@router.get("/jobs/{job_id}")
+@router.get("/jobs/{job_id}")  # type: ignore[untyped-decorator]
 def get_job(job_id: str) -> JobResponse:
     job = store.get(job_id)
     if job is None:
@@ -57,7 +59,7 @@ def get_job(job_id: str) -> JobResponse:
     return _to_response(job)
 
 
-@router.delete("/jobs/{job_id}", status_code=204)
+@router.delete("/jobs/{job_id}", status_code=204)  # type: ignore[untyped-decorator]
 def delete_job(job_id: str) -> None:
     if not store.delete(job_id):
         raise HTTPException(status_code=404, detail="Job not found")

@@ -14,7 +14,9 @@ void main() {
     );
     expect(
       staffScrollOffset(
-          playheadX: anchor - 1, viewportWidth: viewport, contentWidth: content),
+          playheadX: anchor - 1,
+          viewportWidth: viewport,
+          contentWidth: content),
       0,
     );
   });

@@ -35,8 +35,8 @@ void main() {
   });
 
   test('white index advances by seven per octave', () {
-    expect(g.whiteIndexFor(36), 0);  // C2
-    expect(g.whiteIndexFor(48), 7);  // C3
+    expect(g.whiteIndexFor(36), 0); // C2
+    expect(g.whiteIndexFor(48), 7); // C3
     expect(g.whiteIndexFor(96), 35); // C7
   });
 

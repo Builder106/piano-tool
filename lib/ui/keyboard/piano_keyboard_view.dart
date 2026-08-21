@@ -8,7 +8,8 @@ import 'keyboard_geometry.dart';
 /// A 61 key keyboard that shows what is coming and what is being played.
 /// It takes no input; scoring comes from the microphone.
 class PianoKeyboardView extends StatelessWidget {
-  const PianoKeyboardView({super.key, this.due = const {}, this.playing = const {}});
+  const PianoKeyboardView(
+      {super.key, this.due = const {}, this.playing = const {}});
 
   /// Notes the level expects right now.
   final Set<int> due;
@@ -28,7 +29,8 @@ class PianoKeyboardView extends StatelessWidget {
 }
 
 class _KeyboardPainter extends CustomPainter {
-  _KeyboardPainter({required this.colors, required this.due, required this.playing});
+  _KeyboardPainter(
+      {required this.colors, required this.due, required this.playing});
 
   final PianoColors colors;
   final Set<int> due;
@@ -42,14 +44,18 @@ class _KeyboardPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
-    for (var midi = KeyboardGeometry.lowestMidi; midi <= KeyboardGeometry.highestMidi; midi++) {
+    for (var midi = KeyboardGeometry.lowestMidi;
+        midi <= KeyboardGeometry.highestMidi;
+        midi++) {
       if (g.isBlack(midi)) continue;
       final rect = g.whiteKeyRect(g.whiteIndexFor(midi));
       canvas.drawRect(rect, Paint()..color = _whiteFill(midi));
       canvas.drawRect(rect, edge);
     }
 
-    for (var midi = KeyboardGeometry.lowestMidi; midi <= KeyboardGeometry.highestMidi; midi++) {
+    for (var midi = KeyboardGeometry.lowestMidi;
+        midi <= KeyboardGeometry.highestMidi;
+        midi++) {
       if (!g.isBlack(midi)) continue;
       canvas.drawRect(g.blackKeyRect(midi), Paint()..color = _blackFill(midi));
     }
@@ -87,7 +93,8 @@ class _KeyboardPainter extends CustomPainter {
       )..layout();
       painter.paint(
         canvas,
-        Offset(rect.left + (rect.width - painter.width) / 2, size.height - painter.height - 2),
+        Offset(rect.left + (rect.width - painter.width) / 2,
+            size.height - painter.height - 2),
       );
     }
   }

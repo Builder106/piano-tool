@@ -14,7 +14,7 @@ class KeyboardGeometry {
   final double width;
   final double height;
 
-  static const int lowestMidi = 36;  // C2
+  static const int lowestMidi = 36; // C2
   static const int highestMidi = 96; // C7
   static const int whiteKeyCount = 36;
 

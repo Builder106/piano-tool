@@ -44,7 +44,7 @@ class StaffGeometry {
 
   /// Diatonic index of the note on the staff's bottom line.
   static const int _trebleBottom = 30; // E4
-  static const int _bassBottom = 18;   // G2
+  static const int _bassBottom = 18; // G2
 
   /// Maps a chromatic pitch class to its diatonic degree, so a sharp shares a
   /// staff position with its natural.

@@ -12,17 +12,33 @@ typedef GlyphStyle = ({Color color, bool filled, bool ringed, bool struck});
 /// blindness. Filled against hollow noteheads is real notation, so carrying
 /// the distinction in shape costs nothing.
 abstract final class NoteGlyphStyle {
-  static GlyphStyle forState(NoteState state, PianoColors c) =>
-      switch (state) {
+  static GlyphStyle forState(NoteState state, PianoColors c) => switch (state) {
         // All three hit gradations share one glyph. Encoding hit quality
         // visually is a scoring-feedback decision this plan does not make.
-        NoteState.hitPerfect ||
-        NoteState.hitGood ||
-        NoteState.hitOkay =>
-          (color: c.success, filled: true, ringed: false, struck: false),
-        NoteState.missed => (color: c.error, filled: false, ringed: false, struck: true),
-        NoteState.active => (color: c.accent, filled: true, ringed: true, struck: false),
-        NoteState.upcoming => (color: c.muted, filled: false, ringed: false, struck: false),
+        NoteState.hitPerfect || NoteState.hitGood || NoteState.hitOkay => (
+            color: c.success,
+            filled: true,
+            ringed: false,
+            struck: false
+          ),
+        NoteState.missed => (
+            color: c.error,
+            filled: false,
+            ringed: false,
+            struck: true
+          ),
+        NoteState.active => (
+            color: c.accent,
+            filled: true,
+            ringed: true,
+            struck: false
+          ),
+        NoteState.upcoming => (
+            color: c.muted,
+            filled: false,
+            ringed: false,
+            struck: false
+          ),
       };
 }
 
