@@ -34,6 +34,7 @@ class StageEngine extends ChangeNotifier {
 
   Timer? _playbackTimer;
   StreamSubscription<PitchEvent>? _pitchSubscription;
+  var _disposed = false;
   final List<LevelNote> _allNotes = [];
   final Map<int, NoteHitResult> _noteResults = {};
   int _nextNoteIndex = 0;
@@ -126,6 +127,7 @@ class StageEngine extends ChangeNotifier {
 
   /// Stop the stage
   void stop() {
+    if (_disposed) return;
     _stopPlaybackTimer();
     _state = _state.copyWith(engineState: StageEngineStatus.stopped);
     _notifyStateChanged();
@@ -434,6 +436,7 @@ class StageEngine extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _stopPlaybackTimer();
     _pitchSubscription?.cancel();
     _eventController.close();

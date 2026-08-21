@@ -97,6 +97,7 @@ class StageController extends StateNotifier<StageUiState> {
   final String _stageId;
   final ProgressRepository _progress;
   StreamSubscription<StageEvent>? _sub;
+  var _suppressEvents = false;
   Future<void> _progressWrites = Future<void>.value();
 
   /// The engine's own event stream, exposed so the screen can react to the
@@ -116,6 +117,7 @@ class StageController extends StateNotifier<StageUiState> {
   static const double maxSpeed = 2.0;
 
   Future<void> start() async {
+    _suppressEvents = false;
     _engine.start();
     _sync();
     await _progress.setLastPlayed(_stageId);
@@ -129,14 +131,26 @@ class StageController extends StateNotifier<StageUiState> {
   }
 
   void resume() {
+    _suppressEvents = false;
     _engine.resume();
     _sync();
   }
 
   /// Halts and holds position. Distinct from [replay], which rewinds.
-  void stop({final bool notify = true}) {
+  void stop({bool notify = true}) {
+    _suppressEvents = !notify;
     _engine.stop();
-    if (notify) _sync();
+    if (notify) {
+      _sync();
+    } else {
+      // Widget teardown can happen while the tree is being rebuilt. Publish
+      // the stopped state after that build so observers do not retain the
+      // stale playing state, while still avoiding a provider mutation during
+      // disposal.
+      Future<void>.microtask(() {
+        if (mounted) _sync();
+      });
+    }
     // Nothing is being listened for once stopped, so no key should stay lit.
     _clearSounding(notify: notify);
   }
@@ -177,6 +191,7 @@ class StageController extends StateNotifier<StageUiState> {
 
   /// Returns to the start and plays again.
   void replay() {
+    _suppressEvents = false;
     _engine.reset();
     _engine.start();
     _sync();
@@ -194,6 +209,7 @@ class StageController extends StateNotifier<StageUiState> {
   }
 
   void _onEvent(StageEvent event) {
+    if (_suppressEvents) return;
     _sync();
     event.whenOrNull(
       stageCompleted: (accuracy, score, totalNotes, hitNotes) =>
