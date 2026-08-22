@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -51,7 +50,7 @@ class TolerantGoldenFileComparator extends LocalFileComparator {
 
     final String error = await generateFailureOutput(result, golden, basedir);
     result.dispose();
-    throw FlutterError(error);
+    throw TestFailure(error);
   }
 }
 
