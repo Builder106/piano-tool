@@ -57,12 +57,12 @@ Widget _harness(ThemeData theme, List<StaffSystem> systems) => MaterialApp(
 
 Widget _scrollHarness() => MaterialApp(
       theme: PianoTheme.light(),
-      home: Scaffold(
+      home: const Scaffold(
         body: SizedBox(
           width: 740,
           height: 220,
           child: StaffView(
-            systems: const [_scrollingTreble],
+            systems: [_scrollingTreble],
             currentBeat: 12,
             totalBeats: 32,
             beatsPerMeasure: 4,
@@ -144,14 +144,16 @@ void main() {
     await tester.pumpWidget(_scrollHarness());
 
     final staff = tester.widget<StaffView>(find.byType(StaffView));
-    final painter = tester.widget<CustomPaint>(
-      find
-          .descendant(
-            of: find.byType(StaffView),
-            matching: find.byType(CustomPaint),
-          )
-          .first,
-    ).painter! as StaffPainter;
+    final painter = tester
+        .widget<CustomPaint>(
+          find
+              .descendant(
+                of: find.byType(StaffView),
+                matching: find.byType(CustomPaint),
+              )
+              .first,
+        )
+        .painter! as StaffPainter;
     final geometry = painter.geometryFor(220);
     final header = StaffPainter.headerWidthFor(geometry);
     final musicViewport = 740 - header;

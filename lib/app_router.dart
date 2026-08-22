@@ -64,7 +64,9 @@ final FutureProvider<GoRouter> appRouterProvider =
           return ResultsScreen(
             result: result,
             onReplay: () {
-              ref.read(stageControllerProvider(result.stageId).notifier).replay();
+              ref
+                  .read(stageControllerProvider(result.stageId).notifier)
+                  .replay();
               context.goNamed(
                 'practice',
                 pathParameters: {'stageId': result.stageId},

@@ -173,8 +173,9 @@ class StageEngine extends ChangeNotifier {
       final noteState = _state.noteStates[i];
 
       // Skip if already hit or missed
-      if (noteState != NoteState.upcoming && noteState != NoteState.active)
+      if (noteState != NoteState.upcoming && noteState != NoteState.active) {
         continue;
+      }
 
       // Check if this note matches the detected pitch
       if (note.midiNote != detectedMidiNote) continue;
@@ -307,8 +308,9 @@ class StageEngine extends ChangeNotifier {
       final note = _allNotes[i];
       final noteState = _state.noteStates[i];
 
-      if (noteState != NoteState.upcoming && noteState != NoteState.active)
+      if (noteState != NoteState.upcoming && noteState != NoteState.active) {
         continue;
+      }
 
       // Note is missed if we're past its start beat + miss window
       if (currentBeat > note.startBeat + _config.missWindow) {
@@ -333,7 +335,9 @@ class StageEngine extends ChangeNotifier {
       final currentState = newStates[i];
 
       if (currentState != NoteState.upcoming &&
-          currentState != NoteState.active) continue;
+          currentState != NoteState.active) {
+        continue;
+      }
 
       final noteEndBeat = note.startBeat + note.durationBeats;
 

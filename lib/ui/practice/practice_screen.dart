@@ -57,7 +57,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           pathParameters: {'stageId': widget.stageId},
           extra: StageResult(
             stageId: widget.stageId,
-            title: _controller.state.level.title,
+            title:
+                ref.read(stageControllerProvider(widget.stageId)).level.title,
             score: score,
             accuracy: accuracy,
             totalNotes: totalNotes,

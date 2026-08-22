@@ -274,8 +274,7 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 250));
     await tester.pump();
-    final positionBeforePause =
-        container.read(currentBeatProvider('stage_1'));
+    final positionBeforePause = container.read(currentBeatProvider('stage_1'));
     expect(positionBeforePause, greaterThan(0));
 
     await tester.tap(find.byIcon(Icons.pause));

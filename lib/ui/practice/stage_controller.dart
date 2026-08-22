@@ -214,12 +214,12 @@ class StageController extends StateNotifier<StageUiState> {
     event.whenOrNull(
       stageCompleted: (accuracy, score, totalNotes, hitNotes) =>
           _progressWrites = _progressWrites.then(
-            (_) => _progress.record(
-              stageId: _stageId,
-              accuracy: accuracy,
-              score: score,
-            ),
-          ),
+        (_) => _progress.record(
+          stageId: _stageId,
+          accuracy: accuracy,
+          score: score,
+        ),
+      ),
     );
   }
 

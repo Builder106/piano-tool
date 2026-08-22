@@ -7,7 +7,8 @@ void main() {
   Widget harness({
     required VoidCallback onReplay,
     required VoidCallback onReturnToLevels,
-  }) => MaterialApp(
+  }) =>
+      MaterialApp(
         theme: PianoTheme.light(),
         home: ResultsScreen(
           result: const StageResult(

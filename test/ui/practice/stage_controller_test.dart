@@ -38,7 +38,8 @@ void main() {
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
     final started = ctrl.start();
-    final observed = started.then((_) => progressRepository.startCompleted = true);
+    final observed =
+        started.then((_) => progressRepository.startCompleted = true);
     await Future<void>.delayed(Duration.zero);
 
     expect(progressRepository.recordedLastPlayedStageId, 'stage_1');
@@ -116,7 +117,8 @@ void main() {
     expect(() => c.read(stageControllerProvider('nope')), throwsStateError);
   });
 
-  test('stop clears sounding, and a pitch afterward does not relight it', () async {
+  test('stop clears sounding, and a pitch afterward does not relight it',
+      () async {
     final c = harness();
     addTearDown(c.dispose);
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
@@ -173,7 +175,8 @@ void main() {
         reason: 'the note must not stay lit forever after going silent');
   });
 
-  test('a paused transport does not light the keyboard from a stray pitch', () async {
+  test('a paused transport does not light the keyboard from a stray pitch',
+      () async {
     final c = harness();
     addTearDown(c.dispose);
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
