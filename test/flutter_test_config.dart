@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -11,6 +12,10 @@ import 'package:path/path.dart' as p;
 /// would otherwise bake in missing glyphs.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  goldenFileComparator = TolerantGoldenFileComparator(
+    (goldenFileComparator as LocalFileComparator).basedir,
+    tolerance: 0.01,
+  );
   await _load('CormorantGaramond', 'assets/fonts/CormorantGaramond.ttf');
   await _load('IBMPlexSans', 'assets/fonts/IBMPlexSans.ttf');
   await _load('Bravura', 'assets/fonts/Bravura.otf');
@@ -18,6 +23,36 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   // tofu box in a golden unless the SDK's own copy is loaded here.
   await _loadFile('MaterialIcons', _materialIconsPath);
   await testMain();
+}
+
+/// Custom golden file comparator that allows a fractional pixel difference
+/// threshold (default 1%) to accommodate sub-pixel font rasterization
+/// across Linux runner versions.
+class TolerantGoldenFileComparator extends LocalFileComparator {
+  TolerantGoldenFileComparator(
+    super.testFile, {
+    this.tolerance = 0.01,
+  });
+
+  final double tolerance;
+
+  @override
+  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
+    final ComparisonResult result = await GoldenFileComparator.compareLists(
+      imageBytes,
+      await getGoldenBytes(golden),
+    );
+
+    final bool passed = result.passed || result.diffPercent <= tolerance;
+    if (passed) {
+      result.dispose();
+      return true;
+    }
+
+    final String error = await generateFailureOutput(result, golden, basedir);
+    result.dispose();
+    throw FlutterError(error);
+  }
 }
 
 Future<void> _load(String family, String path) async {

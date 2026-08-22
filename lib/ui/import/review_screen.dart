@@ -185,10 +185,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                           child: const Text('Discard'),
                         ),
                         const SizedBox(width: PianoSpacing.md),
-                        FilledButton.icon(
-                          icon: const Icon(Icons.save),
-                          label: const Text('Save Level'),
+                        FilledButton(
                           onPressed: _saveLevel,
+                          child: const Text('Save Level'),
                         ),
                       ],
                     ),
