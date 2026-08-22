@@ -36,6 +36,22 @@ class TolerantGoldenFileComparator extends LocalFileComparator {
   final double tolerance;
 
   @override
+  Uri getTestUri(Uri key, int? version) {
+    final defaultUri = super.getTestUri(key, version);
+    if (File.fromUri(defaultUri).existsSync()) {
+      return defaultUri;
+    }
+    final keyStr = key.toString();
+    for (final prefix in ['test/ui/staff', 'test/ui/practice', 'test']) {
+      final candidate = p.join(prefix, keyStr);
+      if (File(candidate).existsSync()) {
+        return Uri.file(p.absolute(candidate));
+      }
+    }
+    return defaultUri;
+  }
+
+  @override
   Future<bool> compare(Uint8List imageBytes, Uri golden) async {
     final ComparisonResult result = await GoldenFileComparator.compareLists(
       imageBytes,
