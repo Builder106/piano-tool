@@ -178,6 +178,6 @@ test but cannot currently produce an APK.
 
 ## Still to build
 
-Home, level select, results, and settings screens, and the router that
-connects them to the practice screen. Nothing navigates between stages yet;
-`PracticeScreen` is reachable today only by passing a `stageId` directly.
+Settings and broader polish for the import and practice flows. The current app
+supports level selection, import and review storage, practice, and results;
+the router connects those screens by stage ID.
