@@ -203,9 +203,9 @@ The first successful Vercel dependency install still produced a 522.97 MB
 Python function bundle, over Vercel's 500 MB limit. The deployed path uses
 basic-pitch's ONNX backend; it does not need scikit-learn or uvicorn's optional
 server extensions. Production installation therefore uses plain `uvicorn`,
-removes scikit-learn after dependency resolution, and excludes backend tests,
-documentation, unused basic-pitch backends, and their model files. The full
-backend test stack remains in `backend/requirements.txt`.
+removes scikit-learn after dependency resolution, and excludes backend tests
+and documentation from the function bundle. The full backend test stack
+remains in `backend/requirements.txt`.
 
 The production-shaped Python 3.12 environment reached 480,344 KB, and the
 FastAPI and transcription imports succeeded without scikit-learn. The full

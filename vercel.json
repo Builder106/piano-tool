@@ -9,7 +9,7 @@
   "functions": {
     "backend/app/main.py": {
       "maxDuration": 60,
-      "excludeFiles": "{backend/tests/**,docs/**,backend/README.md,backend/scripts/**,**/basic_pitch/data/**,**/basic_pitch/train.py,**/basic_pitch/models.py,**/basic_pitch/nn.py,**/basic_pitch/layers/**,**/basic_pitch/visualize.py,**/basic_pitch/callbacks.py,**/basic_pitch/saved_models/icassp_2022/nmp.tflite,**/basic_pitch/saved_models/icassp_2022/nmp/**,**/basic_pitch/saved_models/icassp_2022/nmp.mlpackage/**,**/sklearn/**,**/scikit_learn-*.dist-info/**}"
+      "excludeFiles": "{backend/tests/**,docs/**,**/sklearn/**,**/scikit_learn-*.dist-info/**}"
     }
   },
   "buildCommand": "pip install basic-pitch==0.4.0 --no-deps && pip uninstall -y scikit-learn",
