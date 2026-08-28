@@ -4,7 +4,6 @@ soundfile
 mir-eval
 pretty-midi>=0.2.9
 resampy<0.4.3,>=0.2.2
-scikit-learn
 scipy>=1.4.1
 typing-extensions
 onnxruntime
