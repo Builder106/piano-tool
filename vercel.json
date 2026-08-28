@@ -1,11 +1,16 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "piano-tool": true
+    }
+  },
   "functions": {
     "backend/app/main.py": {
-      "runtime": "python3.11",
       "maxDuration": 60
     }
   },
   "buildCommand": "pip install -r requirements.txt",
-  "devCommand": "uvicorn backend.app.main:app --reload",
-  "ignoreCommand": "echo \"ref=$VERCEL_GIT_COMMIT_REF\"; case \"$VERCEL_GIT_COMMIT_REF\" in main|staging|piano-tool) exit 1 ;; *) exit 0 ;; esac"
+  "devCommand": "uvicorn backend.app.main:app --reload"
 }
