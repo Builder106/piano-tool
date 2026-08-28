@@ -11,6 +11,6 @@
       "maxDuration": 60
     }
   },
-  "buildCommand": "pip install -r requirements.txt",
+  "buildCommand": "pip install -r requirements.txt && pip install basic-pitch==0.4.0 --no-deps",
   "devCommand": "uvicorn backend.app.main:app --reload"
 }
