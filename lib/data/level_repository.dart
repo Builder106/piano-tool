@@ -1,5 +1,6 @@
 import 'package:riverpod/riverpod.dart';
 import '../models/level_models.dart';
+import 'ingestion_repository.dart';
 
 /// Repository for loading and managing levels/stages.
 ///
@@ -34,10 +35,30 @@ class LevelRepository {
           startBeat: 0,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 60, startBeat: 0, durationBeats: 1, measureIndex: 0, beatIndex: 0), // C4
-            LevelNote(midiNote: 62, startBeat: 1, durationBeats: 1, measureIndex: 0, beatIndex: 1), // D4
-            LevelNote(midiNote: 64, startBeat: 2, durationBeats: 1, measureIndex: 0, beatIndex: 2), // E4
-            LevelNote(midiNote: 65, startBeat: 3, durationBeats: 1, measureIndex: 0, beatIndex: 3), // F4
+            LevelNote(
+                midiNote: 60,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0), // C4
+            LevelNote(
+                midiNote: 62,
+                startBeat: 1,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 1), // D4
+            LevelNote(
+                midiNote: 64,
+                startBeat: 2,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 2), // E4
+            LevelNote(
+                midiNote: 65,
+                startBeat: 3,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 3), // F4
           ],
         ),
         LevelMeasure(
@@ -45,10 +66,30 @@ class LevelRepository {
           startBeat: 4,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 67, startBeat: 4, durationBeats: 1, measureIndex: 1, beatIndex: 0), // G4
-            LevelNote(midiNote: 69, startBeat: 5, durationBeats: 1, measureIndex: 1, beatIndex: 1), // A4
-            LevelNote(midiNote: 71, startBeat: 6, durationBeats: 1, measureIndex: 1, beatIndex: 2), // B4
-            LevelNote(midiNote: 72, startBeat: 7, durationBeats: 1, measureIndex: 1, beatIndex: 3), // C5
+            LevelNote(
+                midiNote: 67,
+                startBeat: 4,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 0), // G4
+            LevelNote(
+                midiNote: 69,
+                startBeat: 5,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 1), // A4
+            LevelNote(
+                midiNote: 71,
+                startBeat: 6,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 2), // B4
+            LevelNote(
+                midiNote: 72,
+                startBeat: 7,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 3), // C5
           ],
         ),
         LevelMeasure(
@@ -56,10 +97,30 @@ class LevelRepository {
           startBeat: 8,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 72, startBeat: 8, durationBeats: 1, measureIndex: 2, beatIndex: 0), // C5
-            LevelNote(midiNote: 71, startBeat: 9, durationBeats: 1, measureIndex: 2, beatIndex: 1), // B4
-            LevelNote(midiNote: 69, startBeat: 10, durationBeats: 1, measureIndex: 2, beatIndex: 2), // A4
-            LevelNote(midiNote: 67, startBeat: 11, durationBeats: 1, measureIndex: 2, beatIndex: 3), // G4
+            LevelNote(
+                midiNote: 72,
+                startBeat: 8,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 0), // C5
+            LevelNote(
+                midiNote: 71,
+                startBeat: 9,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 1), // B4
+            LevelNote(
+                midiNote: 69,
+                startBeat: 10,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 2), // A4
+            LevelNote(
+                midiNote: 67,
+                startBeat: 11,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 3), // G4
           ],
         ),
         LevelMeasure(
@@ -67,10 +128,30 @@ class LevelRepository {
           startBeat: 12,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 65, startBeat: 12, durationBeats: 1, measureIndex: 3, beatIndex: 0), // F4
-            LevelNote(midiNote: 64, startBeat: 13, durationBeats: 1, measureIndex: 3, beatIndex: 1), // E4
-            LevelNote(midiNote: 62, startBeat: 14, durationBeats: 1, measureIndex: 3, beatIndex: 2), // D4
-            LevelNote(midiNote: 60, startBeat: 15, durationBeats: 1, measureIndex: 3, beatIndex: 3), // C4
+            LevelNote(
+                midiNote: 65,
+                startBeat: 12,
+                durationBeats: 1,
+                measureIndex: 3,
+                beatIndex: 0), // F4
+            LevelNote(
+                midiNote: 64,
+                startBeat: 13,
+                durationBeats: 1,
+                measureIndex: 3,
+                beatIndex: 1), // E4
+            LevelNote(
+                midiNote: 62,
+                startBeat: 14,
+                durationBeats: 1,
+                measureIndex: 3,
+                beatIndex: 2), // D4
+            LevelNote(
+                midiNote: 60,
+                startBeat: 15,
+                durationBeats: 1,
+                measureIndex: 3,
+                beatIndex: 3), // C4
           ],
         ),
       ],
@@ -90,10 +171,30 @@ class LevelRepository {
           startBeat: 0,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 64, startBeat: 0, durationBeats: 1, measureIndex: 0, beatIndex: 0), // E4
-            LevelNote(midiNote: 64, startBeat: 1, durationBeats: 1, measureIndex: 0, beatIndex: 1), // E4
-            LevelNote(midiNote: 65, startBeat: 2, durationBeats: 1, measureIndex: 0, beatIndex: 2), // F4
-            LevelNote(midiNote: 67, startBeat: 3, durationBeats: 1, measureIndex: 0, beatIndex: 3), // G4
+            LevelNote(
+                midiNote: 64,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0), // E4
+            LevelNote(
+                midiNote: 64,
+                startBeat: 1,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 1), // E4
+            LevelNote(
+                midiNote: 65,
+                startBeat: 2,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 2), // F4
+            LevelNote(
+                midiNote: 67,
+                startBeat: 3,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 3), // G4
           ],
         ),
         LevelMeasure(
@@ -101,10 +202,30 @@ class LevelRepository {
           startBeat: 4,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 67, startBeat: 4, durationBeats: 1, measureIndex: 1, beatIndex: 0), // G4
-            LevelNote(midiNote: 65, startBeat: 5, durationBeats: 1, measureIndex: 1, beatIndex: 1), // F4
-            LevelNote(midiNote: 64, startBeat: 6, durationBeats: 1, measureIndex: 1, beatIndex: 2), // E4
-            LevelNote(midiNote: 62, startBeat: 7, durationBeats: 1, measureIndex: 1, beatIndex: 3), // D4
+            LevelNote(
+                midiNote: 67,
+                startBeat: 4,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 0), // G4
+            LevelNote(
+                midiNote: 65,
+                startBeat: 5,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 1), // F4
+            LevelNote(
+                midiNote: 64,
+                startBeat: 6,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 2), // E4
+            LevelNote(
+                midiNote: 62,
+                startBeat: 7,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 3), // D4
           ],
         ),
         LevelMeasure(
@@ -112,10 +233,30 @@ class LevelRepository {
           startBeat: 8,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 60, startBeat: 8, durationBeats: 1, measureIndex: 2, beatIndex: 0), // C4
-            LevelNote(midiNote: 60, startBeat: 9, durationBeats: 1, measureIndex: 2, beatIndex: 1), // C4
-            LevelNote(midiNote: 62, startBeat: 10, durationBeats: 1, measureIndex: 2, beatIndex: 2), // D4
-            LevelNote(midiNote: 64, startBeat: 11, durationBeats: 1, measureIndex: 2, beatIndex: 3), // E4
+            LevelNote(
+                midiNote: 60,
+                startBeat: 8,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 0), // C4
+            LevelNote(
+                midiNote: 60,
+                startBeat: 9,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 1), // C4
+            LevelNote(
+                midiNote: 62,
+                startBeat: 10,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 2), // D4
+            LevelNote(
+                midiNote: 64,
+                startBeat: 11,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 3), // E4
           ],
         ),
         LevelMeasure(
@@ -123,8 +264,18 @@ class LevelRepository {
           startBeat: 12,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 64, startBeat: 12, durationBeats: 2, measureIndex: 3, beatIndex: 0), // E4 (half)
-            LevelNote(midiNote: 62, startBeat: 14, durationBeats: 2, measureIndex: 3, beatIndex: 2), // D4 (half)
+            LevelNote(
+                midiNote: 64,
+                startBeat: 12,
+                durationBeats: 2,
+                measureIndex: 3,
+                beatIndex: 0), // E4 (half)
+            LevelNote(
+                midiNote: 62,
+                startBeat: 14,
+                durationBeats: 2,
+                measureIndex: 3,
+                beatIndex: 2), // D4 (half)
           ],
         ),
       ],
@@ -144,10 +295,30 @@ class LevelRepository {
           startBeat: 0,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 60, startBeat: 0, durationBeats: 2, measureIndex: 0, beatIndex: 0), // C4 half
-            LevelNote(midiNote: 64, startBeat: 2, durationBeats: 1, measureIndex: 0, beatIndex: 2), // E4 quarter
-            LevelNote(midiNote: 67, startBeat: 3, durationBeats: 0.5, measureIndex: 0, beatIndex: 3), // G4 eighth
-            LevelNote(midiNote: 72, startBeat: 3.5, durationBeats: 0.5, measureIndex: 0, beatIndex: 3), // C5 eighth
+            LevelNote(
+                midiNote: 60,
+                startBeat: 0,
+                durationBeats: 2,
+                measureIndex: 0,
+                beatIndex: 0), // C4 half
+            LevelNote(
+                midiNote: 64,
+                startBeat: 2,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 2), // E4 quarter
+            LevelNote(
+                midiNote: 67,
+                startBeat: 3,
+                durationBeats: 0.5,
+                measureIndex: 0,
+                beatIndex: 3), // G4 eighth
+            LevelNote(
+                midiNote: 72,
+                startBeat: 3.5,
+                durationBeats: 0.5,
+                measureIndex: 0,
+                beatIndex: 3), // C5 eighth
           ],
         ),
         LevelMeasure(
@@ -155,10 +326,30 @@ class LevelRepository {
           startBeat: 4,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 72, startBeat: 4, durationBeats: 0.5, measureIndex: 1, beatIndex: 0), // C5 eighth
-            LevelNote(midiNote: 67, startBeat: 4.5, durationBeats: 0.5, measureIndex: 1, beatIndex: 0), // G4 eighth
-            LevelNote(midiNote: 65, startBeat: 5, durationBeats: 1, measureIndex: 1, beatIndex: 1), // F4 quarter
-            LevelNote(midiNote: 64, startBeat: 6, durationBeats: 2, measureIndex: 1, beatIndex: 2), // E4 half
+            LevelNote(
+                midiNote: 72,
+                startBeat: 4,
+                durationBeats: 0.5,
+                measureIndex: 1,
+                beatIndex: 0), // C5 eighth
+            LevelNote(
+                midiNote: 67,
+                startBeat: 4.5,
+                durationBeats: 0.5,
+                measureIndex: 1,
+                beatIndex: 0), // G4 eighth
+            LevelNote(
+                midiNote: 65,
+                startBeat: 5,
+                durationBeats: 1,
+                measureIndex: 1,
+                beatIndex: 1), // F4 quarter
+            LevelNote(
+                midiNote: 64,
+                startBeat: 6,
+                durationBeats: 2,
+                measureIndex: 1,
+                beatIndex: 2), // E4 half
           ],
         ),
         LevelMeasure(
@@ -166,12 +357,42 @@ class LevelRepository {
           startBeat: 8,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 62, startBeat: 8, durationBeats: 0.5, measureIndex: 2, beatIndex: 0), // D4 eighth
-            LevelNote(midiNote: 64, startBeat: 8.5, durationBeats: 0.5, measureIndex: 2, beatIndex: 0), // E4 eighth
-            LevelNote(midiNote: 65, startBeat: 9, durationBeats: 0.5, measureIndex: 2, beatIndex: 1), // F4 eighth
-            LevelNote(midiNote: 67, startBeat: 9.5, durationBeats: 0.5, measureIndex: 2, beatIndex: 1), // G4 eighth
-            LevelNote(midiNote: 69, startBeat: 10, durationBeats: 1, measureIndex: 2, beatIndex: 2), // A4 quarter
-            LevelNote(midiNote: 67, startBeat: 11, durationBeats: 1, measureIndex: 2, beatIndex: 3), // G4 quarter
+            LevelNote(
+                midiNote: 62,
+                startBeat: 8,
+                durationBeats: 0.5,
+                measureIndex: 2,
+                beatIndex: 0), // D4 eighth
+            LevelNote(
+                midiNote: 64,
+                startBeat: 8.5,
+                durationBeats: 0.5,
+                measureIndex: 2,
+                beatIndex: 0), // E4 eighth
+            LevelNote(
+                midiNote: 65,
+                startBeat: 9,
+                durationBeats: 0.5,
+                measureIndex: 2,
+                beatIndex: 1), // F4 eighth
+            LevelNote(
+                midiNote: 67,
+                startBeat: 9.5,
+                durationBeats: 0.5,
+                measureIndex: 2,
+                beatIndex: 1), // G4 eighth
+            LevelNote(
+                midiNote: 69,
+                startBeat: 10,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 2), // A4 quarter
+            LevelNote(
+                midiNote: 67,
+                startBeat: 11,
+                durationBeats: 1,
+                measureIndex: 2,
+                beatIndex: 3), // G4 quarter
           ],
         ),
         LevelMeasure(
@@ -179,8 +400,18 @@ class LevelRepository {
           startBeat: 12,
           beatsPerMeasure: 4,
           notes: [
-            LevelNote(midiNote: 65, startBeat: 12, durationBeats: 2, measureIndex: 3, beatIndex: 0), // F4 half
-            LevelNote(midiNote: 60, startBeat: 14, durationBeats: 2, measureIndex: 3, beatIndex: 2), // C4 half
+            LevelNote(
+                midiNote: 65,
+                startBeat: 12,
+                durationBeats: 2,
+                measureIndex: 3,
+                beatIndex: 0), // F4 half
+            LevelNote(
+                midiNote: 60,
+                startBeat: 14,
+                durationBeats: 2,
+                measureIndex: 3,
+                beatIndex: 2), // C4 half
           ],
         ),
       ],
@@ -228,7 +459,15 @@ class LevelRepository {
   LevelModel? getLevel(String id) => _levels[id];
 
   /// Get a stage by ID
-  StageModel? getStage(String id) => _stages[id];
+  StageModel? getStage(String id) {
+    final builtIn = _stages[id];
+    if (builtIn != null) return builtIn;
+
+    for (final stage in _importedStages.values) {
+      if (stage.id == id) return stage;
+    }
+    return null;
+  }
 
   /// Get all levels
   List<LevelModel> getAllLevels() => _levels.values.toList();
@@ -273,5 +512,16 @@ class LevelRepository {
   bool isImportedLevel(String levelId) => _importedStages.containsKey(levelId);
 }
 
-/// Riverpod provider for the level repository
-final levelRepositoryProvider = Provider<LevelRepository>((ref) => LevelRepository());
+/// Riverpod provider for the level repository.
+///
+/// Imported levels are persisted by [IngestionRepository], so the in-memory
+/// catalog must hydrate before the level list is rendered.
+final levelRepositoryProvider = FutureProvider<LevelRepository>((ref) async {
+  final repository = LevelRepository();
+  final ingestion = await ref.watch(ingestionRepositoryProvider.future);
+  final imported = await ingestion.listImportedLevels();
+  for (final level in imported) {
+    repository.addImportedLevel(level);
+  }
+  return repository;
+});

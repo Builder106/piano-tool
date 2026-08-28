@@ -6,27 +6,35 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:piano_tool/data/level_repository.dart';
+import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
 import 'package:piano_tool/ui/levels/level_list_screen.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
-@GenerateMocks([ProgressRepository])
+@GenerateMocks([ProgressRepository, IngestionRepository])
 import 'level_list_screen_test.mocks.dart';
 
 void main() {
   late MockProgressRepository mockProgressRepo;
+  late MockIngestionRepository mockIngestionRepo;
   late LevelRepository levelRepository;
 
   setUp(() {
     mockProgressRepo = MockProgressRepository();
+    mockIngestionRepo = MockIngestionRepository();
     levelRepository = LevelRepository();
+    when(mockIngestionRepo.listImportedLevels())
+        .thenAnswer((_) async => <LevelModel>[]);
+    when(mockIngestionRepo.deleteImportedLevel(any)).thenAnswer((_) async {});
   });
 
   Widget createTestWidget() {
     return ProviderScope(
       overrides: [
-        levelRepositoryProvider.overrideWithValue(levelRepository),
+        levelRepositoryProvider.overrideWith((ref) async => levelRepository),
+        ingestionRepositoryProvider
+            .overrideWith((ref) async => mockIngestionRepo),
         progressRepositoryProvider.overrideWithValue(mockProgressRepo),
       ],
       child: MaterialApp.router(
@@ -42,7 +50,8 @@ void main() {
             ),
             GoRoute(
               path: '/practice/:stageId',
-              builder: (_, state) => Scaffold(body: Text('Practice: ${state.pathParameters['stageId']}')),
+              builder: (_, state) => Scaffold(
+                  body: Text('Practice: ${state.pathParameters['stageId']}')),
             ),
           ],
         ),
@@ -64,9 +73,12 @@ void main() {
       expect(find.text('Mixed Rhythms'), findsOneWidget);
 
       // Check order
-      final scaleIndex = tester.getSemantics(find.text('C Major Scale')).indexInParent as int;
-      final odeIndex = tester.getSemantics(find.text('Ode to Joy')).indexInParent as int;
-      final mixedIndex = tester.getSemantics(find.text('Mixed Rhythms')).indexInParent as int;
+      final scaleIndex =
+          tester.getSemantics(find.text('C Major Scale')).indexInParent as int;
+      final odeIndex =
+          tester.getSemantics(find.text('Ode to Joy')).indexInParent as int;
+      final mixedIndex =
+          tester.getSemantics(find.text('Mixed Rhythms')).indexInParent as int;
       expect(scaleIndex, lessThan(odeIndex));
       expect(odeIndex, lessThan(mixedIndex));
     });
@@ -80,7 +92,8 @@ void main() {
       expect(find.byIcon(Icons.add_rounded), findsOneWidget);
     });
 
-    testWidgets('tapping import button navigates to import screen', (tester) async {
+    testWidgets('tapping import button navigates to import screen',
+        (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
       await tester.pumpWidget(createTestWidget());
@@ -147,8 +160,8 @@ void main() {
       final builtInStages = find.byWidgetPredicate((widget) {
         return widget is Text &&
             (widget.data?.contains('C Major Scale') == true ||
-             widget.data?.contains('Ode to Joy') == true ||
-             widget.data?.contains('Mixed Rhythms') == true);
+                widget.data?.contains('Ode to Joy') == true ||
+                widget.data?.contains('Mixed Rhythms') == true);
       });
       expect(builtInStages, findsAtLeastNWidgets(3));
     });
@@ -188,16 +201,17 @@ void main() {
     });
 
     testWidgets('shows progress for completed stages', (tester) async {
-      when(mockProgressRepo.read('stage_1')).thenAnswer((_) async => StageProgress(
-        stageId: 'stage_1',
-        bestAccuracy: 0.95,
-        bestScore: 1000,
-        attempts: 3,
-        completed: true,
-        unlocked: true,
-        completedAt: DateTime.now(),
-        lastAttemptAt: DateTime.now(),
-      ));
+      when(mockProgressRepo.read('stage_1'))
+          .thenAnswer((_) async => StageProgress(
+                stageId: 'stage_1',
+                bestAccuracy: 0.95,
+                bestScore: 1000,
+                attempts: 3,
+                completed: true,
+                unlocked: true,
+                completedAt: DateTime.now(),
+                lastAttemptAt: DateTime.now(),
+              ));
       when(mockProgressRepo.read('stage_2')).thenAnswer((_) async => null);
       when(mockProgressRepo.read('stage_3')).thenAnswer((_) async => null);
 
@@ -207,7 +221,8 @@ void main() {
       expect(find.text('95%'), findsOneWidget);
     });
 
-    testWidgets('long press on imported level shows delete dialog', (tester) async {
+    testWidgets('long press on imported level shows delete dialog',
+        (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
       const importedLevel = LevelModel(

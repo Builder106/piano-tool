@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/ingestion_repository.dart';
+import '../../data/level_repository.dart';
 import '../../models/level_models.dart';
 import '../../models/engine_models.dart';
 import '../keyboard/piano_keyboard_view.dart';
@@ -202,7 +203,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           state: _currentBeat >= note.startBeat &&
                   _currentBeat < note.startBeat + note.durationBeats
               ? NoteState.active
-              : (_currentBeat < note.startBeat ? NoteState.upcoming : NoteState.missed),
+              : (_currentBeat < note.startBeat
+                  ? NoteState.upcoming
+                  : NoteState.missed),
         ));
       }
     }
@@ -286,6 +289,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       final repo = await ref.read(ingestionRepositoryProvider.future);
       await repo.saveLevel(_level!);
       if (!mounted) return;
+      ref.invalidate(levelRepositoryProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Level saved successfully')),
       );

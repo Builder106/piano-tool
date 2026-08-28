@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/ingestion_repository.dart';
 import '../../data/level_repository.dart';
 import '../../data/progress_repository.dart';
 import '../../models/level_models.dart';
@@ -19,7 +20,22 @@ class LevelListScreen extends ConsumerStatefulWidget {
 class _LevelListScreenState extends ConsumerState<LevelListScreen> {
   @override
   Widget build(BuildContext context) {
-    final repository = ref.watch(levelRepositoryProvider);
+    final repositoryAsync = ref.watch(levelRepositoryProvider);
+
+    return repositoryAsync.when(
+      data: (repository) => _buildScaffold(context, repository),
+      loading: () => const Scaffold(
+        body: SafeArea(child: Center(child: CircularProgressIndicator())),
+      ),
+      error: (error, stack) => Scaffold(
+        body: SafeArea(
+          child: Center(child: Text('Error loading levels: $error')),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, LevelRepository repository) {
     final stages = repository.getAllStages();
 
     return Scaffold(
@@ -34,10 +50,12 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                 children: [
                   Text(
                     'Piano Tool',
-                    style: PianoTheme.textThemeOf(context).headlineMedium?.copyWith(
-                      color: PianoTheme.colorsOf(context).ink,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: PianoTheme.textThemeOf(context)
+                        .headlineMedium
+                        ?.copyWith(
+                          color: PianoTheme.colorsOf(context).ink,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                   const Spacer(),
                   IconButton(
@@ -56,9 +74,11 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
             // Stage list
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: PianoSpacing.lg),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: PianoSpacing.lg),
                 itemCount: stages.length,
-                separatorBuilder: (_, __) => const SizedBox(height: PianoSpacing.md),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: PianoSpacing.md),
                 itemBuilder: (context, index) {
                   final stage = stages[index];
                   final isImported = repository.isImportedLevel(stage.level.id);
@@ -67,7 +87,8 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                     isImported: isImported,
                     onTap: () => context.push('/practice/${stage.id}'),
                     onDelete: isImported
-                        ? () => _confirmDelete(context, stage.level.id)
+                        ? () =>
+                            _confirmDelete(context, repository, stage.level.id)
                         : null,
                   );
                 },
@@ -81,13 +102,15 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
 
   Future<void> _confirmDelete(
     BuildContext context,
+    LevelRepository repository,
     String levelId,
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: PianoTheme.colorsOf(context).paper3,
-        title: Text('Delete imported piece?', style: PianoTheme.textThemeOf(context).titleLarge),
+        title: Text('Delete imported piece?',
+            style: PianoTheme.textThemeOf(context).titleLarge),
         content: Text(
           'This will remove the piece from your library. This action cannot be undone.',
           style: PianoTheme.textThemeOf(context).bodyMedium,
@@ -95,29 +118,39 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: PianoTheme.textThemeOf(context).labelLarge?.copyWith(
-              color: PianoTheme.colorsOf(context).muted,
-            )),
+            child: Text('Cancel',
+                style: PianoTheme.textThemeOf(context).labelLarge?.copyWith(
+                      color: PianoTheme.colorsOf(context).muted,
+                    )),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: PianoTheme.colorsOf(context).error,
             ),
-            child: Text('Delete', style: PianoTheme.textThemeOf(context).labelLarge),
+            child: Text('Delete',
+                style: PianoTheme.textThemeOf(context).labelLarge),
           ),
         ],
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      final repository = ref.read(levelRepositoryProvider);
-      repository.removeImportedLevel(levelId);
-      // LevelRepository is a plain object (overridden via overrideWithValue
-      // in tests), so mutating it doesn't notify Riverpod listeners on its
-      // own -- force a rebuild explicitly.
-      setState(() {});
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final ingestionRepo = await ref.read(ingestionRepositoryProvider.future);
+      await ingestionRepo.deleteImportedLevel(levelId);
+    } on IngestionException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete: ${e.message}')),
+      );
+      return;
     }
+
+    repository.removeImportedLevel(levelId);
+    ref.invalidate(levelRepositoryProvider);
+    setState(() {});
   }
 }
 
@@ -163,11 +196,14 @@ class _StageCard extends ConsumerWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: _difficultyColor(stage.difficulty, colors).withValues(alpha: 0.15),
+                      color: _difficultyColor(stage.difficulty, colors)
+                          .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(PianoRadius.md),
                     ),
                     child: Icon(
-                      isImported ? Icons.upload_file_rounded : _difficultyIcon(stage.difficulty),
+                      isImported
+                          ? Icons.upload_file_rounded
+                          : _difficultyIcon(stage.difficulty),
                       color: _difficultyColor(stage.difficulty, colors),
                       size: 24,
                     ),
@@ -198,7 +234,8 @@ class _StageCard extends ConsumerWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: colors.accent.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(PianoRadius.sm),
+                                  borderRadius:
+                                      BorderRadius.circular(PianoRadius.sm),
                                 ),
                                 child: Text(
                                   'Imported',
@@ -213,7 +250,8 @@ class _StageCard extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           stage.description,
-                          style: textTheme.bodySmall?.copyWith(color: colors.muted),
+                          style: textTheme.bodySmall
+                              ?.copyWith(color: colors.muted),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -229,7 +267,9 @@ class _StageCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(2),
                                   backgroundColor: colors.rule,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    isCompleted ? colors.success : colors.accent,
+                                    isCompleted
+                                        ? colors.success
+                                        : colors.accent,
                                   ),
                                 ),
                               ),
@@ -237,7 +277,9 @@ class _StageCard extends ConsumerWidget {
                               Text(
                                 '${(bestAccuracy * 100).round()}%',
                                 style: textTheme.labelSmall?.copyWith(
-                                  color: isCompleted ? colors.success : colors.muted,
+                                  color: isCompleted
+                                      ? colors.success
+                                      : colors.muted,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -246,7 +288,8 @@ class _StageCard extends ConsumerWidget {
                         ] else ...[
                           Text(
                             'Not started',
-                            style: textTheme.labelSmall?.copyWith(color: colors.muted),
+                            style: textTheme.labelSmall
+                                ?.copyWith(color: colors.muted),
                           ),
                         ],
                       ],
@@ -256,7 +299,8 @@ class _StageCard extends ConsumerWidget {
                   // Chevron or delete
                   if (onDelete != null)
                     IconButton(
-                      icon: Icon(Icons.delete_outline_rounded, color: colors.error),
+                      icon: Icon(Icons.delete_outline_rounded,
+                          color: colors.error),
                       onPressed: onDelete,
                       tooltip: 'Delete',
                     )
