@@ -3,7 +3,8 @@
   "git": {
     "deploymentEnabled": {
       "**": false,
-      "piano-tool": true
+      "piano-tool": true,
+      "staging": true
     }
   }
 }
