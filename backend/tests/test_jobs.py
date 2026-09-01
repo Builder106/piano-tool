@@ -1,5 +1,6 @@
 import time
 
+from app.errors import YoutubeUnavailableError
 from app.jobs import JobStore
 from app.quantize import NoteEvent
 
@@ -53,6 +54,37 @@ def test_submit_fails_when_acquisition_raises_a_known_error(monkeypatch):
     assert "700" in job.error
 
 
+def test_submit_fails_when_youtube_is_unavailable(monkeypatch):
+    store = JobStore(max_workers=1)
+    monkeypatch.setattr(
+        "app.jobs.acquire_audio",
+        lambda *args, **kwargs: (_ for _ in ()).throw(YoutubeUnavailableError("offline")),
+    )
+
+    job_id = store.submit("youtube", "Test Song", youtube_url="https://youtu.be/abc123")
+    store.wait(job_id)
+
+    job = store.get(job_id)
+    assert job.status == "failed"
+    assert job.error == "offline"
+
+
+def test_submit_surfaces_unexpected_errors(monkeypatch):
+    store = JobStore(max_workers=1)
+
+    def _raise(*args, **kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr("app.jobs.acquire_audio", _raise)
+
+    job_id = store.submit("upload", "Test Song", upload_bytes=b"fake")
+    store.wait(job_id)
+
+    job = store.get(job_id)
+    assert job.status == "failed"
+    assert job.error == "Unexpected error: boom"
+
+
 def test_submit_falls_back_to_default_tempo_when_estimate_is_zero(monkeypatch):
     store = JobStore(max_workers=1)
     monkeypatch.setattr("app.jobs.acquire_audio", lambda *a, **k: "/tmp/fake.wav")
@@ -92,6 +124,11 @@ def test_delete_prevents_a_queued_but_not_yet_started_job_from_running(monkeypat
 def test_get_returns_none_for_an_unknown_job():
     store = JobStore(max_workers=1)
     assert store.get("does-not-exist") is None
+
+
+def test_wait_ignores_an_unknown_job():
+    store = JobStore(max_workers=1)
+    store.wait("does-not-exist")
 
 
 def test_delete_removes_a_job(monkeypatch):

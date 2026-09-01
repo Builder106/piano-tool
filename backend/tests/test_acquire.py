@@ -1,8 +1,11 @@
+import subprocess
+from pathlib import Path
+
 import numpy as np
 import pytest
 import soundfile as sf
 
-from app.acquire import acquire_audio, acquire_upload
+from app.acquire import acquire_audio, acquire_upload, acquire_youtube
 from app.errors import AudioTooLongError, NoNotesDetectedError, YoutubeUnavailableError
 
 
@@ -35,6 +38,11 @@ def test_acquire_audio_requires_upload_bytes_for_the_upload_source(tmp_path):
 def test_acquire_audio_requires_a_url_for_the_youtube_source(tmp_path):
     with pytest.raises(ValueError):
         acquire_audio("youtube", str(tmp_path))
+
+
+def test_acquire_audio_rejects_an_unknown_source(tmp_path):
+    with pytest.raises(ValueError, match="Unknown source"):
+        acquire_audio("archive", str(tmp_path))
 
 
 def test_acquire_youtube_wraps_download_errors(tmp_path, monkeypatch):
@@ -100,3 +108,61 @@ def test_acquire_youtube_accepts_real_shaped_youtube_urls(tmp_path, monkeypatch,
 def test_acquire_upload_of_garbage_bytes_raises_no_notes_detected(tmp_path):
     with pytest.raises(NoNotesDetectedError):
         acquire_upload(b"this is not a valid audio file", str(tmp_path))
+
+
+def test_acquire_upload_wraps_ffprobe_failure(monkeypatch, tmp_path):
+    def _fail(*args, **kwargs):
+        raise subprocess.CalledProcessError(1, "ffprobe")
+
+    monkeypatch.setattr("app.acquire.subprocess.run", _fail)
+
+    with pytest.raises(NoNotesDetectedError):
+        acquire_upload(b"fake audio", str(tmp_path))
+
+
+def test_acquire_youtube_rejects_success_without_a_downloaded_file(monkeypatch, tmp_path):
+    import yt_dlp
+
+    class _SuccessfulDownloader:
+        def __init__(self, options):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def extract_info(self, url, download=True):
+            return {"id": "abc123"}
+
+    monkeypatch.setattr(yt_dlp, "YoutubeDL", _SuccessfulDownloader)
+
+    with pytest.raises(YoutubeUnavailableError, match="produced no file"):
+        acquire_youtube("https://youtu.be/abc123", str(tmp_path))
+
+
+def test_acquire_youtube_returns_the_downloaded_wav(monkeypatch, tmp_path):
+    import yt_dlp
+
+    class _SuccessfulDownloader:
+        def __init__(self, options):
+            self.options = options
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def extract_info(self, url, download=True):
+            wav_path = self.options["outtmpl"] % {"ext": "wav"}
+            Path(wav_path).touch()
+            return {"id": "abc123"}
+
+    monkeypatch.setattr(yt_dlp, "YoutubeDL", _SuccessfulDownloader)
+    monkeypatch.setattr("app.acquire._check_duration_cap", lambda path, cap: None)
+
+    result = acquire_youtube("https://youtu.be/abc123", str(tmp_path))
+
+    assert result.endswith(".wav")
