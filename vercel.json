@@ -3,7 +3,15 @@
   "git": {
     "deploymentEnabled": {
       "**": false,
-      "piano-tool": true
+      "main": true
     }
-  }
+  },
+  "functions": {
+    "backend/app/main.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{backend/tests/**,docs/**,backend/README.md,backend/scripts/**,**/sklearn/**,**/scikit_learn-*.dist-info/**}"
+    }
+  },
+  "buildCommand": "pip install -r backend/requirements.txt && pip install basic-pitch==0.4.0 --no-deps && pip uninstall -y scikit-learn",
+  "devCommand": "uvicorn backend.app.main:app --reload"
 }
