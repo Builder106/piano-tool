@@ -3,8 +3,9 @@ import soundfile as sf
 from starlette.testclient import TestClient
 
 from app.main import app
+from app.models import LevelModel
 from app.quantize import NoteEvent
-from app.routes import store
+from app.routes import JobResponse, _to_response, store
 
 client = TestClient(app)
 
@@ -128,6 +129,37 @@ def test_delete_job_then_get_returns_404(monkeypatch):
 
     get_response = client.get(f"/jobs/{job_id}")
     assert get_response.status_code == 404
+
+
+def test_delete_unknown_job_returns_404():
+    response = client.delete("/jobs/does-not-exist")
+    assert response.status_code == 404
+
+
+def test_to_response_serializes_a_level():
+    level = LevelModel(
+        id="level",
+        title="Song",
+        description="",
+        tempo=120,
+        beatsPerMeasure=4,
+        totalMeasures=0,
+        measures=[],
+    )
+    job = type(
+        "JobLike",
+        (),
+        {
+            "job_id": "job",
+            "status": "done",
+            "error": None,
+            "level": level,
+        },
+    )()
+    response = _to_response(job)
+
+    assert isinstance(response, JobResponse)
+    assert response.level["title"] == "Song"
 
 
 def test_end_to_end_with_the_real_pipeline_on_a_synthetic_tone(tmp_path):
