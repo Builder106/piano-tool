@@ -75,16 +75,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         _error = e.message;
         _isLoading = false;
       });
-    } catch (e) {
-      // Repository methods are guarded to only throw IngestionException, but
-      // this screen's own state management (mounted checks, setState) can
-      // still surface a stray error here -- without this branch it would
-      // leave _isLoading stuck true and an eternal spinner with no way out.
-      if (!mounted) return;
-      setState(() {
-        _error = '$e';
-        _isLoading = false;
-      });
     }
   }
 
@@ -185,9 +175,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                           child: const Text('Discard'),
                         ),
                         const SizedBox(width: PianoSpacing.md),
-                        FilledButton(
+                        FilledButton.icon(
+                          icon: const Icon(Icons.save),
+                          label: const Text('Save Level'),
                           onPressed: _saveLevel,
-                          child: const Text('Save Level'),
                         ),
                       ],
                     ),
@@ -298,9 +289,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       final repo = await ref.read(ingestionRepositoryProvider.future);
       await repo.saveLevel(_level!);
       if (!mounted) return;
-      // LevelListScreen reads levelRepositoryProvider, which is hydrated
-      // once at startup from IngestionRepository -- invalidate it so the
-      // level just saved actually shows up there.
       ref.invalidate(levelRepositoryProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Level saved successfully')),

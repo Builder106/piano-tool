@@ -2,39 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/ingestion_repository.dart';
-import '../ui/import/import_screen.dart';
-import '../ui/import/review_screen.dart';
-import '../ui/levels/level_list_screen.dart';
-import '../ui/practice/practice_screen.dart';
-import '../ui/practice/stage_controller.dart';
-import '../ui/results/results_screen.dart';
+import 'data/ingestion_repository.dart';
+import 'ui/import/import_screen.dart';
+import 'ui/import/review_screen.dart';
+import 'ui/levels/level_list_screen.dart';
+import 'ui/practice/practice_screen.dart';
+import 'ui/practice/stage_controller.dart';
+import 'ui/results/results_screen.dart';
 
 /// GoRouter configuration for the app
-final FutureProvider<GoRouter> appRouterProvider =
-    FutureProvider<GoRouter>((final Ref ref) async {
+final appRouterProvider = FutureProvider<GoRouter>((ref) async {
   await ref.watch(ingestionRepositoryProvider.future);
 
   return GoRouter(
     initialLocation: '/',
-    routes: <GoRoute>[
+    routes: [
       GoRoute(
         path: '/',
         name: 'levels',
-        builder: (final BuildContext context, final GoRouterState state) =>
-            const LevelListScreen(),
+        builder: (context, state) => const LevelListScreen(),
       ),
       GoRoute(
         path: '/import',
         name: 'import',
-        builder: (final BuildContext context, final GoRouterState state) =>
-            const ImportScreen(),
+        builder: (context, state) => const ImportScreen(),
       ),
       GoRoute(
         path: '/review',
         name: 'review',
-        builder: (final BuildContext context, final GoRouterState state) {
-          final String? jobId = state.uri.queryParameters['jobId'];
+        builder: (context, state) {
+          final jobId = state.uri.queryParameters['jobId'];
           if (jobId == null) {
             return const Scaffold(body: Center(child: Text('Missing jobId')));
           }
@@ -44,15 +41,15 @@ final FutureProvider<GoRouter> appRouterProvider =
       GoRoute(
         path: '/practice/:stageId',
         name: 'practice',
-        builder: (final BuildContext context, final GoRouterState state) {
-          final String stageId = state.pathParameters['stageId']!;
+        builder: (context, state) {
+          final stageId = state.pathParameters['stageId']!;
           return PracticeScreen(stageId: stageId);
         },
       ),
       GoRoute(
         path: '/results/:stageId',
         name: 'results',
-        builder: (final BuildContext context, final GoRouterState state) {
+        builder: (context, state) {
           final result = state.extra;
           if (result is! StageResult ||
               result.stageId != state.pathParameters['stageId']) {
@@ -77,8 +74,7 @@ final FutureProvider<GoRouter> appRouterProvider =
         },
       ),
     ],
-    errorBuilder: (final BuildContext context, final GoRouterState state) =>
-        Scaffold(
+    errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Text('Route not found: ${state.uri}'),
       ),

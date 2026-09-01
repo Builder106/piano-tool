@@ -41,7 +41,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   /// dispose runs.
   late final StageController _controller;
   StreamSubscription<StageEvent>? _completionSub;
-  var _showingResults = false;
+  bool _showingResults = false;
 
   @override
   void initState() {
@@ -76,10 +76,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     // is not autoDispose, so leaving mid-song would keep the song running,
     // marking notes missed and eventually recording a completion the learner
     // never played.
-    // The provider remains alive after this widget is removed, so stop the
-    // engine even if Riverpod has already detached the notifier from its
-    // listeners. The silent path does not publish provider state.
-    _controller.stop(notify: false);
+    if (_controller.mounted) _controller.stop();
     super.dispose();
   }
 

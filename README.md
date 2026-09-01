@@ -11,39 +11,38 @@ Piano Tool acts as an interactive music coach on your tablet or phone. It displa
 ## Project Status
 
 The core practice foundation is fully functional:
-- **Scrolling Staff Renderer**: clean musical notation rendering for notes, measures, and active playheads.
-- **Audio Pitch Detection**: real-time microphone listening that matches played frequencies to musical notes.
-- **Practice Screen & Transport**: tempo control, replay, score calculation, and keyboard visualization.
-- **Level Catalog and Navigation**: `go_router` takes the app through `LevelListScreen`, `ImportScreen`, `ReviewScreen`, and `PracticeScreen`, and imported levels are hydrated into the catalog on startup.
+- **Scrolling Staff Renderer**: Clean musical notation rendering notes, measures, and active playheads.
+- **Audio Pitch Detection**: Real-time microphone listening that matches played frequencies to musical notes.
+- **Practice Screen & Transport**: Interactive controls for tempo adjustment, replay, score calculation, and keyboard visualization.
 
-## Where the levels come from
+## Where the levels actually come from
 
-Read this before touching level content.
+Read this before touching level content, because the obvious answer is wrong.
 
-The app still ships with three built-in stages in `lib/data/level_repository.dart`.
-The import flow uses `IngestionRepository` to talk to the FastAPI service in
-`backend/`, then hydrates imported levels into the catalog at startup. There is
-no JSON asset pipeline any more, and the old `assets/levels/` path is gone.
+Levels are **hardcoded in Dart**, in `lib/data/level_repository.dart`
+(`_loadBuiltInLevels`). There is no JSON asset pipeline: an earlier version of
+this app read `manifest.json` and `stages.json` from `assets/levels/`, neither
+of which ever existed, and silently fell back to these same built-in levels
+every time. That dead code path, and the `assets/levels/twinkle_twinkle.json`
+fixture that went with it, are gone.
 
-`LevelRepository` exposes the built-in stages through `getAllStages()`: `stage_1`,
+`LevelRepository` exposes three stages through `getAllStages()`: `stage_1`,
 `stage_2`, and `stage_3`, a C major scale, a simple melody, and a mixed rhythm
 study, with `stage_2` and `stage_3` gated behind their predecessor via
 `prerequisites`. Trust `lib/models/level_models.dart` for the data model and
-`lib/data/level_repository.dart` for the catalog.
+`lib/data/level_repository.dart` for the actual content.
 
 ## Architecture
 
 ```text
 lib/
-├── app_router.dart             GoRouter setup for levels, import, review, practice
 ├── main.dart                     App entry, theme, landscape lock
 ├── models/                       Freezed data models and JSON serialisation
 │   ├── level_models.dart         LevelNote, LevelMeasure, LevelModel, StageModel
 │   ├── audio_models.dart         PitchEvent, AudioEngineConfig
 │   └── engine_models.dart        NoteState, StageEvent, StageEngineStateModel
 ├── data/
-│   ├── ingestion_repository.dart  Backend client and local persistence for imports
-│   ├── level_repository.dart     Built-in stages plus imported levels
+│   ├── level_repository.dart     Hardcoded levels (see the section above)
 │   └── progress_repository.dart  Per-stage score/accuracy, via shared_preferences
 ├── audio/
 │   ├── pitch_detector.dart       YIN fundamental frequency estimator
@@ -51,14 +50,6 @@ lib/
 ├── engine/
 │   └── stage_engine.dart         Pitch matching, scoring, playback state
 └── ui/
-    ├── import/                  Import and review screens
-    ├── levels/                  Level list screen
-    ├── practice/
-    │   ├── practice_screen.dart      The practice loop: HUD, staff, keyboard, transport
-    │   ├── stage_controller.dart     Riverpod glue between StageEngine and the screen
-    │   ├── mic_permission_gate.dart  Blocks the screen until the microphone is granted
-    │   ├── practice_hud.dart         Title, tempo, score, accuracy, progress
-    │   └── transport_column.dart     Play/pause, Stop, Replay, speed control
     ├── theme/
     │   ├── tokens.dart           Colour, spacing, and motion tokens
     │   └── app_theme.dart        Material 3 themes built from the tokens
@@ -70,9 +61,13 @@ lib/
     ├── keyboard/
     │   ├── keyboard_geometry.dart    Key layout math, independent of widgets
     │   └── piano_keyboard_view.dart  The 61 key visualisation
+    └── practice/
+        ├── practice_screen.dart      The practice loop: HUD, staff, keyboard, transport
+        ├── stage_controller.dart     Riverpod glue between StageEngine and the screen
+        ├── mic_permission_gate.dart  Blocks the screen until the microphone is granted
+        ├── practice_hud.dart         Title, tempo, score, accuracy, progress
+        └── transport_column.dart     Play/pause, Stop, Replay, speed control
 ```
-
-The import flow talks to the FastAPI service in `backend/`.
 
 ## The data model
 
@@ -148,10 +143,8 @@ verify-on-vm "<path to this repo>" "flutter test"
 verify-on-vm "<path to this repo>" "flutter analyze --no-fatal-infos"
 ```
 
-Verification on ampere-dev passed:
-
-- `flutter test`: 182 tests passed
-- strict `flutter analyze`: no issues
+119 tests pass. `flutter analyze` reports 63 infos and 1 pre-existing warning,
+64 issues in total.
 
 Golden tests are skipped off Linux. Font rasterisation differs by host and
 Flutter's default comparator is byte exact, so the images are generated and
@@ -185,6 +178,6 @@ test but cannot currently produce an APK.
 
 ## Still to build
 
-The next pieces are the scroll-path test coverage the journal calls out, a
-practice-screen golden, and the later results and settings screens. The level
-list, import flow, router, and practice screen are already wired up.
+Settings and broader polish for the import and practice flows. The current app
+supports level selection, import and review storage, practice, and results;
+the router connects those screens by stage ID.

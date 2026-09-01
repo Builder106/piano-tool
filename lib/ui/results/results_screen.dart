@@ -56,10 +56,7 @@ class ResultsScreen extends StatelessWidget {
                   const SizedBox(height: PianoSpacing.xs),
                   Text(result.title, style: text.titleLarge),
                   const SizedBox(height: PianoSpacing.xl),
-                  _ResultMetric(
-                    label: 'Score',
-                    value: '${result.score}',
-                  ),
+                  _ResultMetric(label: 'Score', value: '${result.score}'),
                   const SizedBox(height: PianoSpacing.md),
                   _ResultMetric(
                     label: 'Accuracy',

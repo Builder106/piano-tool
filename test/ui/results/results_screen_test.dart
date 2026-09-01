@@ -1,54 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:piano_tool/ui/results/results_screen.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
 void main() {
-  Widget harness({
-    required VoidCallback onReplay,
-    required VoidCallback onReturnToLevels,
-  }) =>
+  testWidgets('shows the completed stage metrics and actions', (tester) async {
+    var replayed = false;
+    var returnedToLevels = false;
+
+    await tester.pumpWidget(
       MaterialApp(
         theme: PianoTheme.light(),
         home: ResultsScreen(
           result: const StageResult(
             stageId: 'stage_1',
             title: 'C Major Scale',
-            score: 600,
-            accuracy: 0.75,
+            score: 500,
+            accuracy: 0.625,
             totalNotes: 8,
-            hitNotes: 6,
+            hitNotes: 5,
           ),
-          onReplay: onReplay,
-          onReturnToLevels: onReturnToLevels,
+          onReplay: () => replayed = true,
+          onReturnToLevels: () => returnedToLevels = true,
         ),
-      );
-
-  testWidgets('shows final score and accuracy', (tester) async {
-    await tester.pumpWidget(harness(
-      onReplay: () {},
-      onReturnToLevels: () {},
-    ));
+      ),
+    );
 
     expect(find.text('Stage complete'), findsOneWidget);
     expect(find.text('C Major Scale'), findsOneWidget);
-    expect(find.text('600'), findsOneWidget);
-    expect(find.text('75%'), findsOneWidget);
-    expect(find.text('6 of 8 notes matched'), findsOneWidget);
-  });
-
-  testWidgets('uses its replay and levels actions', (tester) async {
-    var replayed = false;
-    var returnedToLevels = false;
-    await tester.pumpWidget(harness(
-      onReplay: () => replayed = true,
-      onReturnToLevels: () => returnedToLevels = true,
-    ));
+    expect(find.text('500'), findsOneWidget);
+    expect(find.text('63%'), findsOneWidget);
+    expect(find.text('5 of 8 notes matched'), findsOneWidget);
 
     await tester.tap(find.text('Replay stage'));
-    expect(replayed, isTrue);
-
     await tester.tap(find.text('All levels'));
+
+    expect(replayed, isTrue);
     expect(returnedToLevels, isTrue);
   });
 }

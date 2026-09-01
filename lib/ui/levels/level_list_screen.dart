@@ -138,10 +138,6 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
     if (confirmed != true || !context.mounted) return;
 
     try {
-      // Both stores must agree: deleting only from the in-memory
-      // LevelRepository left the level in IngestionRepository's persisted
-      // storage, so it reappeared next time levelRepositoryProvider
-      // rehydrated from disk.
       final ingestionRepo = await ref.read(ingestionRepositoryProvider.future);
       await ingestionRepo.deleteImportedLevel(levelId);
     } on IngestionException catch (e) {
@@ -152,10 +148,6 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
       return;
     }
 
-    // Mutate the resolved repository directly so the list updates
-    // immediately, then invalidate the provider so a future rebuild
-    // rehydrates from the (now-updated) persisted store rather than reusing
-    // stale state.
     repository.removeImportedLevel(levelId);
     ref.invalidate(levelRepositoryProvider);
     setState(() {});

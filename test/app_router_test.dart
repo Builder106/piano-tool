@@ -7,6 +7,7 @@ import 'package:mockito/mockito.dart';
 
 import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
+import 'package:piano_tool/models/level_models.dart';
 import 'package:piano_tool/main.dart';
 import 'package:piano_tool/ui/import/import_screen.dart';
 import 'package:piano_tool/ui/import/review_screen.dart';
@@ -26,6 +27,8 @@ void main() {
     mockIngestionRepo = MockIngestionRepository();
     mockProgressRepo = MockProgressRepository();
     when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
+    when(mockIngestionRepo.listImportedLevels())
+        .thenAnswer((_) async => <LevelModel>[]);
     when(mockIngestionRepo.pollJob(any)).thenAnswer(
       (_) async => IngestionJobResult(status: IngestionJobStatus.queued),
     );

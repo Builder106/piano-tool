@@ -11,9 +11,9 @@ import 'ingestion_repository.dart';
 /// failed -- which was every time. Do not go looking for a JSON loader; there
 /// isn't one.
 class LevelRepository {
-  final Map<String, StageModel> _stages = <String, StageModel>{};
-  final Map<String, LevelModel> _levels = <String, LevelModel>{};
-  final Map<String, StageModel> _importedStages = <String, StageModel>{};
+  final Map<String, StageModel> _stages = {};
+  final Map<String, LevelModel> _levels = {};
+  final Map<String, StageModel> _importedStages = {};
 
   LevelRepository() {
     _loadBuiltInLevels();
@@ -22,7 +22,7 @@ class LevelRepository {
   /// Load built-in levels as fallback
   void _loadBuiltInLevels() {
     // Level 1: Simple C Major Scale
-    const LevelModel level1 = LevelModel(
+    final level1 = LevelModel(
       id: 'level_1',
       title: 'C Major Scale',
       description: 'Learn the C major scale with quarter notes',
@@ -158,7 +158,7 @@ class LevelRepository {
     );
 
     // Level 2: Simple melody with half notes
-    const LevelModel level2 = LevelModel(
+    final level2 = LevelModel(
       id: 'level_2',
       title: 'Ode to Joy (Excerpt)',
       description: 'Play the famous melody with half and quarter notes',
@@ -282,7 +282,7 @@ class LevelRepository {
     );
 
     // Level 3: Mixed rhythms
-    const LevelModel level3 = LevelModel(
+    final level3 = LevelModel(
       id: 'level_3',
       title: 'Mixed Rhythms',
       description: 'Practice quarter, half, and eighth notes',
@@ -422,7 +422,7 @@ class LevelRepository {
     _levels[level3.id] = level3;
 
     // Create stages
-    _stages['stage_1'] = const StageModel(
+    _stages['stage_1'] = StageModel(
       id: 'stage_1',
       title: 'C Major Scale',
       description: 'Learn the C major scale with quarter notes',
@@ -432,7 +432,7 @@ class LevelRepository {
       xpReward: 100,
     );
 
-    _stages['stage_2'] = const StageModel(
+    _stages['stage_2'] = StageModel(
       id: 'stage_2',
       title: 'Ode to Joy',
       description: 'Play the famous melody with half and quarter notes',
@@ -443,7 +443,7 @@ class LevelRepository {
       xpReward: 150,
     );
 
-    _stages['stage_3'] = const StageModel(
+    _stages['stage_3'] = StageModel(
       id: 'stage_3',
       title: 'Mixed Rhythms',
       description: 'Practice quarter, half, and eighth notes',
@@ -456,22 +456,14 @@ class LevelRepository {
   }
 
   /// Get a level by ID
-  LevelModel? getLevel(final String id) => _levels[id];
+  LevelModel? getLevel(String id) => _levels[id];
 
-  /// Get a stage by ID, checking both built-in and imported stages -- must
-  /// mirror the merge that [getAllStages] does, or a stage that only exists
-  /// because it was imported would appear in the list but fail to resolve
-  /// when looked up directly (e.g. by the practice route).
-  ///
-  /// `_importedStages` is keyed by the *level* id, not the stage's own `id`
-  /// field ('imported_<levelId>') -- the two differ, so a plain map lookup
-  /// by stage id would always miss. `getAllStages()` hands out the stage
-  /// objects by their `id` field (e.g. the practice route pushes
-  /// `stage.id`), so this has to search by that field too.
-  StageModel? getStage(final String id) {
-    final StageModel? builtIn = _stages[id];
+  /// Get a stage by ID
+  StageModel? getStage(String id) {
+    final builtIn = _stages[id];
     if (builtIn != null) return builtIn;
-    for (final StageModel stage in _importedStages.values) {
+
+    for (final stage in _importedStages.values) {
       if (stage.id == id) return stage;
     }
     return null;
@@ -481,11 +473,11 @@ class LevelRepository {
   List<LevelModel> getAllLevels() => _levels.values.toList();
 
   /// Add an imported level and create a stage wrapper for it
-  void addImportedLevel(final LevelModel level) {
+  void addImportedLevel(LevelModel level) {
     _levels[level.id] = level;
     // Create a stage wrapper for the imported level
-    final int importedStagesCount = _importedStages.length;
-    final int order = 100 + importedStagesCount; // After built-in stages (1-3)
+    final importedStagesCount = _importedStages.length;
+    final order = 100 + importedStagesCount; // After built-in stages (1-3)
     _importedStages[level.id] = StageModel(
       id: 'imported_${level.id}',
       title: level.title,
@@ -499,46 +491,36 @@ class LevelRepository {
   }
 
   /// Remove an imported level and its stage wrapper
-  void removeImportedLevel(final String levelId) {
+  void removeImportedLevel(String levelId) {
     _levels.remove(levelId);
     _importedStages.remove(levelId);
   }
 
   /// Get all stages including imported ones
   List<StageModel> getAllStages() {
-    final List<StageModel> stages = _stages.values.toList();
-    stages.sort(
-        (final StageModel a, final StageModel b) => a.order.compareTo(b.order));
+    final stages = _stages.values.toList();
+    stages.sort((a, b) => a.order.compareTo(b.order));
     // Imported stages must render newest-first, so sort descending by
     // order (order increases with each import, so the latest import has
     // the highest order value).
-    final List<StageModel> importedStages = _importedStages.values.toList();
-    importedStages.sort(
-        (final StageModel a, final StageModel b) => b.order.compareTo(a.order));
+    final importedStages = _importedStages.values.toList();
+    importedStages.sort((a, b) => b.order.compareTo(a.order));
     return [...stages, ...importedStages];
   }
 
   /// Check if a level is imported (not built-in)
-  bool isImportedLevel(final String levelId) =>
-      _importedStages.containsKey(levelId);
+  bool isImportedLevel(String levelId) => _importedStages.containsKey(levelId);
 }
 
 /// Riverpod provider for the level repository.
 ///
-/// This is a [FutureProvider], not a plain [Provider], because the
-/// repository must be hydrated from [IngestionRepository.listImportedLevels]
-/// on startup: levels saved via [IngestionRepository.saveLevel] otherwise
-/// never make it into the in-memory catalog [LevelListScreen] reads from.
-/// Callers that save or delete an imported level must
-/// `ref.invalidate(levelRepositoryProvider)` afterwards so this rebuilds
-/// from the persisted store.
-final FutureProvider<LevelRepository> levelRepositoryProvider =
-    FutureProvider<LevelRepository>((final Ref ref) async {
-  final LevelRepository repository = LevelRepository();
-  final IngestionRepository ingestion =
-      await ref.watch(ingestionRepositoryProvider.future);
-  final List<LevelModel> imported = await ingestion.listImportedLevels();
-  for (final LevelModel level in imported) {
+/// Imported levels are persisted by [IngestionRepository], so the in-memory
+/// catalog must hydrate before the level list is rendered.
+final levelRepositoryProvider = FutureProvider<LevelRepository>((ref) async {
+  final repository = LevelRepository();
+  final ingestion = await ref.watch(ingestionRepositoryProvider.future);
+  final imported = await ingestion.listImportedLevels();
+  for (final level in imported) {
     repository.addImportedLevel(level);
   }
   return repository;

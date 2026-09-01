@@ -218,3 +218,33 @@ controller and the engine, and the fire-and-forget `record()` /
 `setLastPlayed()` calls on `ProgressRepository`, are both still there.
 `test/_startup_screenshot_test.dart` is an untracked scratch file, kept
 deliberately; leave it alone.
+
+## 2026-08-28: finish the piano-tool practice flow
+
+The `piano-tool` branch had the practice loop but no results route. It now
+records completion metrics, routes to a results screen, and lets the learner
+replay the stage or return to the level list.
+
+Persisted imported levels are hydrated before the level list renders, and save
+and delete actions invalidate that catalog after changing storage. The branch
+also declares the Flutter packages already used by its source and keeps its
+Vercel deployment gate open only for the `piano-tool` branch.
+
+Remote verification passed with 166 Flutter tests and 39 backend tests.
+`flutter analyze --no-fatal-infos` reports 61 performance infos and no
+warnings.
+
+## 2026-08-28: keep the Vercel backend under its function limit
+
+The first successful Vercel dependency install still produced a 522.97 MB
+Python function bundle, over Vercel's 500 MB limit. The deployed path uses
+basic-pitch's ONNX backend; it does not need scikit-learn or uvicorn's optional
+server extensions. Production installation therefore uses plain `uvicorn`,
+removes scikit-learn after dependency resolution, and excludes backend tests
+and documentation from the function bundle. The full backend test stack
+remains in `backend/requirements.txt`.
+
+The production-shaped Python 3.12 environment reached 480,344 KB, and the
+FastAPI and transcription imports succeeded without scikit-learn. The full
+backend suite had already passed with that package removed: 39 tests passed
+with three existing warnings.
