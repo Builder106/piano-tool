@@ -12,6 +12,6 @@ fastapi
 uvicorn[standard]
 pydantic>=2
 python-multipart
-httpx
+httpx2
 pytest
 yt-dlp

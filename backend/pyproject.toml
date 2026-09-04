@@ -123,11 +123,17 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+pythonpath = ["app", "."]
 addopts = "-v --strict-markers --strict-config"
 markers = [
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
     "slow: marks tests as slow",
+]
+filterwarnings = [
+    "ignore:pkg_resources is deprecated as an API:UserWarning",
+    "ignore::UserWarning:resampy.*",
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning:starlette.*",
 ]
 
 [tool.coverage.run]
