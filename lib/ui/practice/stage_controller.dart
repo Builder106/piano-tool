@@ -232,12 +232,14 @@ class StageController extends StateNotifier<StageUiState> {
     event.whenOrNull(
       stageCompleted: (accuracy, score, totalNotes, hitNotes) =>
           _progressWrites = _progressWrites.then(
-            (_) => _progress.record(
+        (_) => _progress
+            .record(
               stageId: _stageId,
               accuracy: accuracy,
               score: score,
-            ).catchError((_) {}),
-          ),
+            )
+            .catchError((_) {}),
+      ),
     );
   }
 
@@ -327,23 +329,22 @@ final stageControllerProvider =
 
 // Narrow slices. A widget watching one of these does not rebuild when an
 // unrelated field changes, which is the whole point of this file.
-final currentBeatProvider =
-    Provider.autoDispose.family<double, String>((ref, id) =>
+final currentBeatProvider = Provider.autoDispose.family<double, String>(
+    (ref, id) =>
         ref.watch(stageControllerProvider(id).select((s) => s.currentBeat)));
-final scoreProvider = Provider.autoDispose.family<int, String>((ref, id) =>
-    ref.watch(stageControllerProvider(id).select((s) => s.score)));
-final accuracyProvider =
-    Provider.autoDispose.family<double, String>((ref, id) =>
+final scoreProvider = Provider.autoDispose.family<int, String>(
+    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.score)));
+final accuracyProvider = Provider.autoDispose.family<double, String>(
+    (ref, id) =>
         ref.watch(stageControllerProvider(id).select((s) => s.accuracy)));
-final engineStatusProvider =
-    Provider.autoDispose.family<StageEngineStatus, String>((ref, id) =>
+final engineStatusProvider = Provider.autoDispose
+    .family<StageEngineStatus, String>((ref, id) =>
         ref.watch(stageControllerProvider(id).select((s) => s.status)));
-final noteStatesProvider =
-    Provider.autoDispose.family<List<NoteState>, String>((ref, id) =>
+final noteStatesProvider = Provider.autoDispose.family<List<NoteState>, String>(
+    (ref, id) =>
         ref.watch(stageControllerProvider(id).select((s) => s.noteStates)));
-final playbackSpeedProvider =
-    Provider.autoDispose.family<double, String>((ref, id) =>
-        ref.watch(stageControllerProvider(id).select((s) => s.speed)));
-final soundingProvider =
-    Provider.autoDispose.family<Set<int>, String>((ref, id) =>
+final playbackSpeedProvider = Provider.autoDispose.family<double, String>(
+    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.speed)));
+final soundingProvider = Provider.autoDispose.family<Set<int>, String>(
+    (ref, id) =>
         ref.watch(stageControllerProvider(id).select((s) => s.sounding)));
