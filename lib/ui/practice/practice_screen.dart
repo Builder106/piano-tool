@@ -57,8 +57,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           pathParameters: {'stageId': widget.stageId},
           extra: StageResult(
             stageId: widget.stageId,
-            title:
-                ref.read(stageControllerProvider(widget.stageId)).level.title,
+            title: _controller.levelTitle,
             score: score,
             accuracy: accuracy,
             totalNotes: totalNotes,
@@ -76,7 +75,19 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     // is not autoDispose, so leaving mid-song would keep the song running,
     // marking notes missed and eventually recording a completion the learner
     // never played.
-    if (_controller.mounted) _controller.stop();
+    final controller = _controller;
+    final completed = controller.isCompleted;
+    controller.stop(
+      syncEvents: false,
+      notifyState: false,
+      syncState: false,
+    );
+    if (!completed) {
+      Future<void>.microtask(() {
+        if (!controller.mounted) return;
+        controller.publishStoppedState();
+      });
+    }
     super.dispose();
   }
 

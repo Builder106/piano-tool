@@ -97,11 +97,18 @@ class StageController extends StateNotifier<StageUiState> {
   final String _stageId;
   final ProgressRepository _progress;
   StreamSubscription<StageEvent>? _sub;
+  Future<void> _progressWrites = Future<void>.value();
+  bool _syncEngineEvents = true;
+  bool _disposed = false;
 
   /// The engine's own event stream, exposed so the screen can react to the
   /// same completion signal that [_onEvent] already uses to write progress,
   /// rather than inventing a second way to detect it.
   Stream<StageEvent> get events => _engine.events;
+
+  String get levelTitle => state.level.title;
+
+  bool get isCompleted => state.status == StageEngineStatus.completed;
 
   /// One decay timer per lit key. [PitchDetector] only emits an event while
   /// it hears a pitch -- silence produces nothing -- so without a decay a
@@ -114,13 +121,15 @@ class StageController extends StateNotifier<StageUiState> {
   static const double minSpeed = 0.5;
   static const double maxSpeed = 2.0;
 
-  void start() {
+  Future<void> start() async {
+    _syncEngineEvents = true;
     _engine.start();
-    _progress.setLastPlayed(_stageId);
     _sync();
+    await _progress.setLastPlayed(_stageId);
   }
 
   void pause() {
+    _syncEngineEvents = true;
     _engine.pause();
     _sync();
     // A paused transport should not show a lit key either.
@@ -128,15 +137,39 @@ class StageController extends StateNotifier<StageUiState> {
   }
 
   void resume() {
+    _syncEngineEvents = true;
     _engine.resume();
     _sync();
   }
 
   /// Halts and holds position. Distinct from [replay], which rewinds.
-  void stop() {
+  void stop({
+    final bool syncEvents = true,
+    final bool notifyState = true,
+    final bool syncState = true,
+  }) {
+    _syncEngineEvents = syncEvents;
     _engine.stop();
-    _sync();
+    if (!syncState) {
+      // The engine is already completed when the results route replaces this
+      // screen; preserve that state for the results action and only stop its
+      // transport.
+    } else if (!notifyState) {
+      _clearSounding(notify: false);
+    } else {
+      _sync();
+    }
     // Nothing is being listened for once stopped, so no key should stay lit.
+    if (syncState && notifyState) {
+      _clearSounding();
+    }
+  }
+
+  /// Publishes the stopped engine state after a caller deferred notification
+  /// from a widget lifecycle callback.
+  void publishStoppedState() {
+    _syncEngineEvents = true;
+    _sync();
     _clearSounding();
   }
 
@@ -145,8 +178,7 @@ class StageController extends StateNotifier<StageUiState> {
   /// The microphone keeps listening across Stop and Pause -- [stop] only
   /// halts the [StageEngine], not the audio engine -- so without this guard a
   /// stray tail of a decaying note (or a hand still on the keys) would relight
-  /// a key on a keyboard whose transport reads "stopped." Mirrors the same
-  /// check [StageEngine.processPitchEvent] already applies internally.
+  /// a key on a keyboard whose transport reads "stopped."
   void onPitch(PitchEvent event) {
     if (state.status != StageEngineStatus.playing) return;
     _engine.processPitchEvent(event);
@@ -162,20 +194,22 @@ class StageController extends StateNotifier<StageUiState> {
   /// fires without a fresh detection refreshing it.
   void _dropSounding(int note) {
     _soundingTimers.remove(note);
-    if (!state.sounding.contains(note)) return;
+    if (_disposed || !mounted || !state.sounding.contains(note)) return;
     state = state.copyWith(sounding: {...state.sounding}..remove(note));
   }
 
-  void _clearSounding() {
+  void _clearSounding({final bool notify = true}) {
     for (final timer in _soundingTimers.values) {
       timer.cancel();
     }
     _soundingTimers.clear();
+    if (!notify || _disposed || !mounted) return;
     state = state.copyWith(sounding: const {});
   }
 
   /// Returns to the start and plays again.
   void replay() {
+    _syncEngineEvents = true;
     _engine.reset();
     _engine.start();
     _sync();
@@ -193,13 +227,22 @@ class StageController extends StateNotifier<StageUiState> {
   }
 
   void _onEvent(StageEvent event) {
+    if (!_syncEngineEvents) return;
     _sync();
-    event.whenOrNull(stageCompleted: (accuracy, score, totalNotes, hitNotes) {
-      _progress.record(stageId: _stageId, accuracy: accuracy, score: score);
-    });
+    event.whenOrNull(
+      stageCompleted: (accuracy, score, totalNotes, hitNotes) =>
+          _progressWrites = _progressWrites.then(
+            (_) => _progress.record(
+              stageId: _stageId,
+              accuracy: accuracy,
+              score: score,
+            ).catchError((_) {}),
+          ),
+    );
   }
 
   void _sync() {
+    if (_disposed || !mounted) return;
     final s = _engine.state;
     state = state.copyWith(
       noteStates: List.of(s.noteStates),
@@ -212,6 +255,7 @@ class StageController extends StateNotifier<StageUiState> {
 
   @override
   void dispose() {
+    _disposed = true;
     for (final timer in _soundingTimers.values) {
       timer.cancel();
     }
@@ -241,17 +285,13 @@ final stageControllerProvider =
   }
 
   final engine = StageEngine(level: stage.level);
-  final List<LevelNote> notes = [
-    for (final m in stage.level.measures) ...m.notes,
-  ]..sort((a, b) => a.startBeat.compareTo(b.startBeat));
-
   final controller = StageController(
     engine,
     stageId,
     ref.read(progressRepositoryProvider),
     StageUiState(
       level: stage.level,
-      notes: notes,
+      notes: engine.allNotes,
       noteStates: List.of(engine.state.noteStates),
       currentBeat: 0,
       score: 0,
@@ -287,18 +327,23 @@ final stageControllerProvider =
 
 // Narrow slices. A widget watching one of these does not rebuild when an
 // unrelated field changes, which is the whole point of this file.
-final currentBeatProvider = Provider.family<double, String>((ref, id) =>
-    ref.watch(stageControllerProvider(id).select((s) => s.currentBeat)));
-final scoreProvider = Provider.family<int, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.score)));
-final accuracyProvider = Provider.family<double, String>((ref, id) =>
-    ref.watch(stageControllerProvider(id).select((s) => s.accuracy)));
-final engineStatusProvider = Provider.family<StageEngineStatus, String>(
-    (ref, id) =>
+final currentBeatProvider =
+    Provider.autoDispose.family<double, String>((ref, id) =>
+        ref.watch(stageControllerProvider(id).select((s) => s.currentBeat)));
+final scoreProvider = Provider.autoDispose.family<int, String>((ref, id) =>
+    ref.watch(stageControllerProvider(id).select((s) => s.score)));
+final accuracyProvider =
+    Provider.autoDispose.family<double, String>((ref, id) =>
+        ref.watch(stageControllerProvider(id).select((s) => s.accuracy)));
+final engineStatusProvider =
+    Provider.autoDispose.family<StageEngineStatus, String>((ref, id) =>
         ref.watch(stageControllerProvider(id).select((s) => s.status)));
-final noteStatesProvider = Provider.family<List<NoteState>, String>((ref, id) =>
-    ref.watch(stageControllerProvider(id).select((s) => s.noteStates)));
-final playbackSpeedProvider = Provider.family<double, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.speed)));
-final soundingProvider = Provider.family<Set<int>, String>((ref, id) =>
-    ref.watch(stageControllerProvider(id).select((s) => s.sounding)));
+final noteStatesProvider =
+    Provider.autoDispose.family<List<NoteState>, String>((ref, id) =>
+        ref.watch(stageControllerProvider(id).select((s) => s.noteStates)));
+final playbackSpeedProvider =
+    Provider.autoDispose.family<double, String>((ref, id) =>
+        ref.watch(stageControllerProvider(id).select((s) => s.speed)));
+final soundingProvider =
+    Provider.autoDispose.family<Set<int>, String>((ref, id) =>
+        ref.watch(stageControllerProvider(id).select((s) => s.sounding)));
