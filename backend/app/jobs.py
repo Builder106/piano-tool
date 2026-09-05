@@ -218,9 +218,7 @@ class JobStore:
                 if row is None or row["cancelled"]:
                     return
                 if row["source"] == "upload":
-                    audio_path = acquire_audio(
-                        "upload", tmp_dir, upload_path=row["media_path"]
-                    )
+                    audio_path = acquire_audio("upload", tmp_dir, upload_path=row["media_path"])
                 else:
                     self._set_status(job_id, "downloading")
                     audio_path = acquire_audio("youtube", tmp_dir, youtube_url=row["youtube_url"])
