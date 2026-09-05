@@ -146,9 +146,7 @@ def test_jobstore_reaps_terminal_jobs(tmp_path):
     store = _store(tmp_path, retention_seconds=1)
     job_id = store.submit("youtube", "Song", youtube_url="https://youtu.be/a")
     with store._connect() as db:
-        db.execute(
-            "UPDATE jobs SET status='failed', updated_at=? WHERE job_id=?", (0, job_id)
-        )
+        db.execute("UPDATE jobs SET status='failed', updated_at=? WHERE job_id=?", (0, job_id))
     assert store.get(job_id) is None
 
 
