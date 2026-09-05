@@ -228,7 +228,12 @@ class StageEngine extends ChangeNotifier {
     _updateNoteState(noteIndex, result.noteState);
     _state = _state.copyWith(
       score: _state.score + result.score.round(),
-      hitCount: _state.hitCount + 1,
+      hitCount: result.noteState == NoteState.missed
+          ? _state.hitCount
+          : _state.hitCount + 1,
+      missCount: result.noteState == NoteState.missed
+          ? _state.missCount + 1
+          : _state.missCount,
     );
 
     _eventController.add(StageEvent.noteHit(
