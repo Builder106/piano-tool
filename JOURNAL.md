@@ -3,6 +3,26 @@
 A dated log of decisions and the reasoning behind them, especially the ones that
 are not obvious from the code.
 
+## 2026-09-05: durable ingestion and lifecycle correctness
+
+Ingestion now uses a persistent FastAPI process and a separately supervised
+SQLite-WAL worker with a filesystem spool. Job endpoints require a bearer token,
+uploads and queue depth are bounded, leases recover abandoned work, cancellation
+uses tombstones, and terminal results expire after the configured retention
+period. YouTube acquisition is HTTPS-only and bounded; `/ready` checks binaries,
+model availability, storage, and SQLite access. Vercel no longer hosts backend
+execution.
+
+The Flutter client now submits YouTube jobs as multipart requests, validates
+configured HTTPS endpoints, sends bearer and idempotency headers, serializes
+polling, and ignores stale responses. Practice audio is route-scoped and its
+start/stop lifecycle is serialized. Stage timing distinguishes hits from misses,
+and progression derives unlocks from prerequisites and completed progress.
+
+Final remote verification: 197 Flutter tests passed, the analyzer and formatter
+passed, and the release web build passed. Backend Ruff, Black, strict mypy, and
+pytest with branch coverage enforcement at 100% passed with exit code 0.
+
 ## 2026-08-28: finish the piano-tool practice flow
 
 The `piano-tool` branch had the practice loop but no results route. It now
