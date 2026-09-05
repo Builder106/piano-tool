@@ -46,6 +46,7 @@ void main() {
             .overrideWith((ref) async => mockIngestionRepo),
         progressRepositoryProvider.overrideWithValue(mockProgressRepo),
         audioGrantedProvider.overrideWith((ref) async => true),
+        practiceAudioSessionProvider.overrideWith((ref) async {}),
       ],
       child: const PianoToolApp(),
     );

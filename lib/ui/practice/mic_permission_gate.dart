@@ -32,21 +32,20 @@ class MicPermissionGate extends ConsumerWidget {
     final state = startAudio ? session!.whenData((_) => true) : permission;
 
     return state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => _Denied(
-            message: 'The microphone could not be started. '
-                'Piano Tool listens for the notes you play, so practice needs it.',
-            onRetry: retry,
-          ),
-          data: (granted) => granted
-              ? child
-              : _Denied(
-                  message:
-                      'Piano Tool needs the microphone to hear what you play. '
-                      'Without it, notes cannot be scored.',
-                  onRetry: retry,
-                ),
-        );
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => _Denied(
+        message: 'The microphone could not be started. '
+            'Piano Tool listens for the notes you play, so practice needs it.',
+        onRetry: retry,
+      ),
+      data: (granted) => granted
+          ? child
+          : _Denied(
+              message: 'Piano Tool needs the microphone to hear what you play. '
+                  'Without it, notes cannot be scored.',
+              onRetry: retry,
+            ),
+    );
   }
 }
 

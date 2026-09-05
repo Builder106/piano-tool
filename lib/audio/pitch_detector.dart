@@ -98,14 +98,18 @@ class PitchDetector {
         await recorder.open();
         _sampleBuffer.clear();
         _recordingDataController = dataController;
-        _recordingSubscription = dataController.stream.listen(_handleIncomingPcmBytes);
-        await recorder.start(sink: dataController.sink, sampleRate: config.sampleRate);
+        _recordingSubscription =
+            dataController.stream.listen(_handleIncomingPcmBytes);
+        await recorder.start(
+            sink: dataController.sink, sampleRate: config.sampleRate);
         _recorder = recorder;
         _clock.reset();
         _isRunning = true;
-        debugPrint('PitchDetector: Started audio streaming at ${config.sampleRate}Hz');
+        debugPrint(
+            'PitchDetector: Started audio streaming at ${config.sampleRate}Hz');
       } catch (_) {
-        await _cleanupResources(recorder: recorder, dataController: dataController);
+        await _cleanupResources(
+            recorder: recorder, dataController: dataController);
         rethrow;
       }
     });
@@ -151,7 +155,8 @@ class PitchDetector {
       _recordingDataController = null;
       _isRunning = false;
       _sampleBuffer.clear();
-      await _cleanupResources(recorder: recorder, dataController: dataController);
+      await _cleanupResources(
+          recorder: recorder, dataController: dataController);
       debugPrint('PitchDetector: Stopped');
     });
   }

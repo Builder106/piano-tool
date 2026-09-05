@@ -27,7 +27,8 @@ final audioGrantedProvider = FutureProvider<bool>((ref) async {
 });
 
 /// Owns the microphone for exactly as long as a practice route is mounted.
-final practiceAudioSessionProvider = FutureProvider.autoDispose<void>((ref) async {
+final practiceAudioSessionProvider =
+    FutureProvider.autoDispose<void>((ref) async {
   final granted = await ref.watch(audioGrantedProvider.future);
   if (!granted) throw StateError('Microphone permission was not granted');
   final engine = ref.read(audioEngineProvider);
