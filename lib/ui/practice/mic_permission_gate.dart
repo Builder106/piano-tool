@@ -8,18 +8,30 @@ import 'stage_controller.dart';
 /// Practice needs the microphone, so a denial has to be visible. The previous
 /// screen ignored the permission result and simply never scored anything.
 class MicPermissionGate extends ConsumerWidget {
-  const MicPermissionGate({super.key, required this.child});
+  const MicPermissionGate({
+    super.key,
+    required this.child,
+    this.startAudio = false,
+  });
 
   final Widget child;
+  final bool startAudio;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Invalidating rebuilds the provider from scratch, so a permission that
     // was denied and then granted from system settings recovers rather than
     // leaving the gate latched on its error state.
-    void retry() => ref.invalidate(audioGrantedProvider);
+    void retry() {
+      ref.invalidate(audioGrantedProvider);
+      if (startAudio) ref.invalidate(practiceAudioSessionProvider);
+    }
 
-    return ref.watch(audioGrantedProvider).when(
+    final permission = ref.watch(audioGrantedProvider);
+    final session = startAudio ? ref.watch(practiceAudioSessionProvider) : null;
+    final state = startAudio ? session!.whenData((_) => true) : permission;
+
+    return state.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, __) => _Denied(
             message: 'The microphone could not be started. '

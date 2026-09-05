@@ -102,6 +102,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         // Without a microphone nothing can be scored, so the transport and the
         // staff stay unreachable rather than pretending to listen.
         child: MicPermissionGate(
+          startAudio: true,
           child: Row(
             children: [
               _TransportPane(stageId: stageId),

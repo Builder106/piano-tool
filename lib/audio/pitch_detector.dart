@@ -4,12 +4,72 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import '../models/audio_models.dart';
 
+abstract interface class PcmRecorder {
+  Future<void> open();
+
+  Future<void> start({
+    required StreamSink<Uint8List> sink,
+    required int sampleRate,
+  });
+
+  Future<void> stop();
+
+  Future<void> close();
+}
+
+class FlutterSoundPcmRecorder implements PcmRecorder {
+  final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+
+  @override
+  Future<void> open() => _recorder.openRecorder();
+
+  @override
+  Future<void> start({
+    required final StreamSink<Uint8List> sink,
+    required final int sampleRate,
+  }) =>
+      _recorder.startRecorder(
+        toStream: sink,
+        codec: Codec.pcm16,
+        sampleRate: sampleRate,
+        numChannels: 1,
+      );
+
+  @override
+  Future<void> stop() => _recorder.stopRecorder();
+
+  @override
+  Future<void> close() => _recorder.closeRecorder();
+}
+
+abstract interface class ElapsedClock {
+  void reset();
+
+  double get elapsedSeconds;
+}
+
+class StopwatchElapsedClock implements ElapsedClock {
+  final Stopwatch _stopwatch = Stopwatch();
+
+  @override
+  void reset() {
+    _stopwatch
+      ..reset()
+      ..start();
+  }
+
+  @override
+  double get elapsedSeconds => _stopwatch.elapsedMicroseconds / 1000000.0;
+}
+
 class PitchDetector {
   final AudioEngineConfig config;
   final StreamController<PitchEvent> _pitchController =
       StreamController<PitchEvent>.broadcast();
   bool _isRunning = false;
-  FlutterSoundRecorder? _recorder;
+  final PcmRecorder Function() _recorderFactory;
+  final ElapsedClock _clock;
+  PcmRecorder? _recorder;
   StreamController<Uint8List>? _recordingDataController;
   StreamSubscription<Uint8List>? _recordingSubscription;
   final List<int> _sampleBuffer = <int>[];
@@ -17,33 +77,38 @@ class PitchDetector {
   Stream<PitchEvent> get pitchStream => _pitchController.stream;
   bool get isRunning => _isRunning;
 
-  PitchDetector({final AudioEngineConfig? config})
-      : config = config ?? const AudioEngineConfig();
+  Future<void> _lifecycle = Future<void>.value();
+  bool _disposed = false;
+
+  PitchDetector({
+    final AudioEngineConfig? config,
+    PcmRecorder Function()? recorderFactory,
+    ElapsedClock? clock,
+  })  : config = config ?? const AudioEngineConfig(),
+        _recorderFactory = recorderFactory ?? (() => FlutterSoundPcmRecorder()),
+        _clock = clock ?? StopwatchElapsedClock();
 
   Future<void> start() async {
-    if (_isRunning) {
-      return;
-    }
+    await _enqueueLifecycle(() async {
+      if (_disposed || _isRunning) return;
 
-    _recorder = FlutterSoundRecorder();
-    await _recorder!.openRecorder();
-
-    _sampleBuffer.clear();
-    _recordingDataController = StreamController<Uint8List>();
-
-    _recordingSubscription =
-        _recordingDataController!.stream.listen(_handleIncomingPcmBytes);
-
-    await _recorder!.startRecorder(
-      toStream: _recordingDataController!.sink,
-      codec: Codec.pcm16,
-      sampleRate: config.sampleRate,
-      numChannels: 1,
-    );
-
-    _isRunning = true;
-    debugPrint(
-        'PitchDetector: Started audio streaming at ${config.sampleRate}Hz');
+      final recorder = _recorderFactory();
+      final dataController = StreamController<Uint8List>();
+      try {
+        await recorder.open();
+        _sampleBuffer.clear();
+        _recordingDataController = dataController;
+        _recordingSubscription = dataController.stream.listen(_handleIncomingPcmBytes);
+        await recorder.start(sink: dataController.sink, sampleRate: config.sampleRate);
+        _recorder = recorder;
+        _clock.reset();
+        _isRunning = true;
+        debugPrint('PitchDetector: Started audio streaming at ${config.sampleRate}Hz');
+      } catch (_) {
+        await _cleanupResources(recorder: recorder, dataController: dataController);
+        rethrow;
+      }
+    });
   }
 
   void _handleIncomingPcmBytes(final Uint8List bytes) {
@@ -79,21 +144,38 @@ class PitchDetector {
   }
 
   Future<void> stop() async {
-    if (!_isRunning) {
-      return;
-    }
+    await _enqueueLifecycle(() async {
+      final recorder = _recorder;
+      final dataController = _recordingDataController;
+      _recorder = null;
+      _recordingDataController = null;
+      _isRunning = false;
+      _sampleBuffer.clear();
+      await _cleanupResources(recorder: recorder, dataController: dataController);
+      debugPrint('PitchDetector: Stopped');
+    });
+  }
 
+  Future<void> _enqueueLifecycle(Future<void> Function() operation) {
+    final next = _lifecycle.then((_) => operation());
+    _lifecycle = next.catchError((_) {});
+    return next;
+  }
+
+  Future<void> _cleanupResources({
+    required final PcmRecorder? recorder,
+    required final StreamController<Uint8List>? dataController,
+  }) async {
     await _recordingSubscription?.cancel();
     _recordingSubscription = null;
-    await _recordingDataController?.close();
-    _recordingDataController = null;
-    _sampleBuffer.clear();
-
-    await _recorder?.stopRecorder();
-    await _recorder?.closeRecorder();
-    _recorder = null;
-    _isRunning = false;
-    debugPrint('PitchDetector: Stopped');
+    await dataController?.close();
+    if (recorder == null) return;
+    try {
+      await recorder.stop();
+    } catch (_) {}
+    try {
+      await recorder.close();
+    } catch (_) {}
   }
 
   /// Process raw PCM buffer for pitch detection using YIN algorithm
@@ -137,7 +219,7 @@ class PitchDetector {
       frequency: frequency,
       confidence: confidence,
       midiNote: midiNote,
-      timestamp: DateTime.now().millisecondsSinceEpoch / 1000.0,
+      timestamp: _clock.elapsedSeconds,
       volume: rms,
     );
   }
@@ -220,8 +302,10 @@ class PitchDetector {
     return (sum / sumSq).clamp(0.0, 1.0);
   }
 
-  void dispose() {
-    stop();
-    _pitchController.close();
+  Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
+    await stop();
+    await _pitchController.close();
   }
 }

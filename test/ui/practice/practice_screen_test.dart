@@ -30,6 +30,7 @@ Widget _screen({double textScale = 1.0}) => MaterialApp(
 Widget _harness({double textScale = 1.0}) => ProviderScope(
       overrides: [
         audioGrantedProvider.overrideWith((ref) async => true),
+        practiceAudioSessionProvider.overrideWith((ref) async {}),
         // stageControllerProvider reads levelRepositoryProvider
         // synchronously (requireValue); PracticeScreen is mounted directly
         // here, without going through LevelListScreen first, so nothing
@@ -224,6 +225,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         audioGrantedProvider.overrideWith((ref) async => true),
+        practiceAudioSessionProvider.overrideWith((ref) async {}),
         // stageControllerProvider reads levelRepositoryProvider
         // synchronously (requireValue); PracticeScreen is mounted directly
         // here, without going through LevelListScreen first, so nothing
@@ -288,6 +290,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         audioGrantedProvider.overrideWith((ref) async => true),
+        practiceAudioSessionProvider.overrideWith((ref) async {}),
         // stageControllerProvider reads levelRepositoryProvider
         // synchronously (requireValue); PracticeScreen is mounted directly
         // here, without going through LevelListScreen first, so nothing

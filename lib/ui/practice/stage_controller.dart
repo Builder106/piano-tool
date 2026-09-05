@@ -23,13 +23,24 @@ final audioEngineProvider = Provider<AudioEngine>((ref) {
 /// can run without hardware.
 final audioGrantedProvider = FutureProvider<bool>((ref) async {
   final engine = ref.watch(audioEngineProvider);
-  final granted = await engine.initialize();
-  if (granted) await engine.start();
-  return granted;
+  return engine.initialize();
 });
 
-/// Detected pitches. The engine only produces events after [audioGrantedProvider]
-/// started it, so listening before permission is granted is simply quiet.
+/// Owns the microphone for exactly as long as a practice route is mounted.
+final practiceAudioSessionProvider = FutureProvider.autoDispose<void>((ref) async {
+  final granted = await ref.watch(audioGrantedProvider.future);
+  if (!granted) throw StateError('Microphone permission was not granted');
+  final engine = ref.read(audioEngineProvider);
+  var disposed = false;
+  ref.onDispose(() {
+    disposed = true;
+    unawaited(engine.stop());
+  });
+  await engine.start();
+  if (disposed) await engine.stop();
+});
+
+/// Detected pitches. The route-scoped session starts and stops the engine.
 final audioPitchStreamProvider = StreamProvider<PitchEvent>(
     (ref) => ref.watch(audioEngineProvider).pitchStream);
 

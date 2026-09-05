@@ -12,6 +12,8 @@ class AudioEngine {
 
   Stream<PitchEvent> get pitchStream => _pitchController.stream;
   bool get isRunning => _pitchDetector.isRunning;
+  Future<void> _lifecycle = Future<void>.value();
+  bool _disposed = false;
 
   AudioEngine({final AudioEngineConfig? config})
       : _pitchDetector = PitchDetector(config: config);
@@ -28,34 +30,44 @@ class AudioEngine {
   }
 
   Future<void> start() async {
-    if (_pitchDetector.isRunning) {
-      return;
-    }
-
-    await _pitchDetector.start();
-    _pitchSubscription = _pitchDetector.pitchStream.listen(
-      _pitchController.add,
-      onError: (final Object error, final StackTrace stackTrace) {
-        debugPrint('AudioEngine: Pitch stream error: $error');
-        // Forwarded, not just logged: a listener on [pitchStream] (the
-        // provider that feeds the practice screen) otherwise has no way to
-        // learn the detector broke mid-session.
-        _pitchController.addError(error, stackTrace);
-      },
-    );
-    debugPrint('AudioEngine: Started');
+    await _enqueueLifecycle(() async {
+      if (_disposed || _pitchDetector.isRunning) return;
+      await _pitchDetector.start();
+      _pitchSubscription = _pitchDetector.pitchStream.listen(
+        _pitchController.add,
+        onError: (final Object error, final StackTrace stackTrace) {
+          debugPrint('AudioEngine: Pitch stream error: $error');
+          _pitchController.addError(error, stackTrace);
+        },
+      );
+      debugPrint('AudioEngine: Started');
+    });
   }
 
   Future<void> stop() async {
-    await _pitchSubscription?.cancel();
-    _pitchSubscription = null;
-    await _pitchDetector.stop();
-    debugPrint('AudioEngine: Stopped');
+    await _enqueueLifecycle(() async {
+      await _pitchSubscription?.cancel();
+      _pitchSubscription = null;
+      await _pitchDetector.stop();
+      debugPrint('AudioEngine: Stopped');
+    });
   }
 
   Future<void> dispose() async {
-    await stop();
+    if (_disposed) return;
+    _disposed = true;
+    await _enqueueLifecycle(() async {
+      await _pitchSubscription?.cancel();
+      _pitchSubscription = null;
+      await _pitchDetector.stop();
+    });
     await _pitchController.close();
-    _pitchDetector.dispose();
+    await _pitchDetector.dispose();
+  }
+
+  Future<void> _enqueueLifecycle(Future<void> Function() operation) {
+    final next = _lifecycle.then((_) => operation());
+    _lifecycle = next.catchError((_) {});
+    return next;
   }
 }

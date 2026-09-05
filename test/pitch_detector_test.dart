@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piano_tool/audio/pitch_detector.dart';
 import 'package:piano_tool/models/audio_models.dart';
@@ -74,5 +75,79 @@ void main() {
       expect(permissive.processBuffer(quietA4), isNotNull);
       expect(restrictive.processBuffer(quietA4), isNull);
     });
+
+    test('uses the configured reference frequency for MIDI conversion', () {
+      final detector = PitchDetector(
+        config: const AudioEngineConfig(
+          sampleRate: sampleRate,
+          bufferSize: bufferSize,
+          referenceFrequency: 432.0,
+          minConfidenceThreshold: 0.7,
+        ),
+      );
+      final buffer = List<int>.generate(bufferSize, (i) {
+        final t = i / sampleRate;
+        return (math.sin(2 * math.pi * 432.0 * t) * 20000).round();
+      });
+
+      expect(detector.processBuffer(buffer)!.midiNote, 69);
+    });
+
+    test('timestamps are zero for buffers processed outside a session', () {
+      final buffer = List<int>.generate(bufferSize, (i) {
+        final t = i / sampleRate;
+        return (math.sin(2 * math.pi * 440.0 * t) * 20000).round();
+      });
+
+      expect(detector.processBuffer(buffer)!.timestamp, 0);
+    });
   });
+
+  test('failed recorder startup cleans up and can be retried', () async {
+    final recorders = <_FakeRecorder>[];
+    var shouldFail = true;
+    final detector = PitchDetector(
+      recorderFactory: () {
+        final recorder = _FakeRecorder(shouldFail: shouldFail);
+        shouldFail = false;
+        recorders.add(recorder);
+        return recorder;
+      },
+    );
+    addTearDown(detector.dispose);
+
+    await expectLater(detector.start(), throwsStateError);
+    expect(recorders.single.stopCount, 1);
+    expect(recorders.single.closeCount, 1);
+    await detector.start();
+    expect(detector.isRunning, isTrue);
+    await detector.stop();
+    expect(recorders.last.stopCount, 1);
+    expect(recorders.last.closeCount, 1);
+  });
+}
+
+class _FakeRecorder implements PcmRecorder {
+  _FakeRecorder({required this.shouldFail});
+
+  final bool shouldFail;
+  int stopCount = 0;
+  int closeCount = 0;
+
+  @override
+  Future<void> open() async {}
+
+  @override
+  Future<void> start({
+    required StreamSink<Uint8List> sink,
+    required int sampleRate,
+  }) async {
+    if (shouldFail) throw StateError('startup failed');
+  }
+
+  @override
+  Future<void> stop() async => stopCount++;
+
+  @override
+  Future<void> close() async => closeCount++;
 }
