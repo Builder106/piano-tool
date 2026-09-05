@@ -23,7 +23,7 @@ dependencies = [
     "uvicorn[standard]",
     "pydantic>=2",
     "python-multipart",
-    "httpx2",
+    "httpx",
     "yt-dlp",
 ]
 

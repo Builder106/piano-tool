@@ -31,7 +31,7 @@ TensorFlow dependency that is not used by this service. The service uses Basic
 Pitch's ONNX model with the `onnxruntime` dependency listed in
 `requirements.txt`.
 
-On `ampere-dev`, use:
+On the remote Linux ARM64 verifier, use:
 
 ```text
 verify-on-vm "<repo>/backend" "bash scripts/install_basic_pitch.sh && pytest -v"

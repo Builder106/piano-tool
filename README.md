@@ -143,8 +143,15 @@ verify-on-vm "<path to this repo>" "flutter test"
 verify-on-vm "<path to this repo>" "flutter analyze --no-fatal-infos"
 ```
 
-119 tests pass. `flutter analyze` reports 63 infos and 1 pre-existing warning,
-64 issues in total.
+The current suite is verified in CI and on the remote Linux ARM64 verifier.
+Run the complete Flutter suite and analyzer with the commands above. Release
+builds require an explicit `INGESTION_API_BASE_URL` and
+`INGESTION_API_TOKEN`; release builds require the API URL to use HTTPS.
+
+The ingestion backend is a persistent FastAPI service with a separate worker.
+Run the API from `backend` with `python -m uvicorn app.main:app` and the worker
+with `python -m app.worker`. Job endpoints require a bearer token; `/health`
+is unauthenticated and `/ready` checks runtime dependencies.
 
 Golden tests are skipped off Linux. Font rasterisation differs by host and
 Flutter's default comparator is byte exact, so the images are generated and
