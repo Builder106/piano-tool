@@ -52,8 +52,18 @@ def acquire_upload(
         raise MediaTooLargeError("Audio file is too large")
     dest_path = Path(dest_dir) / f"{uuid.uuid4()}.upload"
     dest_path.write_bytes(upload_bytes)
-    _check_duration_cap(str(dest_path), cap_seconds)
-    return str(dest_path)
+    return acquire_upload_path(dest_path, cap_seconds)
+
+
+def acquire_upload_path(
+    upload_path: str | Path,
+    cap_seconds: float = DEFAULT_DURATION_CAP_SECONDS,
+) -> str:
+    path = Path(upload_path)
+    if path.stat().st_size > MAX_DOWNLOAD_BYTES:
+        raise MediaTooLargeError("Audio file is too large")
+    _check_duration_cap(str(path), cap_seconds)
+    return str(path)
 
 
 def acquire_youtube(
@@ -98,10 +108,13 @@ def acquire_audio(
     source: Literal["upload", "youtube"],
     dest_dir: str,
     upload_bytes: bytes | None = None,
+    upload_path: str | Path | None = None,
     youtube_url: str | None = None,
     cap_seconds: float = DEFAULT_DURATION_CAP_SECONDS,
 ) -> str:
     if source == "upload":
+        if upload_path is not None:
+            return acquire_upload_path(upload_path, cap_seconds)
         if upload_bytes is None:
             raise ValueError("upload_bytes is required when source is 'upload'")
         return acquire_upload(upload_bytes, dest_dir, cap_seconds)

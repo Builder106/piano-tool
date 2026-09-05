@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import os
 import secrets
+import tempfile
 import time
 from collections import defaultdict, deque
 from typing import Any, Literal, cast
@@ -64,13 +65,24 @@ def _check_rate_limit(identity: str) -> None:
     bucket.append(now)
 
 
-async def _read_bounded(audio: UploadFile) -> bytes:
-    content = bytearray()
-    while chunk := await audio.read(1024 * 1024):
-        content.extend(chunk)
-        if len(content) > MAX_MEDIA_BYTES:
-            raise HTTPException(status_code=413, detail="Audio file is too large")
-    return bytes(content)
+async def _spool_bounded(audio: UploadFile) -> str:
+    store.spool_dir.mkdir(parents=True, exist_ok=True)
+    temporary = tempfile.NamedTemporaryFile(
+        dir=store.spool_dir, prefix="incoming-", suffix=".upload", delete=False
+    )
+    path = temporary.name
+    try:
+        with temporary:
+            total = 0
+            while chunk := await audio.read(1024 * 1024):
+                total += len(chunk)
+                if total > MAX_MEDIA_BYTES:
+                    raise HTTPException(status_code=413, detail="Audio file is too large")
+                temporary.write(chunk)
+        return path
+    except Exception:
+        os.unlink(path)
+        raise
 
 
 @router.post("/jobs", status_code=202)
@@ -95,16 +107,18 @@ async def create_job(  # noqa: PLR0913, PLR0917
             status_code=400, detail="youtube_url is required and must be at most 2048 characters"
         )
     _check_rate_limit(identity)
-    upload_bytes = await _read_bounded(audio) if audio is not None else None
+    upload_path = await _spool_bounded(audio) if audio is not None else None
     try:
         job_id = store.submit(
             cast(Literal["upload", "youtube"], source),
             title,
-            upload_bytes=upload_bytes,
+            upload_path=upload_path,
             youtube_url=youtube_url,
             idempotency_key=idempotency_key,
         )
     except ValueError as error:
+        if upload_path is not None:
+            os.unlink(upload_path)
         raise HTTPException(status_code=429, detail=str(error)) from error
     return JobResponse(job_id=job_id, status="queued")
 

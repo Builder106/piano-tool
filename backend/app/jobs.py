@@ -102,6 +102,7 @@ class JobStore:
         upload_bytes: bytes | None = None,
         youtube_url: str | None = None,
         idempotency_key: str | None = None,
+        upload_path: str | Path | None = None,
     ) -> str:
         now = time.time()
         with self._lock, self._connect() as db:
@@ -111,6 +112,8 @@ class JobStore:
                     "SELECT job_id FROM jobs WHERE idempotency_key = ?", (idempotency_key,)
                 ).fetchone()
                 if existing:
+                    if upload_path is not None:
+                        Path(upload_path).unlink(missing_ok=True)
                     return str(existing["job_id"])
             pending = db.execute(
                 "SELECT count(*) AS count FROM jobs WHERE status IN ('queued','downloading','transcribing')"  # noqa: E501
@@ -124,6 +127,11 @@ class JobStore:
                 job_dir.mkdir(parents=True, exist_ok=False)
                 media_path = str(job_dir / "upload.bin")
                 Path(media_path).write_bytes(upload_bytes)
+            elif upload_path is not None:
+                job_dir = self.spool_dir / job_id
+                job_dir.mkdir(parents=True, exist_ok=False)
+                media_path = str(job_dir / "upload.bin")
+                Path(upload_path).replace(media_path)
             db.execute(
                 "INSERT INTO jobs (job_id, source, title, youtube_url, media_path, status, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?)",  # noqa: E501
                 (job_id, source, title, youtube_url, media_path, idempotency_key, now, now),
@@ -211,7 +219,7 @@ class JobStore:
                     return
                 if row["source"] == "upload":
                     audio_path = acquire_audio(
-                        "upload", tmp_dir, upload_bytes=Path(row["media_path"]).read_bytes()
+                        "upload", tmp_dir, upload_path=row["media_path"]
                     )
                 else:
                     self._set_status(job_id, "downloading")
