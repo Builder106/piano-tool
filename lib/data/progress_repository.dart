@@ -4,6 +4,42 @@ import 'package:riverpod/riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/level_models.dart';
+import 'level_repository.dart';
+
+class StageAvailability {
+  const StageAvailability({
+    required this.stage,
+    required this.progress,
+    required this.unmetPrerequisites,
+  });
+
+  final StageModel stage;
+  final StageProgress? progress;
+  final List<String> unmetPrerequisites;
+
+  bool get isUnlocked => unmetPrerequisites.isEmpty;
+}
+
+final stageProgressProvider =
+    FutureProvider.autoDispose<Map<String, StageProgress>>((ref) {
+  return ref.read(progressRepositoryProvider).readAll();
+});
+
+final stageAvailabilityProvider = FutureProvider.autoDispose
+    .family<StageAvailability?, String>((ref, id) async {
+  final repository = await ref.watch(levelRepositoryProvider.future);
+  final stage = repository.getStage(id);
+  if (stage == null) return null;
+  final progress = await ref.watch(stageProgressProvider.future);
+  final unmet = stage.prerequisites
+      .where((requiredId) => progress[requiredId]?.completed != true)
+      .toList(growable: false);
+  return StageAvailability(
+    stage: stage,
+    progress: progress[id],
+    unmetPrerequisites: unmet,
+  );
+});
 
 /// Per-stage bests, stored on device. No accounts and no network.
 ///

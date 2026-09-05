@@ -24,6 +24,8 @@ void main() {
     mockProgressRepo = MockProgressRepository();
     mockIngestionRepo = MockIngestionRepository();
     levelRepository = LevelRepository();
+    when(mockProgressRepo.readAll())
+        .thenAnswer((_) async => <String, StageProgress>{});
     when(mockIngestionRepo.listImportedLevels())
         .thenAnswer((_) async => <LevelModel>[]);
     when(mockIngestionRepo.deleteImportedLevel(any)).thenAnswer((_) async {});
@@ -201,19 +203,18 @@ void main() {
     });
 
     testWidgets('shows progress for completed stages', (tester) async {
-      when(mockProgressRepo.read('stage_1'))
-          .thenAnswer((_) async => StageProgress(
-                stageId: 'stage_1',
-                bestAccuracy: 0.95,
-                bestScore: 1000,
-                attempts: 3,
-                completed: true,
-                unlocked: true,
-                completedAt: DateTime.now(),
-                lastAttemptAt: DateTime.now(),
-              ));
-      when(mockProgressRepo.read('stage_2')).thenAnswer((_) async => null);
-      when(mockProgressRepo.read('stage_3')).thenAnswer((_) async => null);
+      when(mockProgressRepo.readAll()).thenAnswer((_) async => {
+            'stage_1': StageProgress(
+              stageId: 'stage_1',
+              bestAccuracy: 0.95,
+              bestScore: 1000,
+              attempts: 3,
+              completed: true,
+              unlocked: true,
+              completedAt: DateTime.now(),
+              lastAttemptAt: DateTime.now(),
+            )
+          });
 
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();

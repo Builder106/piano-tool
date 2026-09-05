@@ -26,6 +26,8 @@ void main() {
   setUp(() {
     mockIngestionRepo = MockIngestionRepository();
     mockProgressRepo = MockProgressRepository();
+    when(mockProgressRepo.readAll())
+        .thenAnswer((_) async => <String, StageProgress>{});
     when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
     when(mockIngestionRepo.listImportedLevels())
         .thenAnswer((_) async => <LevelModel>[]);

@@ -18,6 +18,29 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
+  group('AppConfig', () {
+    test('requires an explicit base URL', () {
+      expect(
+        () => AppConfig.parse('', requireHttps: false),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('normalizes the base URL path', () {
+      final config =
+          AppConfig.parse('https://api.example.test/v1', requireHttps: true);
+      expect(config.ingestionApiBaseUri.toString(),
+          'https://api.example.test/v1/');
+    });
+
+    test('rejects HTTP when HTTPS is required', () {
+      expect(
+        () => AppConfig.parse('http://api.example.test', requireHttps: true),
+        throwsA(isA<FormatException>()),
+      );
+    });
+  });
+
   group('IngestionRepository', () {
     late IngestionRepository repository;
 
@@ -76,10 +99,13 @@ void main() {
     test('submitYoutubeUrl returns jobId on success', () async {
       final mockClient = MockClient((request) async {
         if (request.url.path == '/jobs' && request.method == 'POST') {
-          final body = request.body;
-          expect(body, contains('"source":"youtube"'));
-          expect(body,
-              contains('"youtube_url":"https://youtube.com/watch?v=abc"'));
+          expect(request.headers['content-type'],
+              startsWith('multipart/form-data;'));
+          expect(request.headers['idempotency-key'], isNotEmpty);
+          expect(request.body, contains('name="source"'));
+          expect(request.body, contains('youtube'));
+          expect(request.body, contains('name="youtube_url"'));
+          expect(request.body, contains('https://youtube.com/watch?v=abc'));
           return http.Response(
               '{"job_id": "job-456", "status": "queued"}', 202);
         }

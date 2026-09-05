@@ -31,6 +31,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   String? _youtubeError;
   Timer? _pollTimer;
   int _pollAttempts = 0;
+  bool _pollInFlight = false;
+  int _pollGeneration = 0;
 
   static const _pollInterval = Duration(seconds: 2);
   static const _pollTimeout = Duration(minutes: 5);
@@ -57,6 +59,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     _youtubeController.dispose();
     _audioRecorder.dispose();
     _pollTimer?.cancel();
+    _pollGeneration++;
     super.dispose();
   }
 
@@ -181,10 +184,20 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   void _startPolling(String jobId) {
     _pollTimer?.cancel();
     _pollAttempts = 0;
-    _pollTimer = Timer.periodic(_pollInterval, (timer) async {
+    final generation = ++_pollGeneration;
+    _pollTimer = Timer.periodic(_pollInterval, (timer) {
+      unawaited(_pollOnce(jobId, generation, timer));
+    });
+  }
+
+  Future<void> _pollOnce(String jobId, int generation, Timer timer) async {
+    if (_pollInFlight || generation != _pollGeneration || !mounted) return;
+    _pollInFlight = true;
+    try {
       _pollAttempts++;
       if (_pollAttempts > _maxPollAttempts) {
         timer.cancel();
+        if (generation != _pollGeneration) return;
         if (!mounted) return;
         _showError('Transcription timed out. Please try again.');
         setState(() {
@@ -198,7 +211,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       try {
         final repo = await ref.read(ingestionRepositoryProvider.future);
         final result = await repo.pollJob(jobId);
-        if (!mounted) return;
+        if (!mounted || generation != _pollGeneration || _jobId != jobId)
+          return;
 
         if (result.status == IngestionJobStatus.done) {
           timer.cancel();
@@ -207,7 +221,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             _jobStatus = result.status;
           });
           context.push('/review?jobId=$jobId');
-        } else if (result.status == IngestionJobStatus.failed) {
+        } else if (result.status == IngestionJobStatus.failed ||
+            result.status == IngestionJobStatus.cancelled) {
           timer.cancel();
           _showError(result.error ?? 'Transcription failed');
           setState(() {
@@ -223,7 +238,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         }
       } on IngestionException catch (e) {
         timer.cancel();
-        if (!mounted) return;
+        if (!mounted || generation != _pollGeneration) return;
         _showError(e.message);
         setState(() {
           _jobId = null;
@@ -231,11 +246,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
           _isSubmitting = false;
         });
       }
-    });
+    } finally {
+      _pollInFlight = false;
+    }
   }
 
   Future<void> _cancelJob() async {
     _pollTimer?.cancel();
+    _pollGeneration++;
     final jobId = _jobId;
     setState(() {
       _jobId = null;
@@ -660,6 +678,7 @@ class _PollingStatus extends StatelessWidget {
       IngestionJobStatus.transcribing => 'Transcribing...',
       IngestionJobStatus.done => 'Done',
       IngestionJobStatus.failed => 'Failed',
+      IngestionJobStatus.cancelled => 'Cancelled',
     };
   }
 }

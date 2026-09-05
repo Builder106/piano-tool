@@ -37,6 +37,17 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
 
   Widget _buildScaffold(BuildContext context, LevelRepository repository) {
     final stages = repository.getAllStages();
+    final progressAsync = ref.watch(stageProgressProvider);
+    if (progressAsync.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (progressAsync.hasError) {
+      return Scaffold(
+        body: Center(
+            child: Text('Error loading progress: ${progressAsync.error}')),
+      );
+    }
+    final progress = progressAsync.value ?? <String, StageProgress>{};
 
     return Scaffold(
       backgroundColor: PianoTheme.colorsOf(context).paper,
@@ -82,10 +93,18 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                 itemBuilder: (context, index) {
                   final stage = stages[index];
                   final isImported = repository.isImportedLevel(stage.level.id);
+                  final stageProgress = progress[stage.id];
+                  final isUnlocked = stage.prerequisites.every(
+                    (id) => progress[id]?.completed == true,
+                  );
                   return _StageCard(
                     stage: stage,
                     isImported: isImported,
-                    onTap: () => context.push('/practice/${stage.id}'),
+                    progress: stageProgress,
+                    isUnlocked: isUnlocked,
+                    onTap: isUnlocked
+                        ? () => context.push('/practice/${stage.id}')
+                        : null,
                     onDelete: isImported
                         ? () =>
                             _confirmDelete(context, repository, stage.level.id)
@@ -158,164 +177,166 @@ class _StageCard extends ConsumerWidget {
   const _StageCard({
     required this.stage,
     required this.isImported,
+    required this.progress,
+    required this.isUnlocked,
     required this.onTap,
     this.onDelete,
   });
 
   final StageModel stage;
   final bool isImported;
-  final VoidCallback onTap;
+  final StageProgress? progress;
+  final bool isUnlocked;
+  final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = PianoTheme.colorsOf(context);
     final textTheme = PianoTheme.textThemeOf(context);
-    final progressRepo = ref.watch(progressRepositoryProvider);
+    final isCompleted = progress?.completed ?? false;
+    final bestAccuracy = progress?.bestAccuracy ?? 0.0;
 
-    return FutureBuilder<StageProgress?>(
-      future: progressRepo.read(stage.id),
-      builder: (context, snapshot) {
-        final progress = snapshot.data;
-        final isCompleted = progress?.completed ?? false;
-        final bestAccuracy = progress?.bestAccuracy ?? 0.0;
-
-        return Material(
-          color: colors.paper3,
-          borderRadius: BorderRadius.circular(PianoRadius.lg),
-          child: InkWell(
-            onTap: onTap,
-            onLongPress: onDelete,
-            borderRadius: BorderRadius.circular(PianoRadius.lg),
-            child: Padding(
-              padding: const EdgeInsets.all(PianoSpacing.md),
-              child: Row(
-                children: [
-                  // Difficulty/import indicator
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: _difficultyColor(stage.difficulty, colors)
-                          .withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(PianoRadius.md),
-                    ),
-                    child: Icon(
-                      isImported
-                          ? Icons.upload_file_rounded
-                          : _difficultyIcon(stage.difficulty),
-                      color: _difficultyColor(stage.difficulty, colors),
-                      size: 24,
-                    ),
+    return Material(
+      color: isUnlocked ? colors.paper3 : colors.paper3.withValues(alpha: 0.55),
+      borderRadius: BorderRadius.circular(PianoRadius.lg),
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onDelete,
+        borderRadius: BorderRadius.circular(PianoRadius.lg),
+        child: Semantics(
+          button: true,
+          enabled: isUnlocked,
+          label: isUnlocked
+              ? stage.title
+              : '${stage.title}, locked. Complete ${stage.prerequisites.join(', ')} first.',
+          child: Padding(
+            padding: const EdgeInsets.all(PianoSpacing.md),
+            child: Row(
+              children: [
+                // Difficulty/import indicator
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _difficultyColor(stage.difficulty, colors)
+                        .withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(PianoRadius.md),
                   ),
-                  const SizedBox(width: PianoSpacing.md),
+                  child: Icon(
+                    isImported
+                        ? Icons.upload_file_rounded
+                        : _difficultyIcon(stage.difficulty),
+                    color: _difficultyColor(stage.difficulty, colors),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: PianoSpacing.md),
 
-                  // Stage info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
+                // Stage info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              stage.title,
+                              style: textTheme.titleMedium?.copyWith(
+                                color: colors.ink,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          if (isImported)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: PianoSpacing.sm,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.accent.withValues(alpha: 0.15),
+                                borderRadius:
+                                    BorderRadius.circular(PianoRadius.sm),
+                              ),
                               child: Text(
-                                stage.title,
-                                style: textTheme.titleMedium?.copyWith(
-                                  color: colors.ink,
+                                'Imported',
+                                style: textTheme.labelSmall?.copyWith(
+                                  color: colors.accent,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
-                            if (isImported)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: PianoSpacing.sm,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.accent.withValues(alpha: 0.15),
-                                  borderRadius:
-                                      BorderRadius.circular(PianoRadius.sm),
-                                ),
-                                child: Text(
-                                  'Imported',
-                                  style: textTheme.labelSmall?.copyWith(
-                                    color: colors.accent,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        stage.description,
+                        style:
+                            textTheme.bodySmall?.copyWith(color: colors.muted),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      // Progress indicator
+                      if (progress != null) ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: LinearProgressIndicator(
+                                value: bestAccuracy,
+                                minHeight: 4,
+                                borderRadius: BorderRadius.circular(2),
+                                backgroundColor: colors.rule,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isCompleted ? colors.success : colors.accent,
                                 ),
                               ),
+                            ),
+                            const SizedBox(width: PianoSpacing.sm),
+                            Text(
+                              '${(bestAccuracy * 100).round()}%',
+                              style: textTheme.labelSmall?.copyWith(
+                                color:
+                                    isCompleted ? colors.success : colors.muted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                      ] else ...[
                         Text(
-                          stage.description,
-                          style: textTheme.bodySmall
+                          'Not started',
+                          style: textTheme.labelSmall
                               ?.copyWith(color: colors.muted),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
-                        // Progress indicator
-                        if (progress != null) ...[
-                          Row(
-                            children: [
-                              Expanded(
-                                child: LinearProgressIndicator(
-                                  value: bestAccuracy,
-                                  minHeight: 4,
-                                  borderRadius: BorderRadius.circular(2),
-                                  backgroundColor: colors.rule,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    isCompleted
-                                        ? colors.success
-                                        : colors.accent,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: PianoSpacing.sm),
-                              Text(
-                                '${(bestAccuracy * 100).round()}%',
-                                style: textTheme.labelSmall?.copyWith(
-                                  color: isCompleted
-                                      ? colors.success
-                                      : colors.muted,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ] else ...[
-                          Text(
-                            'Not started',
-                            style: textTheme.labelSmall
-                                ?.copyWith(color: colors.muted),
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
+                ),
 
-                  // Chevron or delete
-                  if (onDelete != null)
-                    IconButton(
-                      icon: Icon(Icons.delete_outline_rounded,
-                          color: colors.error),
-                      onPressed: onDelete,
-                      tooltip: 'Delete',
-                    )
-                  else
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: colors.muted,
-                      size: 24,
-                    ),
-                ],
-              ),
+                // Chevron or delete
+                if (onDelete != null)
+                  IconButton(
+                    icon:
+                        Icon(Icons.delete_outline_rounded, color: colors.error),
+                    onPressed: onDelete,
+                    tooltip: 'Delete',
+                  )
+                else
+                  Icon(
+                    isUnlocked
+                        ? Icons.chevron_right_rounded
+                        : Icons.lock_outline_rounded,
+                    color: colors.muted,
+                    size: 24,
+                  ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

@@ -16,6 +16,7 @@ enum IngestionJobStatus {
   transcribing,
   done,
   failed,
+  cancelled,
 }
 
 /// Result of polling a job
@@ -23,11 +24,15 @@ class IngestionJobResult {
   final IngestionJobStatus status;
   final String? error;
   final LevelModel? level;
+  final String? errorCode;
+  final bool retryable;
 
   IngestionJobResult({
     required this.status,
     this.error,
     this.level,
+    this.errorCode,
+    this.retryable = false,
   });
 
   factory IngestionJobResult.fromJson(final Map<String, dynamic> json) {
@@ -37,6 +42,8 @@ class IngestionJobResult {
       level: json['level'] != null
           ? LevelModel.fromJson(json['level'] as Map<String, dynamic>)
           : null,
+      errorCode: json['error_code'] as String?,
+      retryable: json['retryable'] as bool? ?? false,
     );
   }
 
@@ -52,6 +59,8 @@ class IngestionJobResult {
         return IngestionJobStatus.done;
       case 'failed':
         return IngestionJobStatus.failed;
+      case 'cancelled':
+        return IngestionJobStatus.cancelled;
       default:
         return IngestionJobStatus.queued;
     }
@@ -63,21 +72,35 @@ class IngestionRepository {
   static const String _levelsKey = 'ingestion.levels';
 
   final http.Client _client;
-  final String _baseUrl;
+  final Uri _baseUri;
   final SharedPreferences _prefs;
+  final String? _authToken;
 
   IngestionRepository({
     required final http.Client client,
     required final String baseUrl,
     required final SharedPreferences prefs,
+    String? authToken,
+    bool requireHttps = false,
   })  : _client = client,
-        _baseUrl = baseUrl,
+        _baseUri = AppConfig.parse(baseUrl, requireHttps: requireHttps)
+            .ingestionApiBaseUri,
+        _authToken = authToken,
         _prefs = prefs;
+
+  Uri _uri(String path) => _baseUri.resolve(path);
+
+  Map<String, String> _headers(String idempotencyKey) => <String, String>{
+        if (_authToken != null && _authToken.isNotEmpty)
+          'Authorization': 'Bearer $_authToken',
+        'Idempotency-Key': idempotencyKey,
+      };
 
   /// Submit an audio file for transcription
   Future<String> submitUpload(final File file) => _guard<String>(() async {
         final http.MultipartRequest request =
-            http.MultipartRequest('POST', Uri.parse('$_baseUrl/jobs'));
+            http.MultipartRequest('POST', _uri('jobs'));
+        request.headers.addAll(_headers(_newIdempotencyKey()));
         request.fields['source'] = 'upload';
         request.fields['title'] = file.path.split('/').last;
         request.files.add(await http.MultipartFile.fromPath(
@@ -100,15 +123,13 @@ class IngestionRepository {
 
   /// Submit a YouTube URL for transcription
   Future<String> submitYoutubeUrl(final String url) => _guard<String>(() async {
-        final http.Response response = await _client.post(
-          Uri.parse('$_baseUrl/jobs'),
-          headers: <String, String>{'Content-Type': 'application/json'},
-          body: jsonEncode(<String, dynamic>{
-            'source': 'youtube',
-            'youtube_url': url,
-            'title': 'YouTube Import',
-          }),
-        );
+        final http.MultipartRequest request =
+            http.MultipartRequest('POST', _uri('jobs'));
+        request.headers.addAll(_headers(_newIdempotencyKey()));
+        request.fields['source'] = 'youtube';
+        request.fields['youtube_url'] = url;
+        request.fields['title'] = 'YouTube Import';
+        final http.StreamedResponse response = await _client.send(request);
 
         if (response.statusCode != 202) {
           throw IngestionException(
@@ -116,7 +137,8 @@ class IngestionRepository {
         }
 
         final Map<String, dynamic> json =
-            jsonDecode(response.body) as Map<String, dynamic>;
+            jsonDecode(await response.stream.bytesToString())
+                as Map<String, dynamic>;
         return json['job_id'] as String;
       });
 
@@ -124,7 +146,8 @@ class IngestionRepository {
   Future<String> submitRecording(final Uint8List audioBytes) =>
       _guard<String>(() async {
         final http.MultipartRequest request =
-            http.MultipartRequest('POST', Uri.parse('$_baseUrl/jobs'));
+            http.MultipartRequest('POST', _uri('jobs'));
+        request.headers.addAll(_headers(_newIdempotencyKey()));
         request.fields['source'] = 'upload';
         request.fields['title'] =
             'Recording ${DateTime.now().millisecondsSinceEpoch}';
@@ -150,8 +173,8 @@ class IngestionRepository {
   /// Poll a job for its status
   Future<IngestionJobResult> pollJob(final String jobId) =>
       _guard<IngestionJobResult>(() async {
-        final http.Response response =
-            await _client.get(Uri.parse('$_baseUrl/jobs/$jobId'));
+        final http.Response response = await _client.get(_uri('jobs/$jobId'),
+            headers: _headers('poll-$jobId'));
 
         if (response.statusCode == 404) {
           throw IngestionException('Job not found: $jobId');
@@ -169,8 +192,10 @@ class IngestionRepository {
 
   /// Cancel a running job
   Future<void> cancelJob(final String jobId) => _guard<void>(() async {
-        final http.Response response =
-            await _client.delete(Uri.parse('$_baseUrl/jobs/$jobId'));
+        final http.Response response = await _client.delete(
+          _uri('jobs/$jobId'),
+          headers: _headers('cancel-$jobId'),
+        );
         if (response.statusCode != 200 && response.statusCode != 204) {
           throw IngestionException(
               'Failed to cancel job: ${response.statusCode}');
@@ -218,6 +243,9 @@ class IngestionRepository {
       throw IngestionException('$e');
     }
   }
+
+  String _newIdempotencyKey() =>
+      '${DateTime.now().microsecondsSinceEpoch}-${Object().hashCode}';
 
   /// Maps a file's extension to the MIME type sent to the ingestion backend.
   /// [ImportScreen] lets the user pick any [FileType.audio] file, which can
@@ -278,19 +306,45 @@ class IngestionException implements Exception {
   String toString() => 'IngestionException: $message';
 }
 
+class AppConfig {
+  const AppConfig({required this.ingestionApiBaseUri});
+
+  final Uri ingestionApiBaseUri;
+
+  factory AppConfig.parse(String raw, {required bool requireHttps}) {
+    if (raw.trim().isEmpty) {
+      throw const FormatException('INGESTION_API_BASE_URL is required');
+    }
+    final uri = Uri.tryParse(raw.trim());
+    if (uri == null || !uri.hasAuthority || uri.path.contains('..')) {
+      throw const FormatException('INGESTION_API_BASE_URL is invalid');
+    }
+    if (uri.scheme != 'https' && !(uri.scheme == 'http' && !requireHttps)) {
+      throw const FormatException('INGESTION_API_BASE_URL must use HTTPS');
+    }
+    return AppConfig(
+        ingestionApiBaseUri:
+            uri.replace(path: '${uri.path.replaceFirst(RegExp(r'/$'), '')}/'));
+  }
+}
+
 /// Riverpod provider for IngestionRepository
 final FutureProvider<IngestionRepository> ingestionRepositoryProvider =
     FutureProvider<IngestionRepository>((final Ref ref) async {
   // Base URL can be configured via --dart-define=INGESTION_API_BASE_URL
-  const String baseUrl = String.fromEnvironment(
-    'INGESTION_API_BASE_URL',
-    defaultValue: 'http://ampere-dev.local:8000',
-  );
+  const String baseUrl = String.fromEnvironment('INGESTION_API_BASE_URL');
+  const String authToken = String.fromEnvironment('INGESTION_API_TOKEN');
+  final bool requireHttps = bool.fromEnvironment('dart.vm.product');
+  if (authToken.isEmpty) {
+    throw const FormatException('INGESTION_API_TOKEN is required');
+  }
 
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   return IngestionRepository(
     client: http.Client(),
     baseUrl: baseUrl,
+    authToken: authToken,
+    requireHttps: requireHttps,
     prefs: prefs,
   );
 });
