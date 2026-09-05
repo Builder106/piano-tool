@@ -116,7 +116,7 @@ def test_delete_prevents_a_queued_but_not_yet_started_job_from_running(monkeypat
     second_job_id = store.submit("upload", "Second", upload_bytes=b"fake")
     store.delete(second_job_id)
 
-    assert store.get(second_job_id) is None
+    assert store.get(second_job_id).status == "cancelled"
 
     store.wait(first_job_id)
 
@@ -129,6 +129,44 @@ def test_get_returns_none_for_an_unknown_job():
 def test_wait_ignores_an_unknown_job():
     store = JobStore(max_workers=1)
     store.wait("does-not-exist")
+
+
+def test_sqlite_store_is_visible_to_a_second_process(tmp_path):
+    first = JobStore(
+        db_path=tmp_path / "jobs.sqlite3", spool_dir=tmp_path / "spool", start_workers=False
+    )
+    job_id = first.submit(
+        "youtube", "Song", youtube_url="https://youtu.be/example", idempotency_key="request-1"
+    )
+
+    second = JobStore(
+        db_path=tmp_path / "jobs.sqlite3", spool_dir=tmp_path / "spool", start_workers=False
+    )
+    job = second.get(job_id)
+
+    assert job is not None
+    assert job.status == "queued"
+    assert (
+        second.submit(
+            "youtube",
+            "Different",
+            youtube_url="https://youtu.be/example",
+            idempotency_key="request-1",
+        )
+        == job_id
+    )
+
+
+def test_delete_marks_running_job_cancelled_without_losing_tombstone(tmp_path):
+    store = JobStore(
+        db_path=tmp_path / "jobs.sqlite3", spool_dir=tmp_path / "spool", start_workers=False
+    )
+    job_id = store.submit("youtube", "Song", youtube_url="https://youtu.be/example")
+    assert store.claim("test-worker") is not None
+
+    assert store.delete(job_id) is True
+    assert store.get(job_id) is not None
+    assert store.get(job_id).status == "cancelled"
 
 
 def test_delete_removes_a_job(monkeypatch):

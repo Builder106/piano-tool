@@ -1,0 +1,13 @@
+[Unit]
+Description=Piano-Tool ingestion API
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/piano-tool/backend
+EnvironmentFile=/etc/piano-tool/backend.env
+ExecStart=/opt/piano-tool/.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

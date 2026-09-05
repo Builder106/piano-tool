@@ -7,7 +7,7 @@ from app.models import LevelModel
 from app.quantize import NoteEvent
 from app.routes import JobResponse, _to_response, store
 
-client = TestClient(app)
+client = TestClient(app, headers={"Authorization": "Bearer test-token"})
 
 
 def test_job_lifecycle_success(monkeypatch):

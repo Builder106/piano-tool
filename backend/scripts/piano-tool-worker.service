@@ -1,0 +1,13 @@
+[Unit]
+Description=Piano-Tool ingestion worker
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/piano-tool/backend
+EnvironmentFile=/etc/piano-tool/backend.env
+ExecStart=/opt/piano-tool/.venv/bin/python -m app.worker
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

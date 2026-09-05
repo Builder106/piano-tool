@@ -11,6 +11,10 @@ class YoutubeUnavailableError(Exception):
     pass
 
 
+class MediaTooLargeError(Exception):
+    pass
+
+
 class NoNotesDetectedError(Exception):
     def __init__(self, message: str = "Didn't find any notes in that audio"):
         super().__init__(message)

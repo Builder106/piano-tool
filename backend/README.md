@@ -1,5 +1,21 @@
 # Audio ingestion backend
 
+The service consists of a persistent FastAPI process and one or more worker
+processes. Both use the SQLite database and filesystem spool configured by
+`PIANO_TOOL_DB` and `PIANO_TOOL_SPOOL`; SQLite runs in WAL mode so API and
+worker processes can operate concurrently.
+
+Run the API from `backend` with `python -m uvicorn app.main:app`. Run a worker
+with `python -m app.worker`. The service templates in `scripts/` are suitable
+bases for a supervised installation. `/health` is a liveness check and
+`/ready` verifies required audio binaries. Job endpoints require
+`Authorization: Bearer $PIANO_TOOL_API_TOKEN`.
+
+The default limits are 256 MiB media, 600 seconds of audio, four queued jobs,
+two local compatibility workers, 200-character titles, 2,048-character URLs,
+five submissions per token per ten minutes, and 24-hour terminal-job
+retention. Clients should send an `Idempotency-Key` when retrying submission.
+
 ## Python environment
 
 The backend requires Python 3.12. The `.python-version` file and the exact

@@ -1,4 +1,19 @@
+import os
+
 import pytest
+
+os.environ.setdefault("PIANO_TOOL_API_TOKEN", "test-token")
+os.environ.setdefault("PIANO_TOOL_LOCAL_WORKER", "1")
+os.environ.setdefault("PIANO_TOOL_DB", "/tmp/piano-tool-test.sqlite3")
+os.environ.setdefault("PIANO_TOOL_SPOOL", "/tmp/piano-tool-test-spool")
+
+
+@pytest.fixture(autouse=True)
+def reset_submission_rate_limit():
+    from app.routes import _submissions
+
+    _submissions.clear()
+    yield
 
 
 def pytest_configure(config: pytest.Config) -> None:

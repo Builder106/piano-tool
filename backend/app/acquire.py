@@ -5,11 +5,17 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
 
-from app.errors import AudioTooLongError, NoNotesDetectedError, YoutubeUnavailableError
+from app.errors import (
+    AudioTooLongError,
+    MediaTooLargeError,
+    NoNotesDetectedError,
+    YoutubeUnavailableError,
+)
 
 DEFAULT_DURATION_CAP_SECONDS = 600.0
 
 YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"}
+MAX_DOWNLOAD_BYTES = 256 * 1024 * 1024
 
 
 def _probe_duration_seconds(path: str) -> float:
@@ -20,6 +26,7 @@ def _probe_duration_seconds(path: str) -> float:
         capture_output=True,
         text=True,
         check=True,
+        timeout=30,
     )
     return float(json.loads(result.stdout)["format"]["duration"])
 
@@ -41,6 +48,8 @@ def acquire_upload(
     dest_dir: str,
     cap_seconds: float = DEFAULT_DURATION_CAP_SECONDS,
 ) -> str:
+    if len(upload_bytes) > MAX_DOWNLOAD_BYTES:
+        raise MediaTooLargeError("Audio file is too large")
     dest_path = Path(dest_dir) / f"{uuid.uuid4()}.upload"
     dest_path.write_bytes(upload_bytes)
     _check_duration_cap(str(dest_path), cap_seconds)
@@ -53,7 +62,7 @@ def acquire_youtube(
     cap_seconds: float = DEFAULT_DURATION_CAP_SECONDS,
 ) -> str:
     hostname = urlparse(url).hostname
-    if hostname not in YOUTUBE_HOSTS:
+    if urlparse(url).scheme != "https" or hostname not in YOUTUBE_HOSTS:
         raise YoutubeUnavailableError("Not a YouTube URL")
 
     import yt_dlp
@@ -65,11 +74,16 @@ def acquire_youtube(
         "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "wav"}],
         "quiet": True,
         "no_warnings": True,
+        "noplaylist": True,
+        "playlist_items": "1",
+        "max_filesize": MAX_DOWNLOAD_BYTES,
+        "socket_timeout": 30,
+        "retries": 2,
     }
     try:
         with yt_dlp.YoutubeDL(options) as downloader:
             downloader.extract_info(url, download=True)
-    except yt_dlp.utils.DownloadError as error:
+    except (yt_dlp.utils.DownloadError, TimeoutError, subprocess.SubprocessError) as error:
         raise YoutubeUnavailableError(str(error)) from error
 
     downloaded_path = Path(output_template % {"ext": "wav"})
