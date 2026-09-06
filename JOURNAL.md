@@ -3,6 +3,10 @@
 A dated log of decisions and the reasoning behind them, especially the ones that
 are not obvious from the code.
 
+## 2026-09-06: CI dependency check and linter alignment
+
+Basic Pitch intentionally omits TensorFlow in favor of ONNX runtime. CI dependency check (`pip check`) now tolerates this deliberate omission while retaining full validation of all other runtime dependencies. Backend Ruff configuration is upgraded to `[tool.ruff.lint]` with `pylint.max-args = 8` to support ingestion pipeline functions, and `routes.py` and `import_screen.dart` control flow lints are resolved. Verification passed with 197 Flutter tests, 0 analyze issues, clean formatting, and 100% backend branch coverage.
+
 ## 2026-09-05: durable ingestion and lifecycle correctness
 
 Ingestion now uses a persistent FastAPI process and a separately supervised
