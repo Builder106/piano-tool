@@ -211,8 +211,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       try {
         final repo = await ref.read(ingestionRepositoryProvider.future);
         final result = await repo.pollJob(jobId);
-        if (!mounted || generation != _pollGeneration || _jobId != jobId)
+        if (!mounted || generation != _pollGeneration || _jobId != jobId) {
           return;
+        }
 
         if (result.status == IngestionJobStatus.done) {
           timer.cancel();
