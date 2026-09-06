@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -118,19 +118,13 @@ jobs:
   deploy:
     name: Deploy to Vercel
     needs: [summary]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Trigger Vercel Deploy Hook
         env:
           VERCEL_DEPLOY_HOOK_PROD: ${{ secrets.VERCEL_DEPLOY_HOOK_PROD }}
-          VERCEL_DEPLOY_HOOK_STAGING: ${{ secrets.VERCEL_DEPLOY_HOOK_STAGING }}
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "Deploying to production..."
-            curl -sS -f -X POST "$VERCEL_DEPLOY_HOOK_PROD"
-          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
-            echo "Deploying to staging..."
-            curl -sS -f -X POST "$VERCEL_DEPLOY_HOOK_STAGING"
-          fi
+          echo "Deploying to production..."
+          curl -sS -f -X POST "$VERCEL_DEPLOY_HOOK_PROD"
