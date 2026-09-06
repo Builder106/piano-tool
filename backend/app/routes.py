@@ -79,10 +79,11 @@ async def _spool_bounded(audio: UploadFile) -> str:
                 if total > MAX_MEDIA_BYTES:
                     raise HTTPException(status_code=413, detail="Audio file is too large")
                 temporary.write(chunk)
-        return path
     except Exception:
         os.unlink(path)
         raise
+    else:
+        return path
 
 
 @router.post("/jobs", status_code=202)
