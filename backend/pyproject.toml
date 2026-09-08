@@ -139,6 +139,8 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:UserWarning",
     "ignore::UserWarning:resampy.*",
     "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning:starlette.*",
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated.*:starlette.exceptions.StarletteDeprecationWarning",
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated.*:UserWarning",
     "ignore:Using `httpx` with `starlette.testclient` is deprecated.*:DeprecationWarning",
 ]
 
