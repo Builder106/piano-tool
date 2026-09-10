@@ -23,7 +23,7 @@ dependencies = [
     "uvicorn[standard]",
     "pydantic>=2",
     "python-multipart",
-    "httpx",
+    "httpx2",
     "yt-dlp",
 ]
 
@@ -114,8 +114,8 @@ module = [
     "pydantic.*",
     "uvicorn",
     "uvicorn.*",
-    "httpx",
-    "httpx.*",
+    "httpx2",
+    "httpx2.*",
     "yaml",
     "yaml.*",
     "yt_dlp",
