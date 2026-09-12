@@ -135,8 +135,9 @@ do not depend on the network and the app works offline from first launch.
 
 ## Building and testing
 
-Builds and tests run on a Linux ARM64 VM, not on the development Mac, so no
-build artifacts land locally.
+Flutter tests and analysis run on the Linux ARM64 verifier, not on the
+development Mac. Android APK packaging and emulator checks run in the pinned
+x86_64 GitHub Actions job, so no build artifacts land locally.
 
 ```bash
 verify-on-vm "<path to this repo>" "flutter test"
@@ -180,8 +181,8 @@ only by opening the PNG.
 Android needs `RECORD_AUDIO` and a minimum SDK of 24. iOS needs
 `NSMicrophoneUsageDescription` and iOS 12.
 
-Android build tooling does not ship for Linux ARM64, so the VM can run every
-test but cannot currently produce an APK.
+Android build tooling does not ship for Linux ARM64. The GitHub Actions Android
+job builds `piano-tool-debug-apk` and smoke-tests it on an x86_64 emulator.
 
 ## Still to build
 

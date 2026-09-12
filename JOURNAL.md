@@ -1,5 +1,11 @@
 # Journal
 
+## 2026-09-12: Added x86_64 Android packaging CI #decision
+
+Flutter tests and analysis remain on the ARM64 verifier, while Android debug
+APK packaging and emulator smoke testing run on x86_64 GitHub Actions. The Mac
+checkout remains source-only and CI publishes a seven-day debug APK artifact.
+
 A dated log of decisions and the reasoning behind them, especially the ones that
 are not obvious from the code.
 
