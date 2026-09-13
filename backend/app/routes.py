@@ -6,7 +6,7 @@ import secrets
 import tempfile
 import time
 from collections import defaultdict, deque
-from typing import Any, Literal, cast
+from typing import Literal, cast
 
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -31,7 +31,7 @@ class JobResponse(BaseModel):
     error_code: str | None = None
     retryable: bool = False
     cancelled: bool = False
-    level: dict[str, Any] | None = None
+    level: dict[str, object] | None = None
 
 
 def _require_auth(authorization: str | None = Header(default=None)) -> str:
