@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.yinkavaughan.piano_tool"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
