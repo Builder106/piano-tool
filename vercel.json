@@ -3,5 +3,6 @@
   "git": {
     "deploymentEnabled": false
   },
-  "framework": null
+  "buildCommand": "bash scripts/build_web.sh",
+  "outputDirectory": "build/web"
 }

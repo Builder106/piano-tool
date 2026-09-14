@@ -1,5 +1,9 @@
 # Journal
 
+## 2026-09-14: configure Vercel for Flutter Web release hosting #decision #deployment
+
+Replaced the decommissioned FastAPI preset on Vercel with Flutter Web release hosting. Reset the project root directory from the obsolete monorepo `apps/piano-tool` path to the repository root, cleared serverless install commands, and configured `scripts/build_web.sh` to compile release web assets to `build/web`. Maintained automatic git deployment gating behind GitHub Actions quality suites before production deploy hook dispatch.
+
 ## 2026-09-12: Added x86_64 Android packaging CI #decision
 
 Flutter tests and analysis remain on the ARM64 verifier, while Android debug
