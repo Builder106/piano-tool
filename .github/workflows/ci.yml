@@ -27,7 +27,7 @@ jobs:
 
   flutter:
     name: Flutter (analyze, format, test)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
@@ -95,7 +95,7 @@ jobs:
 
   python:
     name: Python (ruff, black, mypy, pytest)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -150,7 +150,7 @@ jobs:
 
   summary:
     name: Summary
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [secrets, flutter, python]
     if: always()
     steps:
@@ -166,7 +166,7 @@ jobs:
     name: Deploy to Vercel
     needs: [summary]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Trigger Vercel Deploy Hook
