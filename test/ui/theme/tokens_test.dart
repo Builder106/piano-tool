@@ -32,10 +32,13 @@ void main() {
         'muted',
         'accent',
         'success',
-        'error'
+        'error',
       ]) {
-        expect(_contrast(t[key]!, t['paper']!), greaterThanOrEqualTo(4.5),
-            reason: '$name.$key on paper');
+        expect(
+          _contrast(t[key]!, t['paper']!),
+          greaterThanOrEqualTo(4.5),
+          reason: '$name.$key on paper',
+        );
       }
     });
 
@@ -45,7 +48,9 @@ void main() {
 
     test('$name: accentInk is readable on accent', () {
       expect(
-          _contrast(t['accentInk']!, t['accent']!), greaterThanOrEqualTo(4.5));
+        _contrast(t['accentInk']!, t['accent']!),
+        greaterThanOrEqualTo(4.5),
+      );
     });
 
     test('$name: every token is fully opaque', () {

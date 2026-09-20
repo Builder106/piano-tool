@@ -27,10 +27,14 @@ void main() {
     });
 
     test('normalizes the base URL path', () {
-      final config =
-          AppConfig.parse('https://api.example.test/v1', requireHttps: true);
-      expect(config.ingestionApiBaseUri.toString(),
-          'https://api.example.test/v1/');
+      final config = AppConfig.parse(
+        'https://api.example.test/v1',
+        requireHttps: true,
+      );
+      expect(
+        config.ingestionApiBaseUri.toString(),
+        'https://api.example.test/v1/',
+      );
     });
 
     test('rejects HTTP when HTTPS is required', () {
@@ -48,7 +52,9 @@ void main() {
       final mockClient = MockClient((request) async {
         if (request.url.path == '/jobs' && request.method == 'POST') {
           return http.Response(
-              '{"job_id": "job-123", "status": "queued"}', 202);
+            '{"job_id": "job-123", "status": "queued"}',
+            202,
+          );
         }
         if (request.url.path.startsWith('/jobs/') && request.method == 'GET') {
           return http.Response(
@@ -75,13 +81,13 @@ void main() {
                         'beatIndex': 0,
                         'isRest': false,
                         'voiceIndex': 0,
-                      }
-                    ]
-                  }
+                      },
+                    ],
+                  },
                 ],
                 'clefOctave': 4,
                 'transpose': 0,
-              }
+              },
             }),
             200,
           );
@@ -99,47 +105,18 @@ void main() {
     test('submitYoutubeUrl returns jobId on success', () async {
       final mockClient = MockClient((request) async {
         if (request.url.path == '/jobs' && request.method == 'POST') {
-          expect(request.headers['content-type'],
-              startsWith('multipart/form-data;'));
+          expect(
+            request.headers['content-type'],
+            startsWith('multipart/form-data;'),
+          );
           expect(request.headers['idempotency-key'], isNotEmpty);
           expect(request.body, contains('name="source"'));
           expect(request.body, contains('youtube'));
           expect(request.body, contains('name="youtube_url"'));
           expect(request.body, contains('https://youtube.com/watch?v=abc'));
           return http.Response(
-              '{"job_id": "job-456", "status": "queued"}', 202);
-        }
-        return http.Response('Not found', 404);
-      });
-      repository = IngestionRepository(
-        client: mockClient,
-        baseUrl: 'http://test.api',
-        prefs: prefs,
-      );
-
-      final jobId =
-          await repository.submitYoutubeUrl('https://youtube.com/watch?v=abc');
-      expect(jobId, 'job-456');
-    });
-
-    test('pollJob returns IngestionJobResult with done status and level',
-        () async {
-      final status = await repository.pollJob('job-123');
-      expect(status.status, IngestionJobStatus.done);
-      expect(status.level, isNotNull);
-      expect(status.level!.title, 'Test Level');
-    });
-
-    test('pollJob returns IngestionJobResult with failed status and error',
-        () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.path == '/jobs/job-123' && request.method == 'GET') {
-          return http.Response(
-            jsonEncode({
-              'status': 'failed',
-              'error': 'No notes detected',
-            }),
-            200,
+            '{"job_id": "job-456", "status": "queued"}',
+            202,
           );
         }
         return http.Response('Not found', 404);
@@ -150,36 +127,75 @@ void main() {
         prefs: prefs,
       );
 
-      final status = await repository.pollJob('job-123');
-      expect(status.status, IngestionJobStatus.failed);
-      expect(status.error, 'No notes detected');
-    });
-
-    test('saveLevel persists level and appears in listImportedLevels',
-        () async {
-      const level = LevelModel(
-        id: 'imported_1',
-        title: 'Imported Song',
-        description: 'From audio',
-        tempo: 100,
-        beatsPerMeasure: 4,
-        totalMeasures: 2,
-        measures: [],
+      final jobId = await repository.submitYoutubeUrl(
+        'https://youtube.com/watch?v=abc',
       );
-
-      await repository.saveLevel(level);
-
-      final levels = await repository.listImportedLevels();
-      expect(levels.length, 1);
-      expect(levels.first.id, 'imported_1');
-      expect(levels.first.title, 'Imported Song');
+      expect(jobId, 'job-456');
     });
 
-    test('listImportedLevels returns empty list when no levels saved',
-        () async {
-      final levels = await repository.listImportedLevels();
-      expect(levels, isEmpty);
-    });
+    test(
+      'pollJob returns IngestionJobResult with done status and level',
+      () async {
+        final status = await repository.pollJob('job-123');
+        expect(status.status, IngestionJobStatus.done);
+        expect(status.level, isNotNull);
+        expect(status.level!.title, 'Test Level');
+      },
+    );
+
+    test(
+      'pollJob returns IngestionJobResult with failed status and error',
+      () async {
+        final mockClient = MockClient((request) async {
+          if (request.url.path == '/jobs/job-123' && request.method == 'GET') {
+            return http.Response(
+              jsonEncode({'status': 'failed', 'error': 'No notes detected'}),
+              200,
+            );
+          }
+          return http.Response('Not found', 404);
+        });
+        repository = IngestionRepository(
+          client: mockClient,
+          baseUrl: 'http://test.api',
+          prefs: prefs,
+        );
+
+        final status = await repository.pollJob('job-123');
+        expect(status.status, IngestionJobStatus.failed);
+        expect(status.error, 'No notes detected');
+      },
+    );
+
+    test(
+      'saveLevel persists level and appears in listImportedLevels',
+      () async {
+        const level = LevelModel(
+          id: 'imported_1',
+          title: 'Imported Song',
+          description: 'From audio',
+          tempo: 100,
+          beatsPerMeasure: 4,
+          totalMeasures: 2,
+          measures: [],
+        );
+
+        await repository.saveLevel(level);
+
+        final levels = await repository.listImportedLevels();
+        expect(levels.length, 1);
+        expect(levels.first.id, 'imported_1');
+        expect(levels.first.title, 'Imported Song');
+      },
+    );
+
+    test(
+      'listImportedLevels returns empty list when no levels saved',
+      () async {
+        final levels = await repository.listImportedLevels();
+        expect(levels, isEmpty);
+      },
+    );
 
     test('deleteImportedLevel removes level from list', () async {
       const level = LevelModel(
@@ -211,9 +227,13 @@ void main() {
       final mockClient = MockClient((request) async {
         if (request.url.path == '/jobs' && request.method == 'POST') {
           expect(
-              request.headers['content-type'], contains('multipart/form-data'));
+            request.headers['content-type'],
+            contains('multipart/form-data'),
+          );
           return http.Response(
-              '{"job_id": "job-upload-1", "status": "queued"}', 202);
+            '{"job_id": "job-upload-1", "status": "queued"}',
+            202,
+          );
         }
         return http.Response('Not found', 404);
       });
@@ -259,76 +279,86 @@ void main() {
       );
     });
 
-    test('submitYoutubeUrl wraps a ClientException as an IngestionException',
-        () async {
-      final mockClient = MockClient((request) async {
-        throw http.ClientException('Connection refused');
-      });
-      repository = IngestionRepository(
-        client: mockClient,
-        baseUrl: 'http://test.api',
-        prefs: prefs,
-      );
+    test(
+      'submitYoutubeUrl wraps a ClientException as an IngestionException',
+      () async {
+        final mockClient = MockClient((request) async {
+          throw http.ClientException('Connection refused');
+        });
+        repository = IngestionRepository(
+          client: mockClient,
+          baseUrl: 'http://test.api',
+          prefs: prefs,
+        );
 
-      expect(
-        () => repository.submitYoutubeUrl('https://youtube.com/watch?v=abc'),
-        throwsA(isA<IngestionException>()),
-      );
-    });
+        expect(
+          () => repository.submitYoutubeUrl('https://youtube.com/watch?v=abc'),
+          throwsA(isA<IngestionException>()),
+        );
+      },
+    );
 
-    test('submitUpload uses a content type derived from the file extension',
-        () async {
-      final tempFile = File(
-        '${Directory.systemTemp.path}/ingestion_repository_test_mp3_${DateTime.now().microsecondsSinceEpoch}.mp3',
-      );
-      await tempFile.writeAsBytes([1, 2, 3, 4, 5]);
-      addTearDown(() async {
-        if (await tempFile.exists()) await tempFile.delete();
-      });
+    test(
+      'submitUpload uses a content type derived from the file extension',
+      () async {
+        final tempFile = File(
+          '${Directory.systemTemp.path}/ingestion_repository_test_mp3_${DateTime.now().microsecondsSinceEpoch}.mp3',
+        );
+        await tempFile.writeAsBytes([1, 2, 3, 4, 5]);
+        addTearDown(() async {
+          if (await tempFile.exists()) await tempFile.delete();
+        });
 
-      final mockClient = MockClient((request) async {
-        // MockClient finalizes the request before calling the callback, so the
-        // request body is already available as request.bodyBytes.
-        final body = utf8.decode(request.bodyBytes);
-        // Multipart body uses lowercase 'content-type:' header
-        expect(body, contains('content-type: audio/mpeg'));
-        return http.Response(
-            '{"job_id": "job-mp3-1", "status": "queued"}', 202);
-      });
-      repository = IngestionRepository(
-        client: mockClient,
-        baseUrl: 'http://test.api',
-        prefs: prefs,
-      );
+        final mockClient = MockClient((request) async {
+          // MockClient finalizes the request before calling the callback, so the
+          // request body is already available as request.bodyBytes.
+          final body = utf8.decode(request.bodyBytes);
+          // Multipart body uses lowercase 'content-type:' header
+          expect(body, contains('content-type: audio/mpeg'));
+          return http.Response(
+            '{"job_id": "job-mp3-1", "status": "queued"}',
+            202,
+          );
+        });
+        repository = IngestionRepository(
+          client: mockClient,
+          baseUrl: 'http://test.api',
+          prefs: prefs,
+        );
 
-      final jobId = await repository.submitUpload(tempFile);
-      expect(jobId, 'job-mp3-1');
-    });
+        final jobId = await repository.submitUpload(tempFile);
+        expect(jobId, 'job-mp3-1');
+      },
+    );
 
-    test('submitUpload falls back to octet-stream for an unknown extension',
-        () async {
-      final tempFile = File(
-        '${Directory.systemTemp.path}/ingestion_repository_test_xyz_${DateTime.now().microsecondsSinceEpoch}.xyz',
-      );
-      await tempFile.writeAsBytes([1, 2, 3, 4, 5]);
-      addTearDown(() async {
-        if (await tempFile.exists()) await tempFile.delete();
-      });
+    test(
+      'submitUpload falls back to octet-stream for an unknown extension',
+      () async {
+        final tempFile = File(
+          '${Directory.systemTemp.path}/ingestion_repository_test_xyz_${DateTime.now().microsecondsSinceEpoch}.xyz',
+        );
+        await tempFile.writeAsBytes([1, 2, 3, 4, 5]);
+        addTearDown(() async {
+          if (await tempFile.exists()) await tempFile.delete();
+        });
 
-      final mockClient = MockClient((request) async {
-        final body = utf8.decode(request.bodyBytes);
-        expect(body, contains('content-type: application/octet-stream'));
-        return http.Response(
-            '{"job_id": "job-xyz-1", "status": "queued"}', 202);
-      });
-      repository = IngestionRepository(
-        client: mockClient,
-        baseUrl: 'http://test.api',
-        prefs: prefs,
-      );
+        final mockClient = MockClient((request) async {
+          final body = utf8.decode(request.bodyBytes);
+          expect(body, contains('content-type: application/octet-stream'));
+          return http.Response(
+            '{"job_id": "job-xyz-1", "status": "queued"}',
+            202,
+          );
+        });
+        repository = IngestionRepository(
+          client: mockClient,
+          baseUrl: 'http://test.api',
+          prefs: prefs,
+        );
 
-      await repository.submitUpload(tempFile);
-    });
+        await repository.submitUpload(tempFile);
+      },
+    );
 
     test('cancelJob succeeds on a 200 response', () async {
       final mockClient = MockClient((request) async {
@@ -366,9 +396,13 @@ void main() {
         if (request.url.path == '/jobs' && request.method == 'POST') {
           // For multipart requests, body is not JSON - just verify it's a multipart request
           expect(
-              request.headers['content-type'], contains('multipart/form-data'));
+            request.headers['content-type'],
+            contains('multipart/form-data'),
+          );
           return http.Response(
-              '{"job_id": "job-789", "status": "queued"}', 202);
+            '{"job_id": "job-789", "status": "queued"}',
+            202,
+          );
         }
         return http.Response('Not found', 404);
       });
@@ -378,8 +412,9 @@ void main() {
         prefs: prefs,
       );
 
-      final jobId =
-          await repository.submitRecording(Uint8List.fromList([1, 2, 3, 4, 5]));
+      final jobId = await repository.submitRecording(
+        Uint8List.fromList([1, 2, 3, 4, 5]),
+      );
       expect(jobId, 'job-789');
     });
   });

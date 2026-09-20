@@ -27,13 +27,8 @@ import 'package:piano_tool/models/level_models.dart' as _i7;
 
 class _FakeIngestionJobResult_0 extends _i1.SmartFake
     implements _i2.IngestionJobResult {
-  _FakeIngestionJobResult_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeIngestionJobResult_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [IngestionRepository].
@@ -46,104 +41,91 @@ class MockIngestionRepository extends _i1.Mock
   }
 
   @override
-  _i3.Future<String> submitUpload(_i4.File? file) => (super.noSuchMethod(
-        Invocation.method(
-          #submitUpload,
-          [file],
-        ),
-        returnValue: _i3.Future<String>.value(_i5.dummyValue<String>(
-          this,
-          Invocation.method(
-            #submitUpload,
-            [file],
-          ),
-        )),
-      ) as _i3.Future<String>);
+  _i3.Future<String> submitUpload(_i4.File? file) =>
+      (super.noSuchMethod(
+            Invocation.method(#submitUpload, [file]),
+            returnValue: _i3.Future<String>.value(
+              _i5.dummyValue<String>(
+                this,
+                Invocation.method(#submitUpload, [file]),
+              ),
+            ),
+          )
+          as _i3.Future<String>);
 
   @override
-  _i3.Future<String> submitYoutubeUrl(String? url) => (super.noSuchMethod(
-        Invocation.method(
-          #submitYoutubeUrl,
-          [url],
-        ),
-        returnValue: _i3.Future<String>.value(_i5.dummyValue<String>(
-          this,
-          Invocation.method(
-            #submitYoutubeUrl,
-            [url],
-          ),
-        )),
-      ) as _i3.Future<String>);
+  _i3.Future<String> submitYoutubeUrl(String? url) =>
+      (super.noSuchMethod(
+            Invocation.method(#submitYoutubeUrl, [url]),
+            returnValue: _i3.Future<String>.value(
+              _i5.dummyValue<String>(
+                this,
+                Invocation.method(#submitYoutubeUrl, [url]),
+              ),
+            ),
+          )
+          as _i3.Future<String>);
 
   @override
   _i3.Future<String> submitRecording(_i6.Uint8List? audioBytes) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #submitRecording,
-          [audioBytes],
-        ),
-        returnValue: _i3.Future<String>.value(_i5.dummyValue<String>(
-          this,
-          Invocation.method(
-            #submitRecording,
-            [audioBytes],
-          ),
-        )),
-      ) as _i3.Future<String>);
+            Invocation.method(#submitRecording, [audioBytes]),
+            returnValue: _i3.Future<String>.value(
+              _i5.dummyValue<String>(
+                this,
+                Invocation.method(#submitRecording, [audioBytes]),
+              ),
+            ),
+          )
+          as _i3.Future<String>);
 
   @override
   _i3.Future<_i2.IngestionJobResult> pollJob(String? jobId) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #pollJob,
-          [jobId],
-        ),
-        returnValue:
-            _i3.Future<_i2.IngestionJobResult>.value(_FakeIngestionJobResult_0(
-          this,
-          Invocation.method(
-            #pollJob,
-            [jobId],
-          ),
-        )),
-      ) as _i3.Future<_i2.IngestionJobResult>);
+            Invocation.method(#pollJob, [jobId]),
+            returnValue: _i3.Future<_i2.IngestionJobResult>.value(
+              _FakeIngestionJobResult_0(
+                this,
+                Invocation.method(#pollJob, [jobId]),
+              ),
+            ),
+          )
+          as _i3.Future<_i2.IngestionJobResult>);
 
   @override
-  _i3.Future<void> cancelJob(String? jobId) => (super.noSuchMethod(
-        Invocation.method(
-          #cancelJob,
-          [jobId],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> cancelJob(String? jobId) =>
+      (super.noSuchMethod(
+            Invocation.method(#cancelJob, [jobId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> saveLevel(_i7.LevelModel? level) => (super.noSuchMethod(
-        Invocation.method(
-          #saveLevel,
-          [level],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> saveLevel(_i7.LevelModel? level) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveLevel, [level]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<List<_i7.LevelModel>> listImportedLevels() => (super.noSuchMethod(
-        Invocation.method(
-          #listImportedLevels,
-          [],
-        ),
-        returnValue: _i3.Future<List<_i7.LevelModel>>.value(<_i7.LevelModel>[]),
-      ) as _i3.Future<List<_i7.LevelModel>>);
+  _i3.Future<List<_i7.LevelModel>> listImportedLevels() =>
+      (super.noSuchMethod(
+            Invocation.method(#listImportedLevels, []),
+            returnValue: _i3.Future<List<_i7.LevelModel>>.value(
+              <_i7.LevelModel>[],
+            ),
+          )
+          as _i3.Future<List<_i7.LevelModel>>);
 
   @override
-  _i3.Future<void> deleteImportedLevel(String? levelId) => (super.noSuchMethod(
-        Invocation.method(
-          #deleteImportedLevel,
-          [levelId],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> deleteImportedLevel(String? levelId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteImportedLevel, [levelId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }

@@ -27,13 +27,12 @@ class FlutterSoundPcmRecorder implements PcmRecorder {
   Future<void> start({
     required final StreamSink<Uint8List> sink,
     required final int sampleRate,
-  }) =>
-      _recorder.startRecorder(
-        toStream: sink,
-        codec: Codec.pcm16,
-        sampleRate: sampleRate,
-        numChannels: 1,
-      );
+  }) => _recorder.startRecorder(
+    toStream: sink,
+    codec: Codec.pcm16,
+    sampleRate: sampleRate,
+    numChannels: 1,
+  );
 
   @override
   Future<void> stop() => _recorder.stopRecorder();
@@ -84,9 +83,9 @@ class PitchDetector {
     final AudioEngineConfig? config,
     PcmRecorder Function()? recorderFactory,
     ElapsedClock? clock,
-  })  : config = config ?? const AudioEngineConfig(),
-        _recorderFactory = recorderFactory ?? (() => FlutterSoundPcmRecorder()),
-        _clock = clock ?? StopwatchElapsedClock();
+  }) : config = config ?? const AudioEngineConfig(),
+       _recorderFactory = recorderFactory ?? (() => FlutterSoundPcmRecorder()),
+       _clock = clock ?? StopwatchElapsedClock();
 
   Future<void> start() async {
     await _enqueueLifecycle(() async {
@@ -98,18 +97,24 @@ class PitchDetector {
         await recorder.open();
         _sampleBuffer.clear();
         _recordingDataController = dataController;
-        _recordingSubscription =
-            dataController.stream.listen(_handleIncomingPcmBytes);
+        _recordingSubscription = dataController.stream.listen(
+          _handleIncomingPcmBytes,
+        );
         await recorder.start(
-            sink: dataController.sink, sampleRate: config.sampleRate);
+          sink: dataController.sink,
+          sampleRate: config.sampleRate,
+        );
         _recorder = recorder;
         _clock.reset();
         _isRunning = true;
         debugPrint(
-            'PitchDetector: Started audio streaming at ${config.sampleRate}Hz');
+          'PitchDetector: Started audio streaming at ${config.sampleRate}Hz',
+        );
       } catch (_) {
         await _cleanupResources(
-            recorder: recorder, dataController: dataController);
+          recorder: recorder,
+          dataController: dataController,
+        );
         rethrow;
       }
     });
@@ -156,7 +161,9 @@ class PitchDetector {
       _isRunning = false;
       _sampleBuffer.clear();
       await _cleanupResources(
-          recorder: recorder, dataController: dataController);
+        recorder: recorder,
+        dataController: dataController,
+      );
       debugPrint('PitchDetector: Stopped');
     });
   }
@@ -194,10 +201,12 @@ class PitchDetector {
         .map((final int v) => v / 32768.0)
         .toList();
 
-    final double rms = math.sqrt(samples
-            .map((final double s) => s * s)
-            .reduce((final double a, final double b) => a + b) /
-        samples.length);
+    final double rms = math.sqrt(
+      samples
+              .map((final double s) => s * s)
+              .reduce((final double a, final double b) => a + b) /
+          samples.length,
+    );
 
     if (rms < config.minVolumeThreshold) {
       return null;
@@ -209,16 +218,19 @@ class PitchDetector {
       return null;
     }
 
-    final double confidence =
-        _calculateConfidence(samples, frequency, config.sampleRate);
+    final double confidence = _calculateConfidence(
+      samples,
+      frequency,
+      config.sampleRate,
+    );
 
     if (confidence < config.minConfidenceThreshold) {
       return null;
     }
 
     // Convert frequency to MIDI note
-    final int midiNote =
-        (69 + 12 * math.log(frequency / 440.0) / math.ln2).round();
+    final int midiNote = (69 + 12 * math.log(frequency / 440.0) / math.ln2)
+        .round();
 
     return PitchEvent(
       frequency: frequency,
@@ -286,7 +298,10 @@ class PitchDetector {
   }
 
   static double _calculateConfidence(
-      final List<double> signal, final double frequency, final int sampleRate) {
+    final List<double> signal,
+    final double frequency,
+    final int sampleRate,
+  ) {
     final double period = sampleRate / frequency;
     if (period < 2 || period > signal.length / 2) {
       return 0.0;

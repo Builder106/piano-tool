@@ -28,10 +28,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
 /// threshold (default 1%) to accommodate sub-pixel font rasterization
 /// across Linux runner versions.
 class TolerantGoldenFileComparator extends LocalFileComparator {
-  TolerantGoldenFileComparator(
-    super.testFile, {
-    this.tolerance = 0.01,
-  });
+  TolerantGoldenFileComparator(super.testFile, {this.tolerance = 0.01});
 
   final double tolerance;
 
@@ -86,8 +83,14 @@ String? get _materialIconsPath {
     ..._ancestorsOf(Platform.resolvedExecutable),
   ];
   for (final root in roots) {
-    final candidate = p.join(root, 'bin', 'cache', 'artifacts',
-        'material_fonts', 'MaterialIcons-Regular.otf');
+    final candidate = p.join(
+      root,
+      'bin',
+      'cache',
+      'artifacts',
+      'material_fonts',
+      'MaterialIcons-Regular.otf',
+    );
     if (File(candidate).existsSync()) return candidate;
   }
   return null;

@@ -78,8 +78,9 @@ class PracticeHud extends StatelessWidget {
                       _Metric(label: 'Score', value: '$score'),
                       const SizedBox(width: PianoSpacing.md),
                       _Metric(
-                          label: 'Acc',
-                          value: '${(accuracy * 100).toStringAsFixed(1)}%'),
+                        label: 'Acc',
+                        value: '${(accuracy * 100).toStringAsFixed(1)}%',
+                      ),
                     ],
                   ),
                 ),

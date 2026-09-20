@@ -76,8 +76,9 @@ void main() {
   );
 
   group('ReviewScreen', () {
-    testWidgets('shows a loading indicator while the job is polled',
-        (tester) async {
+    testWidgets('shows a loading indicator while the job is polled', (
+      tester,
+    ) async {
       final completer = Completer<IngestionJobResult>();
       when(mockRepo.pollJob('job-123')).thenAnswer((_) => completer.future);
 
@@ -93,8 +94,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('shows the level title and controls once loaded',
-        (tester) async {
+    testWidgets('shows the level title and controls once loaded', (
+      tester,
+    ) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
         (_) async =>
             IngestionJobResult(status: IngestionJobStatus.done, level: level),
@@ -123,8 +125,9 @@ void main() {
       expect(find.textContaining('Could not transcribe audio'), findsOneWidget);
     });
 
-    testWidgets('play/pause toggles the icon and advances the playhead',
-        (tester) async {
+    testWidgets('play/pause toggles the icon and advances the playhead', (
+      tester,
+    ) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
         (_) async =>
             IngestionJobResult(status: IngestionJobStatus.done, level: level),
@@ -150,8 +153,9 @@ void main() {
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
     });
 
-    testWidgets('shows elapsed and total time derived from the level tempo',
-        (tester) async {
+    testWidgets('shows elapsed and total time derived from the level tempo', (
+      tester,
+    ) async {
       // tempo 80 => 60/80 = 0.75s per beat; 8 beats total = 6.0s = "0:06".
       const slowLevel = LevelModel(
         id: 'imported_slow',
@@ -164,7 +168,9 @@ void main() {
       );
       when(mockRepo.pollJob('job-123')).thenAnswer(
         (_) async => IngestionJobResult(
-            status: IngestionJobStatus.done, level: slowLevel),
+          status: IngestionJobStatus.done,
+          level: slowLevel,
+        ),
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -173,8 +179,9 @@ void main() {
       expect(find.text('0:00 / 0:06'), findsOneWidget);
     });
 
-    testWidgets('playback advances the beat according to the level tempo',
-        (tester) async {
+    testWidgets('playback advances the beat according to the level tempo', (
+      tester,
+    ) async {
       // tempo 180 => 180/60 = 3 beats/sec at 1.0x speed.
       const fastLevel = LevelModel(
         id: 'imported_fast',
@@ -187,7 +194,9 @@ void main() {
       );
       when(mockRepo.pollJob('job-123')).thenAnswer(
         (_) async => IngestionJobResult(
-            status: IngestionJobStatus.done, level: fastLevel),
+          status: IngestionJobStatus.done,
+          level: fastLevel,
+        ),
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -226,8 +235,9 @@ void main() {
       expect(find.text('1.5x'), findsOneWidget);
     });
 
-    testWidgets('save calls saveLevel and navigates to the level list',
-        (tester) async {
+    testWidgets('save calls saveLevel and navigates to the level list', (
+      tester,
+    ) async {
       when(mockRepo.pollJob('job-123')).thenAnswer(
         (_) async =>
             IngestionJobResult(status: IngestionJobStatus.done, level: level),
@@ -249,8 +259,9 @@ void main() {
         (_) async =>
             IngestionJobResult(status: IngestionJobStatus.done, level: level),
       );
-      when(mockRepo.saveLevel(level))
-          .thenThrow(IngestionException('Failed to save: 500'));
+      when(
+        mockRepo.saveLevel(level),
+      ).thenThrow(IngestionException('Failed to save: 500'));
 
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();

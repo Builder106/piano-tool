@@ -85,9 +85,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         youtubeError: _youtubeError,
         onCancelJob: _cancelJob,
       ),
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, stack) => Scaffold(
         body: Center(child: Text('Error loading ingestion service: $error')),
       ),
@@ -95,16 +94,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.audio,
-      allowMultiple: false,
-    );
+    final file = await FilePicker.pickFile(type: FileType.audio);
+    final path = file?.path;
 
-    if (result != null && result.files.single.path != null && mounted) {
-      setState(() {
-        _pickedFilePath = result.files.single.path!;
-      });
-    }
+    if (!mounted || path == null) return;
+    setState(() => _pickedFilePath = path);
   }
 
   String? _pickedFilePath;
@@ -145,8 +139,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
       final String jobId = switch (_selectedSource) {
         ImportSource.file => await repo.submitUpload(File(_pickedFilePath!)),
-        ImportSource.youtube =>
-          await repo.submitYoutubeUrl(_youtubeController.text.trim()),
+        ImportSource.youtube => await repo.submitYoutubeUrl(
+          _youtubeController.text.trim(),
+        ),
         ImportSource.recording => await repo.submitRecording(_recordedBytes!),
       };
 
@@ -171,7 +166,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       return 'Enter a valid URL';
     }
     final host = uri.host.toLowerCase();
-    final isYoutube = host == 'youtube.com' ||
+    final isYoutube =
+        host == 'youtube.com' ||
         host.endsWith('.youtube.com') ||
         host == 'youtu.be' ||
         host.endsWith('.youtu.be');
@@ -299,9 +295,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   Uint8List? _recordedBytes;
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -401,17 +397,10 @@ class _BuildImportScreen extends StatelessWidget {
   }
 }
 
-enum ImportSource {
-  file,
-  youtube,
-  recording,
-}
+enum ImportSource { file, youtube, recording }
 
 class _SourcePicker extends StatelessWidget {
-  const _SourcePicker({
-    required this.selectedSource,
-    required this.onChanged,
-  });
+  const _SourcePicker({required this.selectedSource, required this.onChanged});
 
   final ImportSource selectedSource;
   final ValueChanged<ImportSource> onChanged;
@@ -473,9 +462,7 @@ class _SourceChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? colors.accent : colors.paper3,
           borderRadius: BorderRadius.circular(PianoRadius.md),
-          border: Border.all(
-            color: selected ? colors.accent : colors.rule,
-          ),
+          border: Border.all(color: selected ? colors.accent : colors.rule),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -489,8 +476,8 @@ class _SourceChip extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: selected ? colors.accentInk : colors.ink,
-                  ),
+                color: selected ? colors.accentInk : colors.ink,
+              ),
             ),
           ],
         ),
@@ -528,68 +515,68 @@ class _SourceInput extends StatelessWidget {
 
     return switch (source) {
       ImportSource.file => Column(
-          children: [
-            OutlinedButton.icon(
-              onPressed: onPickFile,
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Pick Audio File'),
+        children: [
+          OutlinedButton.icon(
+            onPressed: onPickFile,
+            icon: const Icon(Icons.upload_file),
+            label: const Text('Pick Audio File'),
+          ),
+          if (pickedFilePath != null) ...[
+            const SizedBox(height: PianoSpacing.sm),
+            Text(
+              'Selected: ${pickedFilePath!.split('/').last}',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
-            if (pickedFilePath != null) ...[
+          ],
+        ],
+      ),
+      ImportSource.youtube => TextField(
+        controller: youtubeController,
+        decoration: InputDecoration(
+          labelText: 'YouTube URL',
+          hintText: 'Paste YouTube URL',
+          prefixIcon: const Icon(Icons.link),
+          errorText: youtubeError,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(PianoRadius.md),
+          ),
+        ),
+        keyboardType: TextInputType.url,
+      ),
+      ImportSource.recording => MicPermissionGate(
+        child: Column(
+          children: [
+            if (!isRecording) ...[
+              FilledButton.icon(
+                onPressed: onStartRecording,
+                icon: const Icon(Icons.mic),
+                label: const Text('Start Recording'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: colors.error,
+                  foregroundColor: colors.paper,
+                ),
+              ),
+            ] else ...[
+              FilledButton.icon(
+                onPressed: onStopRecording,
+                icon: const Icon(Icons.stop),
+                label: const Text('Stop Recording'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: colors.accent,
+                  foregroundColor: colors.accentInk,
+                ),
+              ),
+            ],
+            if (recordedBytes != null && !isRecording) ...[
               const SizedBox(height: PianoSpacing.sm),
               Text(
-                'Selected: ${pickedFilePath!.split('/').last}',
+                'Recorded ${recordedBytes!.length} bytes',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ],
         ),
-      ImportSource.youtube => TextField(
-          controller: youtubeController,
-          decoration: InputDecoration(
-            labelText: 'YouTube URL',
-            hintText: 'Paste YouTube URL',
-            prefixIcon: const Icon(Icons.link),
-            errorText: youtubeError,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(PianoRadius.md),
-            ),
-          ),
-          keyboardType: TextInputType.url,
-        ),
-      ImportSource.recording => MicPermissionGate(
-          child: Column(
-            children: [
-              if (!isRecording) ...[
-                FilledButton.icon(
-                  onPressed: onStartRecording,
-                  icon: const Icon(Icons.mic),
-                  label: const Text('Start Recording'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.error,
-                    foregroundColor: colors.paper,
-                  ),
-                ),
-              ] else ...[
-                FilledButton.icon(
-                  onPressed: onStopRecording,
-                  icon: const Icon(Icons.stop),
-                  label: const Text('Stop Recording'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.accent,
-                    foregroundColor: colors.accentInk,
-                  ),
-                ),
-              ],
-              if (recordedBytes != null && !isRecording) ...[
-                const SizedBox(height: PianoSpacing.sm),
-                Text(
-                  'Recorded ${recordedBytes!.length} bytes',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ],
-          ),
-        ),
+      ),
     };
   }
 }
@@ -646,8 +633,11 @@ class _SubmitButton extends StatelessWidget {
 }
 
 class _PollingStatus extends StatelessWidget {
-  const _PollingStatus(
-      {required this.jobId, required this.status, required this.onCancel});
+  const _PollingStatus({
+    required this.jobId,
+    required this.status,
+    required this.onCancel,
+  });
 
   final String jobId;
   final IngestionJobStatus? status;
@@ -664,10 +654,7 @@ class _PollingStatus extends StatelessWidget {
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: PianoSpacing.md),
-        OutlinedButton(
-          onPressed: onCancel,
-          child: const Text('Cancel'),
-        ),
+        OutlinedButton(onPressed: onCancel, child: const Text('Cancel')),
       ],
     );
   }

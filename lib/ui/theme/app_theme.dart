@@ -14,14 +14,18 @@ class PianoColorsExtension extends ThemeExtension<PianoColorsExtension> {
 
   @override
   PianoColorsExtension lerp(
-      ThemeExtension<PianoColorsExtension>? other, double t) {
+    ThemeExtension<PianoColorsExtension>? other,
+    double t,
+  ) {
     if (other is! PianoColorsExtension) return this;
     final a = colors.argb;
     final b = other.colors.argb;
-    return PianoColorsExtension(PianoColors.fromArgb({
-      for (final key in a.keys)
-        key: Color.lerp(Color(a[key]!), Color(b[key]!), t)!.toARGB32(),
-    }));
+    return PianoColorsExtension(
+      PianoColors.fromArgb({
+        for (final key in a.keys)
+          key: Color.lerp(Color(a[key]!), Color(b[key]!), t)!.toARGB32(),
+      }),
+    );
   }
 }
 
@@ -44,25 +48,29 @@ abstract final class PianoTheme {
     // 'wght' axis; `fontWeight` stays alongside it so weight-aware widgets
     // and any fallback face still behave.
     TextStyle display(double size, int weight, double height) => TextStyle(
-          fontFamily: 'CormorantGaramond',
-          fontWeight: FontWeight.values.firstWhere((w) => w.value == weight),
-          fontVariations: [FontVariation('wght', weight.toDouble())],
-          fontSize: size,
-          height: height,
-          color: c.ink,
-        );
+      fontFamily: 'CormorantGaramond',
+      fontWeight: FontWeight.values.firstWhere((w) => w.value == weight),
+      fontVariations: [FontVariation('wght', weight.toDouble())],
+      fontSize: size,
+      height: height,
+      color: c.ink,
+    );
 
-    TextStyle body(double size, int weight, double height, Color color,
-            {bool tabular = false}) =>
-        TextStyle(
-          fontFamily: 'IBMPlexSans',
-          fontWeight: FontWeight.values.firstWhere((w) => w.value == weight),
-          fontVariations: [FontVariation('wght', weight.toDouble())],
-          fontSize: size,
-          height: height,
-          color: color,
-          fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
-        );
+    TextStyle body(
+      double size,
+      int weight,
+      double height,
+      Color color, {
+      bool tabular = false,
+    }) => TextStyle(
+      fontFamily: 'IBMPlexSans',
+      fontWeight: FontWeight.values.firstWhere((w) => w.value == weight),
+      fontVariations: [FontVariation('wght', weight.toDouble())],
+      fontSize: size,
+      height: height,
+      color: color,
+      fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
+    );
 
     final text = TextTheme(
       displayLarge: display(44, 700, 1.08),
@@ -100,10 +108,11 @@ abstract final class PianoTheme {
       // Depth is weight and lightness, never shadow.
       cardTheme: const CardThemeData(elevation: 0, margin: EdgeInsets.zero),
       appBarTheme: AppBarTheme(
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          backgroundColor: c.paper2,
-          foregroundColor: c.ink),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: c.paper2,
+        foregroundColor: c.ink,
+      ),
       dividerTheme: DividerThemeData(color: c.rule, thickness: 1, space: 1),
       extensions: [PianoColorsExtension(c)],
     );

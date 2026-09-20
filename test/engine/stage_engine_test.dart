@@ -56,13 +56,15 @@ void main() {
     addTearDown(engine.dispose);
     engine.start();
 
-    engine.processPitchEvent(const PitchEvent(
-      frequency: 261.63,
-      confidence: 0,
-      midiNote: 60,
-      timestamp: 0,
-      volume: 0,
-    ));
+    engine.processPitchEvent(
+      const PitchEvent(
+        frequency: 261.63,
+        confidence: 0,
+        midiNote: 60,
+        timestamp: 0,
+        volume: 0,
+      ),
+    );
 
     expect(engine.state.hitCount, 1);
   });
@@ -116,13 +118,15 @@ void main() {
     }) {
       final engine = engineAt(timingError);
       addTearDown(engine.dispose);
-      engine.processPitchEvent(const PitchEvent(
-        frequency: 261.63,
-        confidence: 1,
-        midiNote: 60,
-        timestamp: 0,
-        volume: 1,
-      ));
+      engine.processPitchEvent(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1,
+          midiNote: 60,
+          timestamp: 0,
+          volume: 1,
+        ),
+      );
 
       expect(engine.state.noteStates.single, noteState);
       expect(engine.state.hitCount, hitCount);
@@ -168,13 +172,15 @@ void main() {
     test('counts a late miss-window event as a miss', () {
       final engine = engineAt(0.4);
       addTearDown(engine.dispose);
-      engine.processPitchEvent(const PitchEvent(
-        frequency: 261.63,
-        confidence: 1,
-        midiNote: 60,
-        timestamp: 0,
-        volume: 1,
-      ));
+      engine.processPitchEvent(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1,
+          midiNote: 60,
+          timestamp: 0,
+          volume: 1,
+        ),
+      );
 
       expect(engine.state.noteStates.single, NoteState.missed);
       expect(engine.state.hitCount, 0);
@@ -185,13 +191,15 @@ void main() {
     test('counts an early miss-window event as a miss', () {
       final engine = engineAt(-0.4);
       addTearDown(engine.dispose);
-      engine.processPitchEvent(const PitchEvent(
-        frequency: 261.63,
-        confidence: 1,
-        midiNote: 60,
-        timestamp: 0,
-        volume: 1,
-      ));
+      engine.processPitchEvent(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1,
+          midiNote: 60,
+          timestamp: 0,
+          volume: 1,
+        ),
+      );
 
       expect(engine.state.noteStates.single, NoteState.missed);
       expect(engine.state.hitCount, 0);
@@ -246,21 +254,25 @@ void main() {
       final engine = StageEngine(level: completionLevel, config: config);
       addTearDown(engine.dispose);
       final completion = engine.events
-          .where((event) => event.maybeMap(
-                stageCompleted: (_) => true,
-                orElse: () => false,
-              ))
+          .where(
+            (event) => event.maybeMap(
+              stageCompleted: (_) => true,
+              orElse: () => false,
+            ),
+          )
           .first;
 
       engine.start();
       engine.seekToBeat(0.4);
-      engine.processPitchEvent(const PitchEvent(
-        frequency: 261.63,
-        confidence: 1,
-        midiNote: 60,
-        timestamp: 0,
-        volume: 1,
-      ));
+      engine.processPitchEvent(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1,
+          midiNote: 60,
+          timestamp: 0,
+          volume: 1,
+        ),
+      );
       final event = await completion.timeout(const Duration(seconds: 1));
 
       event.map(

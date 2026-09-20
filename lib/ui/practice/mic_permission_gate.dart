@@ -34,14 +34,16 @@ class MicPermissionGate extends ConsumerWidget {
     return state.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => _Denied(
-        message: 'The microphone could not be started. '
+        message:
+            'The microphone could not be started. '
             'Piano Tool listens for the notes you play, so practice needs it.',
         onRetry: retry,
       ),
       data: (granted) => granted
           ? child
           : _Denied(
-              message: 'Piano Tool needs the microphone to hear what you play. '
+              message:
+                  'Piano Tool needs the microphone to hear what you play. '
                   'Without it, notes cannot be scored.',
               onRetry: retry,
             ),
@@ -75,7 +77,9 @@ class _Denied extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FilledButton(
-                      onPressed: onRetry, child: const Text('Try again')),
+                    onPressed: onRetry,
+                    child: const Text('Try again'),
+                  ),
                   const SizedBox(width: PianoSpacing.sm),
                   // A permanently denied permission never prompts again, so
                   // retry alone would be a dead end.
@@ -88,7 +92,8 @@ class _Denied extends StatelessWidget {
                       final opened = await openAppSettings();
                       if (!opened) {
                         debugPrint(
-                            'MicPermissionGate: could not open app settings');
+                          'MicPermissionGate: could not open app settings',
+                        );
                       }
                     },
                     child: const Text('Open settings'),

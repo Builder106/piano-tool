@@ -16,7 +16,7 @@ class AudioEngine {
   bool _disposed = false;
 
   AudioEngine({final AudioEngineConfig? config})
-      : _pitchDetector = PitchDetector(config: config);
+    : _pitchDetector = PitchDetector(config: config);
 
   Future<bool> initialize() async {
     final PermissionStatus status = await Permission.microphone.request();

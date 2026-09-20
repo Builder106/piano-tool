@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
@@ -23,8 +24,9 @@ void main() {
           // resolved immediately instead of leaving it in AsyncLoading,
           // which is what the default (ingestion-hydrated) definition would
           // do since nothing here awaits it first.
-          levelRepositoryProvider
-              .overrideWith((ref) => SynchronousFuture(LevelRepository())),
+          levelRepositoryProvider.overrideWith(
+            (ref) => SynchronousFuture(LevelRepository()),
+          ),
           if (progressRepository != null)
             progressRepositoryProvider.overrideWithValue(progressRepository),
         ],
@@ -38,8 +40,9 @@ void main() {
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
     final started = ctrl.start();
-    final observed =
-        started.then((_) => progressRepository.startCompleted = true);
+    final observed = started.then(
+      (_) => progressRepository.startCompleted = true,
+    );
     await Future<void>.delayed(Duration.zero);
 
     expect(progressRepository.recordedLastPlayedStageId, 'stage_1');
@@ -86,8 +89,11 @@ void main() {
     expect(c.read(stageControllerProvider('stage_1')).currentBeat, 4);
 
     ctrl.stop();
-    expect(c.read(stageControllerProvider('stage_1')).currentBeat, 4,
-        reason: 'stop must not rewind');
+    expect(
+      c.read(stageControllerProvider('stage_1')).currentBeat,
+      4,
+      reason: 'stop must not rewind',
+    );
 
     ctrl.replay();
     expect(c.read(stageControllerProvider('stage_1')).currentBeat, 0);
@@ -114,84 +120,104 @@ void main() {
   test('an unknown stage id fails loudly', () {
     final c = harness();
     addTearDown(c.dispose);
-    expect(() => c.read(stageControllerProvider('nope')), throwsStateError);
-  });
-
-  test('stop clears sounding, and a pitch afterward does not relight it',
-      () async {
-    final c = harness();
-    addTearDown(c.dispose);
-    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
-
-    await ctrl.start();
-    ctrl.onPitch(const PitchEvent(
-      frequency: 440,
-      confidence: 1.0,
-      midiNote: 69,
-      timestamp: 0,
-      volume: 1.0,
-    ));
-    expect(c.read(stageControllerProvider('stage_1')).sounding, {69});
-
-    ctrl.stop();
-    expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty);
-
-    // The microphone keeps running across Stop; a stray pitch afterward
-    // (a decaying note's tail, a hand still on the keys) must not relight a
-    // key on a keyboard whose transport reads "stopped."
-    ctrl.onPitch(const PitchEvent(
-      frequency: 440,
-      confidence: 1.0,
-      midiNote: 69,
-      timestamp: 1,
-      volume: 1.0,
-    ));
-    expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty);
+    expect(
+      () => c.read(stageControllerProvider('nope')),
+      throwsA(isA<ProviderException>()),
+    );
   });
 
   test(
-      'a sounding note decays and drops out if not heard again within the window',
-      () async {
-    final c = harness();
-    addTearDown(c.dispose);
-    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+    'stop clears sounding, and a pitch afterward does not relight it',
+    () async {
+      final c = harness();
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-    await ctrl.start();
-    ctrl.onPitch(const PitchEvent(
-      frequency: 440,
-      confidence: 1.0,
-      midiNote: 69,
-      timestamp: 0,
-      volume: 1.0,
-    ));
-    expect(c.read(stageControllerProvider('stage_1')).sounding, {69},
-        reason: 'the note should light immediately on detection');
+      await ctrl.start();
+      ctrl.onPitch(
+        const PitchEvent(
+          frequency: 440,
+          confidence: 1.0,
+          midiNote: 69,
+          timestamp: 0,
+          volume: 1.0,
+        ),
+      );
+      expect(c.read(stageControllerProvider('stage_1')).sounding, {69});
 
-    // PitchDetector only emits while it hears a pitch; silence produces no
-    // event at all. Waiting past the decay window without a fresh detection
-    // must drop the note back out on its own.
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty,
-        reason: 'the note must not stay lit forever after going silent');
-  });
+      ctrl.stop();
+      expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty);
 
-  test('a paused transport does not light the keyboard from a stray pitch',
-      () async {
-    final c = harness();
-    addTearDown(c.dispose);
-    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+      // The microphone keeps running across Stop; a stray pitch afterward
+      // (a decaying note's tail, a hand still on the keys) must not relight a
+      // key on a keyboard whose transport reads "stopped."
+      ctrl.onPitch(
+        const PitchEvent(
+          frequency: 440,
+          confidence: 1.0,
+          midiNote: 69,
+          timestamp: 1,
+          volume: 1.0,
+        ),
+      );
+      expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty);
+    },
+  );
 
-    await ctrl.start();
-    ctrl.pause();
-    ctrl.onPitch(const PitchEvent(
-      frequency: 440,
-      confidence: 1.0,
-      midiNote: 69,
-      timestamp: 0,
-      volume: 1.0,
-    ));
-    expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty);
-  });
+  test(
+    'a sounding note decays and drops out if not heard again within the window',
+    () async {
+      final c = harness();
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      await ctrl.start();
+      ctrl.onPitch(
+        const PitchEvent(
+          frequency: 440,
+          confidence: 1.0,
+          midiNote: 69,
+          timestamp: 0,
+          volume: 1.0,
+        ),
+      );
+      expect(c.read(stageControllerProvider('stage_1')).sounding, {
+        69,
+      }, reason: 'the note should light immediately on detection');
+
+      // PitchDetector only emits while it hears a pitch; silence produces no
+      // event at all. Waiting past the decay window without a fresh detection
+      // must drop the note back out on its own.
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(
+        c.read(stageControllerProvider('stage_1')).sounding,
+        isEmpty,
+        reason: 'the note must not stay lit forever after going silent',
+      );
+    },
+  );
+
+  test(
+    'a paused transport does not light the keyboard from a stray pitch',
+    () async {
+      final c = harness();
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      await ctrl.start();
+      ctrl.pause();
+      ctrl.onPitch(
+        const PitchEvent(
+          frequency: 440,
+          confidence: 1.0,
+          midiNote: 69,
+          timestamp: 0,
+          volume: 1.0,
+        ),
+      );
+      expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty);
+    },
+  );
 
   test('pause clears an already-lit key, same as stop', () async {
     final c = harness();
@@ -199,64 +225,85 @@ void main() {
     final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
     await ctrl.start();
-    ctrl.onPitch(const PitchEvent(
-      frequency: 440,
-      confidence: 1.0,
-      midiNote: 69,
-      timestamp: 0,
-      volume: 1.0,
-    ));
+    ctrl.onPitch(
+      const PitchEvent(
+        frequency: 440,
+        confidence: 1.0,
+        midiNote: 69,
+        timestamp: 0,
+        volume: 1.0,
+      ),
+    );
     expect(c.read(stageControllerProvider('stage_1')).sounding, {69});
 
     ctrl.pause();
-    expect(c.read(stageControllerProvider('stage_1')).sounding, isEmpty,
-        reason: 'a paused transport should not show a lit key');
-  });
-
-  test('a pitch-stream error is logged rather than vanishing silently',
-      () async {
-    final pitchController = StreamController<PitchEvent>();
-    addTearDown(pitchController.close);
-
-    final originalDebugPrint = debugPrint;
-    final logs = <String>[];
-    debugPrint = (String? message, {int? wrapWidth}) => logs.add(message ?? '');
-    addTearDown(() => debugPrint = originalDebugPrint);
-
-    final c = ProviderContainer(overrides: [
-      audioGrantedProvider.overrideWith((ref) async => true),
-      audioPitchStreamProvider.overrideWith((ref) => pitchController.stream),
-      levelRepositoryProvider
-          .overrideWith((ref) => SynchronousFuture(LevelRepository())),
-    ]);
-    addTearDown(c.dispose);
-
-    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
-    await ctrl.start();
-
-    pitchController.addError(Exception('device disconnected'));
-    await Future<void>.delayed(Duration.zero);
-
     expect(
-      logs.any((line) => line.contains('audioPitchStreamProvider error')),
-      isTrue,
-      reason: 'the old code (next.whenData) dropped this with no log at all',
+      c.read(stageControllerProvider('stage_1')).sounding,
+      isEmpty,
+      reason: 'a paused transport should not show a lit key',
     );
-
-    // The listener is still attached afterward: a real event that follows
-    // the error still reaches the controller and lights the keyboard, so one
-    // bad event does not wedge the stream for the rest of the session.
-    pitchController.add(const PitchEvent(
-      frequency: 440,
-      confidence: 1.0,
-      midiNote: 69,
-      timestamp: 0,
-      volume: 1.0,
-    ));
-    await Future<void>.delayed(Duration.zero);
-
-    expect(c.read(stageControllerProvider('stage_1')).sounding, {69});
   });
+
+  test(
+    'a pitch-stream error is logged rather than vanishing silently',
+    () async {
+      final pitchController = StreamController<PitchEvent>();
+      addTearDown(pitchController.close);
+
+      final originalDebugPrint = debugPrint;
+      final logs = <String>[];
+      debugPrint = (String? message, {int? wrapWidth}) =>
+          logs.add(message ?? '');
+      addTearDown(() => debugPrint = originalDebugPrint);
+
+      final c = ProviderContainer(
+        overrides: [
+          audioGrantedProvider.overrideWith((ref) async => true),
+          audioPitchStreamProvider.overrideWith(
+            (ref) => pitchController.stream,
+          ),
+          levelRepositoryProvider.overrideWith(
+            (ref) => SynchronousFuture(LevelRepository()),
+          ),
+        ],
+      );
+      addTearDown(c.dispose);
+      final stageSubscription = c.listen(
+        stageControllerProvider('stage_1'),
+        (_, _) {},
+        fireImmediately: true,
+      );
+      addTearDown(stageSubscription.close);
+
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+      await ctrl.start();
+
+      pitchController.addError(Exception('device disconnected'));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        logs.any((line) => line.contains('audioPitchStreamProvider error')),
+        isTrue,
+        reason: 'the old code (next.whenData) dropped this with no log at all',
+      );
+
+      // The listener is still attached afterward: a real event that follows
+      // the error still reaches the controller and lights the keyboard, so one
+      // bad event does not wedge the stream for the rest of the session.
+      pitchController.add(
+        const PitchEvent(
+          frequency: 440,
+          confidence: 1.0,
+          midiNote: 69,
+          timestamp: 0,
+          volume: 1.0,
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(c.read(stageControllerProvider('stage_1')).sounding, {69});
+    },
+  );
 }
 
 class _DelayedProgressRepository extends ProgressRepository {

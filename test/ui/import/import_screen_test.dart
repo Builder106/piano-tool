@@ -30,10 +30,7 @@ void main() {
       child: MaterialApp.router(
         routerConfig: GoRouter(
           routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => const ImportScreen(),
-            ),
+            GoRoute(path: '/', builder: (_, __) => const ImportScreen()),
             GoRoute(
               path: '/review',
               builder: (_, state) => Scaffold(
@@ -67,8 +64,9 @@ void main() {
       expect(find.text('Record'), findsOneWidget);
     });
 
-    testWidgets('defaults to the file source with submit disabled',
-        (tester) async {
+    testWidgets('defaults to the file source with submit disabled', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -90,8 +88,9 @@ void main() {
       expect(find.widgetWithText(TextField, 'YouTube URL'), findsOneWidget);
     });
 
-    testWidgets('submit is disabled until a YouTube URL is entered',
-        (tester) async {
+    testWidgets('submit is disabled until a YouTube URL is entered', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -116,46 +115,47 @@ void main() {
     });
 
     testWidgets(
-        'submitting a YouTube URL polls and navigates to ReviewScreen on success',
-        (tester) async {
-      when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-123');
-      when(mockRepo.pollJob('job-123')).thenAnswer(
-        (_) async => IngestionJobResult(
-          status: IngestionJobStatus.done,
-          level: level,
-        ),
-      );
+      'submitting a YouTube URL polls and navigates to ReviewScreen on success',
+      (tester) async {
+        when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-123');
+        when(mockRepo.pollJob('job-123')).thenAnswer(
+          (_) async =>
+              IngestionJobResult(status: IngestionJobStatus.done, level: level),
+        );
 
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('YouTube'));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.widgetWithText(TextField, 'YouTube URL'),
-        'https://youtube.com/watch?v=abc',
-      );
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('YouTube'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.widgetWithText(TextField, 'YouTube URL'),
+          'https://youtube.com/watch?v=abc',
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
-      await tester.pump();
-      await tester.pump();
+        await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+        await tester.pump();
+        await tester.pump();
 
-      // Polling status is visible while the job is in flight.
-      expect(find.textContaining('Queued'), findsOneWidget);
+        // Polling status is visible while the job is in flight.
+        expect(find.textContaining('Queued'), findsOneWidget);
 
-      // Let the periodic poll timer fire and resolve.
-      await tester.pump(const Duration(seconds: 2));
-      await tester.pump();
-      await tester.pumpAndSettle();
+        // Let the periodic poll timer fire and resolve.
+        await tester.pump(const Duration(seconds: 2));
+        await tester.pump();
+        await tester.pumpAndSettle();
 
-      expect(find.text('Review: job-123'), findsOneWidget);
-      verify(mockRepo.submitYoutubeUrl('https://youtube.com/watch?v=abc'))
-          .called(1);
-    });
+        expect(find.text('Review: job-123'), findsOneWidget);
+        verify(
+          mockRepo.submitYoutubeUrl('https://youtube.com/watch?v=abc'),
+        ).called(1);
+      },
+    );
 
-    testWidgets('progresses through downloading and transcribing before done',
-        (tester) async {
+    testWidgets('progresses through downloading and transcribing before done', (
+      tester,
+    ) async {
       when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-789');
 
       // The repository is polled repeatedly; return a different stage on
@@ -245,10 +245,12 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('shows an error when the submission itself throws',
-        (tester) async {
-      when(mockRepo.submitYoutubeUrl(any))
-          .thenThrow(IngestionException('Failed to submit YouTube URL: 500'));
+    testWidgets('shows an error when the submission itself throws', (
+      tester,
+    ) async {
+      when(
+        mockRepo.submitYoutubeUrl(any),
+      ).thenThrow(IngestionException('Failed to submit YouTube URL: 500'));
 
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
@@ -268,25 +270,29 @@ void main() {
     });
 
     testWidgets(
-        'shows a validation error for a non-YouTube URL and does not submit',
-        (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
+      'shows a validation error for a non-YouTube URL and does not submit',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('YouTube'));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.widgetWithText(TextField, 'YouTube URL'),
-        'https://example.com/not-youtube',
-      );
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('YouTube'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.widgetWithText(TextField, 'YouTube URL'),
+          'https://example.com/not-youtube',
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Enter a youtube.com or youtu.be URL'), findsOneWidget);
-      verifyNever(mockRepo.submitYoutubeUrl(any));
-    });
+        expect(
+          find.text('Enter a youtube.com or youtu.be URL'),
+          findsOneWidget,
+        );
+        verifyNever(mockRepo.submitYoutubeUrl(any));
+      },
+    );
 
     testWidgets('accepts a youtu.be short URL', (tester) async {
       when(mockRepo.submitYoutubeUrl(any)).thenAnswer((_) async => 'job-short');
@@ -318,10 +324,12 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('cancel button stops polling and calls cancelJob',
-        (tester) async {
-      when(mockRepo.submitYoutubeUrl(any))
-          .thenAnswer((_) async => 'job-cancel');
+    testWidgets('cancel button stops polling and calls cancelJob', (
+      tester,
+    ) async {
+      when(
+        mockRepo.submitYoutubeUrl(any),
+      ).thenAnswer((_) async => 'job-cancel');
       when(mockRepo.pollJob('job-cancel')).thenAnswer(
         (_) async => IngestionJobResult(status: IngestionJobStatus.queued),
       );
@@ -352,10 +360,12 @@ void main() {
       expect(find.widgetWithText(FilledButton, 'Submit'), findsOneWidget);
     });
 
-    testWidgets('polling times out and shows an error after the deadline',
-        (tester) async {
-      when(mockRepo.submitYoutubeUrl(any))
-          .thenAnswer((_) async => 'job-timeout');
+    testWidgets('polling times out and shows an error after the deadline', (
+      tester,
+    ) async {
+      when(
+        mockRepo.submitYoutubeUrl(any),
+      ).thenAnswer((_) async => 'job-timeout');
       when(mockRepo.pollJob('job-timeout')).thenAnswer(
         (_) async => IngestionJobResult(status: IngestionJobStatus.queued),
       );
@@ -380,16 +390,19 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(find.text('Transcription timed out. Please try again.'),
-          findsOneWidget);
+      expect(
+        find.text('Transcription timed out. Please try again.'),
+        findsOneWidget,
+      );
       final button = tester.widget<FilledButton>(
         find.widgetWithText(FilledButton, 'Submit'),
       );
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('record source is gated behind MicPermissionGate',
-        (tester) async {
+    testWidgets('record source is gated behind MicPermissionGate', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -400,31 +413,32 @@ void main() {
     });
 
     testWidgets(
-        'record source shows the denied state when the mic is unavailable',
-        (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            ingestionRepositoryProvider.overrideWith((ref) async => mockRepo),
-            audioGrantedProvider.overrideWith((ref) async => false),
-          ],
-          child: MaterialApp.router(
-            routerConfig: GoRouter(
-              routes: [
-                GoRoute(path: '/', builder: (_, __) => const ImportScreen()),
-              ],
+      'record source shows the denied state when the mic is unavailable',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              ingestionRepositoryProvider.overrideWith((ref) async => mockRepo),
+              audioGrantedProvider.overrideWith((ref) async => false),
+            ],
+            child: MaterialApp.router(
+              routerConfig: GoRouter(
+                routes: [
+                  GoRoute(path: '/', builder: (_, __) => const ImportScreen()),
+                ],
+              ),
+              theme: PianoTheme.light(),
             ),
-            theme: PianoTheme.light(),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Record'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Record'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('No microphone'), findsOneWidget);
-      expect(find.text('Start Recording'), findsNothing);
-    });
+        expect(find.text('No microphone'), findsOneWidget);
+        expect(find.text('Start Recording'), findsNothing);
+      },
+    );
   });
 }

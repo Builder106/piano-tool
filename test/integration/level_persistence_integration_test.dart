@@ -35,8 +35,9 @@ void main() {
         // real http.Client for one that can't hit a network in tests -- the
         // repository itself, and levelRepositoryProvider's hydration logic,
         // are the real production code.
-        ingestionRepositoryProvider
-            .overrideWith((ref) async => ingestionRepository),
+        ingestionRepositoryProvider.overrideWith(
+          (ref) async => ingestionRepository,
+        ),
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
@@ -49,7 +50,8 @@ void main() {
             GoRoute(
               path: '/practice/:stageId',
               builder: (_, state) => Scaffold(
-                  body: Text('Practice: ${state.pathParameters['stageId']}')),
+                body: Text('Practice: ${state.pathParameters['stageId']}'),
+              ),
             ),
           ],
         ),
@@ -59,56 +61,58 @@ void main() {
   }
 
   testWidgets(
-      'a level saved via IngestionRepository appears in LevelListScreen on next load',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    final ingestionRepository = IngestionRepository(
-      client: MockClient((request) async => http.Response('Not found', 404)),
-      baseUrl: 'http://test.api',
-      prefs: prefs,
-    );
+    'a level saved via IngestionRepository appears in LevelListScreen on next load',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final ingestionRepository = IngestionRepository(
+        client: MockClient((request) async => http.Response('Not found', 404)),
+        baseUrl: 'http://test.api',
+        prefs: prefs,
+      );
 
-    // This is the save half of the seam: what ReviewScreen._saveLevel calls
-    // after a successful transcription.
-    await ingestionRepository.saveLevel(level);
+      // This is the save half of the seam: what ReviewScreen._saveLevel calls
+      // after a successful transcription.
+      await ingestionRepository.saveLevel(level);
 
-    // This is the display half: LevelListScreen reads levelRepositoryProvider,
-    // which must hydrate from IngestionRepository.listImportedLevels() on
-    // its own for the saved level to appear here.
-    await tester.pumpWidget(createTestWidget(ingestionRepository));
-    await tester.pumpAndSettle();
+      // This is the display half: LevelListScreen reads levelRepositoryProvider,
+      // which must hydrate from IngestionRepository.listImportedLevels() on
+      // its own for the saved level to appear here.
+      await tester.pumpWidget(createTestWidget(ingestionRepository));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Integration Song'), findsOneWidget);
-    expect(find.text('Imported'), findsOneWidget);
-  });
+      expect(find.text('Integration Song'), findsOneWidget);
+      expect(find.text('Imported'), findsOneWidget);
+    },
+  );
 
   testWidgets(
-      'deleting an imported level removes it from IngestionRepository storage too',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    final ingestionRepository = IngestionRepository(
-      client: MockClient((request) async => http.Response('Not found', 404)),
-      baseUrl: 'http://test.api',
-      prefs: prefs,
-    );
-    await ingestionRepository.saveLevel(level);
+    'deleting an imported level removes it from IngestionRepository storage too',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final ingestionRepository = IngestionRepository(
+        client: MockClient((request) async => http.Response('Not found', 404)),
+        baseUrl: 'http://test.api',
+        prefs: prefs,
+      );
+      await ingestionRepository.saveLevel(level);
 
-    await tester.pumpWidget(createTestWidget(ingestionRepository));
-    await tester.pumpAndSettle();
-    expect(find.text('Integration Song'), findsOneWidget);
+      await tester.pumpWidget(createTestWidget(ingestionRepository));
+      await tester.pumpAndSettle();
+      expect(find.text('Integration Song'), findsOneWidget);
 
-    await tester.longPress(find.text('Integration Song'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
-    await tester.pumpAndSettle();
+      await tester.longPress(find.text('Integration Song'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Integration Song'), findsNothing);
+      expect(find.text('Integration Song'), findsNothing);
 
-    // The persisted store must agree, or the level would reappear the next
-    // time levelRepositoryProvider rehydrates from it.
-    final remaining = await ingestionRepository.listImportedLevels();
-    expect(remaining, isEmpty);
-  });
+      // The persisted store must agree, or the level would reappear the next
+      // time levelRepositoryProvider rehydrates from it.
+      final remaining = await ingestionRepository.listImportedLevels();
+      expect(remaining, isEmpty);
+    },
+  );
 }

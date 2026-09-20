@@ -39,8 +39,10 @@ class StaffGeometry {
   double clefFontSize(Clef clef) => space * 4;
 
   /// Bravura anchors gClef to the G line and fClef to the F line.
-  double clefCenterY(Clef clef) =>
-      switch (clef) { Clef.treble => lineY(3), Clef.bass => lineY(1) };
+  double clefCenterY(Clef clef) => switch (clef) {
+    Clef.treble => lineY(3),
+    Clef.bass => lineY(1),
+  };
 
   /// Diatonic index of the note on the staff's bottom line.
   static const int _trebleBottom = 30; // E4
@@ -55,8 +57,10 @@ class StaffGeometry {
     return octave * 7 + _degree[midi % 12];
   }
 
-  int _bottomFor(Clef clef) =>
-      switch (clef) { Clef.treble => _trebleBottom, Clef.bass => _bassBottom };
+  int _bottomFor(Clef clef) => switch (clef) {
+    Clef.treble => _trebleBottom,
+    Clef.bass => _bassBottom,
+  };
 
   /// Each diatonic step moves half a space.
   double yForMidi(int midi, Clef clef) =>

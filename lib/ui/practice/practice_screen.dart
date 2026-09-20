@@ -49,22 +49,24 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     _controller = ref.read(stageControllerProvider(widget.stageId).notifier);
 
     _completionSub = _controller.events.listen((event) {
-      event.whenOrNull(stageCompleted: (accuracy, score, totalNotes, hitNotes) {
-        if (!mounted || _showingResults) return;
-        _showingResults = true;
-        context.goNamed(
-          'results',
-          pathParameters: {'stageId': widget.stageId},
-          extra: StageResult(
-            stageId: widget.stageId,
-            title: _controller.levelTitle,
-            score: score,
-            accuracy: accuracy,
-            totalNotes: totalNotes,
-            hitNotes: hitNotes,
-          ),
-        );
-      });
+      event.whenOrNull(
+        stageCompleted: (accuracy, score, totalNotes, hitNotes) {
+          if (!mounted || _showingResults) return;
+          _showingResults = true;
+          context.goNamed(
+            'results',
+            pathParameters: {'stageId': widget.stageId},
+            extra: StageResult(
+              stageId: widget.stageId,
+              title: _controller.levelTitle,
+              score: score,
+              accuracy: accuracy,
+              totalNotes: totalNotes,
+              hitNotes: hitNotes,
+            ),
+          );
+        },
+      );
     });
   }
 
@@ -77,11 +79,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     // never played.
     final controller = _controller;
     final completed = controller.isCompleted;
-    controller.stop(
-      syncEvents: false,
-      notifyState: false,
-      syncState: false,
-    );
+    controller.stop(syncEvents: false, notifyState: false, syncState: false);
     if (!completed) {
       Future<void>.microtask(() {
         if (!controller.mounted) return;
@@ -94,8 +92,9 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   @override
   Widget build(BuildContext context) {
     final stageId = widget.stageId;
-    final level =
-        ref.watch(stageControllerProvider(stageId).select((s) => s.level));
+    final level = ref.watch(
+      stageControllerProvider(stageId).select((s) => s.level),
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -112,8 +111,10 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                     // The keyboard takes a fifth of the height, floored and
                     // capped so it stays legible on a short screen without
                     // eating a tall one.
-                    final keyboardHeight =
-                        (constraints.maxHeight * 0.21).clamp(64.0, 88.0);
+                    final keyboardHeight = (constraints.maxHeight * 0.21).clamp(
+                      64.0,
+                      88.0,
+                    );
 
                     return Column(
                       children: [
@@ -121,7 +122,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                         // The staff takes the remainder, so it grows on a
                         // larger screen instead of leaving a dead band.
                         Expanded(
-                            child: _StaffPane(stageId: stageId, level: level)),
+                          child: _StaffPane(stageId: stageId, level: level),
+                        ),
                         SizedBox(
                           height: keyboardHeight,
                           child: _KeyboardPane(stageId: stageId),
@@ -183,8 +185,9 @@ class _HudPane extends ConsumerWidget {
     final accuracy = ref.watch(accuracyProvider(stageId));
     // The state's own progress, rather than a second copy of the same sum.
     // A double compares by value, so this slice really does narrow.
-    final progress =
-        ref.watch(stageControllerProvider(stageId).select((s) => s.progress));
+    final progress = ref.watch(
+      stageControllerProvider(stageId).select((s) => s.progress),
+    );
 
     return PracticeHud(
       title: level.title,
@@ -241,8 +244,9 @@ class _KeyboardPane extends ConsumerWidget {
 /// The level's notes zipped with their live states, in the shape the staff
 /// painter wants.
 List<PlacedNote> _placedNotes(WidgetRef ref, String stageId) {
-  final levelNotes =
-      ref.watch(stageControllerProvider(stageId).select((s) => s.notes));
+  final levelNotes = ref.watch(
+    stageControllerProvider(stageId).select((s) => s.notes),
+  );
   final states = ref.watch(noteStatesProvider(stageId));
 
   return [

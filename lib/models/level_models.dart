@@ -55,12 +55,7 @@ sealed class LevelModel with _$LevelModel {
 }
 
 /// Difficulty levels for stages
-enum Difficulty {
-  beginner,
-  intermediate,
-  advanced,
-  expert,
-}
+enum Difficulty { beginner, intermediate, advanced, expert }
 
 /// Stage metadata for the game progression
 @freezed
