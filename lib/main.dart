@@ -38,9 +38,7 @@ class PianoToolApp extends ConsumerWidget {
         themeMode: ThemeMode.system,
         home: Scaffold(
           backgroundColor: PianoTheme.light().colorScheme.surface,
-          body: const Center(
-            child: CircularProgressIndicator(),
-          ),
+          body: const Center(child: CircularProgressIndicator()),
         ),
       ),
       error: (error, stack) => MaterialApp(
@@ -51,9 +49,7 @@ class PianoToolApp extends ConsumerWidget {
         themeMode: ThemeMode.system,
         home: Scaffold(
           backgroundColor: PianoTheme.light().colorScheme.surface,
-          body: Center(
-            child: Text('Error initializing app: $error'),
-          ),
+          body: Center(child: Text('Error initializing app: $error')),
         ),
       ),
     );

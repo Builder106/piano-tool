@@ -28,13 +28,8 @@ import 'package:piano_tool/models/level_models.dart' as _i5;
 
 class _FakeIngestionJobResult_0 extends _i1.SmartFake
     implements _i2.IngestionJobResult {
-  _FakeIngestionJobResult_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeIngestionJobResult_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [ProgressRepository].
@@ -47,23 +42,22 @@ class MockProgressRepository extends _i1.Mock
   }
 
   @override
-  _i4.Future<_i5.StageProgress?> read(String? stageId) => (super.noSuchMethod(
-        Invocation.method(
-          #read,
-          [stageId],
-        ),
-        returnValue: _i4.Future<_i5.StageProgress?>.value(),
-      ) as _i4.Future<_i5.StageProgress?>);
+  _i4.Future<_i5.StageProgress?> read(String? stageId) =>
+      (super.noSuchMethod(
+            Invocation.method(#read, [stageId]),
+            returnValue: _i4.Future<_i5.StageProgress?>.value(),
+          )
+          as _i4.Future<_i5.StageProgress?>);
 
   @override
-  _i4.Future<Map<String, _i5.StageProgress>> readAll() => (super.noSuchMethod(
-        Invocation.method(
-          #readAll,
-          [],
-        ),
-        returnValue: _i4.Future<Map<String, _i5.StageProgress>>.value(
-            <String, _i5.StageProgress>{}),
-      ) as _i4.Future<Map<String, _i5.StageProgress>>);
+  _i4.Future<Map<String, _i5.StageProgress>> readAll() =>
+      (super.noSuchMethod(
+            Invocation.method(#readAll, []),
+            returnValue: _i4.Future<Map<String, _i5.StageProgress>>.value(
+              <String, _i5.StageProgress>{},
+            ),
+          )
+          as _i4.Future<Map<String, _i5.StageProgress>>);
 
   @override
   _i4.Future<void> record({
@@ -72,37 +66,32 @@ class MockProgressRepository extends _i1.Mock
     required int? score,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #record,
-          [],
-          {
-            #stageId: stageId,
-            #accuracy: accuracy,
-            #score: score,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#record, [], {
+              #stageId: stageId,
+              #accuracy: accuracy,
+              #score: score,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<String?> lastPlayedStageId() => (super.noSuchMethod(
-        Invocation.method(
-          #lastPlayedStageId,
-          [],
-        ),
-        returnValue: _i4.Future<String?>.value(),
-      ) as _i4.Future<String?>);
+  _i4.Future<String?> lastPlayedStageId() =>
+      (super.noSuchMethod(
+            Invocation.method(#lastPlayedStageId, []),
+            returnValue: _i4.Future<String?>.value(),
+          )
+          as _i4.Future<String?>);
 
   @override
-  _i4.Future<void> setLastPlayed(String? stageId) => (super.noSuchMethod(
-        Invocation.method(
-          #setLastPlayed,
-          [stageId],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> setLastPlayed(String? stageId) =>
+      (super.noSuchMethod(
+            Invocation.method(#setLastPlayed, [stageId]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }
 
 /// A class which mocks [IngestionRepository].
@@ -115,94 +104,82 @@ class MockIngestionRepository extends _i1.Mock
   }
 
   @override
-  _i4.Future<String> submitUpload(_i6.File? file) => (super.noSuchMethod(
-        Invocation.method(
-          #submitUpload,
-          [file],
-        ),
-        returnValue: _i4.Future<String>.value(_i7.dummyValue<String>(
-          this,
-          Invocation.method(
-            #submitUpload,
-            [file],
-          ),
-        )),
-      ) as _i4.Future<String>);
+  _i4.Future<String> submitUpload(_i6.File? file) =>
+      (super.noSuchMethod(
+            Invocation.method(#submitUpload, [file]),
+            returnValue: _i4.Future<String>.value(
+              _i7.dummyValue<String>(
+                this,
+                Invocation.method(#submitUpload, [file]),
+              ),
+            ),
+          )
+          as _i4.Future<String>);
 
   @override
-  _i4.Future<String> submitYoutubeUrl(String? url) => (super.noSuchMethod(
-        Invocation.method(
-          #submitYoutubeUrl,
-          [url],
-        ),
-        returnValue: _i4.Future<String>.value(_i7.dummyValue<String>(
-          this,
-          Invocation.method(
-            #submitYoutubeUrl,
-            [url],
-          ),
-        )),
-      ) as _i4.Future<String>);
+  _i4.Future<String> submitYoutubeUrl(String? url) =>
+      (super.noSuchMethod(
+            Invocation.method(#submitYoutubeUrl, [url]),
+            returnValue: _i4.Future<String>.value(
+              _i7.dummyValue<String>(
+                this,
+                Invocation.method(#submitYoutubeUrl, [url]),
+              ),
+            ),
+          )
+          as _i4.Future<String>);
 
   @override
   _i4.Future<String> submitRecording(_i8.Uint8List? audioBytes) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #submitRecording,
-          [audioBytes],
-        ),
-        returnValue: _i4.Future<String>.value(_i7.dummyValue<String>(
-          this,
-          Invocation.method(
-            #submitRecording,
-            [audioBytes],
-          ),
-        )),
-      ) as _i4.Future<String>);
+            Invocation.method(#submitRecording, [audioBytes]),
+            returnValue: _i4.Future<String>.value(
+              _i7.dummyValue<String>(
+                this,
+                Invocation.method(#submitRecording, [audioBytes]),
+              ),
+            ),
+          )
+          as _i4.Future<String>);
 
   @override
   _i4.Future<_i2.IngestionJobResult> pollJob(String? jobId) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #pollJob,
-          [jobId],
-        ),
-        returnValue:
-            _i4.Future<_i2.IngestionJobResult>.value(_FakeIngestionJobResult_0(
-          this,
-          Invocation.method(
-            #pollJob,
-            [jobId],
-          ),
-        )),
-      ) as _i4.Future<_i2.IngestionJobResult>);
+            Invocation.method(#pollJob, [jobId]),
+            returnValue: _i4.Future<_i2.IngestionJobResult>.value(
+              _FakeIngestionJobResult_0(
+                this,
+                Invocation.method(#pollJob, [jobId]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.IngestionJobResult>);
 
   @override
-  _i4.Future<void> saveLevel(_i5.LevelModel? level) => (super.noSuchMethod(
-        Invocation.method(
-          #saveLevel,
-          [level],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> saveLevel(_i5.LevelModel? level) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveLevel, [level]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<List<_i5.LevelModel>> listImportedLevels() => (super.noSuchMethod(
-        Invocation.method(
-          #listImportedLevels,
-          [],
-        ),
-        returnValue: _i4.Future<List<_i5.LevelModel>>.value(<_i5.LevelModel>[]),
-      ) as _i4.Future<List<_i5.LevelModel>>);
+  _i4.Future<List<_i5.LevelModel>> listImportedLevels() =>
+      (super.noSuchMethod(
+            Invocation.method(#listImportedLevels, []),
+            returnValue: _i4.Future<List<_i5.LevelModel>>.value(
+              <_i5.LevelModel>[],
+            ),
+          )
+          as _i4.Future<List<_i5.LevelModel>>);
 
   @override
-  _i4.Future<void> deleteImportedLevel(String? levelId) => (super.noSuchMethod(
-        Invocation.method(
-          #deleteImportedLevel,
-          [levelId],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> deleteImportedLevel(String? levelId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteImportedLevel, [levelId]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../../audio/audio_engine.dart';
 import '../../data/level_repository.dart';
@@ -27,8 +28,9 @@ final audioGrantedProvider = FutureProvider<bool>((ref) async {
 });
 
 /// Owns the microphone for exactly as long as a practice route is mounted.
-final practiceAudioSessionProvider =
-    FutureProvider.autoDispose<void>((ref) async {
+final practiceAudioSessionProvider = FutureProvider.autoDispose<void>((
+  ref,
+) async {
   final granted = await ref.watch(audioGrantedProvider.future);
   if (!granted) throw StateError('Microphone permission was not granted');
   final engine = ref.read(audioEngineProvider);
@@ -43,7 +45,8 @@ final practiceAudioSessionProvider =
 
 /// Detected pitches. The route-scoped session starts and stops the engine.
 final audioPitchStreamProvider = StreamProvider<PitchEvent>(
-    (ref) => ref.watch(audioEngineProvider).pitchStream);
+  (ref) => ref.watch(audioEngineProvider).pitchStream,
+);
 
 /// Everything the practice screen can show, in one immutable value.
 class StageUiState {
@@ -84,24 +87,26 @@ class StageUiState {
     StageEngineStatus? status,
     double? speed,
     Set<int>? sounding,
-  }) =>
-      StageUiState(
-        level: level,
-        notes: notes,
-        noteStates: noteStates ?? this.noteStates,
-        currentBeat: currentBeat ?? this.currentBeat,
-        score: score ?? this.score,
-        accuracy: accuracy ?? this.accuracy,
-        status: status ?? this.status,
-        speed: speed ?? this.speed,
-        sounding: sounding ?? this.sounding,
-      );
+  }) => StageUiState(
+    level: level,
+    notes: notes,
+    noteStates: noteStates ?? this.noteStates,
+    currentBeat: currentBeat ?? this.currentBeat,
+    score: score ?? this.score,
+    accuracy: accuracy ?? this.accuracy,
+    status: status ?? this.status,
+    speed: speed ?? this.speed,
+    sounding: sounding ?? this.sounding,
+  );
 }
 
 class StageController extends StateNotifier<StageUiState> {
   StageController(
-      this._engine, this._stageId, this._progress, StageUiState initial)
-      : super(initial) {
+    this._engine,
+    this._stageId,
+    this._progress,
+    StageUiState initial,
+  ) : super(initial) {
     _sub = _engine.events.listen(_onEvent);
   }
 
@@ -244,14 +249,10 @@ class StageController extends StateNotifier<StageUiState> {
     event.whenOrNull(
       stageCompleted: (accuracy, score, totalNotes, hitNotes) =>
           _progressWrites = _progressWrites.then(
-        (_) => _progress
-            .record(
-              stageId: _stageId,
-              accuracy: accuracy,
-              score: score,
-            )
-            .catchError((_) {}),
-      ),
+            (_) => _progress
+                .record(stageId: _stageId, accuracy: accuracy, score: score)
+                .catchError((_) {}),
+          ),
     );
   }
 
@@ -281,82 +282,104 @@ class StageController extends StateNotifier<StageUiState> {
 }
 
 final stageControllerProvider =
-    StateNotifierProvider.family<StageController, StageUiState, String>(
-        (ref, stageId) {
-  // By the time a practice route is reachable, LevelListScreen has already
-  // awaited levelRepositoryProvider to render the stage list the user tapped
-  // -- requireValue asserts that instead of silently falling back to an
-  // empty catalog.
-  final stages = ref.read(levelRepositoryProvider).requireValue.getAllStages();
-  final stage = stages.cast<StageModel?>().firstWhere(
+    StateNotifierProvider.family<StageController, StageUiState, String>((
+      ref,
+      stageId,
+    ) {
+      // By the time a practice route is reachable, LevelListScreen has already
+      // awaited levelRepositoryProvider to render the stage list the user tapped
+      // -- requireValue asserts that instead of silently falling back to an
+      // empty catalog.
+      final stages = ref
+          .read(levelRepositoryProvider)
+          .requireValue
+          .getAllStages();
+      final stage = stages.cast<StageModel?>().firstWhere(
         (s) => s?.id == stageId,
         orElse: () => null,
       );
-  if (stage == null) {
-    // Loud, not silent: a bad id is a routing bug and should not render an
-    // empty staff that looks like a loading state.
-    throw StateError('No stage with id "$stageId"');
-  }
+      if (stage == null) {
+        // Loud, not silent: a bad id is a routing bug and should not render an
+        // empty staff that looks like a loading state.
+        throw StateError('No stage with id "$stageId"');
+      }
 
-  final engine = StageEngine(level: stage.level);
-  final controller = StageController(
-    engine,
-    stageId,
-    ref.read(progressRepositoryProvider),
-    StageUiState(
-      level: stage.level,
-      notes: engine.allNotes,
-      noteStates: List.of(engine.state.noteStates),
-      currentBeat: 0,
-      score: 0,
-      accuracy: 0,
-      status: engine.state.engineState,
-      speed: engine.playbackSpeed,
-    ),
-  );
+      final engine = StageEngine(level: stage.level);
+      final controller = StageController(
+        engine,
+        stageId,
+        ref.read(progressRepositoryProvider),
+        StageUiState(
+          level: stage.level,
+          notes: engine.allNotes,
+          noteStates: List.of(engine.state.noteStates),
+          currentBeat: 0,
+          score: 0,
+          accuracy: 0,
+          status: engine.state.engineState,
+          speed: engine.playbackSpeed,
+        ),
+      );
 
-  // Pitch events only flow once permission was granted; the gate makes sure
-  // the screen is not reachable before then.
-  //
-  // This subscription lives as long as the provider does, same as the
-  // engine's own event subscription cancelled in StageController.dispose --
-  // the provider is not autoDispose, so both share the same accepted
-  // lifetime tradeoff documented where the screen stops the controller.
-  ref.listen(audioPitchStreamProvider, (_, next) {
-    next.when(
-      data: controller.onPitch,
-      // A stream error (a device hiccup, the mic disconnecting mid-session)
-      // does not stop the transport or unmount the screen; only this one
-      // pitch is lost. There is no existing error surface for a mid-session
-      // event this rare -- the permission gate only speaks to the initial
-      // grant -- so this is logged rather than given a new UI state.
-      error: (error, stackTrace) =>
-          debugPrint('audioPitchStreamProvider error: $error'),
-      loading: () {},
-    );
-  });
+      // Pitch events only flow once permission was granted; the gate makes sure
+      // the screen is not reachable before then.
+      //
+      // This subscription lives as long as the provider does, same as the
+      // engine's own event subscription cancelled in StageController.dispose --
+      // the provider is not autoDispose, so both share the same accepted
+      // lifetime tradeoff documented where the screen stops the controller.
+      ref.listen(
+        audioPitchStreamProvider,
+        (_, next) {
+          // Riverpod 3 represents a retrying stream error as AsyncLoading with
+          // the original error attached, so checking hasError must happen before
+          // the usual AsyncValue.when dispatch.
+          if (next.hasError) {
+            _logAudioStreamError(next.error);
+            return;
+          }
+          next.whenOrNull(data: controller.onPitch);
+        },
+        onError: (error, _) => _logAudioStreamError(error),
+        fireImmediately: true,
+      );
 
-  return controller;
-});
+      return controller;
+    });
+
+void _logAudioStreamError(Object? error) {
+  // A stream error (a device hiccup, the mic disconnecting mid-session) does
+  // not stop the transport or unmount the screen; only this one pitch is
+  // lost. There is no existing error surface for a mid-session event this
+  // rare -- the permission gate only speaks to the initial grant -- so this
+  // is logged rather than given a new UI state.
+  debugPrint('audioPitchStreamProvider error: $error');
+}
 
 // Narrow slices. A widget watching one of these does not rebuild when an
 // unrelated field changes, which is the whole point of this file.
 final currentBeatProvider = Provider.autoDispose.family<double, String>(
-    (ref, id) =>
-        ref.watch(stageControllerProvider(id).select((s) => s.currentBeat)));
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.currentBeat)),
+);
 final scoreProvider = Provider.autoDispose.family<int, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.score)));
+  (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.score)),
+);
 final accuracyProvider = Provider.autoDispose.family<double, String>(
-    (ref, id) =>
-        ref.watch(stageControllerProvider(id).select((s) => s.accuracy)));
+  (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.accuracy)),
+);
 final engineStatusProvider = Provider.autoDispose
-    .family<StageEngineStatus, String>((ref, id) =>
-        ref.watch(stageControllerProvider(id).select((s) => s.status)));
+    .family<StageEngineStatus, String>(
+      (ref, id) =>
+          ref.watch(stageControllerProvider(id).select((s) => s.status)),
+    );
 final noteStatesProvider = Provider.autoDispose.family<List<NoteState>, String>(
-    (ref, id) =>
-        ref.watch(stageControllerProvider(id).select((s) => s.noteStates)));
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.noteStates)),
+);
 final playbackSpeedProvider = Provider.autoDispose.family<double, String>(
-    (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.speed)));
+  (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.speed)),
+);
 final soundingProvider = Provider.autoDispose.family<Set<int>, String>(
-    (ref, id) =>
-        ref.watch(stageControllerProvider(id).select((s) => s.sounding)));
+  (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.sounding)),
+);

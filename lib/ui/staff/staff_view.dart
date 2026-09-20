@@ -33,7 +33,9 @@ class StaffView extends StatelessWidget {
   /// a test can assert on the staff that is actually drawn rather than on
   /// the widget box, which is the band and not the staff.
   StaffGeometry geometryFor(double bandHeight) => staffGeometryForBand(
-      bandHeight: bandHeight, maxStaffHeight: maxStaffHeight);
+    bandHeight: bandHeight,
+    maxStaffHeight: maxStaffHeight,
+  );
 
   @override
   Widget build(BuildContext context) {

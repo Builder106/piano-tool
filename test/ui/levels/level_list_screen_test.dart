@@ -24,10 +24,12 @@ void main() {
     mockProgressRepo = MockProgressRepository();
     mockIngestionRepo = MockIngestionRepository();
     levelRepository = LevelRepository();
-    when(mockProgressRepo.readAll())
-        .thenAnswer((_) async => <String, StageProgress>{});
-    when(mockIngestionRepo.listImportedLevels())
-        .thenAnswer((_) async => <LevelModel>[]);
+    when(
+      mockProgressRepo.readAll(),
+    ).thenAnswer((_) async => <String, StageProgress>{});
+    when(
+      mockIngestionRepo.listImportedLevels(),
+    ).thenAnswer((_) async => <LevelModel>[]);
     when(mockIngestionRepo.deleteImportedLevel(any)).thenAnswer((_) async {});
   });
 
@@ -35,17 +37,15 @@ void main() {
     return ProviderScope(
       overrides: [
         levelRepositoryProvider.overrideWith((ref) async => levelRepository),
-        ingestionRepositoryProvider
-            .overrideWith((ref) async => mockIngestionRepo),
+        ingestionRepositoryProvider.overrideWith(
+          (ref) async => mockIngestionRepo,
+        ),
         progressRepositoryProvider.overrideWithValue(mockProgressRepo),
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
           routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => const LevelListScreen(),
-            ),
+            GoRoute(path: '/', builder: (_, __) => const LevelListScreen()),
             GoRoute(
               path: '/import',
               builder: (_, __) => const Scaffold(body: Text('Import Screen')),
@@ -53,7 +53,8 @@ void main() {
             GoRoute(
               path: '/practice/:stageId',
               builder: (_, state) => Scaffold(
-                  body: Text('Practice: ${state.pathParameters['stageId']}')),
+                body: Text('Practice: ${state.pathParameters['stageId']}'),
+              ),
             ),
           ],
         ),
@@ -94,8 +95,9 @@ void main() {
       expect(find.byIcon(Icons.add_rounded), findsOneWidget);
     });
 
-    testWidgets('tapping import button navigates to import screen',
-        (tester) async {
+    testWidgets('tapping import button navigates to import screen', (
+      tester,
+    ) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
       await tester.pumpWidget(createTestWidget());
@@ -203,18 +205,20 @@ void main() {
     });
 
     testWidgets('shows progress for completed stages', (tester) async {
-      when(mockProgressRepo.readAll()).thenAnswer((_) async => {
-            'stage_1': StageProgress(
-              stageId: 'stage_1',
-              bestAccuracy: 0.95,
-              bestScore: 1000,
-              attempts: 3,
-              completed: true,
-              unlocked: true,
-              completedAt: DateTime.now(),
-              lastAttemptAt: DateTime.now(),
-            )
-          });
+      when(mockProgressRepo.readAll()).thenAnswer(
+        (_) async => {
+          'stage_1': StageProgress(
+            stageId: 'stage_1',
+            bestAccuracy: 0.95,
+            bestScore: 1000,
+            attempts: 3,
+            completed: true,
+            unlocked: true,
+            completedAt: DateTime.now(),
+            lastAttemptAt: DateTime.now(),
+          ),
+        },
+      );
 
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
@@ -222,8 +226,9 @@ void main() {
       expect(find.text('95%'), findsOneWidget);
     });
 
-    testWidgets('long press on imported level shows delete dialog',
-        (tester) async {
+    testWidgets('long press on imported level shows delete dialog', (
+      tester,
+    ) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
       const importedLevel = LevelModel(

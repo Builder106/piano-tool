@@ -8,14 +8,12 @@ import 'package:piano_tool/ui/practice/stage_controller.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
 Widget _harness(Future<bool> Function(Ref) grant) => ProviderScope(
-      overrides: [audioGrantedProvider.overrideWith(grant)],
-      child: MaterialApp(
-        theme: PianoTheme.light(),
-        home: const Scaffold(
-          body: MicPermissionGate(child: Text('practice')),
-        ),
-      ),
-    );
+  overrides: [audioGrantedProvider.overrideWith(grant)],
+  child: MaterialApp(
+    theme: PianoTheme.light(),
+    home: const Scaffold(body: MicPermissionGate(child: Text('practice'))),
+  ),
+);
 
 void main() {
   testWidgets('shows the child once the microphone is granted', (tester) async {
@@ -24,8 +22,9 @@ void main() {
     expect(find.text('practice'), findsOneWidget);
   });
 
-  testWidgets('explains the problem and offers a retry when denied',
-      (tester) async {
+  testWidgets('explains the problem and offers a retry when denied', (
+    tester,
+  ) async {
     await tester.pumpWidget(_harness((ref) async => false));
     await tester.pumpAndSettle();
 
@@ -35,14 +34,16 @@ void main() {
   });
 
   testWidgets('surfaces a failure instead of hanging', (tester) async {
-    await tester
-        .pumpWidget(_harness((ref) async => throw Exception('no device')));
+    await tester.pumpWidget(
+      _harness((ref) async => throw Exception('no device')),
+    );
     await tester.pumpAndSettle();
     expect(find.textContaining('microphone'), findsWidgets);
   });
 
-  testWidgets('shows progress while the request is outstanding',
-      (tester) async {
+  testWidgets('shows progress while the request is outstanding', (
+    tester,
+  ) async {
     final completer = Completer<bool>();
     await tester.pumpWidget(_harness((ref) => completer.future));
     await tester.pump();

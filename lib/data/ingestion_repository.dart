@@ -82,86 +82,101 @@ class IngestionRepository {
     required final SharedPreferences prefs,
     String? authToken,
     bool requireHttps = false,
-  })  : _client = client,
-        _baseUri = AppConfig.parse(baseUrl, requireHttps: requireHttps)
-            .ingestionApiBaseUri,
-        _authToken = authToken,
-        _prefs = prefs;
+  }) : _client = client,
+       _baseUri = AppConfig.parse(
+         baseUrl,
+         requireHttps: requireHttps,
+       ).ingestionApiBaseUri,
+       _authToken = authToken,
+       _prefs = prefs;
 
   Uri _uri(String path) => _baseUri.resolve(path);
 
   Map<String, String> _headers(String idempotencyKey) => <String, String>{
-        if (_authToken != null && _authToken.isNotEmpty)
-          'Authorization': 'Bearer $_authToken',
-        'Idempotency-Key': idempotencyKey,
-      };
+    if (_authToken != null && _authToken.isNotEmpty)
+      'Authorization': 'Bearer $_authToken',
+    'Idempotency-Key': idempotencyKey,
+  };
 
   /// Submit an audio file for transcription
   Future<String> submitUpload(final File file) => _guard<String>(() async {
-        final http.MultipartRequest request =
-            http.MultipartRequest('POST', _uri('jobs'));
-        request.headers.addAll(_headers(_newIdempotencyKey()));
-        request.fields['source'] = 'upload';
-        request.fields['title'] = file.path.split('/').last;
-        request.files.add(await http.MultipartFile.fromPath(
-          'audio',
-          file.path,
-          contentType: _mediaTypeForPath(file.path),
-        ));
+    final http.MultipartRequest request = http.MultipartRequest(
+      'POST',
+      _uri('jobs'),
+    );
+    request.headers.addAll(_headers(_newIdempotencyKey()));
+    request.fields['source'] = 'upload';
+    request.fields['title'] = file.path.split('/').last;
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'audio',
+        file.path,
+        contentType: _mediaTypeForPath(file.path),
+      ),
+    );
 
-        final http.StreamedResponse response = await _client.send(request);
-        if (response.statusCode != 202) {
-          throw IngestionException(
-              'Failed to submit upload: ${response.statusCode}');
-        }
+    final http.StreamedResponse response = await _client.send(request);
+    if (response.statusCode != 202) {
+      throw IngestionException(
+        'Failed to submit upload: ${response.statusCode}',
+      );
+    }
 
-        final String responseBody = await response.stream.bytesToString();
-        final Map<String, dynamic> json =
-            jsonDecode(responseBody) as Map<String, dynamic>;
-        return json['job_id'] as String;
-      });
+    final String responseBody = await response.stream.bytesToString();
+    final Map<String, dynamic> json =
+        jsonDecode(responseBody) as Map<String, dynamic>;
+    return json['job_id'] as String;
+  });
 
   /// Submit a YouTube URL for transcription
   Future<String> submitYoutubeUrl(final String url) => _guard<String>(() async {
-        final http.MultipartRequest request =
-            http.MultipartRequest('POST', _uri('jobs'));
-        request.headers.addAll(_headers(_newIdempotencyKey()));
-        request.fields['source'] = 'youtube';
-        request.fields['youtube_url'] = url;
-        request.fields['title'] = 'YouTube Import';
-        final http.StreamedResponse response = await _client.send(request);
+    final http.MultipartRequest request = http.MultipartRequest(
+      'POST',
+      _uri('jobs'),
+    );
+    request.headers.addAll(_headers(_newIdempotencyKey()));
+    request.fields['source'] = 'youtube';
+    request.fields['youtube_url'] = url;
+    request.fields['title'] = 'YouTube Import';
+    final http.StreamedResponse response = await _client.send(request);
 
-        if (response.statusCode != 202) {
-          throw IngestionException(
-              'Failed to submit YouTube URL: ${response.statusCode}');
-        }
+    if (response.statusCode != 202) {
+      throw IngestionException(
+        'Failed to submit YouTube URL: ${response.statusCode}',
+      );
+    }
 
-        final Map<String, dynamic> json =
-            jsonDecode(await response.stream.bytesToString())
-                as Map<String, dynamic>;
-        return json['job_id'] as String;
-      });
+    final Map<String, dynamic> json =
+        jsonDecode(await response.stream.bytesToString())
+            as Map<String, dynamic>;
+    return json['job_id'] as String;
+  });
 
   /// Submit a recording (audio bytes) for transcription
   Future<String> submitRecording(final Uint8List audioBytes) =>
       _guard<String>(() async {
-        final http.MultipartRequest request =
-            http.MultipartRequest('POST', _uri('jobs'));
+        final http.MultipartRequest request = http.MultipartRequest(
+          'POST',
+          _uri('jobs'),
+        );
         request.headers.addAll(_headers(_newIdempotencyKey()));
         request.fields['source'] = 'upload';
         request.fields['title'] =
             'Recording ${DateTime.now().millisecondsSinceEpoch}';
-        request.files.add(http.MultipartFile.fromBytes(
-          'audio',
-          audioBytes,
-          filename: 'recording.wav',
-          contentType: MediaType('audio', 'wav'),
-        ));
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'audio',
+            audioBytes,
+            filename: 'recording.wav',
+            contentType: MediaType('audio', 'wav'),
+          ),
+        );
 
         final http.StreamedResponse response = await _client.send(request);
         if (response.statusCode != 202) {
           throw IngestionException(
-              'Failed to submit recording: ${response.statusCode}');
+            'Failed to submit recording: ${response.statusCode}',
+          );
         }
 
         final String responseBody = await response.stream.bytesToString();
@@ -173,8 +188,10 @@ class IngestionRepository {
   /// Poll a job for its status
   Future<IngestionJobResult> pollJob(final String jobId) =>
       _guard<IngestionJobResult>(() async {
-        final http.Response response = await _client.get(_uri('jobs/$jobId'),
-            headers: _headers('poll-$jobId'));
+        final http.Response response = await _client.get(
+          _uri('jobs/$jobId'),
+          headers: _headers('poll-$jobId'),
+        );
 
         if (response.statusCode == 404) {
           throw IngestionException('Job not found: $jobId');
@@ -182,7 +199,8 @@ class IngestionRepository {
 
         if (response.statusCode != 200) {
           throw IngestionException(
-              'Failed to poll job: ${response.statusCode}');
+            'Failed to poll job: ${response.statusCode}',
+          );
         }
 
         final Map<String, dynamic> json =
@@ -192,33 +210,31 @@ class IngestionRepository {
 
   /// Cancel a running job
   Future<void> cancelJob(final String jobId) => _guard<void>(() async {
-        final http.Response response = await _client.delete(
-          _uri('jobs/$jobId'),
-          headers: _headers('cancel-$jobId'),
-        );
-        if (response.statusCode != 200 && response.statusCode != 204) {
-          throw IngestionException(
-              'Failed to cancel job: ${response.statusCode}');
-        }
-      });
+    final http.Response response = await _client.delete(
+      _uri('jobs/$jobId'),
+      headers: _headers('cancel-$jobId'),
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw IngestionException('Failed to cancel job: ${response.statusCode}');
+    }
+  });
 
   /// Save an imported level to local storage
   Future<void> saveLevel(final LevelModel level) => _guard<void>(() async {
-        final Map<String, LevelModel> levels = await _loadLevels();
-        levels[level.id] = level;
-        await _saveLevels(levels);
-      });
+    final Map<String, LevelModel> levels = await _loadLevels();
+    levels[level.id] = level;
+    await _saveLevels(levels);
+  });
 
   /// List all imported levels
-  Future<List<LevelModel>> listImportedLevels() =>
-      _guard<List<LevelModel>>(() async {
-        final Map<String, LevelModel> levels = await _loadLevels();
-        final List<LevelModel> list = levels.values.toList();
-        // Sort by most recent first (we don't have timestamps, so use ID as proxy)
-        list.sort(
-            (final LevelModel a, final LevelModel b) => b.id.compareTo(a.id));
-        return list;
-      });
+  Future<List<LevelModel>>
+  listImportedLevels() => _guard<List<LevelModel>>(() async {
+    final Map<String, LevelModel> levels = await _loadLevels();
+    final List<LevelModel> list = levels.values.toList();
+    // Sort by most recent first (we don't have timestamps, so use ID as proxy)
+    list.sort((final LevelModel a, final LevelModel b) => b.id.compareTo(a.id));
+    return list;
+  });
 
   /// Delete an imported level
   Future<void> deleteImportedLevel(final String levelId) =>
@@ -251,8 +267,9 @@ class IngestionRepository {
   /// [ImportScreen] lets the user pick any [FileType.audio] file, which can
   /// resolve to formats other than wav.
   static MediaType _mediaTypeForPath(final String path) {
-    final String ext =
-        path.contains('.') ? path.split('.').last.toLowerCase() : '';
+    final String ext = path.contains('.')
+        ? path.split('.').last.toLowerCase()
+        : '';
     switch (ext) {
       case 'wav':
         return MediaType('audio', 'wav');
@@ -323,28 +340,30 @@ class AppConfig {
       throw const FormatException('INGESTION_API_BASE_URL must use HTTPS');
     }
     return AppConfig(
-        ingestionApiBaseUri:
-            uri.replace(path: '${uri.path.replaceFirst(RegExp(r'/$'), '')}/'));
+      ingestionApiBaseUri: uri.replace(
+        path: '${uri.path.replaceFirst(RegExp(r'/$'), '')}/',
+      ),
+    );
   }
 }
 
 /// Riverpod provider for IngestionRepository
 final FutureProvider<IngestionRepository> ingestionRepositoryProvider =
     FutureProvider<IngestionRepository>((final Ref ref) async {
-  // Base URL can be configured via --dart-define=INGESTION_API_BASE_URL
-  const String baseUrl = String.fromEnvironment('INGESTION_API_BASE_URL');
-  const String authToken = String.fromEnvironment('INGESTION_API_TOKEN');
-  final bool requireHttps = bool.fromEnvironment('dart.vm.product');
-  if (authToken.isEmpty) {
-    throw const FormatException('INGESTION_API_TOKEN is required');
-  }
+      // Base URL can be configured via --dart-define=INGESTION_API_BASE_URL
+      const String baseUrl = String.fromEnvironment('INGESTION_API_BASE_URL');
+      const String authToken = String.fromEnvironment('INGESTION_API_TOKEN');
+      final bool requireHttps = bool.fromEnvironment('dart.vm.product');
+      if (authToken.isEmpty) {
+        throw const FormatException('INGESTION_API_TOKEN is required');
+      }
 
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  return IngestionRepository(
-    client: http.Client(),
-    baseUrl: baseUrl,
-    authToken: authToken,
-    requireHttps: requireHttps,
-    prefs: prefs,
-  );
-});
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      return IngestionRepository(
+        client: http.Client(),
+        baseUrl: baseUrl,
+        authToken: authToken,
+        requireHttps: requireHttps,
+        prefs: prefs,
+      );
+    });

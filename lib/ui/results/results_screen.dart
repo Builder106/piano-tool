@@ -58,10 +58,7 @@ class ResultsScreen extends StatelessWidget {
                   const SizedBox(height: PianoSpacing.xl),
                   _ResultMetric(label: 'Score', value: '${result.score}'),
                   const SizedBox(height: PianoSpacing.md),
-                  _ResultMetric(
-                    label: 'Accuracy',
-                    value: '$accuracyPercent%',
-                  ),
+                  _ResultMetric(label: 'Accuracy', value: '$accuracyPercent%'),
                   const SizedBox(height: PianoSpacing.sm),
                   Text(
                     '${result.hitNotes} of ${result.totalNotes} notes matched',

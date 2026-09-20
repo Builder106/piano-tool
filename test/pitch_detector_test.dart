@@ -17,20 +17,22 @@ void main() {
       ),
     );
 
-    test('Detects A4 (440 Hz) pitch and MIDI note 69 from synthetic sine wave',
-        () {
-      final buffer = List<int>.generate(bufferSize, (i) {
-        final t = i / sampleRate;
-        final sample = math.sin(2 * math.pi * 440.0 * t);
-        return (sample * 20000).round();
-      });
+    test(
+      'Detects A4 (440 Hz) pitch and MIDI note 69 from synthetic sine wave',
+      () {
+        final buffer = List<int>.generate(bufferSize, (i) {
+          final t = i / sampleRate;
+          final sample = math.sin(2 * math.pi * 440.0 * t);
+          return (sample * 20000).round();
+        });
 
-      final event = detector.processBuffer(buffer);
-      expect(event, isNotNull);
-      expect(event!.frequency, closeTo(440.0, 5.0));
-      expect(event.midiNote, equals(69));
-      expect(event.confidence, greaterThanOrEqualTo(0.7));
-    });
+        final event = detector.processBuffer(buffer);
+        expect(event, isNotNull);
+        expect(event!.frequency, closeTo(440.0, 5.0));
+        expect(event.midiNote, equals(69));
+        expect(event.confidence, greaterThanOrEqualTo(0.7));
+      },
+    );
 
     test('Detects Middle C / C4 (261.63 Hz) pitch and MIDI note 60', () {
       final buffer = List<int>.generate(bufferSize, (i) {

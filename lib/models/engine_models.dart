@@ -5,14 +5,7 @@ part 'engine_models.freezed.dart';
 part 'engine_models.g.dart';
 
 /// State of a note during gameplay
-enum NoteState {
-  upcoming,
-  active,
-  hitPerfect,
-  hitGood,
-  hitOkay,
-  missed,
-}
+enum NoteState { upcoming, active, hitPerfect, hitGood, hitOkay, missed }
 
 /// Result of a note hit attempt
 @freezed
@@ -34,26 +27,25 @@ sealed class NoteHitResult with _$NoteHitResult {
     required double timingError,
   }) = _NoteHitResultOkay;
 
-  const factory NoteHitResult.missed({
-    required int noteIndex,
-  }) = _NoteHitResultMissed;
+  const factory NoteHitResult.missed({required int noteIndex}) =
+      _NoteHitResultMissed;
 
   factory NoteHitResult.fromJson(Map<String, dynamic> json) =>
       _$NoteHitResultFromJson(json);
 
   NoteState get noteState => switch (this) {
-        _NoteHitResultPerfect() => NoteState.hitPerfect,
-        _NoteHitResultGood() => NoteState.hitGood,
-        _NoteHitResultOkay() => NoteState.hitOkay,
-        _NoteHitResultMissed() => NoteState.missed,
-      };
+    _NoteHitResultPerfect() => NoteState.hitPerfect,
+    _NoteHitResultGood() => NoteState.hitGood,
+    _NoteHitResultOkay() => NoteState.hitOkay,
+    _NoteHitResultMissed() => NoteState.missed,
+  };
 
   double get score => switch (this) {
-        _NoteHitResultPerfect() => 100.0,
-        _NoteHitResultGood() => 75.0,
-        _NoteHitResultOkay() => 50.0,
-        _NoteHitResultMissed() => 0.0,
-      };
+    _NoteHitResultPerfect() => 100.0,
+    _NoteHitResultGood() => 75.0,
+    _NoteHitResultOkay() => 50.0,
+    _NoteHitResultMissed() => 0.0,
+  };
 }
 
 /// Events emitted by the stage engine
@@ -83,22 +75,15 @@ sealed class StageEvent with _$StageEvent {
     required bool isPlaying,
   }) = _StageEventPlaybackPosition;
 
-  const factory StageEvent.stateChanged({
-    required StageEngineStatus state,
-  }) = _StageEventStateChanged;
+  const factory StageEvent.stateChanged({required StageEngineStatus state}) =
+      _StageEventStateChanged;
 
   factory StageEvent.fromJson(Map<String, dynamic> json) =>
       _$StageEventFromJson(json);
 }
 
 /// Stage engine state (enum for internal state machine)
-enum StageEngineStatus {
-  idle,
-  playing,
-  paused,
-  completed,
-  stopped,
-}
+enum StageEngineStatus { idle, playing, paused, completed, stopped }
 
 /// Configuration for the stage engine
 @freezed
@@ -139,8 +124,10 @@ sealed class StageEngineStateModel with _$StageEngineStateModel {
       _$StageEngineStateModelFromJson(json);
 
   double get progress => level.totalMeasures > 0
-      ? (currentBeat / (level.totalMeasures * level.beatsPerMeasure))
-          .clamp(0.0, 1.0)
+      ? (currentBeat / (level.totalMeasures * level.beatsPerMeasure)).clamp(
+          0.0,
+          1.0,
+        )
       : 0.0;
 
   double get accuracy =>

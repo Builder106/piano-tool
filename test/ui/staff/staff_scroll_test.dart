@@ -9,14 +9,18 @@ void main() {
   test('does not scroll while the playhead is left of the anchor', () {
     expect(
       staffScrollOffset(
-          playheadX: 0, viewportWidth: viewport, contentWidth: content),
+        playheadX: 0,
+        viewportWidth: viewport,
+        contentWidth: content,
+      ),
       0,
     );
     expect(
       staffScrollOffset(
-          playheadX: anchor - 1,
-          viewportWidth: viewport,
-          contentWidth: content),
+        playheadX: anchor - 1,
+        viewportWidth: viewport,
+        contentWidth: content,
+      ),
       0,
     );
   });
@@ -24,7 +28,10 @@ void main() {
   test('pins the playhead at the anchor through the middle', () {
     expect(
       staffScrollOffset(
-          playheadX: 500, viewportWidth: viewport, contentWidth: content),
+        playheadX: 500,
+        viewportWidth: viewport,
+        contentWidth: content,
+      ),
       closeTo(500 - anchor, 1e-9),
     );
   });
@@ -32,7 +39,10 @@ void main() {
   test('stops when the end of the content reaches the right edge', () {
     expect(
       staffScrollOffset(
-          playheadX: 1400, viewportWidth: viewport, contentWidth: content),
+        playheadX: 1400,
+        viewportWidth: viewport,
+        contentWidth: content,
+      ),
       closeTo(content - viewport, 1e-9),
     );
   });
@@ -40,7 +50,10 @@ void main() {
   test('never scrolls when the content is narrower than the viewport', () {
     expect(
       staffScrollOffset(
-          playheadX: 300, viewportWidth: viewport, contentWidth: 400),
+        playheadX: 300,
+        viewportWidth: viewport,
+        contentWidth: 400,
+      ),
       0,
     );
   });

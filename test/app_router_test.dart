@@ -26,11 +26,13 @@ void main() {
   setUp(() {
     mockIngestionRepo = MockIngestionRepository();
     mockProgressRepo = MockProgressRepository();
-    when(mockProgressRepo.readAll())
-        .thenAnswer((_) async => <String, StageProgress>{});
+    when(
+      mockProgressRepo.readAll(),
+    ).thenAnswer((_) async => <String, StageProgress>{});
     when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
-    when(mockIngestionRepo.listImportedLevels())
-        .thenAnswer((_) async => <LevelModel>[]);
+    when(
+      mockIngestionRepo.listImportedLevels(),
+    ).thenAnswer((_) async => <LevelModel>[]);
     when(mockIngestionRepo.pollJob(any)).thenAnswer(
       (_) async => IngestionJobResult(status: IngestionJobStatus.queued),
     );
@@ -42,8 +44,9 @@ void main() {
   Widget createTestWidget() {
     return ProviderScope(
       overrides: [
-        ingestionRepositoryProvider
-            .overrideWith((ref) async => mockIngestionRepo),
+        ingestionRepositoryProvider.overrideWith(
+          (ref) async => mockIngestionRepo,
+        ),
         progressRepositoryProvider.overrideWithValue(mockProgressRepo),
         audioGrantedProvider.overrideWith((ref) async => true),
         practiceAudioSessionProvider.overrideWith((ref) async {}),
@@ -60,20 +63,23 @@ void main() {
       expect(find.byType(LevelListScreen), findsOneWidget);
     });
 
-    testWidgets('tapping the import action navigates to /import (ImportScreen)',
-        (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'tapping the import action navigates to /import (ImportScreen)',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Import new piece'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Import new piece'));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(ImportScreen), findsOneWidget);
-      expect(find.byType(LevelListScreen), findsNothing);
-    });
+        expect(find.byType(ImportScreen), findsOneWidget);
+        expect(find.byType(LevelListScreen), findsNothing);
+      },
+    );
 
-    testWidgets('/review?jobId=... renders ReviewScreen with the jobId',
-        (tester) async {
+    testWidgets('/review?jobId=... renders ReviewScreen with the jobId', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -81,13 +87,15 @@ void main() {
       GoRouter.of(context).push('/review?jobId=job-42');
       await tester.pumpAndSettle();
 
-      final reviewScreen =
-          tester.widget<ReviewScreen>(find.byType(ReviewScreen));
+      final reviewScreen = tester.widget<ReviewScreen>(
+        find.byType(ReviewScreen),
+      );
       expect(reviewScreen.jobId, 'job-42');
     });
 
-    testWidgets('/practice/:stageId renders PracticeScreen with the stageId',
-        (tester) async {
+    testWidgets('/practice/:stageId renders PracticeScreen with the stageId', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -95,8 +103,9 @@ void main() {
       GoRouter.of(context).push('/practice/stage_1');
       await tester.pumpAndSettle();
 
-      final practiceScreen =
-          tester.widget<PracticeScreen>(find.byType(PracticeScreen));
+      final practiceScreen = tester.widget<PracticeScreen>(
+        find.byType(PracticeScreen),
+      );
       expect(practiceScreen.stageId, 'stage_1');
     });
 
@@ -124,8 +133,9 @@ void main() {
       expect(find.text('63%'), findsOneWidget);
     });
 
-    testWidgets('results actions replay the stage or return to levels',
-        (tester) async {
+    testWidgets('results actions replay the stage or return to levels', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 

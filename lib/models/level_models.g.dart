@@ -82,7 +82,8 @@ _$StageModelImpl _$$StageModelImplFromJson(Map<String, dynamic> json) =>
       difficulty: $enumDecode(_$DifficultyEnumMap, json['difficulty']),
       level: LevelModel.fromJson(json['level'] as Map<String, dynamic>),
       order: (json['order'] as num?)?.toInt() ?? 0,
-      prerequisites: (json['prerequisites'] as List<dynamic>?)
+      prerequisites:
+          (json['prerequisites'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],

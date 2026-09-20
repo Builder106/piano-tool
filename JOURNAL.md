@@ -1,5 +1,19 @@
 # Journal
 
+## 2026-09-20: resolve major Flutter dependency updates #decision
+
+Migrated the open major Dependabot updates for Riverpod, Freezed, the file
+picker, and their generators. File selection now uses the static
+`FilePicker.pickFile` API. The practice controller keeps its existing
+StateNotifier implementation through Riverpod's legacy compatibility export
+and handles Riverpod 3 retrying stream errors explicitly. The Dart SDK floor
+is 3.8.0, with the lockfile and generated sources refreshed accordingly.
+
+Verification passed for Flutter analysis, formatting, all 197 Flutter tests,
+and the release web build. Android debug packaging remains unverified in the
+Linux ARM64 verification environment because no Android SDK is installed; the
+x86_64 GitHub Actions Android job remains authoritative for that gate.
+
 ## 2026-09-14: configure Vercel for Flutter Web release hosting #decision #deployment
 
 Replaced the decommissioned FastAPI preset on Vercel with Flutter Web release hosting. Reset the project root directory from the obsolete monorepo `apps/piano-tool` path to the repository root, cleared serverless install commands, and configured `scripts/build_web.sh` to compile release web assets to `build/web`. Maintained automatic git deployment gating behind GitHub Actions quality suites before production deploy hook dispatch.

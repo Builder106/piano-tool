@@ -4,16 +4,21 @@ import 'package:piano_tool/ui/theme/app_theme.dart';
 import 'package:piano_tool/ui/theme/tokens.dart';
 
 void main() {
-  testWidgets('light theme exposes tokens and uses the bundled faces',
-      (tester) async {
+  testWidgets('light theme exposes tokens and uses the bundled faces', (
+    tester,
+  ) async {
     late BuildContext ctx;
-    await tester.pumpWidget(MaterialApp(
-      theme: PianoTheme.light(),
-      home: Builder(builder: (c) {
-        ctx = c;
-        return const SizedBox();
-      }),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: PianoTheme.light(),
+        home: Builder(
+          builder: (c) {
+            ctx = c;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
 
     final colors = PianoTheme.colorsOf(ctx);
     expect(colors.paper, PianoColors.light().paper);
@@ -25,16 +30,21 @@ void main() {
     expect(theme.textTheme.headlineSmall!.fontFamily, 'CormorantGaramond');
   });
 
-  testWidgets('dark theme swaps tokens but keeps the same families',
-      (tester) async {
+  testWidgets('dark theme swaps tokens but keeps the same families', (
+    tester,
+  ) async {
     late BuildContext ctx;
-    await tester.pumpWidget(MaterialApp(
-      theme: PianoTheme.dark(),
-      home: Builder(builder: (c) {
-        ctx = c;
-        return const SizedBox();
-      }),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: PianoTheme.dark(),
+        home: Builder(
+          builder: (c) {
+            ctx = c;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
 
     expect(PianoTheme.colorsOf(ctx).paper, PianoColors.dark().paper);
     expect(Theme.of(ctx).textTheme.bodyMedium!.fontFamily, 'IBMPlexSans');

@@ -82,7 +82,7 @@ sealed class PitchDetectionResult with _$PitchDetectionResult {
       _$PitchDetectionResultFromJson(json);
 
   bool get isSuccess => switch (this) {
-        _PitchDetectionResultSuccess() => true,
-        _PitchDetectionResultFailure() => false,
-      };
+    _PitchDetectionResultSuccess() => true,
+    _PitchDetectionResultFailure() => false,
+  };
 }

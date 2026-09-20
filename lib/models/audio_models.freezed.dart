@@ -12,7 +12,8 @@ part of 'audio_models.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 PitchEvent _$PitchEventFromJson(Map<String, dynamic> json) {
   return _PitchEvent.fromJson(json);
@@ -37,15 +38,17 @@ mixin _$PitchEvent {
 /// @nodoc
 abstract class $PitchEventCopyWith<$Res> {
   factory $PitchEventCopyWith(
-          PitchEvent value, $Res Function(PitchEvent) then) =
-      _$PitchEventCopyWithImpl<$Res, PitchEvent>;
+    PitchEvent value,
+    $Res Function(PitchEvent) then,
+  ) = _$PitchEventCopyWithImpl<$Res, PitchEvent>;
   @useResult
-  $Res call(
-      {double frequency,
-      double confidence,
-      int midiNote,
-      double timestamp,
-      double volume});
+  $Res call({
+    double frequency,
+    double confidence,
+    int midiNote,
+    double timestamp,
+    double volume,
+  });
 }
 
 /// @nodoc
@@ -67,28 +70,31 @@ class _$PitchEventCopyWithImpl<$Res, $Val extends PitchEvent>
     Object? timestamp = null,
     Object? volume = null,
   }) {
-    return _then(_value.copyWith(
-      frequency: null == frequency
-          ? _value.frequency
-          : frequency // ignore: cast_nullable_to_non_nullable
-              as double,
-      confidence: null == confidence
-          ? _value.confidence
-          : confidence // ignore: cast_nullable_to_non_nullable
-              as double,
-      midiNote: null == midiNote
-          ? _value.midiNote
-          : midiNote // ignore: cast_nullable_to_non_nullable
-              as int,
-      timestamp: null == timestamp
-          ? _value.timestamp
-          : timestamp // ignore: cast_nullable_to_non_nullable
-              as double,
-      volume: null == volume
-          ? _value.volume
-          : volume // ignore: cast_nullable_to_non_nullable
-              as double,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            frequency: null == frequency
+                ? _value.frequency
+                : frequency // ignore: cast_nullable_to_non_nullable
+                      as double,
+            confidence: null == confidence
+                ? _value.confidence
+                : confidence // ignore: cast_nullable_to_non_nullable
+                      as double,
+            midiNote: null == midiNote
+                ? _value.midiNote
+                : midiNote // ignore: cast_nullable_to_non_nullable
+                      as int,
+            timestamp: null == timestamp
+                ? _value.timestamp
+                : timestamp // ignore: cast_nullable_to_non_nullable
+                      as double,
+            volume: null == volume
+                ? _value.volume
+                : volume // ignore: cast_nullable_to_non_nullable
+                      as double,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -96,16 +102,18 @@ class _$PitchEventCopyWithImpl<$Res, $Val extends PitchEvent>
 abstract class _$$PitchEventImplCopyWith<$Res>
     implements $PitchEventCopyWith<$Res> {
   factory _$$PitchEventImplCopyWith(
-          _$PitchEventImpl value, $Res Function(_$PitchEventImpl) then) =
-      __$$PitchEventImplCopyWithImpl<$Res>;
+    _$PitchEventImpl value,
+    $Res Function(_$PitchEventImpl) then,
+  ) = __$$PitchEventImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {double frequency,
-      double confidence,
-      int midiNote,
-      double timestamp,
-      double volume});
+  $Res call({
+    double frequency,
+    double confidence,
+    int midiNote,
+    double timestamp,
+    double volume,
+  });
 }
 
 /// @nodoc
@@ -113,8 +121,9 @@ class __$$PitchEventImplCopyWithImpl<$Res>
     extends _$PitchEventCopyWithImpl<$Res, _$PitchEventImpl>
     implements _$$PitchEventImplCopyWith<$Res> {
   __$$PitchEventImplCopyWithImpl(
-      _$PitchEventImpl _value, $Res Function(_$PitchEventImpl) _then)
-      : super(_value, _then);
+    _$PitchEventImpl _value,
+    $Res Function(_$PitchEventImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -125,56 +134,59 @@ class __$$PitchEventImplCopyWithImpl<$Res>
     Object? timestamp = null,
     Object? volume = null,
   }) {
-    return _then(_$PitchEventImpl(
-      frequency: null == frequency
-          ? _value.frequency
-          : frequency // ignore: cast_nullable_to_non_nullable
-              as double,
-      confidence: null == confidence
-          ? _value.confidence
-          : confidence // ignore: cast_nullable_to_non_nullable
-              as double,
-      midiNote: null == midiNote
-          ? _value.midiNote
-          : midiNote // ignore: cast_nullable_to_non_nullable
-              as int,
-      timestamp: null == timestamp
-          ? _value.timestamp
-          : timestamp // ignore: cast_nullable_to_non_nullable
-              as double,
-      volume: null == volume
-          ? _value.volume
-          : volume // ignore: cast_nullable_to_non_nullable
-              as double,
-    ));
+    return _then(
+      _$PitchEventImpl(
+        frequency: null == frequency
+            ? _value.frequency
+            : frequency // ignore: cast_nullable_to_non_nullable
+                  as double,
+        confidence: null == confidence
+            ? _value.confidence
+            : confidence // ignore: cast_nullable_to_non_nullable
+                  as double,
+        midiNote: null == midiNote
+            ? _value.midiNote
+            : midiNote // ignore: cast_nullable_to_non_nullable
+                  as int,
+        timestamp: null == timestamp
+            ? _value.timestamp
+            : timestamp // ignore: cast_nullable_to_non_nullable
+                  as double,
+        volume: null == volume
+            ? _value.volume
+            : volume // ignore: cast_nullable_to_non_nullable
+                  as double,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$PitchEventImpl implements _PitchEvent {
-  const _$PitchEventImpl(
-      {required this.frequency,
-      required this.confidence,
-      required this.midiNote,
-      required this.timestamp,
-      required this.volume});
+  const _$PitchEventImpl({
+    required this.frequency,
+    required this.confidence,
+    required this.midiNote,
+    required this.timestamp,
+    required this.volume,
+  });
 
   factory _$PitchEventImpl.fromJson(Map<String, dynamic> json) =>
       _$$PitchEventImplFromJson(json);
 
   @override
   final double frequency;
-// Hz
+  // Hz
   @override
   final double confidence;
-// 0.0 - 1.0
+  // 0.0 - 1.0
   @override
   final int midiNote;
-// MIDI note number (60 = middle C)
+  // MIDI note number (60 = middle C)
   @override
   final double timestamp;
-// seconds since engine start
+  // seconds since engine start
   @override
   final double volume;
 
@@ -202,7 +214,13 @@ class _$PitchEventImpl implements _PitchEvent {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType, frequency, confidence, midiNote, timestamp, volume);
+    runtimeType,
+    frequency,
+    confidence,
+    midiNote,
+    timestamp,
+    volume,
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -212,19 +230,18 @@ class _$PitchEventImpl implements _PitchEvent {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$PitchEventImplToJson(
-      this,
-    );
+    return _$$PitchEventImplToJson(this);
   }
 }
 
 abstract class _PitchEvent implements PitchEvent {
-  const factory _PitchEvent(
-      {required final double frequency,
-      required final double confidence,
-      required final int midiNote,
-      required final double timestamp,
-      required final double volume}) = _$PitchEventImpl;
+  const factory _PitchEvent({
+    required final double frequency,
+    required final double confidence,
+    required final int midiNote,
+    required final double timestamp,
+    required final double volume,
+  }) = _$PitchEventImpl;
 
   factory _PitchEvent.fromJson(Map<String, dynamic> json) =
       _$PitchEventImpl.fromJson;
@@ -268,15 +285,17 @@ mixin _$AudioEngineConfig {
 /// @nodoc
 abstract class $AudioEngineConfigCopyWith<$Res> {
   factory $AudioEngineConfigCopyWith(
-          AudioEngineConfig value, $Res Function(AudioEngineConfig) then) =
-      _$AudioEngineConfigCopyWithImpl<$Res, AudioEngineConfig>;
+    AudioEngineConfig value,
+    $Res Function(AudioEngineConfig) then,
+  ) = _$AudioEngineConfigCopyWithImpl<$Res, AudioEngineConfig>;
   @useResult
-  $Res call(
-      {int sampleRate,
-      int bufferSize,
-      double minVolumeThreshold,
-      double minConfidenceThreshold,
-      double referenceFrequency});
+  $Res call({
+    int sampleRate,
+    int bufferSize,
+    double minVolumeThreshold,
+    double minConfidenceThreshold,
+    double referenceFrequency,
+  });
 }
 
 /// @nodoc
@@ -298,54 +317,60 @@ class _$AudioEngineConfigCopyWithImpl<$Res, $Val extends AudioEngineConfig>
     Object? minConfidenceThreshold = null,
     Object? referenceFrequency = null,
   }) {
-    return _then(_value.copyWith(
-      sampleRate: null == sampleRate
-          ? _value.sampleRate
-          : sampleRate // ignore: cast_nullable_to_non_nullable
-              as int,
-      bufferSize: null == bufferSize
-          ? _value.bufferSize
-          : bufferSize // ignore: cast_nullable_to_non_nullable
-              as int,
-      minVolumeThreshold: null == minVolumeThreshold
-          ? _value.minVolumeThreshold
-          : minVolumeThreshold // ignore: cast_nullable_to_non_nullable
-              as double,
-      minConfidenceThreshold: null == minConfidenceThreshold
-          ? _value.minConfidenceThreshold
-          : minConfidenceThreshold // ignore: cast_nullable_to_non_nullable
-              as double,
-      referenceFrequency: null == referenceFrequency
-          ? _value.referenceFrequency
-          : referenceFrequency // ignore: cast_nullable_to_non_nullable
-              as double,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            sampleRate: null == sampleRate
+                ? _value.sampleRate
+                : sampleRate // ignore: cast_nullable_to_non_nullable
+                      as int,
+            bufferSize: null == bufferSize
+                ? _value.bufferSize
+                : bufferSize // ignore: cast_nullable_to_non_nullable
+                      as int,
+            minVolumeThreshold: null == minVolumeThreshold
+                ? _value.minVolumeThreshold
+                : minVolumeThreshold // ignore: cast_nullable_to_non_nullable
+                      as double,
+            minConfidenceThreshold: null == minConfidenceThreshold
+                ? _value.minConfidenceThreshold
+                : minConfidenceThreshold // ignore: cast_nullable_to_non_nullable
+                      as double,
+            referenceFrequency: null == referenceFrequency
+                ? _value.referenceFrequency
+                : referenceFrequency // ignore: cast_nullable_to_non_nullable
+                      as double,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$AudioEngineConfigImplCopyWith<$Res>
     implements $AudioEngineConfigCopyWith<$Res> {
-  factory _$$AudioEngineConfigImplCopyWith(_$AudioEngineConfigImpl value,
-          $Res Function(_$AudioEngineConfigImpl) then) =
-      __$$AudioEngineConfigImplCopyWithImpl<$Res>;
+  factory _$$AudioEngineConfigImplCopyWith(
+    _$AudioEngineConfigImpl value,
+    $Res Function(_$AudioEngineConfigImpl) then,
+  ) = __$$AudioEngineConfigImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int sampleRate,
-      int bufferSize,
-      double minVolumeThreshold,
-      double minConfidenceThreshold,
-      double referenceFrequency});
+  $Res call({
+    int sampleRate,
+    int bufferSize,
+    double minVolumeThreshold,
+    double minConfidenceThreshold,
+    double referenceFrequency,
+  });
 }
 
 /// @nodoc
 class __$$AudioEngineConfigImplCopyWithImpl<$Res>
     extends _$AudioEngineConfigCopyWithImpl<$Res, _$AudioEngineConfigImpl>
     implements _$$AudioEngineConfigImplCopyWith<$Res> {
-  __$$AudioEngineConfigImplCopyWithImpl(_$AudioEngineConfigImpl _value,
-      $Res Function(_$AudioEngineConfigImpl) _then)
-      : super(_value, _then);
+  __$$AudioEngineConfigImplCopyWithImpl(
+    _$AudioEngineConfigImpl _value,
+    $Res Function(_$AudioEngineConfigImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -356,40 +381,43 @@ class __$$AudioEngineConfigImplCopyWithImpl<$Res>
     Object? minConfidenceThreshold = null,
     Object? referenceFrequency = null,
   }) {
-    return _then(_$AudioEngineConfigImpl(
-      sampleRate: null == sampleRate
-          ? _value.sampleRate
-          : sampleRate // ignore: cast_nullable_to_non_nullable
-              as int,
-      bufferSize: null == bufferSize
-          ? _value.bufferSize
-          : bufferSize // ignore: cast_nullable_to_non_nullable
-              as int,
-      minVolumeThreshold: null == minVolumeThreshold
-          ? _value.minVolumeThreshold
-          : minVolumeThreshold // ignore: cast_nullable_to_non_nullable
-              as double,
-      minConfidenceThreshold: null == minConfidenceThreshold
-          ? _value.minConfidenceThreshold
-          : minConfidenceThreshold // ignore: cast_nullable_to_non_nullable
-              as double,
-      referenceFrequency: null == referenceFrequency
-          ? _value.referenceFrequency
-          : referenceFrequency // ignore: cast_nullable_to_non_nullable
-              as double,
-    ));
+    return _then(
+      _$AudioEngineConfigImpl(
+        sampleRate: null == sampleRate
+            ? _value.sampleRate
+            : sampleRate // ignore: cast_nullable_to_non_nullable
+                  as int,
+        bufferSize: null == bufferSize
+            ? _value.bufferSize
+            : bufferSize // ignore: cast_nullable_to_non_nullable
+                  as int,
+        minVolumeThreshold: null == minVolumeThreshold
+            ? _value.minVolumeThreshold
+            : minVolumeThreshold // ignore: cast_nullable_to_non_nullable
+                  as double,
+        minConfidenceThreshold: null == minConfidenceThreshold
+            ? _value.minConfidenceThreshold
+            : minConfidenceThreshold // ignore: cast_nullable_to_non_nullable
+                  as double,
+        referenceFrequency: null == referenceFrequency
+            ? _value.referenceFrequency
+            : referenceFrequency // ignore: cast_nullable_to_non_nullable
+                  as double,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$AudioEngineConfigImpl implements _AudioEngineConfig {
-  const _$AudioEngineConfigImpl(
-      {this.sampleRate = 44100,
-      this.bufferSize = 2048,
-      this.minVolumeThreshold = 0.1,
-      this.minConfidenceThreshold = 0.7,
-      this.referenceFrequency = 440.0});
+  const _$AudioEngineConfigImpl({
+    this.sampleRate = 44100,
+    this.bufferSize = 2048,
+    this.minVolumeThreshold = 0.1,
+    this.minConfidenceThreshold = 0.7,
+    this.referenceFrequency = 440.0,
+  });
 
   factory _$AudioEngineConfigImpl.fromJson(Map<String, dynamic> json) =>
       _$$AudioEngineConfigImplFromJson(json);
@@ -403,11 +431,11 @@ class _$AudioEngineConfigImpl implements _AudioEngineConfig {
   @override
   @JsonKey()
   final double minVolumeThreshold;
-// minimum volume to consider as note
+  // minimum volume to consider as note
   @override
   @JsonKey()
   final double minConfidenceThreshold;
-// minimum confidence for pitch detection
+  // minimum confidence for pitch detection
   @override
   @JsonKey()
   final double referenceFrequency;
@@ -436,31 +464,38 @@ class _$AudioEngineConfigImpl implements _AudioEngineConfig {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, sampleRate, bufferSize,
-      minVolumeThreshold, minConfidenceThreshold, referenceFrequency);
+  int get hashCode => Object.hash(
+    runtimeType,
+    sampleRate,
+    bufferSize,
+    minVolumeThreshold,
+    minConfidenceThreshold,
+    referenceFrequency,
+  );
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$AudioEngineConfigImplCopyWith<_$AudioEngineConfigImpl> get copyWith =>
       __$$AudioEngineConfigImplCopyWithImpl<_$AudioEngineConfigImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$AudioEngineConfigImplToJson(
-      this,
-    );
+    return _$$AudioEngineConfigImplToJson(this);
   }
 }
 
 abstract class _AudioEngineConfig implements AudioEngineConfig {
-  const factory _AudioEngineConfig(
-      {final int sampleRate,
-      final int bufferSize,
-      final double minVolumeThreshold,
-      final double minConfidenceThreshold,
-      final double referenceFrequency}) = _$AudioEngineConfigImpl;
+  const factory _AudioEngineConfig({
+    final int sampleRate,
+    final int bufferSize,
+    final double minVolumeThreshold,
+    final double minConfidenceThreshold,
+    final double referenceFrequency,
+  }) = _$AudioEngineConfigImpl;
 
   factory _AudioEngineConfig.fromJson(Map<String, dynamic> json) =
       _$AudioEngineConfigImpl.fromJson;
@@ -502,15 +537,17 @@ mixin _$AudioEngineStatus {
 /// @nodoc
 abstract class $AudioEngineStatusCopyWith<$Res> {
   factory $AudioEngineStatusCopyWith(
-          AudioEngineStatus value, $Res Function(AudioEngineStatus) then) =
-      _$AudioEngineStatusCopyWithImpl<$Res, AudioEngineStatus>;
+    AudioEngineStatus value,
+    $Res Function(AudioEngineStatus) then,
+  ) = _$AudioEngineStatusCopyWithImpl<$Res, AudioEngineStatus>;
   @useResult
-  $Res call(
-      {AudioEngineState state,
-      String? errorMessage,
-      double currentVolume,
-      double currentPitch,
-      int currentMidiNote});
+  $Res call({
+    AudioEngineState state,
+    String? errorMessage,
+    double currentVolume,
+    double currentPitch,
+    int currentMidiNote,
+  });
 }
 
 /// @nodoc
@@ -532,54 +569,60 @@ class _$AudioEngineStatusCopyWithImpl<$Res, $Val extends AudioEngineStatus>
     Object? currentPitch = null,
     Object? currentMidiNote = null,
   }) {
-    return _then(_value.copyWith(
-      state: null == state
-          ? _value.state
-          : state // ignore: cast_nullable_to_non_nullable
-              as AudioEngineState,
-      errorMessage: freezed == errorMessage
-          ? _value.errorMessage
-          : errorMessage // ignore: cast_nullable_to_non_nullable
-              as String?,
-      currentVolume: null == currentVolume
-          ? _value.currentVolume
-          : currentVolume // ignore: cast_nullable_to_non_nullable
-              as double,
-      currentPitch: null == currentPitch
-          ? _value.currentPitch
-          : currentPitch // ignore: cast_nullable_to_non_nullable
-              as double,
-      currentMidiNote: null == currentMidiNote
-          ? _value.currentMidiNote
-          : currentMidiNote // ignore: cast_nullable_to_non_nullable
-              as int,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            state: null == state
+                ? _value.state
+                : state // ignore: cast_nullable_to_non_nullable
+                      as AudioEngineState,
+            errorMessage: freezed == errorMessage
+                ? _value.errorMessage
+                : errorMessage // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            currentVolume: null == currentVolume
+                ? _value.currentVolume
+                : currentVolume // ignore: cast_nullable_to_non_nullable
+                      as double,
+            currentPitch: null == currentPitch
+                ? _value.currentPitch
+                : currentPitch // ignore: cast_nullable_to_non_nullable
+                      as double,
+            currentMidiNote: null == currentMidiNote
+                ? _value.currentMidiNote
+                : currentMidiNote // ignore: cast_nullable_to_non_nullable
+                      as int,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$AudioEngineStatusImplCopyWith<$Res>
     implements $AudioEngineStatusCopyWith<$Res> {
-  factory _$$AudioEngineStatusImplCopyWith(_$AudioEngineStatusImpl value,
-          $Res Function(_$AudioEngineStatusImpl) then) =
-      __$$AudioEngineStatusImplCopyWithImpl<$Res>;
+  factory _$$AudioEngineStatusImplCopyWith(
+    _$AudioEngineStatusImpl value,
+    $Res Function(_$AudioEngineStatusImpl) then,
+  ) = __$$AudioEngineStatusImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {AudioEngineState state,
-      String? errorMessage,
-      double currentVolume,
-      double currentPitch,
-      int currentMidiNote});
+  $Res call({
+    AudioEngineState state,
+    String? errorMessage,
+    double currentVolume,
+    double currentPitch,
+    int currentMidiNote,
+  });
 }
 
 /// @nodoc
 class __$$AudioEngineStatusImplCopyWithImpl<$Res>
     extends _$AudioEngineStatusCopyWithImpl<$Res, _$AudioEngineStatusImpl>
     implements _$$AudioEngineStatusImplCopyWith<$Res> {
-  __$$AudioEngineStatusImplCopyWithImpl(_$AudioEngineStatusImpl _value,
-      $Res Function(_$AudioEngineStatusImpl) _then)
-      : super(_value, _then);
+  __$$AudioEngineStatusImplCopyWithImpl(
+    _$AudioEngineStatusImpl _value,
+    $Res Function(_$AudioEngineStatusImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -590,40 +633,43 @@ class __$$AudioEngineStatusImplCopyWithImpl<$Res>
     Object? currentPitch = null,
     Object? currentMidiNote = null,
   }) {
-    return _then(_$AudioEngineStatusImpl(
-      state: null == state
-          ? _value.state
-          : state // ignore: cast_nullable_to_non_nullable
-              as AudioEngineState,
-      errorMessage: freezed == errorMessage
-          ? _value.errorMessage
-          : errorMessage // ignore: cast_nullable_to_non_nullable
-              as String?,
-      currentVolume: null == currentVolume
-          ? _value.currentVolume
-          : currentVolume // ignore: cast_nullable_to_non_nullable
-              as double,
-      currentPitch: null == currentPitch
-          ? _value.currentPitch
-          : currentPitch // ignore: cast_nullable_to_non_nullable
-              as double,
-      currentMidiNote: null == currentMidiNote
-          ? _value.currentMidiNote
-          : currentMidiNote // ignore: cast_nullable_to_non_nullable
-              as int,
-    ));
+    return _then(
+      _$AudioEngineStatusImpl(
+        state: null == state
+            ? _value.state
+            : state // ignore: cast_nullable_to_non_nullable
+                  as AudioEngineState,
+        errorMessage: freezed == errorMessage
+            ? _value.errorMessage
+            : errorMessage // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        currentVolume: null == currentVolume
+            ? _value.currentVolume
+            : currentVolume // ignore: cast_nullable_to_non_nullable
+                  as double,
+        currentPitch: null == currentPitch
+            ? _value.currentPitch
+            : currentPitch // ignore: cast_nullable_to_non_nullable
+                  as double,
+        currentMidiNote: null == currentMidiNote
+            ? _value.currentMidiNote
+            : currentMidiNote // ignore: cast_nullable_to_non_nullable
+                  as int,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$AudioEngineStatusImpl implements _AudioEngineStatus {
-  const _$AudioEngineStatusImpl(
-      {required this.state,
-      this.errorMessage,
-      this.currentVolume = 0.0,
-      this.currentPitch = 0.0,
-      this.currentMidiNote = 0});
+  const _$AudioEngineStatusImpl({
+    required this.state,
+    this.errorMessage,
+    this.currentVolume = 0.0,
+    this.currentPitch = 0.0,
+    this.currentMidiNote = 0,
+  });
 
   factory _$AudioEngineStatusImpl.fromJson(Map<String, dynamic> json) =>
       _$$AudioEngineStatusImplFromJson(json);
@@ -665,31 +711,38 @@ class _$AudioEngineStatusImpl implements _AudioEngineStatus {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, state, errorMessage,
-      currentVolume, currentPitch, currentMidiNote);
+  int get hashCode => Object.hash(
+    runtimeType,
+    state,
+    errorMessage,
+    currentVolume,
+    currentPitch,
+    currentMidiNote,
+  );
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$AudioEngineStatusImplCopyWith<_$AudioEngineStatusImpl> get copyWith =>
       __$$AudioEngineStatusImplCopyWithImpl<_$AudioEngineStatusImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$AudioEngineStatusImplToJson(
-      this,
-    );
+    return _$$AudioEngineStatusImplToJson(this);
   }
 }
 
 abstract class _AudioEngineStatus implements AudioEngineStatus {
-  const factory _AudioEngineStatus(
-      {required final AudioEngineState state,
-      final String? errorMessage,
-      final double currentVolume,
-      final double currentPitch,
-      final int currentMidiNote}) = _$AudioEngineStatusImpl;
+  const factory _AudioEngineStatus({
+    required final AudioEngineState state,
+    final String? errorMessage,
+    final double currentVolume,
+    final double currentPitch,
+    final int currentMidiNote,
+  }) = _$AudioEngineStatusImpl;
 
   factory _AudioEngineStatus.fromJson(Map<String, dynamic> json) =
       _$AudioEngineStatusImpl.fromJson;
@@ -719,10 +772,11 @@ PitchDetectionResult _$PitchDetectionResultFromJson(Map<String, dynamic> json) {
 
     default:
       throw CheckedFromJsonException(
-          json,
-          'runtimeType',
-          'PitchDetectionResult',
-          'Invalid union type "${json['runtimeType']}"!');
+        json,
+        'runtimeType',
+        'PitchDetectionResult',
+        'Invalid union type "${json['runtimeType']}"!',
+      );
   }
 }
 
@@ -732,47 +786,53 @@ mixin _$PitchDetectionResult {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(
-            double frequency, double confidence, int midiNote, double volume)
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )
+    success,
     required TResult Function(String reason, double volume) failure,
-  }) =>
-      throw _privateConstructorUsedError;
+  }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(
-            double frequency, double confidence, int midiNote, double volume)?
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )?
+    success,
     TResult? Function(String reason, double volume)? failure,
-  }) =>
-      throw _privateConstructorUsedError;
+  }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(
-            double frequency, double confidence, int midiNote, double volume)?
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )?
+    success,
     TResult Function(String reason, double volume)? failure,
     required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+  }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(_PitchDetectionResultSuccess value) success,
     required TResult Function(_PitchDetectionResultFailure value) failure,
-  }) =>
-      throw _privateConstructorUsedError;
+  }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_PitchDetectionResultSuccess value)? success,
     TResult? Function(_PitchDetectionResultFailure value)? failure,
-  }) =>
-      throw _privateConstructorUsedError;
+  }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_PitchDetectionResultSuccess value)? success,
     TResult Function(_PitchDetectionResultFailure value)? failure,
     required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+  }) => throw _privateConstructorUsedError;
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $PitchDetectionResultCopyWith<PitchDetectionResult> get copyWith =>
@@ -781,16 +841,19 @@ mixin _$PitchDetectionResult {
 
 /// @nodoc
 abstract class $PitchDetectionResultCopyWith<$Res> {
-  factory $PitchDetectionResultCopyWith(PitchDetectionResult value,
-          $Res Function(PitchDetectionResult) then) =
-      _$PitchDetectionResultCopyWithImpl<$Res, PitchDetectionResult>;
+  factory $PitchDetectionResultCopyWith(
+    PitchDetectionResult value,
+    $Res Function(PitchDetectionResult) then,
+  ) = _$PitchDetectionResultCopyWithImpl<$Res, PitchDetectionResult>;
   @useResult
   $Res call({double volume});
 }
 
 /// @nodoc
-class _$PitchDetectionResultCopyWithImpl<$Res,
-        $Val extends PitchDetectionResult>
+class _$PitchDetectionResultCopyWithImpl<
+  $Res,
+  $Val extends PitchDetectionResult
+>
     implements $PitchDetectionResultCopyWith<$Res> {
   _$PitchDetectionResultCopyWithImpl(this._value, this._then);
 
@@ -801,15 +864,16 @@ class _$PitchDetectionResultCopyWithImpl<$Res,
 
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? volume = null,
-  }) {
-    return _then(_value.copyWith(
-      volume: null == volume
-          ? _value.volume
-          : volume // ignore: cast_nullable_to_non_nullable
-              as double,
-    ) as $Val);
+  $Res call({Object? volume = null}) {
+    return _then(
+      _value.copyWith(
+            volume: null == volume
+                ? _value.volume
+                : volume // ignore: cast_nullable_to_non_nullable
+                      as double,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -817,9 +881,9 @@ class _$PitchDetectionResultCopyWithImpl<$Res,
 abstract class _$$PitchDetectionResultSuccessImplCopyWith<$Res>
     implements $PitchDetectionResultCopyWith<$Res> {
   factory _$$PitchDetectionResultSuccessImplCopyWith(
-          _$PitchDetectionResultSuccessImpl value,
-          $Res Function(_$PitchDetectionResultSuccessImpl) then) =
-      __$$PitchDetectionResultSuccessImplCopyWithImpl<$Res>;
+    _$PitchDetectionResultSuccessImpl value,
+    $Res Function(_$PitchDetectionResultSuccessImpl) then,
+  ) = __$$PitchDetectionResultSuccessImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({double frequency, double confidence, int midiNote, double volume});
@@ -827,13 +891,16 @@ abstract class _$$PitchDetectionResultSuccessImplCopyWith<$Res>
 
 /// @nodoc
 class __$$PitchDetectionResultSuccessImplCopyWithImpl<$Res>
-    extends _$PitchDetectionResultCopyWithImpl<$Res,
-        _$PitchDetectionResultSuccessImpl>
+    extends
+        _$PitchDetectionResultCopyWithImpl<
+          $Res,
+          _$PitchDetectionResultSuccessImpl
+        >
     implements _$$PitchDetectionResultSuccessImplCopyWith<$Res> {
   __$$PitchDetectionResultSuccessImplCopyWithImpl(
-      _$PitchDetectionResultSuccessImpl _value,
-      $Res Function(_$PitchDetectionResultSuccessImpl) _then)
-      : super(_value, _then);
+    _$PitchDetectionResultSuccessImpl _value,
+    $Res Function(_$PitchDetectionResultSuccessImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -843,42 +910,44 @@ class __$$PitchDetectionResultSuccessImplCopyWithImpl<$Res>
     Object? midiNote = null,
     Object? volume = null,
   }) {
-    return _then(_$PitchDetectionResultSuccessImpl(
-      frequency: null == frequency
-          ? _value.frequency
-          : frequency // ignore: cast_nullable_to_non_nullable
-              as double,
-      confidence: null == confidence
-          ? _value.confidence
-          : confidence // ignore: cast_nullable_to_non_nullable
-              as double,
-      midiNote: null == midiNote
-          ? _value.midiNote
-          : midiNote // ignore: cast_nullable_to_non_nullable
-              as int,
-      volume: null == volume
-          ? _value.volume
-          : volume // ignore: cast_nullable_to_non_nullable
-              as double,
-    ));
+    return _then(
+      _$PitchDetectionResultSuccessImpl(
+        frequency: null == frequency
+            ? _value.frequency
+            : frequency // ignore: cast_nullable_to_non_nullable
+                  as double,
+        confidence: null == confidence
+            ? _value.confidence
+            : confidence // ignore: cast_nullable_to_non_nullable
+                  as double,
+        midiNote: null == midiNote
+            ? _value.midiNote
+            : midiNote // ignore: cast_nullable_to_non_nullable
+                  as int,
+        volume: null == volume
+            ? _value.volume
+            : volume // ignore: cast_nullable_to_non_nullable
+                  as double,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$PitchDetectionResultSuccessImpl extends _PitchDetectionResultSuccess {
-  const _$PitchDetectionResultSuccessImpl(
-      {required this.frequency,
-      required this.confidence,
-      required this.midiNote,
-      required this.volume,
-      final String? $type})
-      : $type = $type ?? 'success',
-        super._();
+  const _$PitchDetectionResultSuccessImpl({
+    required this.frequency,
+    required this.confidence,
+    required this.midiNote,
+    required this.volume,
+    final String? $type,
+  }) : $type = $type ?? 'success',
+       super._();
 
   factory _$PitchDetectionResultSuccessImpl.fromJson(
-          Map<String, dynamic> json) =>
-      _$$PitchDetectionResultSuccessImplFromJson(json);
+    Map<String, dynamic> json,
+  ) => _$$PitchDetectionResultSuccessImplFromJson(json);
 
   @override
   final double frequency;
@@ -920,15 +989,21 @@ class _$PitchDetectionResultSuccessImpl extends _PitchDetectionResultSuccess {
   @override
   @pragma('vm:prefer-inline')
   _$$PitchDetectionResultSuccessImplCopyWith<_$PitchDetectionResultSuccessImpl>
-      get copyWith => __$$PitchDetectionResultSuccessImplCopyWithImpl<
-          _$PitchDetectionResultSuccessImpl>(this, _$identity);
+  get copyWith =>
+      __$$PitchDetectionResultSuccessImplCopyWithImpl<
+        _$PitchDetectionResultSuccessImpl
+      >(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(
-            double frequency, double confidence, int midiNote, double volume)
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )
+    success,
     required TResult Function(String reason, double volume) failure,
   }) {
     return success(frequency, confidence, midiNote, volume);
@@ -938,8 +1013,12 @@ class _$PitchDetectionResultSuccessImpl extends _PitchDetectionResultSuccess {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(
-            double frequency, double confidence, int midiNote, double volume)?
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )?
+    success,
     TResult? Function(String reason, double volume)? failure,
   }) {
     return success?.call(frequency, confidence, midiNote, volume);
@@ -949,8 +1028,12 @@ class _$PitchDetectionResultSuccessImpl extends _PitchDetectionResultSuccess {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(
-            double frequency, double confidence, int midiNote, double volume)?
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )?
+    success,
     TResult Function(String reason, double volume)? failure,
     required TResult orElse(),
   }) {
@@ -993,18 +1076,17 @@ class _$PitchDetectionResultSuccessImpl extends _PitchDetectionResultSuccess {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$PitchDetectionResultSuccessImplToJson(
-      this,
-    );
+    return _$$PitchDetectionResultSuccessImplToJson(this);
   }
 }
 
 abstract class _PitchDetectionResultSuccess extends PitchDetectionResult {
-  const factory _PitchDetectionResultSuccess(
-      {required final double frequency,
-      required final double confidence,
-      required final int midiNote,
-      required final double volume}) = _$PitchDetectionResultSuccessImpl;
+  const factory _PitchDetectionResultSuccess({
+    required final double frequency,
+    required final double confidence,
+    required final int midiNote,
+    required final double volume,
+  }) = _$PitchDetectionResultSuccessImpl;
   const _PitchDetectionResultSuccess._() : super._();
 
   factory _PitchDetectionResultSuccess.fromJson(Map<String, dynamic> json) =
@@ -1018,16 +1100,16 @@ abstract class _PitchDetectionResultSuccess extends PitchDetectionResult {
   @override
   @JsonKey(ignore: true)
   _$$PitchDetectionResultSuccessImplCopyWith<_$PitchDetectionResultSuccessImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PitchDetectionResultFailureImplCopyWith<$Res>
     implements $PitchDetectionResultCopyWith<$Res> {
   factory _$$PitchDetectionResultFailureImplCopyWith(
-          _$PitchDetectionResultFailureImpl value,
-          $Res Function(_$PitchDetectionResultFailureImpl) then) =
-      __$$PitchDetectionResultFailureImplCopyWithImpl<$Res>;
+    _$PitchDetectionResultFailureImpl value,
+    $Res Function(_$PitchDetectionResultFailureImpl) then,
+  ) = __$$PitchDetectionResultFailureImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String reason, double volume});
@@ -1035,44 +1117,48 @@ abstract class _$$PitchDetectionResultFailureImplCopyWith<$Res>
 
 /// @nodoc
 class __$$PitchDetectionResultFailureImplCopyWithImpl<$Res>
-    extends _$PitchDetectionResultCopyWithImpl<$Res,
-        _$PitchDetectionResultFailureImpl>
+    extends
+        _$PitchDetectionResultCopyWithImpl<
+          $Res,
+          _$PitchDetectionResultFailureImpl
+        >
     implements _$$PitchDetectionResultFailureImplCopyWith<$Res> {
   __$$PitchDetectionResultFailureImplCopyWithImpl(
-      _$PitchDetectionResultFailureImpl _value,
-      $Res Function(_$PitchDetectionResultFailureImpl) _then)
-      : super(_value, _then);
+    _$PitchDetectionResultFailureImpl _value,
+    $Res Function(_$PitchDetectionResultFailureImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? reason = null,
-    Object? volume = null,
-  }) {
-    return _then(_$PitchDetectionResultFailureImpl(
-      reason: null == reason
-          ? _value.reason
-          : reason // ignore: cast_nullable_to_non_nullable
-              as String,
-      volume: null == volume
-          ? _value.volume
-          : volume // ignore: cast_nullable_to_non_nullable
-              as double,
-    ));
+  $Res call({Object? reason = null, Object? volume = null}) {
+    return _then(
+      _$PitchDetectionResultFailureImpl(
+        reason: null == reason
+            ? _value.reason
+            : reason // ignore: cast_nullable_to_non_nullable
+                  as String,
+        volume: null == volume
+            ? _value.volume
+            : volume // ignore: cast_nullable_to_non_nullable
+                  as double,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$PitchDetectionResultFailureImpl extends _PitchDetectionResultFailure {
-  const _$PitchDetectionResultFailureImpl(
-      {required this.reason, this.volume = 0.0, final String? $type})
-      : $type = $type ?? 'failure',
-        super._();
+  const _$PitchDetectionResultFailureImpl({
+    required this.reason,
+    this.volume = 0.0,
+    final String? $type,
+  }) : $type = $type ?? 'failure',
+       super._();
 
   factory _$PitchDetectionResultFailureImpl.fromJson(
-          Map<String, dynamic> json) =>
-      _$$PitchDetectionResultFailureImplFromJson(json);
+    Map<String, dynamic> json,
+  ) => _$$PitchDetectionResultFailureImplFromJson(json);
 
   @override
   final String reason;
@@ -1105,15 +1191,21 @@ class _$PitchDetectionResultFailureImpl extends _PitchDetectionResultFailure {
   @override
   @pragma('vm:prefer-inline')
   _$$PitchDetectionResultFailureImplCopyWith<_$PitchDetectionResultFailureImpl>
-      get copyWith => __$$PitchDetectionResultFailureImplCopyWithImpl<
-          _$PitchDetectionResultFailureImpl>(this, _$identity);
+  get copyWith =>
+      __$$PitchDetectionResultFailureImplCopyWithImpl<
+        _$PitchDetectionResultFailureImpl
+      >(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(
-            double frequency, double confidence, int midiNote, double volume)
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )
+    success,
     required TResult Function(String reason, double volume) failure,
   }) {
     return failure(reason, volume);
@@ -1123,8 +1215,12 @@ class _$PitchDetectionResultFailureImpl extends _PitchDetectionResultFailure {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(
-            double frequency, double confidence, int midiNote, double volume)?
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )?
+    success,
     TResult? Function(String reason, double volume)? failure,
   }) {
     return failure?.call(reason, volume);
@@ -1134,8 +1230,12 @@ class _$PitchDetectionResultFailureImpl extends _PitchDetectionResultFailure {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(
-            double frequency, double confidence, int midiNote, double volume)?
-        success,
+      double frequency,
+      double confidence,
+      int midiNote,
+      double volume,
+    )?
+    success,
     TResult Function(String reason, double volume)? failure,
     required TResult orElse(),
   }) {
@@ -1178,16 +1278,15 @@ class _$PitchDetectionResultFailureImpl extends _PitchDetectionResultFailure {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$PitchDetectionResultFailureImplToJson(
-      this,
-    );
+    return _$$PitchDetectionResultFailureImplToJson(this);
   }
 }
 
 abstract class _PitchDetectionResultFailure extends PitchDetectionResult {
-  const factory _PitchDetectionResultFailure(
-      {required final String reason,
-      final double volume}) = _$PitchDetectionResultFailureImpl;
+  const factory _PitchDetectionResultFailure({
+    required final String reason,
+    final double volume,
+  }) = _$PitchDetectionResultFailureImpl;
   const _PitchDetectionResultFailure._() : super._();
 
   factory _PitchDetectionResultFailure.fromJson(Map<String, dynamic> json) =
@@ -1199,5 +1298,5 @@ abstract class _PitchDetectionResultFailure extends PitchDetectionResult {
   @override
   @JsonKey(ignore: true)
   _$$PitchDetectionResultFailureImplCopyWith<_$PitchDetectionResultFailureImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  get copyWith => throw _privateConstructorUsedError;
 }

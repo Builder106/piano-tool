@@ -12,7 +12,8 @@ part of 'level_models.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 LevelNote _$LevelNoteFromJson(Map<String, dynamic> json) {
   return _LevelNote.fromJson(json);
@@ -39,14 +40,15 @@ abstract class $LevelNoteCopyWith<$Res> {
   factory $LevelNoteCopyWith(LevelNote value, $Res Function(LevelNote) then) =
       _$LevelNoteCopyWithImpl<$Res, LevelNote>;
   @useResult
-  $Res call(
-      {int midiNote,
-      double startBeat,
-      double durationBeats,
-      int measureIndex,
-      int beatIndex,
-      bool isRest,
-      int voiceIndex});
+  $Res call({
+    int midiNote,
+    double startBeat,
+    double durationBeats,
+    int measureIndex,
+    int beatIndex,
+    bool isRest,
+    int voiceIndex,
+  });
 }
 
 /// @nodoc
@@ -70,36 +72,39 @@ class _$LevelNoteCopyWithImpl<$Res, $Val extends LevelNote>
     Object? isRest = null,
     Object? voiceIndex = null,
   }) {
-    return _then(_value.copyWith(
-      midiNote: null == midiNote
-          ? _value.midiNote
-          : midiNote // ignore: cast_nullable_to_non_nullable
-              as int,
-      startBeat: null == startBeat
-          ? _value.startBeat
-          : startBeat // ignore: cast_nullable_to_non_nullable
-              as double,
-      durationBeats: null == durationBeats
-          ? _value.durationBeats
-          : durationBeats // ignore: cast_nullable_to_non_nullable
-              as double,
-      measureIndex: null == measureIndex
-          ? _value.measureIndex
-          : measureIndex // ignore: cast_nullable_to_non_nullable
-              as int,
-      beatIndex: null == beatIndex
-          ? _value.beatIndex
-          : beatIndex // ignore: cast_nullable_to_non_nullable
-              as int,
-      isRest: null == isRest
-          ? _value.isRest
-          : isRest // ignore: cast_nullable_to_non_nullable
-              as bool,
-      voiceIndex: null == voiceIndex
-          ? _value.voiceIndex
-          : voiceIndex // ignore: cast_nullable_to_non_nullable
-              as int,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            midiNote: null == midiNote
+                ? _value.midiNote
+                : midiNote // ignore: cast_nullable_to_non_nullable
+                      as int,
+            startBeat: null == startBeat
+                ? _value.startBeat
+                : startBeat // ignore: cast_nullable_to_non_nullable
+                      as double,
+            durationBeats: null == durationBeats
+                ? _value.durationBeats
+                : durationBeats // ignore: cast_nullable_to_non_nullable
+                      as double,
+            measureIndex: null == measureIndex
+                ? _value.measureIndex
+                : measureIndex // ignore: cast_nullable_to_non_nullable
+                      as int,
+            beatIndex: null == beatIndex
+                ? _value.beatIndex
+                : beatIndex // ignore: cast_nullable_to_non_nullable
+                      as int,
+            isRest: null == isRest
+                ? _value.isRest
+                : isRest // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            voiceIndex: null == voiceIndex
+                ? _value.voiceIndex
+                : voiceIndex // ignore: cast_nullable_to_non_nullable
+                      as int,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -107,18 +112,20 @@ class _$LevelNoteCopyWithImpl<$Res, $Val extends LevelNote>
 abstract class _$$LevelNoteImplCopyWith<$Res>
     implements $LevelNoteCopyWith<$Res> {
   factory _$$LevelNoteImplCopyWith(
-          _$LevelNoteImpl value, $Res Function(_$LevelNoteImpl) then) =
-      __$$LevelNoteImplCopyWithImpl<$Res>;
+    _$LevelNoteImpl value,
+    $Res Function(_$LevelNoteImpl) then,
+  ) = __$$LevelNoteImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int midiNote,
-      double startBeat,
-      double durationBeats,
-      int measureIndex,
-      int beatIndex,
-      bool isRest,
-      int voiceIndex});
+  $Res call({
+    int midiNote,
+    double startBeat,
+    double durationBeats,
+    int measureIndex,
+    int beatIndex,
+    bool isRest,
+    int voiceIndex,
+  });
 }
 
 /// @nodoc
@@ -126,8 +133,9 @@ class __$$LevelNoteImplCopyWithImpl<$Res>
     extends _$LevelNoteCopyWithImpl<$Res, _$LevelNoteImpl>
     implements _$$LevelNoteImplCopyWith<$Res> {
   __$$LevelNoteImplCopyWithImpl(
-      _$LevelNoteImpl _value, $Res Function(_$LevelNoteImpl) _then)
-      : super(_value, _then);
+    _$LevelNoteImpl _value,
+    $Res Function(_$LevelNoteImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -140,50 +148,53 @@ class __$$LevelNoteImplCopyWithImpl<$Res>
     Object? isRest = null,
     Object? voiceIndex = null,
   }) {
-    return _then(_$LevelNoteImpl(
-      midiNote: null == midiNote
-          ? _value.midiNote
-          : midiNote // ignore: cast_nullable_to_non_nullable
-              as int,
-      startBeat: null == startBeat
-          ? _value.startBeat
-          : startBeat // ignore: cast_nullable_to_non_nullable
-              as double,
-      durationBeats: null == durationBeats
-          ? _value.durationBeats
-          : durationBeats // ignore: cast_nullable_to_non_nullable
-              as double,
-      measureIndex: null == measureIndex
-          ? _value.measureIndex
-          : measureIndex // ignore: cast_nullable_to_non_nullable
-              as int,
-      beatIndex: null == beatIndex
-          ? _value.beatIndex
-          : beatIndex // ignore: cast_nullable_to_non_nullable
-              as int,
-      isRest: null == isRest
-          ? _value.isRest
-          : isRest // ignore: cast_nullable_to_non_nullable
-              as bool,
-      voiceIndex: null == voiceIndex
-          ? _value.voiceIndex
-          : voiceIndex // ignore: cast_nullable_to_non_nullable
-              as int,
-    ));
+    return _then(
+      _$LevelNoteImpl(
+        midiNote: null == midiNote
+            ? _value.midiNote
+            : midiNote // ignore: cast_nullable_to_non_nullable
+                  as int,
+        startBeat: null == startBeat
+            ? _value.startBeat
+            : startBeat // ignore: cast_nullable_to_non_nullable
+                  as double,
+        durationBeats: null == durationBeats
+            ? _value.durationBeats
+            : durationBeats // ignore: cast_nullable_to_non_nullable
+                  as double,
+        measureIndex: null == measureIndex
+            ? _value.measureIndex
+            : measureIndex // ignore: cast_nullable_to_non_nullable
+                  as int,
+        beatIndex: null == beatIndex
+            ? _value.beatIndex
+            : beatIndex // ignore: cast_nullable_to_non_nullable
+                  as int,
+        isRest: null == isRest
+            ? _value.isRest
+            : isRest // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        voiceIndex: null == voiceIndex
+            ? _value.voiceIndex
+            : voiceIndex // ignore: cast_nullable_to_non_nullable
+                  as int,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$LevelNoteImpl with DiagnosticableTreeMixin implements _LevelNote {
-  const _$LevelNoteImpl(
-      {required this.midiNote,
-      required this.startBeat,
-      required this.durationBeats,
-      required this.measureIndex,
-      required this.beatIndex,
-      this.isRest = false,
-      this.voiceIndex = 0});
+  const _$LevelNoteImpl({
+    required this.midiNote,
+    required this.startBeat,
+    required this.durationBeats,
+    required this.measureIndex,
+    required this.beatIndex,
+    this.isRest = false,
+    this.voiceIndex = 0,
+  });
 
   factory _$LevelNoteImpl.fromJson(Map<String, dynamic> json) =>
       _$$LevelNoteImplFromJson(json);
@@ -246,8 +257,16 @@ class _$LevelNoteImpl with DiagnosticableTreeMixin implements _LevelNote {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, midiNote, startBeat,
-      durationBeats, measureIndex, beatIndex, isRest, voiceIndex);
+  int get hashCode => Object.hash(
+    runtimeType,
+    midiNote,
+    startBeat,
+    durationBeats,
+    measureIndex,
+    beatIndex,
+    isRest,
+    voiceIndex,
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -257,21 +276,20 @@ class _$LevelNoteImpl with DiagnosticableTreeMixin implements _LevelNote {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$LevelNoteImplToJson(
-      this,
-    );
+    return _$$LevelNoteImplToJson(this);
   }
 }
 
 abstract class _LevelNote implements LevelNote {
-  const factory _LevelNote(
-      {required final int midiNote,
-      required final double startBeat,
-      required final double durationBeats,
-      required final int measureIndex,
-      required final int beatIndex,
-      final bool isRest,
-      final int voiceIndex}) = _$LevelNoteImpl;
+  const factory _LevelNote({
+    required final int midiNote,
+    required final double startBeat,
+    required final double durationBeats,
+    required final int measureIndex,
+    required final int beatIndex,
+    final bool isRest,
+    final int voiceIndex,
+  }) = _$LevelNoteImpl;
 
   factory _LevelNote.fromJson(Map<String, dynamic> json) =
       _$LevelNoteImpl.fromJson;
@@ -316,14 +334,16 @@ mixin _$LevelMeasure {
 /// @nodoc
 abstract class $LevelMeasureCopyWith<$Res> {
   factory $LevelMeasureCopyWith(
-          LevelMeasure value, $Res Function(LevelMeasure) then) =
-      _$LevelMeasureCopyWithImpl<$Res, LevelMeasure>;
+    LevelMeasure value,
+    $Res Function(LevelMeasure) then,
+  ) = _$LevelMeasureCopyWithImpl<$Res, LevelMeasure>;
   @useResult
-  $Res call(
-      {int index,
-      double startBeat,
-      int beatsPerMeasure,
-      List<LevelNote> notes});
+  $Res call({
+    int index,
+    double startBeat,
+    int beatsPerMeasure,
+    List<LevelNote> notes,
+  });
 }
 
 /// @nodoc
@@ -344,24 +364,27 @@ class _$LevelMeasureCopyWithImpl<$Res, $Val extends LevelMeasure>
     Object? beatsPerMeasure = null,
     Object? notes = null,
   }) {
-    return _then(_value.copyWith(
-      index: null == index
-          ? _value.index
-          : index // ignore: cast_nullable_to_non_nullable
-              as int,
-      startBeat: null == startBeat
-          ? _value.startBeat
-          : startBeat // ignore: cast_nullable_to_non_nullable
-              as double,
-      beatsPerMeasure: null == beatsPerMeasure
-          ? _value.beatsPerMeasure
-          : beatsPerMeasure // ignore: cast_nullable_to_non_nullable
-              as int,
-      notes: null == notes
-          ? _value.notes
-          : notes // ignore: cast_nullable_to_non_nullable
-              as List<LevelNote>,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            index: null == index
+                ? _value.index
+                : index // ignore: cast_nullable_to_non_nullable
+                      as int,
+            startBeat: null == startBeat
+                ? _value.startBeat
+                : startBeat // ignore: cast_nullable_to_non_nullable
+                      as double,
+            beatsPerMeasure: null == beatsPerMeasure
+                ? _value.beatsPerMeasure
+                : beatsPerMeasure // ignore: cast_nullable_to_non_nullable
+                      as int,
+            notes: null == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as List<LevelNote>,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -369,15 +392,17 @@ class _$LevelMeasureCopyWithImpl<$Res, $Val extends LevelMeasure>
 abstract class _$$LevelMeasureImplCopyWith<$Res>
     implements $LevelMeasureCopyWith<$Res> {
   factory _$$LevelMeasureImplCopyWith(
-          _$LevelMeasureImpl value, $Res Function(_$LevelMeasureImpl) then) =
-      __$$LevelMeasureImplCopyWithImpl<$Res>;
+    _$LevelMeasureImpl value,
+    $Res Function(_$LevelMeasureImpl) then,
+  ) = __$$LevelMeasureImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int index,
-      double startBeat,
-      int beatsPerMeasure,
-      List<LevelNote> notes});
+  $Res call({
+    int index,
+    double startBeat,
+    int beatsPerMeasure,
+    List<LevelNote> notes,
+  });
 }
 
 /// @nodoc
@@ -385,8 +410,9 @@ class __$$LevelMeasureImplCopyWithImpl<$Res>
     extends _$LevelMeasureCopyWithImpl<$Res, _$LevelMeasureImpl>
     implements _$$LevelMeasureImplCopyWith<$Res> {
   __$$LevelMeasureImplCopyWithImpl(
-      _$LevelMeasureImpl _value, $Res Function(_$LevelMeasureImpl) _then)
-      : super(_value, _then);
+    _$LevelMeasureImpl _value,
+    $Res Function(_$LevelMeasureImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -396,36 +422,38 @@ class __$$LevelMeasureImplCopyWithImpl<$Res>
     Object? beatsPerMeasure = null,
     Object? notes = null,
   }) {
-    return _then(_$LevelMeasureImpl(
-      index: null == index
-          ? _value.index
-          : index // ignore: cast_nullable_to_non_nullable
-              as int,
-      startBeat: null == startBeat
-          ? _value.startBeat
-          : startBeat // ignore: cast_nullable_to_non_nullable
-              as double,
-      beatsPerMeasure: null == beatsPerMeasure
-          ? _value.beatsPerMeasure
-          : beatsPerMeasure // ignore: cast_nullable_to_non_nullable
-              as int,
-      notes: null == notes
-          ? _value._notes
-          : notes // ignore: cast_nullable_to_non_nullable
-              as List<LevelNote>,
-    ));
+    return _then(
+      _$LevelMeasureImpl(
+        index: null == index
+            ? _value.index
+            : index // ignore: cast_nullable_to_non_nullable
+                  as int,
+        startBeat: null == startBeat
+            ? _value.startBeat
+            : startBeat // ignore: cast_nullable_to_non_nullable
+                  as double,
+        beatsPerMeasure: null == beatsPerMeasure
+            ? _value.beatsPerMeasure
+            : beatsPerMeasure // ignore: cast_nullable_to_non_nullable
+                  as int,
+        notes: null == notes
+            ? _value._notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as List<LevelNote>,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$LevelMeasureImpl with DiagnosticableTreeMixin implements _LevelMeasure {
-  const _$LevelMeasureImpl(
-      {required this.index,
-      required this.startBeat,
-      required this.beatsPerMeasure,
-      required final List<LevelNote> notes})
-      : _notes = notes;
+  const _$LevelMeasureImpl({
+    required this.index,
+    required this.startBeat,
+    required this.beatsPerMeasure,
+    required final List<LevelNote> notes,
+  }) : _notes = notes;
 
   factory _$LevelMeasureImpl.fromJson(Map<String, dynamic> json) =>
       _$$LevelMeasureImplFromJson(json);
@@ -475,8 +503,13 @@ class _$LevelMeasureImpl with DiagnosticableTreeMixin implements _LevelMeasure {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, index, startBeat,
-      beatsPerMeasure, const DeepCollectionEquality().hash(_notes));
+  int get hashCode => Object.hash(
+    runtimeType,
+    index,
+    startBeat,
+    beatsPerMeasure,
+    const DeepCollectionEquality().hash(_notes),
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -486,18 +519,17 @@ class _$LevelMeasureImpl with DiagnosticableTreeMixin implements _LevelMeasure {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$LevelMeasureImplToJson(
-      this,
-    );
+    return _$$LevelMeasureImplToJson(this);
   }
 }
 
 abstract class _LevelMeasure implements LevelMeasure {
-  const factory _LevelMeasure(
-      {required final int index,
-      required final double startBeat,
-      required final int beatsPerMeasure,
-      required final List<LevelNote> notes}) = _$LevelMeasureImpl;
+  const factory _LevelMeasure({
+    required final int index,
+    required final double startBeat,
+    required final int beatsPerMeasure,
+    required final List<LevelNote> notes,
+  }) = _$LevelMeasureImpl;
 
   factory _LevelMeasure.fromJson(Map<String, dynamic> json) =
       _$LevelMeasureImpl.fromJson;
@@ -542,19 +574,21 @@ mixin _$LevelModel {
 /// @nodoc
 abstract class $LevelModelCopyWith<$Res> {
   factory $LevelModelCopyWith(
-          LevelModel value, $Res Function(LevelModel) then) =
-      _$LevelModelCopyWithImpl<$Res, LevelModel>;
+    LevelModel value,
+    $Res Function(LevelModel) then,
+  ) = _$LevelModelCopyWithImpl<$Res, LevelModel>;
   @useResult
-  $Res call(
-      {String id,
-      String title,
-      String description,
-      int tempo,
-      int beatsPerMeasure,
-      int totalMeasures,
-      List<LevelMeasure> measures,
-      int clefOctave,
-      int transpose});
+  $Res call({
+    String id,
+    String title,
+    String description,
+    int tempo,
+    int beatsPerMeasure,
+    int totalMeasures,
+    List<LevelMeasure> measures,
+    int clefOctave,
+    int transpose,
+  });
 }
 
 /// @nodoc
@@ -580,44 +614,47 @@ class _$LevelModelCopyWithImpl<$Res, $Val extends LevelModel>
     Object? clefOctave = null,
     Object? transpose = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: null == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String,
-      tempo: null == tempo
-          ? _value.tempo
-          : tempo // ignore: cast_nullable_to_non_nullable
-              as int,
-      beatsPerMeasure: null == beatsPerMeasure
-          ? _value.beatsPerMeasure
-          : beatsPerMeasure // ignore: cast_nullable_to_non_nullable
-              as int,
-      totalMeasures: null == totalMeasures
-          ? _value.totalMeasures
-          : totalMeasures // ignore: cast_nullable_to_non_nullable
-              as int,
-      measures: null == measures
-          ? _value.measures
-          : measures // ignore: cast_nullable_to_non_nullable
-              as List<LevelMeasure>,
-      clefOctave: null == clefOctave
-          ? _value.clefOctave
-          : clefOctave // ignore: cast_nullable_to_non_nullable
-              as int,
-      transpose: null == transpose
-          ? _value.transpose
-          : transpose // ignore: cast_nullable_to_non_nullable
-              as int,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            title: null == title
+                ? _value.title
+                : title // ignore: cast_nullable_to_non_nullable
+                      as String,
+            description: null == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
+                      as String,
+            tempo: null == tempo
+                ? _value.tempo
+                : tempo // ignore: cast_nullable_to_non_nullable
+                      as int,
+            beatsPerMeasure: null == beatsPerMeasure
+                ? _value.beatsPerMeasure
+                : beatsPerMeasure // ignore: cast_nullable_to_non_nullable
+                      as int,
+            totalMeasures: null == totalMeasures
+                ? _value.totalMeasures
+                : totalMeasures // ignore: cast_nullable_to_non_nullable
+                      as int,
+            measures: null == measures
+                ? _value.measures
+                : measures // ignore: cast_nullable_to_non_nullable
+                      as List<LevelMeasure>,
+            clefOctave: null == clefOctave
+                ? _value.clefOctave
+                : clefOctave // ignore: cast_nullable_to_non_nullable
+                      as int,
+            transpose: null == transpose
+                ? _value.transpose
+                : transpose // ignore: cast_nullable_to_non_nullable
+                      as int,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -625,20 +662,22 @@ class _$LevelModelCopyWithImpl<$Res, $Val extends LevelModel>
 abstract class _$$LevelModelImplCopyWith<$Res>
     implements $LevelModelCopyWith<$Res> {
   factory _$$LevelModelImplCopyWith(
-          _$LevelModelImpl value, $Res Function(_$LevelModelImpl) then) =
-      __$$LevelModelImplCopyWithImpl<$Res>;
+    _$LevelModelImpl value,
+    $Res Function(_$LevelModelImpl) then,
+  ) = __$$LevelModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String title,
-      String description,
-      int tempo,
-      int beatsPerMeasure,
-      int totalMeasures,
-      List<LevelMeasure> measures,
-      int clefOctave,
-      int transpose});
+  $Res call({
+    String id,
+    String title,
+    String description,
+    int tempo,
+    int beatsPerMeasure,
+    int totalMeasures,
+    List<LevelMeasure> measures,
+    int clefOctave,
+    int transpose,
+  });
 }
 
 /// @nodoc
@@ -646,8 +685,9 @@ class __$$LevelModelImplCopyWithImpl<$Res>
     extends _$LevelModelCopyWithImpl<$Res, _$LevelModelImpl>
     implements _$$LevelModelImplCopyWith<$Res> {
   __$$LevelModelImplCopyWithImpl(
-      _$LevelModelImpl _value, $Res Function(_$LevelModelImpl) _then)
-      : super(_value, _then);
+    _$LevelModelImpl _value,
+    $Res Function(_$LevelModelImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -662,61 +702,63 @@ class __$$LevelModelImplCopyWithImpl<$Res>
     Object? clefOctave = null,
     Object? transpose = null,
   }) {
-    return _then(_$LevelModelImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: null == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String,
-      tempo: null == tempo
-          ? _value.tempo
-          : tempo // ignore: cast_nullable_to_non_nullable
-              as int,
-      beatsPerMeasure: null == beatsPerMeasure
-          ? _value.beatsPerMeasure
-          : beatsPerMeasure // ignore: cast_nullable_to_non_nullable
-              as int,
-      totalMeasures: null == totalMeasures
-          ? _value.totalMeasures
-          : totalMeasures // ignore: cast_nullable_to_non_nullable
-              as int,
-      measures: null == measures
-          ? _value._measures
-          : measures // ignore: cast_nullable_to_non_nullable
-              as List<LevelMeasure>,
-      clefOctave: null == clefOctave
-          ? _value.clefOctave
-          : clefOctave // ignore: cast_nullable_to_non_nullable
-              as int,
-      transpose: null == transpose
-          ? _value.transpose
-          : transpose // ignore: cast_nullable_to_non_nullable
-              as int,
-    ));
+    return _then(
+      _$LevelModelImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        title: null == title
+            ? _value.title
+            : title // ignore: cast_nullable_to_non_nullable
+                  as String,
+        description: null == description
+            ? _value.description
+            : description // ignore: cast_nullable_to_non_nullable
+                  as String,
+        tempo: null == tempo
+            ? _value.tempo
+            : tempo // ignore: cast_nullable_to_non_nullable
+                  as int,
+        beatsPerMeasure: null == beatsPerMeasure
+            ? _value.beatsPerMeasure
+            : beatsPerMeasure // ignore: cast_nullable_to_non_nullable
+                  as int,
+        totalMeasures: null == totalMeasures
+            ? _value.totalMeasures
+            : totalMeasures // ignore: cast_nullable_to_non_nullable
+                  as int,
+        measures: null == measures
+            ? _value._measures
+            : measures // ignore: cast_nullable_to_non_nullable
+                  as List<LevelMeasure>,
+        clefOctave: null == clefOctave
+            ? _value.clefOctave
+            : clefOctave // ignore: cast_nullable_to_non_nullable
+                  as int,
+        transpose: null == transpose
+            ? _value.transpose
+            : transpose // ignore: cast_nullable_to_non_nullable
+                  as int,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$LevelModelImpl with DiagnosticableTreeMixin implements _LevelModel {
-  const _$LevelModelImpl(
-      {required this.id,
-      required this.title,
-      required this.description,
-      required this.tempo,
-      required this.beatsPerMeasure,
-      required this.totalMeasures,
-      required final List<LevelMeasure> measures,
-      this.clefOctave = 4,
-      this.transpose = 0})
-      : _measures = measures;
+  const _$LevelModelImpl({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.tempo,
+    required this.beatsPerMeasure,
+    required this.totalMeasures,
+    required final List<LevelMeasure> measures,
+    this.clefOctave = 4,
+    this.transpose = 0,
+  }) : _measures = measures;
 
   factory _$LevelModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$LevelModelImplFromJson(json);
@@ -744,7 +786,7 @@ class _$LevelModelImpl with DiagnosticableTreeMixin implements _LevelModel {
   @override
   @JsonKey()
   final int clefOctave;
-// 4 = middle C octave
+  // 4 = middle C octave
   @override
   @JsonKey()
   final int transpose;
@@ -794,16 +836,17 @@ class _$LevelModelImpl with DiagnosticableTreeMixin implements _LevelModel {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      title,
-      description,
-      tempo,
-      beatsPerMeasure,
-      totalMeasures,
-      const DeepCollectionEquality().hash(_measures),
-      clefOctave,
-      transpose);
+    runtimeType,
+    id,
+    title,
+    description,
+    tempo,
+    beatsPerMeasure,
+    totalMeasures,
+    const DeepCollectionEquality().hash(_measures),
+    clefOctave,
+    transpose,
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -813,23 +856,22 @@ class _$LevelModelImpl with DiagnosticableTreeMixin implements _LevelModel {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$LevelModelImplToJson(
-      this,
-    );
+    return _$$LevelModelImplToJson(this);
   }
 }
 
 abstract class _LevelModel implements LevelModel {
-  const factory _LevelModel(
-      {required final String id,
-      required final String title,
-      required final String description,
-      required final int tempo,
-      required final int beatsPerMeasure,
-      required final int totalMeasures,
-      required final List<LevelMeasure> measures,
-      final int clefOctave,
-      final int transpose}) = _$LevelModelImpl;
+  const factory _LevelModel({
+    required final String id,
+    required final String title,
+    required final String description,
+    required final int tempo,
+    required final int beatsPerMeasure,
+    required final int totalMeasures,
+    required final List<LevelMeasure> measures,
+    final int clefOctave,
+    final int transpose,
+  }) = _$LevelModelImpl;
 
   factory _LevelModel.fromJson(Map<String, dynamic> json) =
       _$LevelModelImpl.fromJson;
@@ -882,18 +924,20 @@ mixin _$StageModel {
 /// @nodoc
 abstract class $StageModelCopyWith<$Res> {
   factory $StageModelCopyWith(
-          StageModel value, $Res Function(StageModel) then) =
-      _$StageModelCopyWithImpl<$Res, StageModel>;
+    StageModel value,
+    $Res Function(StageModel) then,
+  ) = _$StageModelCopyWithImpl<$Res, StageModel>;
   @useResult
-  $Res call(
-      {String id,
-      String title,
-      String description,
-      Difficulty difficulty,
-      LevelModel level,
-      int order,
-      List<String> prerequisites,
-      int xpReward});
+  $Res call({
+    String id,
+    String title,
+    String description,
+    Difficulty difficulty,
+    LevelModel level,
+    int order,
+    List<String> prerequisites,
+    int xpReward,
+  });
 
   $LevelModelCopyWith<$Res> get level;
 }
@@ -920,40 +964,43 @@ class _$StageModelCopyWithImpl<$Res, $Val extends StageModel>
     Object? prerequisites = null,
     Object? xpReward = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: null == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String,
-      difficulty: null == difficulty
-          ? _value.difficulty
-          : difficulty // ignore: cast_nullable_to_non_nullable
-              as Difficulty,
-      level: null == level
-          ? _value.level
-          : level // ignore: cast_nullable_to_non_nullable
-              as LevelModel,
-      order: null == order
-          ? _value.order
-          : order // ignore: cast_nullable_to_non_nullable
-              as int,
-      prerequisites: null == prerequisites
-          ? _value.prerequisites
-          : prerequisites // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      xpReward: null == xpReward
-          ? _value.xpReward
-          : xpReward // ignore: cast_nullable_to_non_nullable
-              as int,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            title: null == title
+                ? _value.title
+                : title // ignore: cast_nullable_to_non_nullable
+                      as String,
+            description: null == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
+                      as String,
+            difficulty: null == difficulty
+                ? _value.difficulty
+                : difficulty // ignore: cast_nullable_to_non_nullable
+                      as Difficulty,
+            level: null == level
+                ? _value.level
+                : level // ignore: cast_nullable_to_non_nullable
+                      as LevelModel,
+            order: null == order
+                ? _value.order
+                : order // ignore: cast_nullable_to_non_nullable
+                      as int,
+            prerequisites: null == prerequisites
+                ? _value.prerequisites
+                : prerequisites // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+            xpReward: null == xpReward
+                ? _value.xpReward
+                : xpReward // ignore: cast_nullable_to_non_nullable
+                      as int,
+          )
+          as $Val,
+    );
   }
 
   @override
@@ -969,19 +1016,21 @@ class _$StageModelCopyWithImpl<$Res, $Val extends StageModel>
 abstract class _$$StageModelImplCopyWith<$Res>
     implements $StageModelCopyWith<$Res> {
   factory _$$StageModelImplCopyWith(
-          _$StageModelImpl value, $Res Function(_$StageModelImpl) then) =
-      __$$StageModelImplCopyWithImpl<$Res>;
+    _$StageModelImpl value,
+    $Res Function(_$StageModelImpl) then,
+  ) = __$$StageModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String title,
-      String description,
-      Difficulty difficulty,
-      LevelModel level,
-      int order,
-      List<String> prerequisites,
-      int xpReward});
+  $Res call({
+    String id,
+    String title,
+    String description,
+    Difficulty difficulty,
+    LevelModel level,
+    int order,
+    List<String> prerequisites,
+    int xpReward,
+  });
 
   @override
   $LevelModelCopyWith<$Res> get level;
@@ -992,8 +1041,9 @@ class __$$StageModelImplCopyWithImpl<$Res>
     extends _$StageModelCopyWithImpl<$Res, _$StageModelImpl>
     implements _$$StageModelImplCopyWith<$Res> {
   __$$StageModelImplCopyWithImpl(
-      _$StageModelImpl _value, $Res Function(_$StageModelImpl) _then)
-      : super(_value, _then);
+    _$StageModelImpl _value,
+    $Res Function(_$StageModelImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -1007,56 +1057,58 @@ class __$$StageModelImplCopyWithImpl<$Res>
     Object? prerequisites = null,
     Object? xpReward = null,
   }) {
-    return _then(_$StageModelImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: null == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String,
-      difficulty: null == difficulty
-          ? _value.difficulty
-          : difficulty // ignore: cast_nullable_to_non_nullable
-              as Difficulty,
-      level: null == level
-          ? _value.level
-          : level // ignore: cast_nullable_to_non_nullable
-              as LevelModel,
-      order: null == order
-          ? _value.order
-          : order // ignore: cast_nullable_to_non_nullable
-              as int,
-      prerequisites: null == prerequisites
-          ? _value._prerequisites
-          : prerequisites // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      xpReward: null == xpReward
-          ? _value.xpReward
-          : xpReward // ignore: cast_nullable_to_non_nullable
-              as int,
-    ));
+    return _then(
+      _$StageModelImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        title: null == title
+            ? _value.title
+            : title // ignore: cast_nullable_to_non_nullable
+                  as String,
+        description: null == description
+            ? _value.description
+            : description // ignore: cast_nullable_to_non_nullable
+                  as String,
+        difficulty: null == difficulty
+            ? _value.difficulty
+            : difficulty // ignore: cast_nullable_to_non_nullable
+                  as Difficulty,
+        level: null == level
+            ? _value.level
+            : level // ignore: cast_nullable_to_non_nullable
+                  as LevelModel,
+        order: null == order
+            ? _value.order
+            : order // ignore: cast_nullable_to_non_nullable
+                  as int,
+        prerequisites: null == prerequisites
+            ? _value._prerequisites
+            : prerequisites // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+        xpReward: null == xpReward
+            ? _value.xpReward
+            : xpReward // ignore: cast_nullable_to_non_nullable
+                  as int,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$StageModelImpl with DiagnosticableTreeMixin implements _StageModel {
-  const _$StageModelImpl(
-      {required this.id,
-      required this.title,
-      required this.description,
-      required this.difficulty,
-      required this.level,
-      this.order = 0,
-      final List<String> prerequisites = const [],
-      this.xpReward = 0})
-      : _prerequisites = prerequisites;
+  const _$StageModelImpl({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.difficulty,
+    required this.level,
+    this.order = 0,
+    final List<String> prerequisites = const [],
+    this.xpReward = 0,
+  }) : _prerequisites = prerequisites;
 
   factory _$StageModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$StageModelImplFromJson(json);
@@ -1120,8 +1172,10 @@ class _$StageModelImpl with DiagnosticableTreeMixin implements _StageModel {
                 other.difficulty == difficulty) &&
             (identical(other.level, level) || other.level == level) &&
             (identical(other.order, order) || other.order == order) &&
-            const DeepCollectionEquality()
-                .equals(other._prerequisites, _prerequisites) &&
+            const DeepCollectionEquality().equals(
+              other._prerequisites,
+              _prerequisites,
+            ) &&
             (identical(other.xpReward, xpReward) ||
                 other.xpReward == xpReward));
   }
@@ -1129,15 +1183,16 @@ class _$StageModelImpl with DiagnosticableTreeMixin implements _StageModel {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      title,
-      description,
-      difficulty,
-      level,
-      order,
-      const DeepCollectionEquality().hash(_prerequisites),
-      xpReward);
+    runtimeType,
+    id,
+    title,
+    description,
+    difficulty,
+    level,
+    order,
+    const DeepCollectionEquality().hash(_prerequisites),
+    xpReward,
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -1147,22 +1202,21 @@ class _$StageModelImpl with DiagnosticableTreeMixin implements _StageModel {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$StageModelImplToJson(
-      this,
-    );
+    return _$$StageModelImplToJson(this);
   }
 }
 
 abstract class _StageModel implements StageModel {
-  const factory _StageModel(
-      {required final String id,
-      required final String title,
-      required final String description,
-      required final Difficulty difficulty,
-      required final LevelModel level,
-      final int order,
-      final List<String> prerequisites,
-      final int xpReward}) = _$StageModelImpl;
+  const factory _StageModel({
+    required final String id,
+    required final String title,
+    required final String description,
+    required final Difficulty difficulty,
+    required final LevelModel level,
+    final int order,
+    final List<String> prerequisites,
+    final int xpReward,
+  }) = _$StageModelImpl;
 
   factory _StageModel.fromJson(Map<String, dynamic> json) =
       _$StageModelImpl.fromJson;
@@ -1213,18 +1267,20 @@ mixin _$StageProgress {
 /// @nodoc
 abstract class $StageProgressCopyWith<$Res> {
   factory $StageProgressCopyWith(
-          StageProgress value, $Res Function(StageProgress) then) =
-      _$StageProgressCopyWithImpl<$Res, StageProgress>;
+    StageProgress value,
+    $Res Function(StageProgress) then,
+  ) = _$StageProgressCopyWithImpl<$Res, StageProgress>;
   @useResult
-  $Res call(
-      {String stageId,
-      double bestAccuracy,
-      int bestScore,
-      int attempts,
-      bool completed,
-      bool unlocked,
-      DateTime? completedAt,
-      DateTime? lastAttemptAt});
+  $Res call({
+    String stageId,
+    double bestAccuracy,
+    int bestScore,
+    int attempts,
+    bool completed,
+    bool unlocked,
+    DateTime? completedAt,
+    DateTime? lastAttemptAt,
+  });
 }
 
 /// @nodoc
@@ -1249,40 +1305,43 @@ class _$StageProgressCopyWithImpl<$Res, $Val extends StageProgress>
     Object? completedAt = freezed,
     Object? lastAttemptAt = freezed,
   }) {
-    return _then(_value.copyWith(
-      stageId: null == stageId
-          ? _value.stageId
-          : stageId // ignore: cast_nullable_to_non_nullable
-              as String,
-      bestAccuracy: null == bestAccuracy
-          ? _value.bestAccuracy
-          : bestAccuracy // ignore: cast_nullable_to_non_nullable
-              as double,
-      bestScore: null == bestScore
-          ? _value.bestScore
-          : bestScore // ignore: cast_nullable_to_non_nullable
-              as int,
-      attempts: null == attempts
-          ? _value.attempts
-          : attempts // ignore: cast_nullable_to_non_nullable
-              as int,
-      completed: null == completed
-          ? _value.completed
-          : completed // ignore: cast_nullable_to_non_nullable
-              as bool,
-      unlocked: null == unlocked
-          ? _value.unlocked
-          : unlocked // ignore: cast_nullable_to_non_nullable
-              as bool,
-      completedAt: freezed == completedAt
-          ? _value.completedAt
-          : completedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      lastAttemptAt: freezed == lastAttemptAt
-          ? _value.lastAttemptAt
-          : lastAttemptAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            stageId: null == stageId
+                ? _value.stageId
+                : stageId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            bestAccuracy: null == bestAccuracy
+                ? _value.bestAccuracy
+                : bestAccuracy // ignore: cast_nullable_to_non_nullable
+                      as double,
+            bestScore: null == bestScore
+                ? _value.bestScore
+                : bestScore // ignore: cast_nullable_to_non_nullable
+                      as int,
+            attempts: null == attempts
+                ? _value.attempts
+                : attempts // ignore: cast_nullable_to_non_nullable
+                      as int,
+            completed: null == completed
+                ? _value.completed
+                : completed // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            unlocked: null == unlocked
+                ? _value.unlocked
+                : unlocked // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            completedAt: freezed == completedAt
+                ? _value.completedAt
+                : completedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            lastAttemptAt: freezed == lastAttemptAt
+                ? _value.lastAttemptAt
+                : lastAttemptAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -1290,19 +1349,21 @@ class _$StageProgressCopyWithImpl<$Res, $Val extends StageProgress>
 abstract class _$$StageProgressImplCopyWith<$Res>
     implements $StageProgressCopyWith<$Res> {
   factory _$$StageProgressImplCopyWith(
-          _$StageProgressImpl value, $Res Function(_$StageProgressImpl) then) =
-      __$$StageProgressImplCopyWithImpl<$Res>;
+    _$StageProgressImpl value,
+    $Res Function(_$StageProgressImpl) then,
+  ) = __$$StageProgressImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String stageId,
-      double bestAccuracy,
-      int bestScore,
-      int attempts,
-      bool completed,
-      bool unlocked,
-      DateTime? completedAt,
-      DateTime? lastAttemptAt});
+  $Res call({
+    String stageId,
+    double bestAccuracy,
+    int bestScore,
+    int attempts,
+    bool completed,
+    bool unlocked,
+    DateTime? completedAt,
+    DateTime? lastAttemptAt,
+  });
 }
 
 /// @nodoc
@@ -1310,8 +1371,9 @@ class __$$StageProgressImplCopyWithImpl<$Res>
     extends _$StageProgressCopyWithImpl<$Res, _$StageProgressImpl>
     implements _$$StageProgressImplCopyWith<$Res> {
   __$$StageProgressImplCopyWithImpl(
-      _$StageProgressImpl _value, $Res Function(_$StageProgressImpl) _then)
-      : super(_value, _then);
+    _$StageProgressImpl _value,
+    $Res Function(_$StageProgressImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -1325,40 +1387,42 @@ class __$$StageProgressImplCopyWithImpl<$Res>
     Object? completedAt = freezed,
     Object? lastAttemptAt = freezed,
   }) {
-    return _then(_$StageProgressImpl(
-      stageId: null == stageId
-          ? _value.stageId
-          : stageId // ignore: cast_nullable_to_non_nullable
-              as String,
-      bestAccuracy: null == bestAccuracy
-          ? _value.bestAccuracy
-          : bestAccuracy // ignore: cast_nullable_to_non_nullable
-              as double,
-      bestScore: null == bestScore
-          ? _value.bestScore
-          : bestScore // ignore: cast_nullable_to_non_nullable
-              as int,
-      attempts: null == attempts
-          ? _value.attempts
-          : attempts // ignore: cast_nullable_to_non_nullable
-              as int,
-      completed: null == completed
-          ? _value.completed
-          : completed // ignore: cast_nullable_to_non_nullable
-              as bool,
-      unlocked: null == unlocked
-          ? _value.unlocked
-          : unlocked // ignore: cast_nullable_to_non_nullable
-              as bool,
-      completedAt: freezed == completedAt
-          ? _value.completedAt
-          : completedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      lastAttemptAt: freezed == lastAttemptAt
-          ? _value.lastAttemptAt
-          : lastAttemptAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-    ));
+    return _then(
+      _$StageProgressImpl(
+        stageId: null == stageId
+            ? _value.stageId
+            : stageId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        bestAccuracy: null == bestAccuracy
+            ? _value.bestAccuracy
+            : bestAccuracy // ignore: cast_nullable_to_non_nullable
+                  as double,
+        bestScore: null == bestScore
+            ? _value.bestScore
+            : bestScore // ignore: cast_nullable_to_non_nullable
+                  as int,
+        attempts: null == attempts
+            ? _value.attempts
+            : attempts // ignore: cast_nullable_to_non_nullable
+                  as int,
+        completed: null == completed
+            ? _value.completed
+            : completed // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        unlocked: null == unlocked
+            ? _value.unlocked
+            : unlocked // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        completedAt: freezed == completedAt
+            ? _value.completedAt
+            : completedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        lastAttemptAt: freezed == lastAttemptAt
+            ? _value.lastAttemptAt
+            : lastAttemptAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+      ),
+    );
   }
 }
 
@@ -1367,15 +1431,16 @@ class __$$StageProgressImplCopyWithImpl<$Res>
 class _$StageProgressImpl
     with DiagnosticableTreeMixin
     implements _StageProgress {
-  const _$StageProgressImpl(
-      {required this.stageId,
-      this.bestAccuracy = 0,
-      this.bestScore = 0,
-      this.attempts = 0,
-      this.completed = false,
-      this.unlocked = false,
-      this.completedAt,
-      this.lastAttemptAt});
+  const _$StageProgressImpl({
+    required this.stageId,
+    this.bestAccuracy = 0,
+    this.bestScore = 0,
+    this.attempts = 0,
+    this.completed = false,
+    this.unlocked = false,
+    this.completedAt,
+    this.lastAttemptAt,
+  });
 
   factory _$StageProgressImpl.fromJson(Map<String, dynamic> json) =>
       _$$StageProgressImplFromJson(json);
@@ -1446,8 +1511,17 @@ class _$StageProgressImpl
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, stageId, bestAccuracy, bestScore,
-      attempts, completed, unlocked, completedAt, lastAttemptAt);
+  int get hashCode => Object.hash(
+    runtimeType,
+    stageId,
+    bestAccuracy,
+    bestScore,
+    attempts,
+    completed,
+    unlocked,
+    completedAt,
+    lastAttemptAt,
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -1457,22 +1531,21 @@ class _$StageProgressImpl
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$StageProgressImplToJson(
-      this,
-    );
+    return _$$StageProgressImplToJson(this);
   }
 }
 
 abstract class _StageProgress implements StageProgress {
-  const factory _StageProgress(
-      {required final String stageId,
-      final double bestAccuracy,
-      final int bestScore,
-      final int attempts,
-      final bool completed,
-      final bool unlocked,
-      final DateTime? completedAt,
-      final DateTime? lastAttemptAt}) = _$StageProgressImpl;
+  const factory _StageProgress({
+    required final String stageId,
+    final double bestAccuracy,
+    final int bestScore,
+    final int attempts,
+    final bool completed,
+    final bool unlocked,
+    final DateTime? completedAt,
+    final DateTime? lastAttemptAt,
+  }) = _$StageProgressImpl;
 
   factory _StageProgress.fromJson(Map<String, dynamic> json) =
       _$StageProgressImpl.fromJson;

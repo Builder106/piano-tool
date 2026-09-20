@@ -39,11 +39,9 @@ class StageEngine extends ChangeNotifier {
   final Map<int, NoteHitResult> _noteResults = {};
   int _nextNoteIndex = 0;
 
-  StageEngine({
-    required LevelModel level,
-    StageEngineConfig? config,
-  })  : _level = level,
-        _config = config ?? const StageEngineConfig() {
+  StageEngine({required LevelModel level, StageEngineConfig? config})
+    : _level = level,
+      _config = config ?? const StageEngineConfig() {
     _playbackSpeed = _config.playbackSpeed;
     _initializeNotes();
     _state = _state.copyWith(
@@ -195,9 +193,10 @@ class StageEngine extends ChangeNotifier {
 
     if (bestMatchIndex != null) {
       _registerHit(
-          bestMatchIndex,
-          bestTimingError *
-              (currentBeat > _allNotes[bestMatchIndex].startBeat ? 1 : -1));
+        bestMatchIndex,
+        bestTimingError *
+            (currentBeat > _allNotes[bestMatchIndex].startBeat ? 1 : -1),
+      );
     }
   }
 
@@ -209,16 +208,22 @@ class StageEngine extends ChangeNotifier {
     NoteHitResult result;
 
     if (absError <= _config.perfectWindow) {
-      result =
-          NoteHitResult.perfect(noteIndex: noteIndex, timingError: timingError);
+      result = NoteHitResult.perfect(
+        noteIndex: noteIndex,
+        timingError: timingError,
+      );
       _state = _state.copyWith(perfectCount: _state.perfectCount + 1);
     } else if (absError <= _config.goodWindow) {
-      result =
-          NoteHitResult.good(noteIndex: noteIndex, timingError: timingError);
+      result = NoteHitResult.good(
+        noteIndex: noteIndex,
+        timingError: timingError,
+      );
       _state = _state.copyWith(goodCount: _state.goodCount + 1);
     } else if (absError <= _config.okayWindow) {
-      result =
-          NoteHitResult.okay(noteIndex: noteIndex, timingError: timingError);
+      result = NoteHitResult.okay(
+        noteIndex: noteIndex,
+        timingError: timingError,
+      );
       _state = _state.copyWith(okayCount: _state.okayCount + 1);
     } else {
       result = NoteHitResult.missed(noteIndex: noteIndex);
@@ -236,11 +241,13 @@ class StageEngine extends ChangeNotifier {
           : _state.missCount,
     );
 
-    _eventController.add(StageEvent.noteHit(
-      noteIndex: noteIndex,
-      result: result,
-      currentBeat: _state.currentBeat,
-    ));
+    _eventController.add(
+      StageEvent.noteHit(
+        noteIndex: noteIndex,
+        result: result,
+        currentBeat: _state.currentBeat,
+      ),
+    );
 
     // Advance next note index
     while (_nextNoteIndex < _allNotes.length &&
@@ -298,11 +305,13 @@ class StageEngine extends ChangeNotifier {
 
     _state = _state.copyWith(currentBeat: newBeat);
 
-    _eventController.add(StageEvent.playbackPosition(
-      currentBeat: newBeat,
-      progress: newBeat / totalBeats,
-      isPlaying: _state.engineState == StageEngineStatus.playing,
-    ));
+    _eventController.add(
+      StageEvent.playbackPosition(
+        currentBeat: newBeat,
+        progress: newBeat / totalBeats,
+        isPlaying: _state.engineState == StageEngineStatus.playing,
+      ),
+    );
 
     notifyListeners();
   }
@@ -323,10 +332,9 @@ class StageEngine extends ChangeNotifier {
         _noteResults[i] = NoteHitResult.missed(noteIndex: i);
         _state = _state.copyWith(missCount: _state.missCount + 1);
 
-        _eventController.add(StageEvent.noteMissed(
-          noteIndex: i,
-          currentBeat: currentBeat,
-        ));
+        _eventController.add(
+          StageEvent.noteMissed(noteIndex: i, currentBeat: currentBeat),
+        );
       }
     }
   }
@@ -368,12 +376,14 @@ class StageEngine extends ChangeNotifier {
     final totalNotes = _allNotes.length;
     final hitNotes = _state.hitCount;
 
-    _eventController.add(StageEvent.stageCompleted(
-      accuracy: accuracy,
-      score: _state.score,
-      totalNotes: totalNotes,
-      hitNotes: hitNotes,
-    ));
+    _eventController.add(
+      StageEvent.stageCompleted(
+        accuracy: accuracy,
+        score: _state.score,
+        totalNotes: totalNotes,
+        hitNotes: hitNotes,
+      ),
+    );
 
     _notifyStateChanged();
   }
@@ -400,7 +410,9 @@ class StageEngine extends ChangeNotifier {
   /// Seek to a specific beat position (for scrubbing)
   void seekToBeat(double beat) {
     final clampedBeat = beat.clamp(
-        0.0, _level.totalMeasures * _level.beatsPerMeasure.toDouble());
+      0.0,
+      _level.totalMeasures * _level.beatsPerMeasure.toDouble(),
+    );
 
     // Reset note states up to the seek position
     final newStates = List<NoteState>.from(_state.noteStates);
@@ -429,16 +441,15 @@ class StageEngine extends ChangeNotifier {
       _nextNoteIndex++;
     }
 
-    _state = _state.copyWith(
-      currentBeat: clampedBeat,
-      noteStates: newStates,
-    );
+    _state = _state.copyWith(currentBeat: clampedBeat, noteStates: newStates);
 
-    _eventController.add(StageEvent.playbackPosition(
-      currentBeat: clampedBeat,
-      progress: clampedBeat / (_level.totalMeasures * _level.beatsPerMeasure),
-      isPlaying: _state.engineState == StageEngineStatus.playing,
-    ));
+    _eventController.add(
+      StageEvent.playbackPosition(
+        currentBeat: clampedBeat,
+        progress: clampedBeat / (_level.totalMeasures * _level.beatsPerMeasure),
+        isPlaying: _state.engineState == StageEngineStatus.playing,
+      ),
+    );
 
     notifyListeners();
   }

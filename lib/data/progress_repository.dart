@@ -22,24 +22,24 @@ class StageAvailability {
 
 final stageProgressProvider =
     FutureProvider.autoDispose<Map<String, StageProgress>>((ref) {
-  return ref.read(progressRepositoryProvider).readAll();
-});
+      return ref.read(progressRepositoryProvider).readAll();
+    });
 
 final stageAvailabilityProvider = FutureProvider.autoDispose
     .family<StageAvailability?, String>((ref, id) async {
-  final repository = await ref.watch(levelRepositoryProvider.future);
-  final stage = repository.getStage(id);
-  if (stage == null) return null;
-  final progress = await ref.watch(stageProgressProvider.future);
-  final unmet = stage.prerequisites
-      .where((requiredId) => progress[requiredId]?.completed != true)
-      .toList(growable: false);
-  return StageAvailability(
-    stage: stage,
-    progress: progress[id],
-    unmetPrerequisites: unmet,
-  );
-});
+      final repository = await ref.watch(levelRepositoryProvider.future);
+      final stage = repository.getStage(id);
+      if (stage == null) return null;
+      final progress = await ref.watch(stageProgressProvider.future);
+      final unmet = stage.prerequisites
+          .where((requiredId) => progress[requiredId]?.completed != true)
+          .toList(growable: false);
+      return StageAvailability(
+        stage: stage,
+        progress: progress[id],
+        unmetPrerequisites: unmet,
+      );
+    });
 
 /// Per-stage bests, stored on device. No accounts and no network.
 ///
@@ -75,8 +75,10 @@ class ProgressRepository {
     required final int score,
   }) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final StageProgress? previous =
-        _decode(stageId, prefs.getString('$_prefix$stageId'));
+    final StageProgress? previous = _decode(
+      stageId,
+      prefs.getString('$_prefix$stageId'),
+    );
 
     // Bests only ever climb; a bad run still counts as an attempt, and
     // clearing a stage once is permanent.
@@ -92,7 +94,8 @@ class ProgressRepository {
       completed:
           (previous?.completed ?? false) || accuracy >= completionThreshold,
       unlocked: true,
-      completedAt: previous?.completedAt ??
+      completedAt:
+          previous?.completedAt ??
           (accuracy >= completionThreshold ? DateTime.now() : null),
       lastAttemptAt: DateTime.now(),
     );
@@ -104,8 +107,10 @@ class ProgressRepository {
       (await SharedPreferences.getInstance()).getString(_lastPlayedKey);
 
   Future<void> setLastPlayed(final String stageId) async =>
-      (await SharedPreferences.getInstance())
-          .setString(_lastPlayedKey, stageId);
+      (await SharedPreferences.getInstance()).setString(
+        _lastPlayedKey,
+        stageId,
+      );
 
   StageProgress? _decode(final String stageId, final String? raw) {
     if (raw == null) return null;
@@ -119,5 +124,6 @@ class ProgressRepository {
   }
 }
 
-final progressRepositoryProvider =
-    Provider<ProgressRepository>((ref) => ProgressRepository());
+final progressRepositoryProvider = Provider<ProgressRepository>(
+  (ref) => ProgressRepository(),
+);

@@ -38,25 +38,36 @@ void main() {
     fast.start();
     await Future<void>.delayed(const Duration(milliseconds: 300));
 
-    expect(fast.state.currentBeat, greaterThan(slow.state.currentBeat),
-        reason: 'speed must affect how fast the playhead moves');
+    expect(
+      fast.state.currentBeat,
+      greaterThan(slow.state.currentBeat),
+      reason: 'speed must affect how fast the playhead moves',
+    );
   });
 
-  test('changing speed mid-playback takes effect without restarting the stage',
-      () async {
-    final e = engineForStage1();
-    addTearDown(e.dispose);
+  test(
+    'changing speed mid-playback takes effect without restarting the stage',
+    () async {
+      final e = engineForStage1();
+      addTearDown(e.dispose);
 
-    e.start();
-    await Future<void>.delayed(const Duration(milliseconds: 120));
-    final beforeChange = e.state.currentBeat;
+      e.start();
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      final beforeChange = e.state.currentBeat;
 
-    e.setPlaybackSpeed(2.0);
-    await Future<void>.delayed(const Duration(milliseconds: 120));
+      e.setPlaybackSpeed(2.0);
+      await Future<void>.delayed(const Duration(milliseconds: 120));
 
-    expect(e.state.currentBeat, greaterThan(beforeChange),
-        reason: 'the playhead must keep moving across a speed change');
-    expect(e.state.engineState.toString(), contains('playing'),
-        reason: 'changing speed must not stop playback');
-  });
+      expect(
+        e.state.currentBeat,
+        greaterThan(beforeChange),
+        reason: 'the playhead must keep moving across a speed change',
+      );
+      expect(
+        e.state.engineState.toString(),
+        contains('playing'),
+        reason: 'changing speed must not stop playback',
+      );
+    },
+  );
 }

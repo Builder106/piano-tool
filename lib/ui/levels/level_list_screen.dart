@@ -44,7 +44,8 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
     if (progressAsync.hasError) {
       return Scaffold(
         body: Center(
-            child: Text('Error loading progress: ${progressAsync.error}')),
+          child: Text('Error loading progress: ${progressAsync.error}'),
+        ),
       );
     }
     final progress = progressAsync.value ?? <String, StageProgress>{};
@@ -61,8 +62,7 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                 children: [
                   Text(
                     'Piano Tool',
-                    style: PianoTheme.textThemeOf(context)
-                        .headlineMedium
+                    style: PianoTheme.textThemeOf(context).headlineMedium
                         ?.copyWith(
                           color: PianoTheme.colorsOf(context).ink,
                           fontWeight: FontWeight.w700,
@@ -85,8 +85,9 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
             // Stage list
             Expanded(
               child: ListView.separated(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: PianoSpacing.lg),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: PianoSpacing.lg,
+                ),
                 itemCount: stages.length,
                 separatorBuilder: (_, __) =>
                     const SizedBox(height: PianoSpacing.md),
@@ -106,8 +107,11 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                         ? () => context.push('/practice/${stage.id}')
                         : null,
                     onDelete: isImported
-                        ? () =>
-                            _confirmDelete(context, repository, stage.level.id)
+                        ? () => _confirmDelete(
+                            context,
+                            repository,
+                            stage.level.id,
+                          )
                         : null,
                   );
                 },
@@ -128,8 +132,10 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: PianoTheme.colorsOf(context).paper3,
-        title: Text('Delete imported piece?',
-            style: PianoTheme.textThemeOf(context).titleLarge),
+        title: Text(
+          'Delete imported piece?',
+          style: PianoTheme.textThemeOf(context).titleLarge,
+        ),
         content: Text(
           'This will remove the piece from your library. This action cannot be undone.',
           style: PianoTheme.textThemeOf(context).bodyMedium,
@@ -137,18 +143,22 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel',
-                style: PianoTheme.textThemeOf(context).labelLarge?.copyWith(
-                      color: PianoTheme.colorsOf(context).muted,
-                    )),
+            child: Text(
+              'Cancel',
+              style: PianoTheme.textThemeOf(
+                context,
+              ).labelLarge?.copyWith(color: PianoTheme.colorsOf(context).muted),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: PianoTheme.colorsOf(context).error,
             ),
-            child: Text('Delete',
-                style: PianoTheme.textThemeOf(context).labelLarge),
+            child: Text(
+              'Delete',
+              style: PianoTheme.textThemeOf(context).labelLarge,
+            ),
           ),
         ],
       ),
@@ -161,9 +171,9 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
       await ingestionRepo.deleteImportedLevel(levelId);
     } on IngestionException catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete: ${e.message}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete: ${e.message}')));
       return;
     }
 
@@ -219,8 +229,10 @@ class _StageCard extends ConsumerWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _difficultyColor(stage.difficulty, colors)
-                        .withValues(alpha: 0.15),
+                    color: _difficultyColor(
+                      stage.difficulty,
+                      colors,
+                    ).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(PianoRadius.md),
                   ),
                   child: Icon(
@@ -257,8 +269,9 @@ class _StageCard extends ConsumerWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: colors.accent.withValues(alpha: 0.15),
-                                borderRadius:
-                                    BorderRadius.circular(PianoRadius.sm),
+                                borderRadius: BorderRadius.circular(
+                                  PianoRadius.sm,
+                                ),
                               ),
                               child: Text(
                                 'Imported',
@@ -273,8 +286,9 @@ class _StageCard extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         stage.description,
-                        style:
-                            textTheme.bodySmall?.copyWith(color: colors.muted),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colors.muted,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -298,8 +312,9 @@ class _StageCard extends ConsumerWidget {
                             Text(
                               '${(bestAccuracy * 100).round()}%',
                               style: textTheme.labelSmall?.copyWith(
-                                color:
-                                    isCompleted ? colors.success : colors.muted,
+                                color: isCompleted
+                                    ? colors.success
+                                    : colors.muted,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -308,8 +323,9 @@ class _StageCard extends ConsumerWidget {
                       ] else ...[
                         Text(
                           'Not started',
-                          style: textTheme.labelSmall
-                              ?.copyWith(color: colors.muted),
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colors.muted,
+                          ),
                         ),
                       ],
                     ],
@@ -319,8 +335,10 @@ class _StageCard extends ConsumerWidget {
                 // Chevron or delete
                 if (onDelete != null)
                   IconButton(
-                    icon:
-                        Icon(Icons.delete_outline_rounded, color: colors.error),
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      color: colors.error,
+                    ),
                     onPressed: onDelete,
                     tooltip: 'Delete',
                   )

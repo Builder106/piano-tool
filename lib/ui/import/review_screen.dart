@@ -82,17 +82,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        body: SafeArea(
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        body: SafeArea(child: Center(child: CircularProgressIndicator())),
       );
     }
 
     if (_error != null) {
       return Scaffold(
-        body: SafeArea(
-          child: Center(child: Text('Error: $_error')),
-        ),
+        body: SafeArea(child: Center(child: Text('Error: $_error'))),
       );
     }
 
@@ -200,12 +196,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         notes.add((
           midi: note.midiNote,
           startBeat: note.startBeat,
-          state: _currentBeat >= note.startBeat &&
+          state:
+              _currentBeat >= note.startBeat &&
                   _currentBeat < note.startBeat + note.durationBeats
               ? NoteState.active
               : (_currentBeat < note.startBeat
-                  ? NoteState.upcoming
-                  : NoteState.missed),
+                    ? NoteState.upcoming
+                    : NoteState.missed),
         ));
       }
     }
@@ -290,15 +287,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       await repo.saveLevel(_level!);
       if (!mounted) return;
       ref.invalidate(levelRepositoryProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Level saved successfully')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Level saved successfully')));
       context.go('/');
     } on IngestionException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: ${e.message}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: ${e.message}')));
     }
   }
 
