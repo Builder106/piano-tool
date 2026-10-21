@@ -14,6 +14,7 @@ import '../practice/transport_column.dart';
 import '../staff/staff_geometry.dart' show Clef;
 import '../staff/staff_painter.dart' show PlacedNote;
 import '../staff/staff_view.dart';
+import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 
 /// Shows the transcribed level for one imported job, with a read-only
@@ -42,6 +43,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   bool _isPlaying = false;
   double _speed = 1.0;
   bool _isMuted = false;
+  bool _showNoteEditor = false;
   AudioSynthesizer? _synthesizer;
 
   @override
@@ -149,7 +151,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     ),
                     const SizedBox(height: PianoSpacing.lg),
                     Expanded(
-                      flex: 3,
+                      flex: _showNoteEditor ? 2 : 3,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           return StaffView(
@@ -164,15 +166,19 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(height: PianoSpacing.lg),
+                    const SizedBox(height: PianoSpacing.sm),
+                    if (_showNoteEditor) ...[
+                      Expanded(flex: 3, child: _buildNoteEditorPanel(level)),
+                      const SizedBox(height: PianoSpacing.sm),
+                    ],
                     SizedBox(
-                      height: 88,
+                      height: _showNoteEditor ? 64 : 88,
                       child: PianoKeyboardView(
                         due: _getDueNotesAtBeat(level, _currentBeat),
                         playing: const {},
                       ),
                     ),
-                    const SizedBox(height: PianoSpacing.lg),
+                    const SizedBox(height: PianoSpacing.md),
                     LinearProgressIndicator(
                       value: totalBeats > 0 ? _currentBeat / totalBeats : 0,
                       minHeight: 4,
@@ -183,10 +189,23 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       '${_formatTime(totalBeats, level.tempo)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    const SizedBox(height: PianoSpacing.lg),
+                    const SizedBox(height: PianoSpacing.md),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        OutlinedButton.icon(
+                          icon: Icon(
+                            _showNoteEditor
+                                ? Icons.visibility_rounded
+                                : Icons.tune_rounded,
+                          ),
+                          label: Text(
+                            _showNoteEditor ? 'Hide Editor' : 'Edit Notes',
+                          ),
+                          onPressed: () => setState(
+                            () => _showNoteEditor = !_showNoteEditor,
+                          ),
+                        ),
+                        const Spacer(),
                         OutlinedButton(
                           onPressed: _discard,
                           child: const Text('Discard'),
@@ -207,6 +226,252 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildNoteEditorPanel(LevelModel level) {
+    final colors = PianoTheme.colorsOf(context);
+    final allNotes = <({int measureIndex, int noteIndex, LevelNote note})>[];
+    for (var m = 0; m < level.measures.length; m++) {
+      for (var n = 0; n < level.measures[m].notes.length; n++) {
+        allNotes.add((
+          measureIndex: m,
+          noteIndex: n,
+          note: level.measures[m].notes[n],
+        ));
+      }
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.paper,
+        borderRadius: BorderRadius.circular(PianoRadius.md),
+        border: Border.all(color: colors.staff.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: PianoSpacing.md,
+              vertical: PianoSpacing.xs,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.tune_rounded, size: 18, color: colors.ink),
+                const SizedBox(width: PianoSpacing.xs),
+                Text(
+                  'Note Correction Inspector (${allNotes.length} notes)',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colors.ink,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => setState(() => _showNoteEditor = false),
+                  tooltip: 'Close inspector',
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: allNotes.isEmpty
+                ? Center(
+                    child: Text(
+                      'No notes in transcription',
+                      style: TextStyle(color: colors.muted),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: PianoSpacing.md,
+                      vertical: PianoSpacing.xs,
+                    ),
+                    itemCount: allNotes.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final item = allNotes[index];
+                      final note = item.note;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                'm.${note.measureIndex + 1} b.${note.startBeat.toStringAsFixed(2)}',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: colors.muted),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: PianoSpacing.sm,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.accent.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                _midiToPitchName(note.midiNote),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: colors.accent,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: PianoSpacing.xs),
+                            IconButton(
+                              icon: const Icon(Icons.remove, size: 15),
+                              tooltip: 'Pitch down 1 semitone',
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _adjustNotePitch(
+                                item.measureIndex,
+                                item.noteIndex,
+                                -1,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.add, size: 15),
+                              tooltip: 'Pitch up 1 semitone',
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _adjustNotePitch(
+                                item.measureIndex,
+                                item.noteIndex,
+                                1,
+                              ),
+                            ),
+                            const SizedBox(width: PianoSpacing.md),
+                            Text(
+                              '${note.durationBeats.toStringAsFixed(2)} b',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                size: 15,
+                              ),
+                              tooltip: 'Shorten by 0.25 beat',
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _adjustNoteDuration(
+                                item.measureIndex,
+                                item.noteIndex,
+                                -0.25,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.add_circle_outline,
+                                size: 15,
+                              ),
+                              tooltip: 'Lengthen by 0.25 beat',
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _adjustNoteDuration(
+                                item.measureIndex,
+                                item.noteIndex,
+                                0.25,
+                              ),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                size: 17,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              tooltip: 'Delete false note',
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _deleteNote(
+                                item.measureIndex,
+                                item.noteIndex,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteNote(int measureIndex, int noteIndex) {
+    final current = _level;
+    if (current == null) return;
+    final measures = [...current.measures];
+    final targetMeasure = measures[measureIndex];
+    final updatedNotes = [...targetMeasure.notes]..removeAt(noteIndex);
+    measures[measureIndex] = targetMeasure.copyWith(notes: updatedNotes);
+    setState(() {
+      _level = current.copyWith(measures: measures);
+    });
+  }
+
+  void _adjustNotePitch(int measureIndex, int noteIndex, int semitones) {
+    final current = _level;
+    if (current == null) return;
+    final measures = [...current.measures];
+    final targetMeasure = measures[measureIndex];
+    final note = targetMeasure.notes[noteIndex];
+    final newPitch = (note.midiNote + semitones).clamp(21, 108);
+    final updatedNotes = [...targetMeasure.notes];
+    updatedNotes[noteIndex] = note.copyWith(midiNote: newPitch);
+    measures[measureIndex] = targetMeasure.copyWith(notes: updatedNotes);
+    setState(() {
+      _level = current.copyWith(measures: measures);
+    });
+  }
+
+  void _adjustNoteDuration(int measureIndex, int noteIndex, double deltaBeats) {
+    final current = _level;
+    if (current == null) return;
+    final measures = [...current.measures];
+    final targetMeasure = measures[measureIndex];
+    final note = targetMeasure.notes[noteIndex];
+    final newDuration = (note.durationBeats + deltaBeats).clamp(0.25, 16.0);
+    final updatedNotes = [...targetMeasure.notes];
+    updatedNotes[noteIndex] = note.copyWith(durationBeats: newDuration);
+    measures[measureIndex] = targetMeasure.copyWith(notes: updatedNotes);
+    setState(() {
+      _level = current.copyWith(measures: measures);
+    });
+  }
+
+  static String _midiToPitchName(int midi) {
+    const names = [
+      'C',
+      'C#',
+      'D',
+      'D#',
+      'E',
+      'F',
+      'F#',
+      'G',
+      'G#',
+      'A',
+      'A#',
+      'B',
+    ];
+    final octave = (midi ~/ 12) - 1;
+    final note = names[midi % 12];
+    return '$note$octave ($midi)';
   }
 
   List<StaffSystem> _buildSystems(LevelModel level) {

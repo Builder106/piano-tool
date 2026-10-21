@@ -348,5 +348,50 @@ void main() {
       await tester.tap(find.byIcon(Icons.pause));
       await tester.pump();
     });
+
+    testWidgets('toggles note editor and edits note pitch and duration', (
+      tester,
+    ) async {
+      when(mockRepo.pollJob('job-123')).thenAnswer(
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
+      );
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Notes'), findsOneWidget);
+      expect(find.textContaining('Note Correction Inspector'), findsNothing);
+
+      // Open inspector
+      await tester.tap(find.text('Edit Notes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hide Editor'), findsOneWidget);
+      expect(
+        find.textContaining('Note Correction Inspector (1 notes)'),
+        findsOneWidget,
+      );
+      expect(find.text('C4 (60)'), findsOneWidget);
+
+      // Adjust pitch up
+      await tester.tap(find.byTooltip('Pitch up 1 semitone'));
+      await tester.pumpAndSettle();
+      expect(find.text('C#4 (61)'), findsOneWidget);
+
+      // Adjust duration up
+      await tester.tap(find.byTooltip('Lengthen by 0.25 beat'));
+      await tester.pumpAndSettle();
+      expect(find.text('1.25 b'), findsOneWidget);
+
+      // Delete note
+      await tester.tap(find.byTooltip('Delete false note'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Note Correction Inspector (0 notes)'),
+        findsOneWidget,
+      );
+      expect(find.text('No notes in transcription'), findsOneWidget);
+    });
   });
 }
