@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import 'package:piano_tool/audio/tone_synthesizer.dart';
 import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
@@ -51,6 +52,9 @@ void main() {
         progressRepositoryProvider.overrideWithValue(mockProgressRepo),
         audioGrantedProvider.overrideWith((ref) async => true),
         practiceAudioSessionProvider.overrideWith((ref) async {}),
+        audioSynthesizerProvider.overrideWithValue(
+          AudioSynthesizer(player: SilentAudioTonePlayer()),
+        ),
       ],
       child: const PianoToolApp(),
     );

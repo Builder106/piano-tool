@@ -1,5 +1,16 @@
 # Journal
 
+## 2026-10-21: add audio review synthesizer #audio #ui #decision
+
+Implemented `AudioSynthesizer` and `ToneGenerator` in `lib/audio/tone_synthesizer.dart`
+to provide auditory feedback during `ReviewScreen` preview. Synthesizes 16-bit
+PCM WAV audio using additive harmonic decay (fundamental plus 2nd and 3rd
+harmonics) with a 5ms attack envelope to prevent pops, played via `FlutterSoundPlayer`.
+Integrated playback into `ReviewScreen` note timings, added a mute/unmute preview
+toggle, and decoupled audio players with `SilentAudioTonePlayer` for deterministic
+widget testing. Verification passed on `ampere-dev` with clean `dart format`,
+0 analyzer warnings, 221 passing Flutter tests, and all 68 backend tests passing.
+
 ## 2026-10-21: add settings and calibration hub #decision #ui
 
 Delivered `SettingsScreen` and `SettingsRepository` to fulfill the first milestone

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import 'package:piano_tool/audio/tone_synthesizer.dart';
 import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
 import 'package:piano_tool/ui/import/review_screen.dart';
@@ -17,15 +18,20 @@ import 'review_screen_test.mocks.dart';
 
 void main() {
   late MockIngestionRepository mockRepo;
+  late SilentAudioTonePlayer mockTonePlayer;
+  late AudioSynthesizer testSynth;
 
   setUp(() {
     mockRepo = MockIngestionRepository();
+    mockTonePlayer = SilentAudioTonePlayer();
+    testSynth = AudioSynthesizer(player: mockTonePlayer);
   });
 
   Widget createTestWidget({String jobId = 'job-123'}) {
     return ProviderScope(
       overrides: [
         ingestionRepositoryProvider.overrideWith((ref) async => mockRepo),
+        audioSynthesizerProvider.overrideWithValue(testSynth),
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
@@ -288,6 +294,57 @@ void main() {
 
       expect(find.text('Import screen'), findsOneWidget);
       verifyNever(mockRepo.saveLevel(any));
+    });
+
+    testWidgets('toggles mute state when clicking audio volume button', (
+      tester,
+    ) async {
+      when(mockRepo.pollJob('job-123')).thenAnswer(
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
+      );
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Mute audio preview'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Mute audio preview'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Unmute audio preview'), findsOneWidget);
+      expect(testSynth.isMuted, isTrue);
+
+      await tester.tap(find.byTooltip('Unmute audio preview'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Mute audio preview'), findsOneWidget);
+      expect(testSynth.isMuted, isFalse);
+    });
+
+    testWidgets('triggers synthesized tone playback as notes pass playhead', (
+      tester,
+    ) async {
+      when(mockRepo.pollJob('job-123')).thenAnswer(
+        (_) async =>
+            IngestionJobResult(status: IngestionJobStatus.done, level: level),
+      );
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(mockTonePlayer.playCount, 0);
+
+      // Start playback
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(mockTonePlayer.playCount, greaterThan(0));
+
+      // Pause again so no timer keeps firing after the test ends
+      await tester.tap(find.byIcon(Icons.pause));
+      await tester.pump();
     });
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../audio/tone_synthesizer.dart';
 import '../../data/ingestion_repository.dart';
 import '../../data/level_repository.dart';
 import '../../models/level_models.dart';
@@ -40,6 +41,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Timer? _playbackTimer;
   bool _isPlaying = false;
   double _speed = 1.0;
+  bool _isMuted = false;
+  AudioSynthesizer? _synthesizer;
 
   @override
   void initState() {
@@ -48,8 +51,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _synthesizer = ref.read(audioSynthesizerProvider);
+  }
+
+  @override
   void dispose() {
     _playbackTimer?.cancel();
+    _synthesizer?.stop();
     super.dispose();
   }
 
@@ -119,6 +129,21 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                             level.title,
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            _isMuted
+                                ? Icons.volume_off_rounded
+                                : Icons.volume_up_rounded,
+                            size: 26,
+                          ),
+                          onPressed: () {
+                            setState(() => _isMuted = !_isMuted);
+                            _synthesizer?.isMuted = _isMuted;
+                          },
+                          tooltip: _isMuted
+                              ? 'Unmute audio preview'
+                              : 'Mute audio preview',
                         ),
                       ],
                     ),
@@ -246,25 +271,54 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     setState(() => _isPlaying = true);
     _playbackTimer?.cancel();
     _playbackTimer = Timer.periodic(tickRate, (timer) {
+      final prevBeat = _currentBeat;
+      final nextBeat =
+          _currentBeat +
+          baseBeatsPerSecond * _speed * (tickRate.inMilliseconds / 1000);
+
+      _playNotesBetween(lvl, prevBeat, nextBeat, baseBeatsPerSecond);
+
       setState(() {
-        _currentBeat +=
-            baseBeatsPerSecond * _speed * (tickRate.inMilliseconds / 1000);
+        _currentBeat = nextBeat;
         if (_currentBeat >= totalBeats) {
           _currentBeat = totalBeats;
           _isPlaying = false;
+          _synthesizer?.stop();
           timer.cancel();
         }
       });
     });
   }
 
+  void _playNotesBetween(
+    LevelModel lvl,
+    double fromBeat,
+    double toBeat,
+    double baseBeatsPerSecond,
+  ) {
+    if (_isMuted) return;
+    final synth = _synthesizer;
+    if (synth == null) return;
+
+    for (final measure in lvl.measures) {
+      for (final note in measure.notes) {
+        if (note.startBeat >= fromBeat && note.startBeat < toBeat) {
+          final durSec = (note.durationBeats / baseBeatsPerSecond) / _speed;
+          synth.playNote(midiNote: note.midiNote, durationSeconds: durSec);
+        }
+      }
+    }
+  }
+
   void _pausePlayback() {
     _playbackTimer?.cancel();
+    _synthesizer?.stop();
     setState(() => _isPlaying = false);
   }
 
   void _stopPlayback() {
     _playbackTimer?.cancel();
+    _synthesizer?.stop();
     setState(() {
       _isPlaying = false;
       _currentBeat = 0;
@@ -273,6 +327,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   void _replay() {
     _playbackTimer?.cancel();
+    _synthesizer?.stop();
     setState(() => _currentBeat = 0);
     _startPlayback();
   }
