@@ -152,7 +152,7 @@ def quantize_notes(  # noqa: PLR0913
             LevelMeasure(
                 index=measure_index,
                 startBeat=measure_start_beat,
-                beats_per_measure=beats_per_measure,
+                beatsPerMeasure=beats_per_measure,
                 notes=notes_in_measure,
             )
         )
