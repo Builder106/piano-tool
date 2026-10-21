@@ -12,6 +12,7 @@ import '../../engine/stage_engine.dart';
 import '../../models/audio_models.dart';
 import '../../models/engine_models.dart';
 import '../../models/level_models.dart';
+import '../../services/midi_service.dart';
 
 /// One engine for the whole app. Permission and the pitch stream both hang off
 /// it, so a single microphone is opened rather than one per provider.
@@ -338,9 +339,8 @@ final stageControllerProvider =
       ref.listen(
         audioPitchStreamProvider,
         (_, next) {
-          // Riverpod 3 represents a retrying stream error as AsyncLoading with
-          // the original error attached, so checking hasError must happen before
-          // the usual AsyncValue.when dispatch.
+          final settings = ref.read(settingsProvider);
+          if (settings.inputSource == PracticeInputSource.midi) return;
           if (next.hasError) {
             _logAudioStreamError(next.error);
             return;
@@ -348,6 +348,17 @@ final stageControllerProvider =
           next.whenOrNull(data: controller.onPitch);
         },
         onError: (error, _) => _logAudioStreamError(error),
+        fireImmediately: true,
+      );
+
+      ref.listen(
+        midiPitchStreamProvider,
+        (_, next) {
+          final settings = ref.read(settingsProvider);
+          if (settings.inputSource == PracticeInputSource.microphone) return;
+          if (next.hasError) return;
+          next.whenOrNull(data: controller.onPitch);
+        },
         fireImmediately: true,
       );
 

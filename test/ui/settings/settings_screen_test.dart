@@ -29,6 +29,11 @@ class FakeSettingsNotifier extends SettingsNotifier {
   Future<void> setToleranceLevel(ToleranceLevel level) async {
     state = state.copyWith(toleranceLevel: level);
   }
+
+  @override
+  Future<void> setInputSource(PracticeInputSource source) async {
+    state = state.copyWith(inputSource: source);
+  }
 }
 
 void main() {
@@ -174,5 +179,54 @@ void main() {
         );
       },
     );
+
+    testWidgets('renders input source selector and switches input source', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Practice Input Source'), findsOneWidget);
+      expect(find.text('Dual Input'), findsWidgets);
+      expect(find.text('MIDI Keyboard'), findsWidgets);
+
+      final buttonFinder = find.widgetWithText(OutlinedButton, 'MIDI Keyboard');
+      await tester.ensureVisible(buttonFinder);
+      await tester.tap(buttonFinder);
+      await tester.pumpAndSettle();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(SettingsScreen)),
+      );
+      expect(
+        container.read(settingsProvider).inputSource,
+        PracticeInputSource.midi,
+      );
+    });
+
+    testWidgets('renders MIDI hardware card and simulates key press', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.text('MIDI Keyboard (USB & Bluetooth)'), findsOneWidget);
+      expect(find.text('Connect'), findsWidgets);
+
+      // Connect first device
+      await tester.tap(find.text('Connect').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Disconnect'), findsOneWidget);
+
+      // Test key press Middle C
+      await tester.tap(find.text('Test Key Press (Middle C / 60)'));
+      await tester.pump();
+
+      expect(
+        find.text('Simulated MIDI Note On: Middle C (60)'),
+        findsOneWidget,
+      );
+    });
   });
 }

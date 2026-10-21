@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/settings_repository.dart';
+import '../../services/midi_service.dart';
 import '../practice/stage_controller.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
@@ -103,6 +104,12 @@ class SettingsScreen extends ConsumerWidget {
                             ref,
                             settings.toleranceLevel,
                           ),
+                          const SizedBox(height: PianoSpacing.md),
+                          _buildInputSourceSelector(
+                            context,
+                            ref,
+                            settings.inputSource,
+                          ),
                         ],
                       ),
                     ),
@@ -122,6 +129,8 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: PianoSpacing.sm),
                           _buildMicCard(context, ref, audioGrantedAsync),
+                          const SizedBox(height: PianoSpacing.md),
+                          _buildMidiCard(context, ref),
                           const SizedBox(height: PianoSpacing.md),
                           _buildAudioEngineSpecsCard(context),
 
@@ -435,6 +444,213 @@ class SettingsScreen extends ConsumerWidget {
               ),
             );
           }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputSourceSelector(
+    BuildContext context,
+    WidgetRef ref,
+    PracticeInputSource currentSource,
+  ) {
+    final colors = PianoTheme.colorsOf(context);
+    final textTheme = PianoTheme.textThemeOf(context);
+
+    return Container(
+      padding: const EdgeInsets.all(PianoSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.paper2,
+        borderRadius: BorderRadius.circular(PianoRadius.md),
+        border: Border.all(color: colors.rule),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Practice Input Source',
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.ink,
+                ),
+              ),
+              Text(
+                currentSource.label,
+                style: textTheme.labelLarge?.copyWith(
+                  color: colors.accent,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: PianoSpacing.xs),
+          Text(
+            currentSource.description,
+            style: textTheme.bodySmall?.copyWith(color: colors.muted),
+          ),
+          const SizedBox(height: PianoSpacing.sm),
+          Row(
+            children: PracticeInputSource.values.map((src) {
+              final isSelected = src == currentSource;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: OutlinedButton(
+                    onPressed: () {
+                      ref.read(settingsProvider.notifier).setInputSource(src);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor:
+                          isSelected ? colors.accent : colors.paper,
+                      foregroundColor:
+                          isSelected ? colors.accentInk : colors.ink,
+                      side: BorderSide(
+                        color: isSelected ? colors.accent : colors.rule,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      minimumSize: Size.zero,
+                    ),
+                    child: Text(
+                      src.label,
+                      textAlign: TextAlign.center,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: isSelected ? colors.accentInk : colors.ink,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMidiCard(BuildContext context, WidgetRef ref) {
+    final colors = PianoTheme.colorsOf(context);
+    final textTheme = PianoTheme.textThemeOf(context);
+    final midiService = ref.watch(midiServiceProvider);
+    final selectedDevice = midiService.selectedDevice;
+
+    return Container(
+      padding: const EdgeInsets.all(PianoSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.paper2,
+        borderRadius: BorderRadius.circular(PianoRadius.md),
+        border: Border.all(color: colors.rule),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                selectedDevice != null
+                    ? Icons.piano_rounded
+                    : Icons.piano_off_rounded,
+                color: selectedDevice != null ? colors.success : colors.muted,
+                size: 24,
+              ),
+              const SizedBox(width: PianoSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'MIDI Keyboard (USB & Bluetooth)',
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.ink,
+                      ),
+                    ),
+                    Text(
+                      selectedDevice != null
+                          ? 'Connected: ${selectedDevice.name}'
+                          : 'No external digital piano connected',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: selectedDevice != null
+                            ? colors.success
+                            : colors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton.icon(
+                icon: midiService.isScanning
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(midiService.isScanning ? 'Scanning...' : 'Scan'),
+                onPressed: midiService.isScanning
+                    ? null
+                    : () => midiService.scanDevices(),
+              ),
+            ],
+          ),
+          const SizedBox(height: PianoSpacing.sm),
+          const Divider(height: 1),
+          const SizedBox(height: PianoSpacing.sm),
+          Text(
+            'Available Interfaces:',
+            style: textTheme.labelSmall?.copyWith(color: colors.muted),
+          ),
+          const SizedBox(height: PianoSpacing.xs),
+          for (final device in midiService.devices)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  Icon(
+                    device.type == MidiDeviceType.usb
+                        ? Icons.usb_rounded
+                        : Icons.bluetooth_rounded,
+                    size: 16,
+                    color: colors.muted,
+                  ),
+                  const SizedBox(width: PianoSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      device.name,
+                      style: textTheme.bodySmall?.copyWith(color: colors.ink),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      if (device.connected) {
+                        midiService.disconnectDevice();
+                      } else {
+                        midiService.connectDevice(device.id);
+                      }
+                    },
+                    child: Text(device.connected ? 'Disconnect' : 'Connect'),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: PianoSpacing.xs),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.play_circle_outline, size: 16),
+            label: const Text('Test Key Press (Middle C / 60)'),
+            onPressed: () {
+              midiService.simulateNotePress(60);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Simulated MIDI Note On: Middle C (60)'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

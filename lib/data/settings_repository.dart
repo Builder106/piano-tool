@@ -49,6 +49,17 @@ enum ToleranceLevel {
   final double missWindow;
 }
 
+/// Available audio and hardware input sources for practice.
+enum PracticeInputSource {
+  microphone('Microphone', 'Acoustic pitch detection via device mic'),
+  midi('MIDI Keyboard', 'Direct digital connection via USB or Bluetooth'),
+  both('Dual Input', 'Listen via microphone and MIDI keyboard simultaneously');
+
+  const PracticeInputSource(this.label, this.description);
+  final String label;
+  final String description;
+}
+
 /// Immutable app settings model.
 class AppSettings {
   const AppSettings({
@@ -58,6 +69,7 @@ class AppSettings {
     this.minVolumeThreshold = 0.1,
     this.referenceFrequency = 440.0,
     this.customApiBaseUrl,
+    this.inputSource = PracticeInputSource.both,
   });
 
   final ThemeMode themeMode;
@@ -66,6 +78,7 @@ class AppSettings {
   final double minVolumeThreshold;
   final double referenceFrequency;
   final String? customApiBaseUrl;
+  final PracticeInputSource inputSource;
 
   StageEngineConfig toStageEngineConfig() => StageEngineConfig(
     perfectWindow: toleranceLevel.perfectWindow,
@@ -87,6 +100,7 @@ class AppSettings {
     double? minVolumeThreshold,
     double? referenceFrequency,
     String? customApiBaseUrl,
+    PracticeInputSource? inputSource,
     bool clearCustomApiBaseUrl = false,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
@@ -97,6 +111,7 @@ class AppSettings {
     customApiBaseUrl: clearCustomApiBaseUrl
         ? null
         : (customApiBaseUrl ?? this.customApiBaseUrl),
+    inputSource: inputSource ?? this.inputSource,
   );
 
   @override
@@ -109,7 +124,8 @@ class AppSettings {
           toleranceLevel == other.toleranceLevel &&
           minVolumeThreshold == other.minVolumeThreshold &&
           referenceFrequency == other.referenceFrequency &&
-          customApiBaseUrl == other.customApiBaseUrl;
+          customApiBaseUrl == other.customApiBaseUrl &&
+          inputSource == other.inputSource;
 
   @override
   int get hashCode => Object.hash(
@@ -119,6 +135,7 @@ class AppSettings {
     minVolumeThreshold,
     referenceFrequency,
     customApiBaseUrl,
+    inputSource,
   );
 }
 
@@ -131,6 +148,7 @@ class SettingsRepository {
   static const _volumeKey = '${_prefix}minVolume';
   static const _referenceFreqKey = '${_prefix}referenceFreq';
   static const _customApiUrlKey = '${_prefix}customApiUrl';
+  static const _inputSourceKey = '${_prefix}inputSource';
 
   Future<AppSettings> read() async {
     final prefs = await SharedPreferences.getInstance();
@@ -155,6 +173,13 @@ class SettingsRepository {
     final refFreq = prefs.getDouble(_referenceFreqKey) ?? 440.0;
     final customUrl = prefs.getString(_customApiUrlKey);
 
+    final inputSourceStr = prefs.getString(_inputSourceKey);
+    final inputSource = switch (inputSourceStr) {
+      'microphone' => PracticeInputSource.microphone,
+      'midi' => PracticeInputSource.midi,
+      _ => PracticeInputSource.both,
+    };
+
     return AppSettings(
       themeMode: themeMode,
       defaultPlaybackSpeed: speed,
@@ -162,6 +187,7 @@ class SettingsRepository {
       minVolumeThreshold: volume,
       referenceFrequency: refFreq,
       customApiBaseUrl: customUrl,
+      inputSource: inputSource,
     );
   }
 
@@ -172,6 +198,7 @@ class SettingsRepository {
     await prefs.setString(_toleranceKey, settings.toleranceLevel.name);
     await prefs.setDouble(_volumeKey, settings.minVolumeThreshold);
     await prefs.setDouble(_referenceFreqKey, settings.referenceFrequency);
+    await prefs.setString(_inputSourceKey, settings.inputSource.name);
 
     if (settings.customApiBaseUrl != null &&
         settings.customApiBaseUrl!.trim().isNotEmpty) {
@@ -229,6 +256,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setToleranceLevel(ToleranceLevel level) async {
     state = state.copyWith(toleranceLevel: level);
+    final repo = ref.read(settingsRepositoryProvider);
+    await repo.save(state);
+  }
+
+  Future<void> setInputSource(PracticeInputSource source) async {
+    state = state.copyWith(inputSource: source);
     final repo = ref.read(settingsRepositoryProvider);
     await repo.save(state);
   }
