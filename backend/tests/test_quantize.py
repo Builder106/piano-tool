@@ -182,3 +182,87 @@ def test_automatic_clef_assignment_for_grand_staff():
     notes = level.measures[0].notes
     assert len(notes) == 2
     assert {n.voice_index for n in notes} == {0, 1}
+
+
+def test_automatic_clef_assignment_for_bass_staff():
+    from app.models import LevelClef
+
+    events = [
+        NoteEvent(pitch=36, start=0.0, end=1.0, velocity=80),
+        NoteEvent(pitch=48, start=1.0, end=2.0, velocity=80),
+    ]
+
+    level = quantize_notes(events, tempo_bpm=120.0, level_id="bass_lvl", title="Bass")
+    assert level.clef == LevelClef.bass
+
+
+def test_quantize_with_explicit_clef_override():
+    from app.models import LevelClef
+
+    events = [NoteEvent(pitch=48, start=0.0, end=1.0, velocity=80)]
+    level = quantize_notes(
+        events,
+        tempo_bpm=120.0,
+        level_id="clef_override",
+        title="Override",
+        clef=LevelClef.treble,
+    )
+    assert level.clef == LevelClef.treble
+
+
+def test_quantize_defaults_beat_unit_for_explicit_beats():
+    events = [NoteEvent(pitch=60, start=0.0, end=0.5, velocity=80)]
+
+    level_six = quantize_notes(
+        events,
+        tempo_bpm=120.0,
+        level_id="six_beats",
+        title="Six",
+        beats_per_measure=6,
+    )
+    assert level_six.beats_per_measure == 6
+    assert level_six.beat_unit == 8
+
+    level_three = quantize_notes(
+        events,
+        tempo_bpm=120.0,
+        level_id="three_beats",
+        title="Three",
+        beats_per_measure=3,
+    )
+    assert level_three.beats_per_measure == 3
+    assert level_three.beat_unit == 4
+
+
+def test_quantize_preserves_explicit_beat_unit_with_detected_meter():
+    events = [NoteEvent(pitch=60, start=0.0, end=0.5, velocity=80)]
+    level = quantize_notes(
+        events,
+        tempo_bpm=120.0,
+        level_id="unit_override",
+        title="Override",
+        beat_unit=4,
+    )
+    assert level.beats_per_measure == 4
+    assert level.beat_unit == 4
+
+
+def test_detect_meter_with_non_positive_tempo():
+    from app.quantize import detect_meter
+
+    events = [NoteEvent(pitch=60, start=0.0, end=0.5, velocity=80)]
+    assert detect_meter(events, tempo_bpm=0.0) == (4, 4)
+
+
+def test_detect_meter_duple_subdivisions_default_to_four_four():
+    from app.quantize import detect_meter
+
+    # 120 bpm = 0.5s per beat. Onsets at eighth-note intervals (frac = 0.5)
+    # Total non-integer beats >= 3, but frac aligns with duple, not triplet.
+    events = [
+        NoteEvent(pitch=60, start=0.25, end=0.45, velocity=80),  # beat 0.5
+        NoteEvent(pitch=62, start=0.75, end=0.95, velocity=75),  # beat 1.5
+        NoteEvent(pitch=64, start=1.25, end=1.45, velocity=70),  # beat 2.5
+        NoteEvent(pitch=65, start=1.75, end=1.95, velocity=70),  # beat 3.5
+    ]
+    assert detect_meter(events, tempo_bpm=120.0) == (4, 4)
