@@ -35,6 +35,16 @@ sealed class LevelMeasure with _$LevelMeasure {
       _$LevelMeasureFromJson(json);
 }
 
+/// Clef configuration for level presentation
+enum LevelClef {
+  @JsonValue('treble')
+  treble,
+  @JsonValue('bass')
+  bass,
+  @JsonValue('grand')
+  grand,
+}
+
 /// Represents a complete level/stage
 @freezed
 sealed class LevelModel with _$LevelModel {
@@ -48,6 +58,8 @@ sealed class LevelModel with _$LevelModel {
     required List<LevelMeasure> measures,
     @Default(4) int clefOctave, // 4 = middle C octave
     @Default(0) int transpose, // semitones to transpose
+    @Default(LevelClef.treble) LevelClef clef,
+    @Default(4) int beatUnit, // 4 = quarter note, 8 = eighth note
   }) = _LevelModel;
 
   factory LevelModel.fromJson(Map<String, dynamic> json) =>

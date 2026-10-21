@@ -212,15 +212,62 @@ class _StaffPane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentBeat = ref.watch(currentBeatProvider(stageId));
+    final systems = _buildSystems(ref, stageId, level);
 
     return StaffView(
-      systems: [(clef: Clef.treble, notes: _placedNotes(ref, stageId))],
+      systems: systems,
       currentBeat: currentBeat,
       totalBeats: (level.totalMeasures * level.beatsPerMeasure).toDouble(),
       beatsPerMeasure: level.beatsPerMeasure,
+      beatUnit: level.beatUnit,
       pixelsPerBeat: 70,
     );
   }
+}
+
+List<StaffSystem> _buildSystems(
+  WidgetRef ref,
+  String stageId,
+  LevelModel level,
+) {
+  final levelNotes = ref.watch(
+    stageControllerProvider(stageId).select((s) => s.notes),
+  );
+  final states = ref.watch(noteStatesProvider(stageId));
+  final placed = [
+    for (var i = 0; i < levelNotes.length; i++)
+      (
+        midi: levelNotes[i].midiNote,
+        startBeat: levelNotes[i].startBeat,
+        state: i < states.length ? states[i] : NoteState.upcoming,
+      ),
+  ];
+
+  return switch (level.clef) {
+    LevelClef.bass => [(clef: Clef.bass, notes: placed)],
+    LevelClef.grand => () {
+      final hasMultiVoice = levelNotes.any((n) => n.voiceIndex != 0);
+      final trebleNotes = <PlacedNote>[];
+      final bassNotes = <PlacedNote>[];
+      for (var i = 0; i < levelNotes.length; i++) {
+        final ln = levelNotes[i];
+        final pn = placed[i];
+        final isBass = hasMultiVoice
+            ? (ln.voiceIndex == 1)
+            : (ln.midiNote < 60);
+        if (isBass) {
+          bassNotes.add(pn);
+        } else {
+          trebleNotes.add(pn);
+        }
+      }
+      return [
+        (clef: Clef.treble, notes: trebleNotes),
+        (clef: Clef.bass, notes: bassNotes),
+      ];
+    }(),
+    LevelClef.treble => [(clef: Clef.treble, notes: placed)],
+  };
 }
 
 class _KeyboardPane extends ConsumerWidget {

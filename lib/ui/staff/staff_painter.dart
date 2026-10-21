@@ -17,6 +17,7 @@ class StaffPainter extends CustomPainter {
     required this.totalBeats,
     required this.beatsPerMeasure,
     required this.pixelsPerBeat,
+    this.beatUnit = 4,
     this.maxStaffHeight = kDefaultMaxStaffHeight,
     this.showPlayheadCap = true,
   });
@@ -27,6 +28,7 @@ class StaffPainter extends CustomPainter {
   final double currentBeat;
   final double totalBeats;
   final int beatsPerMeasure;
+  final int beatUnit;
   final double pixelsPerBeat;
 
   /// Ceiling on the drawn staff height, whatever band the painter is given.
@@ -211,7 +213,7 @@ class StaffPainter extends CustomPainter {
     final fontSize = g.space * 4;
 
     _paintTimeSigNumber(canvas, '$beatsPerMeasure', fontSize, x, g.lineY(2));
-    _paintTimeSigNumber(canvas, '4', fontSize, x, g.lineY(4));
+    _paintTimeSigNumber(canvas, '$beatUnit', fontSize, x, g.lineY(4));
   }
 
   void _paintTimeSigNumber(
@@ -259,6 +261,7 @@ class StaffPainter extends CustomPainter {
       old.showPlayheadCap != showPlayheadCap ||
       old.maxStaffHeight != maxStaffHeight ||
       old.beatsPerMeasure != beatsPerMeasure ||
+      old.beatUnit != beatUnit ||
       old.totalBeats != totalBeats ||
       !listEquals(old.notes, notes);
 }

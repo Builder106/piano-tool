@@ -79,7 +79,7 @@ Future<void> _load(String family, String path) async {
 String? get _materialIconsPath {
   final fromEnv = Platform.environment['FLUTTER_ROOT'];
   final roots = <String>[
-    if (fromEnv != null) fromEnv,
+    ?fromEnv,
     ..._ancestorsOf(Platform.resolvedExecutable),
   ];
   for (final root in roots) {

@@ -39,15 +39,17 @@ void main() {
           routes: [
             GoRoute(
               path: '/review',
-              builder: (_, __) => ReviewScreen(jobId: jobId),
+              builder: (context, state) => ReviewScreen(jobId: jobId),
             ),
             GoRoute(
               path: '/',
-              builder: (_, __) => const Scaffold(body: Text('Level list')),
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Level list')),
             ),
             GoRoute(
               path: '/import',
-              builder: (_, __) => const Scaffold(body: Text('Import screen')),
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Import screen')),
             ),
           ],
         ),

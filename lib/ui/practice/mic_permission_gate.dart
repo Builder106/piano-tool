@@ -33,7 +33,7 @@ class MicPermissionGate extends ConsumerWidget {
 
     return state.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => _Denied(
+      error: (err, stack) => _Denied(
         message:
             'The microphone could not be started. '
             'Piano Tool listens for the notes you play, so practice needs it.',

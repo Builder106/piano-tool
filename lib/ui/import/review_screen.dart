@@ -153,15 +153,11 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           return StaffView(
-                            systems: [
-                              (
-                                clef: Clef.treble,
-                                notes: _buildPlacedNotes(level),
-                              ),
-                            ],
+                            systems: _buildSystems(level),
                             currentBeat: _currentBeat,
                             totalBeats: totalBeats,
                             beatsPerMeasure: level.beatsPerMeasure,
+                            beatUnit: level.beatUnit,
                             pixelsPerBeat: 70,
                             maxStaffHeight: constraints.maxHeight * 0.8,
                           );
@@ -211,6 +207,38 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ),
       ),
     );
+  }
+
+  List<StaffSystem> _buildSystems(LevelModel level) {
+    final placed = _buildPlacedNotes(level);
+    return switch (level.clef) {
+      LevelClef.bass => [(clef: Clef.bass, notes: placed)],
+      LevelClef.grand => () {
+        final allNotes = [
+          for (final measure in level.measures) ...measure.notes,
+        ];
+        final hasMultiVoice = allNotes.any((n) => n.voiceIndex != 0);
+        final trebleNotes = <PlacedNote>[];
+        final bassNotes = <PlacedNote>[];
+        for (var i = 0; i < allNotes.length && i < placed.length; i++) {
+          final ln = allNotes[i];
+          final pn = placed[i];
+          final isBass = hasMultiVoice
+              ? (ln.voiceIndex == 1)
+              : (ln.midiNote < 60);
+          if (isBass) {
+            bassNotes.add(pn);
+          } else {
+            trebleNotes.add(pn);
+          }
+        }
+        return [
+          (clef: Clef.treble, notes: trebleNotes),
+          (clef: Clef.bass, notes: bassNotes),
+        ];
+      }(),
+      LevelClef.treble => [(clef: Clef.treble, notes: placed)],
+    };
   }
 
   List<PlacedNote> _buildPlacedNotes(LevelModel level) {

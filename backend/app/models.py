@@ -1,4 +1,12 @@
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class LevelClef(str, Enum):
+    treble = "treble"
+    bass = "bass"
+    grand = "grand"
 
 
 class LevelNote(BaseModel):
@@ -34,3 +42,5 @@ class LevelModel(BaseModel):
     measures: list[LevelMeasure]
     clef_octave: int = Field(default=4, alias="clefOctave")
     transpose: int = Field(default=0, alias="transpose")
+    clef: LevelClef = Field(default=LevelClef.treble, alias="clef")
+    beat_unit: int = Field(default=4, alias="beatUnit")

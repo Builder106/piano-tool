@@ -115,7 +115,7 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                   horizontal: PianoSpacing.lg,
                 ),
                 itemCount: stages.length,
-                separatorBuilder: (_, __) =>
+                separatorBuilder: (context, index) =>
                     const SizedBox(height: PianoSpacing.md),
                 itemBuilder: (context, index) {
                   final stage = stages[index];

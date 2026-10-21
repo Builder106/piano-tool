@@ -21,6 +21,44 @@ void main() {
     expect(stage!.level.id, 'imported_1');
   });
 
+  test('supports bass clef and grand staff level models', () {
+    final repository = LevelRepository();
+    const bassLevel = LevelModel(
+      id: 'bass_1',
+      title: 'Bass Journey',
+      description: 'Bass clef level',
+      tempo: 90,
+      beatsPerMeasure: 3,
+      beatUnit: 4,
+      clef: LevelClef.bass,
+      totalMeasures: 2,
+      measures: [],
+    );
+    repository.addImportedLevel(bassLevel);
+    expect(repository.getStage('imported_bass_1')?.level.clef, LevelClef.bass);
+    expect(repository.getStage('imported_bass_1')?.level.beatsPerMeasure, 3);
+    expect(repository.getStage('imported_bass_1')?.level.beatUnit, 4);
+
+    const grandLevel = LevelModel(
+      id: 'grand_1',
+      title: 'Grand Etude',
+      description: 'Grand staff level',
+      tempo: 100,
+      beatsPerMeasure: 6,
+      beatUnit: 8,
+      clef: LevelClef.grand,
+      totalMeasures: 2,
+      measures: [],
+    );
+    repository.addImportedLevel(grandLevel);
+    expect(
+      repository.getStage('imported_grand_1')?.level.clef,
+      LevelClef.grand,
+    );
+    expect(repository.getStage('imported_grand_1')?.level.beatsPerMeasure, 6);
+    expect(repository.getStage('imported_grand_1')?.level.beatUnit, 8);
+  });
+
   test('getStage returns null for an unknown id', () {
     expect(LevelRepository().getStage('does_not_exist'), isNull);
   });

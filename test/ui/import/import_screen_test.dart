@@ -30,7 +30,10 @@ void main() {
       child: MaterialApp.router(
         routerConfig: GoRouter(
           routes: [
-            GoRoute(path: '/', builder: (_, __) => const ImportScreen()),
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const ImportScreen(),
+            ),
             GoRoute(
               path: '/review',
               builder: (_, state) => Scaffold(
@@ -424,7 +427,10 @@ void main() {
             child: MaterialApp.router(
               routerConfig: GoRouter(
                 routes: [
-                  GoRoute(path: '/', builder: (_, __) => const ImportScreen()),
+                  GoRoute(
+                    path: '/',
+                    builder: (context, state) => const ImportScreen(),
+                  ),
                 ],
               ),
               theme: PianoTheme.light(),

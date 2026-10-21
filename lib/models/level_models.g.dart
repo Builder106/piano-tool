@@ -6,18 +6,17 @@ part of 'level_models.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$LevelNoteImpl _$$LevelNoteImplFromJson(Map<String, dynamic> json) =>
-    _$LevelNoteImpl(
-      midiNote: (json['midiNote'] as num).toInt(),
-      startBeat: (json['startBeat'] as num).toDouble(),
-      durationBeats: (json['durationBeats'] as num).toDouble(),
-      measureIndex: (json['measureIndex'] as num).toInt(),
-      beatIndex: (json['beatIndex'] as num).toInt(),
-      isRest: json['isRest'] as bool? ?? false,
-      voiceIndex: (json['voiceIndex'] as num?)?.toInt() ?? 0,
-    );
+_LevelNote _$LevelNoteFromJson(Map<String, dynamic> json) => _LevelNote(
+  midiNote: (json['midiNote'] as num).toInt(),
+  startBeat: (json['startBeat'] as num).toDouble(),
+  durationBeats: (json['durationBeats'] as num).toDouble(),
+  measureIndex: (json['measureIndex'] as num).toInt(),
+  beatIndex: (json['beatIndex'] as num).toInt(),
+  isRest: json['isRest'] as bool? ?? false,
+  voiceIndex: (json['voiceIndex'] as num?)?.toInt() ?? 0,
+);
 
-Map<String, dynamic> _$$LevelNoteImplToJson(_$LevelNoteImpl instance) =>
+Map<String, dynamic> _$LevelNoteToJson(_LevelNote instance) =>
     <String, dynamic>{
       'midiNote': instance.midiNote,
       'startBeat': instance.startBeat,
@@ -28,8 +27,8 @@ Map<String, dynamic> _$$LevelNoteImplToJson(_$LevelNoteImpl instance) =>
       'voiceIndex': instance.voiceIndex,
     };
 
-_$LevelMeasureImpl _$$LevelMeasureImplFromJson(Map<String, dynamic> json) =>
-    _$LevelMeasureImpl(
+_LevelMeasure _$LevelMeasureFromJson(Map<String, dynamic> json) =>
+    _LevelMeasure(
       index: (json['index'] as num).toInt(),
       startBeat: (json['startBeat'] as num).toDouble(),
       beatsPerMeasure: (json['beatsPerMeasure'] as num).toInt(),
@@ -38,7 +37,7 @@ _$LevelMeasureImpl _$$LevelMeasureImplFromJson(Map<String, dynamic> json) =>
           .toList(),
     );
 
-Map<String, dynamic> _$$LevelMeasureImplToJson(_$LevelMeasureImpl instance) =>
+Map<String, dynamic> _$LevelMeasureToJson(_LevelMeasure instance) =>
     <String, dynamic>{
       'index': instance.index,
       'startBeat': instance.startBeat,
@@ -46,22 +45,24 @@ Map<String, dynamic> _$$LevelMeasureImplToJson(_$LevelMeasureImpl instance) =>
       'notes': instance.notes,
     };
 
-_$LevelModelImpl _$$LevelModelImplFromJson(Map<String, dynamic> json) =>
-    _$LevelModelImpl(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      tempo: (json['tempo'] as num).toInt(),
-      beatsPerMeasure: (json['beatsPerMeasure'] as num).toInt(),
-      totalMeasures: (json['totalMeasures'] as num).toInt(),
-      measures: (json['measures'] as List<dynamic>)
-          .map((e) => LevelMeasure.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      clefOctave: (json['clefOctave'] as num?)?.toInt() ?? 4,
-      transpose: (json['transpose'] as num?)?.toInt() ?? 0,
-    );
+_LevelModel _$LevelModelFromJson(Map<String, dynamic> json) => _LevelModel(
+  id: json['id'] as String,
+  title: json['title'] as String,
+  description: json['description'] as String,
+  tempo: (json['tempo'] as num).toInt(),
+  beatsPerMeasure: (json['beatsPerMeasure'] as num).toInt(),
+  totalMeasures: (json['totalMeasures'] as num).toInt(),
+  measures: (json['measures'] as List<dynamic>)
+      .map((e) => LevelMeasure.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  clefOctave: (json['clefOctave'] as num?)?.toInt() ?? 4,
+  transpose: (json['transpose'] as num?)?.toInt() ?? 0,
+  clef:
+      $enumDecodeNullable(_$LevelClefEnumMap, json['clef']) ?? LevelClef.treble,
+  beatUnit: (json['beatUnit'] as num?)?.toInt() ?? 4,
+);
 
-Map<String, dynamic> _$$LevelModelImplToJson(_$LevelModelImpl instance) =>
+Map<String, dynamic> _$LevelModelToJson(_LevelModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
@@ -72,25 +73,32 @@ Map<String, dynamic> _$$LevelModelImplToJson(_$LevelModelImpl instance) =>
       'measures': instance.measures,
       'clefOctave': instance.clefOctave,
       'transpose': instance.transpose,
+      'clef': _$LevelClefEnumMap[instance.clef]!,
+      'beatUnit': instance.beatUnit,
     };
 
-_$StageModelImpl _$$StageModelImplFromJson(Map<String, dynamic> json) =>
-    _$StageModelImpl(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      difficulty: $enumDecode(_$DifficultyEnumMap, json['difficulty']),
-      level: LevelModel.fromJson(json['level'] as Map<String, dynamic>),
-      order: (json['order'] as num?)?.toInt() ?? 0,
-      prerequisites:
-          (json['prerequisites'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      xpReward: (json['xpReward'] as num?)?.toInt() ?? 0,
-    );
+const _$LevelClefEnumMap = {
+  LevelClef.treble: 'treble',
+  LevelClef.bass: 'bass',
+  LevelClef.grand: 'grand',
+};
 
-Map<String, dynamic> _$$StageModelImplToJson(_$StageModelImpl instance) =>
+_StageModel _$StageModelFromJson(Map<String, dynamic> json) => _StageModel(
+  id: json['id'] as String,
+  title: json['title'] as String,
+  description: json['description'] as String,
+  difficulty: $enumDecode(_$DifficultyEnumMap, json['difficulty']),
+  level: LevelModel.fromJson(json['level'] as Map<String, dynamic>),
+  order: (json['order'] as num?)?.toInt() ?? 0,
+  prerequisites:
+      (json['prerequisites'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  xpReward: (json['xpReward'] as num?)?.toInt() ?? 0,
+);
+
+Map<String, dynamic> _$StageModelToJson(_StageModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
@@ -109,8 +117,8 @@ const _$DifficultyEnumMap = {
   Difficulty.expert: 'expert',
 };
 
-_$StageProgressImpl _$$StageProgressImplFromJson(Map<String, dynamic> json) =>
-    _$StageProgressImpl(
+_StageProgress _$StageProgressFromJson(Map<String, dynamic> json) =>
+    _StageProgress(
       stageId: json['stageId'] as String,
       bestAccuracy: (json['bestAccuracy'] as num?)?.toDouble() ?? 0,
       bestScore: (json['bestScore'] as num?)?.toInt() ?? 0,
@@ -125,7 +133,7 @@ _$StageProgressImpl _$$StageProgressImplFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['lastAttemptAt'] as String),
     );
 
-Map<String, dynamic> _$$StageProgressImplToJson(_$StageProgressImpl instance) =>
+Map<String, dynamic> _$StageProgressToJson(_StageProgress instance) =>
     <String, dynamic>{
       'stageId': instance.stageId,
       'bestAccuracy': instance.bestAccuracy,

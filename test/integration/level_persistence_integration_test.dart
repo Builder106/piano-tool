@@ -42,10 +42,14 @@ void main() {
       child: MaterialApp.router(
         routerConfig: GoRouter(
           routes: [
-            GoRoute(path: '/', builder: (_, __) => const LevelListScreen()),
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const LevelListScreen(),
+            ),
             GoRoute(
               path: '/import',
-              builder: (_, __) => const Scaffold(body: Text('Import Screen')),
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Import Screen')),
             ),
             GoRoute(
               path: '/practice/:stageId',
