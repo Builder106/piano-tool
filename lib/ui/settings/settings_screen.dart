@@ -503,10 +503,12 @@ class SettingsScreen extends ConsumerWidget {
                       ref.read(settingsProvider.notifier).setInputSource(src);
                     },
                     style: OutlinedButton.styleFrom(
-                      backgroundColor:
-                          isSelected ? colors.accent : colors.paper,
-                      foregroundColor:
-                          isSelected ? colors.accentInk : colors.ink,
+                      backgroundColor: isSelected
+                          ? colors.accent
+                          : colors.paper,
+                      foregroundColor: isSelected
+                          ? colors.accentInk
+                          : colors.ink,
                       side: BorderSide(
                         color: isSelected ? colors.accent : colors.rule,
                       ),
@@ -518,8 +520,9 @@ class SettingsScreen extends ConsumerWidget {
                       textAlign: TextAlign.center,
                       style: textTheme.labelSmall?.copyWith(
                         color: isSelected ? colors.accentInk : colors.ink,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                   ),

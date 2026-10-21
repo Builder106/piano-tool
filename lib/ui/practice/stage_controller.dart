@@ -351,16 +351,12 @@ final stageControllerProvider =
         fireImmediately: true,
       );
 
-      ref.listen(
-        midiPitchStreamProvider,
-        (_, next) {
-          final settings = ref.read(settingsProvider);
-          if (settings.inputSource == PracticeInputSource.microphone) return;
-          if (next.hasError) return;
-          next.whenOrNull(data: controller.onPitch);
-        },
-        fireImmediately: true,
-      );
+      ref.listen(midiPitchStreamProvider, (_, next) {
+        final settings = ref.read(settingsProvider);
+        if (settings.inputSource == PracticeInputSource.microphone) return;
+        if (next.hasError) return;
+        next.whenOrNull(data: controller.onPitch);
+      }, fireImmediately: true);
 
       return controller;
     });
