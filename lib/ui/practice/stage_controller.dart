@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../audio/audio_engine.dart';
 import '../../data/level_repository.dart';
 import '../../data/progress_repository.dart';
+import '../../data/settings_repository.dart';
 import '../../engine/stage_engine.dart';
 import '../../models/audio_models.dart';
 import '../../models/engine_models.dart';
@@ -304,7 +305,11 @@ final stageControllerProvider =
         throw StateError('No stage with id "$stageId"');
       }
 
-      final engine = StageEngine(level: stage.level);
+      final settings = ref.read(settingsProvider);
+      final engine = StageEngine(
+        level: stage.level,
+        config: settings.toStageEngineConfig(),
+      );
       final controller = StageController(
         engine,
         stageId,

@@ -71,6 +71,16 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                   const Spacer(),
                   IconButton(
                     icon: Icon(
+                      Icons.settings_outlined,
+                      color: PianoTheme.colorsOf(context).ink,
+                      size: 26,
+                    ),
+                    onPressed: () => context.push('/settings'),
+                    tooltip: 'Settings & Calibration',
+                  ),
+                  const SizedBox(width: PianoSpacing.sm),
+                  IconButton(
+                    icon: Icon(
                       Icons.add_rounded,
                       color: PianoTheme.colorsOf(context).ink,
                       size: 28,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_router.dart';
+import 'data/settings_repository.dart';
 import 'ui/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -21,13 +22,14 @@ class PianoToolApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final routerAsync = ref.watch(appRouterProvider);
+    final themeMode = ref.watch(themeModeProvider);
     return routerAsync.when(
       data: (router) => MaterialApp.router(
         title: 'Piano Tool',
         debugShowCheckedModeBanner: false,
         theme: PianoTheme.light(),
         darkTheme: PianoTheme.dark(),
-        themeMode: ThemeMode.system,
+        themeMode: themeMode,
         routerConfig: router,
       ),
       loading: () => MaterialApp(
@@ -35,7 +37,7 @@ class PianoToolApp extends ConsumerWidget {
         debugShowCheckedModeBanner: false,
         theme: PianoTheme.light(),
         darkTheme: PianoTheme.dark(),
-        themeMode: ThemeMode.system,
+        themeMode: themeMode,
         home: Scaffold(
           backgroundColor: PianoTheme.light().colorScheme.surface,
           body: const Center(child: CircularProgressIndicator()),
@@ -46,7 +48,7 @@ class PianoToolApp extends ConsumerWidget {
         debugShowCheckedModeBanner: false,
         theme: PianoTheme.light(),
         darkTheme: PianoTheme.dark(),
-        themeMode: ThemeMode.system,
+        themeMode: themeMode,
         home: Scaffold(
           backgroundColor: PianoTheme.light().colorScheme.surface,
           body: Center(child: Text('Error initializing app: $error')),

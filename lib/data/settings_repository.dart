@@ -1,0 +1,252 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/audio_models.dart';
+import '../models/engine_models.dart';
+
+/// Preset accuracy tolerance windows for practice scoring.
+enum ToleranceLevel {
+  relaxed(
+    label: 'Relaxed',
+    description: 'Generous timing window for beginners',
+    perfectWindow: 0.15,
+    goodWindow: 0.30,
+    okayWindow: 0.45,
+    missWindow: 0.70,
+  ),
+  normal(
+    label: 'Normal',
+    description: 'Standard timing accuracy',
+    perfectWindow: 0.10,
+    goodWindow: 0.20,
+    okayWindow: 0.30,
+    missWindow: 0.50,
+  ),
+  strict(
+    label: 'Strict',
+    description: 'Narrow timing window for advanced precision',
+    perfectWindow: 0.06,
+    goodWindow: 0.12,
+    okayWindow: 0.20,
+    missWindow: 0.35,
+  );
+
+  const ToleranceLevel({
+    required this.label,
+    required this.description,
+    required this.perfectWindow,
+    required this.goodWindow,
+    required this.okayWindow,
+    required this.missWindow,
+  });
+
+  final String label;
+  final String description;
+  final double perfectWindow;
+  final double goodWindow;
+  final double okayWindow;
+  final double missWindow;
+}
+
+/// Immutable app settings model.
+class AppSettings {
+  const AppSettings({
+    this.themeMode = ThemeMode.system,
+    this.defaultPlaybackSpeed = 1.0,
+    this.toleranceLevel = ToleranceLevel.normal,
+    this.minVolumeThreshold = 0.1,
+    this.referenceFrequency = 440.0,
+    this.customApiBaseUrl,
+  });
+
+  final ThemeMode themeMode;
+  final double defaultPlaybackSpeed;
+  final ToleranceLevel toleranceLevel;
+  final double minVolumeThreshold;
+  final double referenceFrequency;
+  final String? customApiBaseUrl;
+
+  StageEngineConfig toStageEngineConfig() => StageEngineConfig(
+    perfectWindow: toleranceLevel.perfectWindow,
+    goodWindow: toleranceLevel.goodWindow,
+    okayWindow: toleranceLevel.okayWindow,
+    missWindow: toleranceLevel.missWindow,
+    playbackSpeed: defaultPlaybackSpeed,
+  );
+
+  AudioEngineConfig toAudioEngineConfig() => AudioEngineConfig(
+    minVolumeThreshold: minVolumeThreshold,
+    referenceFrequency: referenceFrequency,
+  );
+
+  AppSettings copyWith({
+    ThemeMode? themeMode,
+    double? defaultPlaybackSpeed,
+    ToleranceLevel? toleranceLevel,
+    double? minVolumeThreshold,
+    double? referenceFrequency,
+    String? customApiBaseUrl,
+    bool clearCustomApiBaseUrl = false,
+  }) => AppSettings(
+    themeMode: themeMode ?? this.themeMode,
+    defaultPlaybackSpeed: defaultPlaybackSpeed ?? this.defaultPlaybackSpeed,
+    toleranceLevel: toleranceLevel ?? this.toleranceLevel,
+    minVolumeThreshold: minVolumeThreshold ?? this.minVolumeThreshold,
+    referenceFrequency: referenceFrequency ?? this.referenceFrequency,
+    customApiBaseUrl: clearCustomApiBaseUrl
+        ? null
+        : (customApiBaseUrl ?? this.customApiBaseUrl),
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AppSettings &&
+          runtimeType == other.runtimeType &&
+          themeMode == other.themeMode &&
+          defaultPlaybackSpeed == other.defaultPlaybackSpeed &&
+          toleranceLevel == other.toleranceLevel &&
+          minVolumeThreshold == other.minVolumeThreshold &&
+          referenceFrequency == other.referenceFrequency &&
+          customApiBaseUrl == other.customApiBaseUrl;
+
+  @override
+  int get hashCode => Object.hash(
+    themeMode,
+    defaultPlaybackSpeed,
+    toleranceLevel,
+    minVolumeThreshold,
+    referenceFrequency,
+    customApiBaseUrl,
+  );
+}
+
+/// Stores and retrieves user preferences using SharedPreferences.
+class SettingsRepository {
+  static const _prefix = 'settings.';
+  static const _themeModeKey = '${_prefix}themeMode';
+  static const _speedKey = '${_prefix}defaultSpeed';
+  static const _toleranceKey = '${_prefix}tolerance';
+  static const _volumeKey = '${_prefix}minVolume';
+  static const _referenceFreqKey = '${_prefix}referenceFreq';
+  static const _customApiUrlKey = '${_prefix}customApiUrl';
+
+  Future<AppSettings> read() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final themeStr = prefs.getString(_themeModeKey);
+    final themeMode = switch (themeStr) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+
+    final speed = prefs.getDouble(_speedKey) ?? 1.0;
+
+    final tolStr = prefs.getString(_toleranceKey);
+    final tolerance = switch (tolStr) {
+      'relaxed' => ToleranceLevel.relaxed,
+      'strict' => ToleranceLevel.strict,
+      _ => ToleranceLevel.normal,
+    };
+
+    final volume = prefs.getDouble(_volumeKey) ?? 0.1;
+    final refFreq = prefs.getDouble(_referenceFreqKey) ?? 440.0;
+    final customUrl = prefs.getString(_customApiUrlKey);
+
+    return AppSettings(
+      themeMode: themeMode,
+      defaultPlaybackSpeed: speed,
+      toleranceLevel: tolerance,
+      minVolumeThreshold: volume,
+      referenceFrequency: refFreq,
+      customApiBaseUrl: customUrl,
+    );
+  }
+
+  Future<void> save(AppSettings settings) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_themeModeKey, settings.themeMode.name);
+    await prefs.setDouble(_speedKey, settings.defaultPlaybackSpeed);
+    await prefs.setString(_toleranceKey, settings.toleranceLevel.name);
+    await prefs.setDouble(_volumeKey, settings.minVolumeThreshold);
+    await prefs.setDouble(_referenceFreqKey, settings.referenceFrequency);
+
+    if (settings.customApiBaseUrl != null &&
+        settings.customApiBaseUrl!.trim().isNotEmpty) {
+      await prefs.setString(
+        _customApiUrlKey,
+        settings.customApiBaseUrl!.trim(),
+      );
+    } else {
+      await prefs.remove(_customApiUrlKey);
+    }
+  }
+
+  Future<void> updateThemeMode(ThemeMode mode) async {
+    final current = await read();
+    await save(current.copyWith(themeMode: mode));
+  }
+
+  Future<void> updateSpeed(double speed) async {
+    final current = await read();
+    await save(current.copyWith(defaultPlaybackSpeed: speed));
+  }
+
+  Future<void> updateTolerance(ToleranceLevel level) async {
+    final current = await read();
+    await save(current.copyWith(toleranceLevel: level));
+  }
+}
+
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  return SettingsRepository();
+});
+
+class SettingsNotifier extends Notifier<AppSettings> {
+  @override
+  AppSettings build() {
+    final repo = ref.watch(settingsRepositoryProvider);
+    // Asynchronously hydrate persisted preferences
+    repo.read().then((persisted) {
+      state = persisted;
+    });
+    return const AppSettings();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    state = state.copyWith(themeMode: mode);
+    final repo = ref.read(settingsRepositoryProvider);
+    await repo.save(state);
+  }
+
+  Future<void> setDefaultSpeed(double speed) async {
+    state = state.copyWith(defaultPlaybackSpeed: speed);
+    final repo = ref.read(settingsRepositoryProvider);
+    await repo.save(state);
+  }
+
+  Future<void> setToleranceLevel(ToleranceLevel level) async {
+    state = state.copyWith(toleranceLevel: level);
+    final repo = ref.read(settingsRepositoryProvider);
+    await repo.save(state);
+  }
+
+  Future<void> setCustomApiBaseUrl(String? url) async {
+    state = state.copyWith(
+      customApiBaseUrl: url,
+      clearCustomApiBaseUrl: url == null || url.trim().isEmpty,
+    );
+    final repo = ref.read(settingsRepositoryProvider);
+    await repo.save(state);
+  }
+}
+
+final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
+  SettingsNotifier.new,
+);
+
+final themeModeProvider = Provider<ThemeMode>((ref) {
+  return ref.watch(settingsProvider.select((s) => s.themeMode));
+});

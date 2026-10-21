@@ -1,5 +1,18 @@
 # Journal
 
+## 2026-10-21: add settings and calibration hub #decision #ui
+
+Delivered `SettingsScreen` and `SettingsRepository` to fulfill the first milestone
+of the v1.1 roadmap. Implemented user preference persistence for theme modes
+(System, Recital Light, Recital Dark), default practice playback speed, scoring
+timing accuracy tolerance levels (relaxed, normal, strict), microphone permission
+and audio engine hardware diagnostics, and ingestion backend service inspection.
+Wired `themeModeProvider` to `PianoToolApp` for live theme toggling and threaded
+user practice preferences into `StageController` and `StageEngineConfig`.
+Verification passed on `ampere-dev` with 0 analyzer issues, clean `dart format`,
+213 passing Flutter tests (including all golden tests), and 68 passing backend
+pytest unit tests.
+
 ## 2026-09-20: resolve major Flutter dependency updates #decision
 
 Migrated the open major Dependabot updates for Riverpod, Freezed, the file

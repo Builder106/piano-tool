@@ -11,6 +11,7 @@ import 'ui/levels/level_list_screen.dart';
 import 'ui/practice/practice_screen.dart';
 import 'ui/practice/stage_controller.dart';
 import 'ui/results/results_screen.dart';
+import 'ui/settings/settings_screen.dart';
 
 /// GoRouter configuration for the app
 final appRouterProvider = FutureProvider<GoRouter>((ref) async {
@@ -28,6 +29,11 @@ final appRouterProvider = FutureProvider<GoRouter>((ref) async {
         path: '/import',
         name: 'import',
         builder: (context, state) => const ImportScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/review',

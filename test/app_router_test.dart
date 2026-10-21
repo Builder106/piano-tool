@@ -15,6 +15,7 @@ import 'package:piano_tool/ui/levels/level_list_screen.dart';
 import 'package:piano_tool/ui/practice/practice_screen.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
 import 'package:piano_tool/ui/results/results_screen.dart';
+import 'package:piano_tool/ui/settings/settings_screen.dart';
 
 @GenerateMocks([IngestionRepository, ProgressRepository])
 import 'app_router_test.mocks.dart';
@@ -73,6 +74,20 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(ImportScreen), findsOneWidget);
+        expect(find.byType(LevelListScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tapping the settings action navigates to /settings (SettingsScreen)',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('Settings & Calibration'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SettingsScreen), findsOneWidget);
         expect(find.byType(LevelListScreen), findsNothing);
       },
     );
