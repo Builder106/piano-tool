@@ -1,5 +1,17 @@
 # Journal
 
+## 2026-10-21: polish smufl glyphs and hit timing differentiation #ui #music #decision
+
+Delivered the SMuFL glyph polish milestone from the v1.1 roadmap. Replaced
+Cormorant roman digits for time signatures with native Bravura SMuFL glyphs
+(`0xE080..0xE089`) in `StaffPainter._paintTimeSignature`, positioning numerator
+and denominator baselines on staff line indices 2 and 4 at the standard 4-space
+em font size. Added visual differentiation for hit timing quality across
+`NoteState`: `hitPerfect` displays filled solid noteheads with a precision
+success halo ring, `hitGood` renders solid success green noteheads, and
+`hitOkay` renders warning-amber filled noteheads. Updated unit and widget tests
+in `test/ui/staff/note_glyph_test.dart` and regenerated golden reference tests.
+
 ## 2026-10-21: add home navigation and continue hub #ui #navigation #decision
 
 Implemented dedicated root landing route (`/`) with `HomeScreen` serving as

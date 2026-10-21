@@ -208,27 +208,46 @@ class StaffPainter extends CustomPainter {
 
   void _paintTimeSignature(Canvas canvas, StaffGeometry g) {
     final x = g.space * 5.5;
-    final style = TextStyle(
-      fontFamily: 'CormorantGaramond',
-      fontWeight: FontWeight.w700,
-      fontSize: g.timeSignatureFontSize,
-      height: 0.88,
-      color: colors.ink,
-    );
-    // The numerator fills the upper half of the staff, the denominator the
-    // lower half; each glyph is centred, both horizontally and vertically,
-    // on its half's midline.
-    for (final (i, digit) in ['$beatsPerMeasure', '4'].indexed) {
-      final painter = TextPainter(
-        text: TextSpan(text: digit, style: style),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      final centerY = g.lineY(i == 0 ? 1 : 3);
-      painter.paint(
-        canvas,
-        Offset(x - painter.width / 2, centerY - painter.height / 2),
-      );
+    final fontSize = g.space * 4;
+
+    _paintTimeSigNumber(canvas, '$beatsPerMeasure', fontSize, x, g.lineY(2));
+    _paintTimeSigNumber(canvas, '4', fontSize, x, g.lineY(4));
+  }
+
+  void _paintTimeSigNumber(
+    Canvas canvas,
+    String digits,
+    double fontSize,
+    double centerX,
+    double baselineY,
+  ) {
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      final code = digits.codeUnitAt(i) - 0x30;
+      if (code >= 0 && code <= 9) {
+        buffer.writeCharCode(0xE080 + code);
+      }
     }
+    final painter = TextPainter(
+      text: TextSpan(
+        text: buffer.toString(),
+        style: TextStyle(
+          fontFamily: 'Bravura',
+          fontSize: fontSize,
+          color: colors.ink,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    painter.paint(
+      canvas,
+      Offset(
+        centerX - painter.width / 2,
+        baselineY -
+            painter.computeDistanceToActualBaseline(TextBaseline.alphabetic),
+      ),
+    );
   }
 
   @override

@@ -13,10 +13,20 @@ typedef GlyphStyle = ({Color color, bool filled, bool ringed, bool struck});
 /// the distinction in shape costs nothing.
 abstract final class NoteGlyphStyle {
   static GlyphStyle forState(NoteState state, PianoColors c) => switch (state) {
-    // All three hit gradations share one glyph. Encoding hit quality
-    // visually is a scoring-feedback decision this plan does not make.
-    NoteState.hitPerfect || NoteState.hitGood || NoteState.hitOkay => (
+    NoteState.hitPerfect => (
       color: c.success,
+      filled: true,
+      ringed: true,
+      struck: false,
+    ),
+    NoteState.hitGood => (
+      color: c.success,
+      filled: true,
+      ringed: false,
+      struck: false,
+    ),
+    NoteState.hitOkay => (
+      color: c.warning,
       filled: true,
       ringed: false,
       struck: false,

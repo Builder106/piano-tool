@@ -21,14 +21,28 @@ void main() {
     final four = {
       sig(NoteState.upcoming),
       sig(NoteState.active),
-      sig(NoteState.hitPerfect),
+      sig(NoteState.hitGood),
       sig(NoteState.missed),
     };
     expect(four.length, 4);
   });
 
-  test('all three hit gradations render identically', () {
-    expect(hits.map(sig).toSet().length, 1);
+  test('hit timing qualities are visually differentiated', () {
+    final perfect = NoteGlyphStyle.forState(NoteState.hitPerfect, c);
+    final good = NoteGlyphStyle.forState(NoteState.hitGood, c);
+    final okay = NoteGlyphStyle.forState(NoteState.hitOkay, c);
+
+    expect(perfect.ringed, isTrue);
+    expect(perfect.filled, isTrue);
+    expect(perfect.color, c.success);
+
+    expect(good.ringed, isFalse);
+    expect(good.filled, isTrue);
+    expect(good.color, c.success);
+
+    expect(okay.ringed, isFalse);
+    expect(okay.filled, isTrue);
+    expect(okay.color, c.warning);
   });
 
   test('hit is filled and missed is hollow', () {
@@ -46,9 +60,9 @@ void main() {
   });
 
   test('states map to their token colours', () {
-    for (final h in hits) {
-      expect(NoteGlyphStyle.forState(h, c).color, c.success);
-    }
+    expect(NoteGlyphStyle.forState(NoteState.hitPerfect, c).color, c.success);
+    expect(NoteGlyphStyle.forState(NoteState.hitGood, c).color, c.success);
+    expect(NoteGlyphStyle.forState(NoteState.hitOkay, c).color, c.warning);
     expect(NoteGlyphStyle.forState(NoteState.missed, c).color, c.error);
     expect(NoteGlyphStyle.forState(NoteState.upcoming, c).color, c.muted);
     expect(NoteGlyphStyle.forState(NoteState.active, c).color, c.accent);
