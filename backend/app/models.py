@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class LevelClef(str, Enum):
+class LevelClef(StrEnum):
     treble = "treble"
     bass = "bass"
     grand = "grand"

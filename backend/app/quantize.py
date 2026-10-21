@@ -72,6 +72,18 @@ def detect_meter(
     return (4, 4)
 
 
+def _infer_clef(note_events: list[NoteEvent]) -> LevelClef:
+    if not note_events:
+        return LevelClef.treble
+    has_bass = any(e.pitch < 60 for e in note_events)
+    has_treble = any(e.pitch >= 60 for e in note_events)
+    if has_bass and has_treble:
+        return LevelClef.grand
+    if has_bass:
+        return LevelClef.bass
+    return LevelClef.treble
+
+
 def quantize_notes(  # noqa: PLR0913
     note_events: list[NoteEvent],
     tempo_bpm: float,
@@ -93,17 +105,7 @@ def quantize_notes(  # noqa: PLR0913
         beat_unit = 8 if beats_per_measure == 6 else 4
 
     if clef is None:
-        if not note_events:
-            clef = LevelClef.treble
-        else:
-            has_bass = any(e.pitch < 60 for e in note_events)
-            has_treble = any(e.pitch >= 60 for e in note_events)
-            if has_bass and has_treble:
-                clef = LevelClef.grand
-            elif has_bass:
-                clef = LevelClef.bass
-            else:
-                clef = LevelClef.treble
+        clef = _infer_clef(note_events)
 
     seconds_per_beat = 60.0 / tempo_bpm
     snap_unit = 0.5 if beat_unit == 8 else SIXTEENTH_NOTE_BEATS
