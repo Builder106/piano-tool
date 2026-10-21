@@ -1,5 +1,34 @@
 # Journal
 
+## 2026-10-21: implement v1.2 musical notation and meter expansion #ui #music #backend #decision
+
+Delivered all four milestones for roadmap version v1.2:
+
+1. Grand Staff & Bass Clef Notation: Added dual-system grand staff support
+   across `StaffView`, `PracticeScreen`, and `ReviewScreen`. `StaffView`
+   renders an initial vertical connector barline and the standard Bravura
+   brace glyph (`U+E000`) for multi-system configurations. Added `LevelClef`
+   (`treble`, `bass`, `grand`) and `beatUnit` to level models and SMuFL time
+   signature painters.
+2. Variable Meter Detection & Quantization: Replaced the fixed 4/4 quantizer in
+   `backend/app/quantize.py` with multi-meter detection and quantization.
+   `detect_meter` calculates downbeat autocorrelation and triplet energy to
+   classify recordings into 3/4 waltz, 6/8 compound, or 4/4 time, while
+   partitioning multi-octave transcriptions across grand staff systems.
+3. Note-Level Ingestion Correction: Added an interactive Note Correction
+   Inspector to `ReviewScreen`. Users can inspect transcribed notes, adjust
+   pitches in semitone increments, trim or extend durations by quarter beats,
+   and delete false detections with instantaneous updates to the staff preview
+   and review audio synthesizer.
+4. USB & Bluetooth MIDI Input: Built `MidiService` to support hardware
+   digital piano connectivity over USB-MIDI and Bluetooth LE MIDI interfaces.
+   Decoded MIDI Note On/Off bytes stream directly into `StageController` as
+   confidence-1.0 pitch events, configurable via `SettingsScreen` as
+   microphone-only, MIDI-only, or simultaneous dual input.
+
+Verified across the complete test matrix on Linux ARM64 with 240 passing Flutter
+tests (including golden tests) and 73 passing backend pytest unit tests.
+
 ## 2026-10-21: polish smufl glyphs and hit timing differentiation #ui #music #decision
 
 Delivered the SMuFL glyph polish milestone from the v1.1 roadmap. Replaced
