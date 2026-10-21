@@ -60,8 +60,24 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
               padding: const EdgeInsets.all(PianoSpacing.lg),
               child: Row(
                 children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_back_rounded,
+                      color: PianoTheme.colorsOf(context).ink,
+                      size: 26,
+                    ),
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/');
+                      }
+                    },
+                    tooltip: 'Back to home',
+                  ),
+                  const SizedBox(width: PianoSpacing.sm),
                   Text(
-                    'Piano Tool',
+                    'Level Library',
                     style: PianoTheme.textThemeOf(context).headlineMedium
                         ?.copyWith(
                           color: PianoTheme.colorsOf(context).ink,
@@ -368,21 +384,27 @@ class _StageCard extends ConsumerWidget {
     );
   }
 
-  Color _difficultyColor(Difficulty difficulty, PianoColors colors) {
-    return switch (difficulty) {
-      Difficulty.beginner => colors.success,
-      Difficulty.intermediate => colors.accent,
-      Difficulty.advanced => colors.warning,
-      Difficulty.expert => colors.error,
-    };
-  }
+  Color _difficultyColor(Difficulty difficulty, PianoColors colors) =>
+      stageDifficultyColor(difficulty, colors);
 
-  IconData _difficultyIcon(Difficulty difficulty) {
-    return switch (difficulty) {
-      Difficulty.beginner => Icons.looks_one_rounded,
-      Difficulty.intermediate => Icons.looks_two_rounded,
-      Difficulty.advanced => Icons.looks_3_rounded,
-      Difficulty.expert => Icons.looks_4_rounded,
-    };
-  }
+  IconData _difficultyIcon(Difficulty difficulty) =>
+      stageDifficultyIcon(difficulty);
+}
+
+Color stageDifficultyColor(Difficulty difficulty, PianoColors colors) {
+  return switch (difficulty) {
+    Difficulty.beginner => colors.success,
+    Difficulty.intermediate => colors.accent,
+    Difficulty.advanced => colors.warning,
+    Difficulty.expert => colors.error,
+  };
+}
+
+IconData stageDifficultyIcon(Difficulty difficulty) {
+  return switch (difficulty) {
+    Difficulty.beginner => Icons.looks_one_rounded,
+    Difficulty.intermediate => Icons.looks_two_rounded,
+    Difficulty.advanced => Icons.looks_3_rounded,
+    Difficulty.expert => Icons.looks_4_rounded,
+  };
 }

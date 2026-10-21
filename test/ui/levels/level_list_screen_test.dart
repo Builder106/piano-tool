@@ -64,6 +64,18 @@ void main() {
   }
 
   group('LevelListScreen', () {
+    testWidgets('shows header and back button navigating to home', (
+      tester,
+    ) async {
+      when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Level Library'), findsOneWidget);
+      expect(find.byTooltip('Back to home'), findsOneWidget);
+    });
+
     testWidgets('shows built-in stages in order', (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 

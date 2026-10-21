@@ -25,6 +25,12 @@ final stageProgressProvider =
       return ref.read(progressRepositoryProvider).readAll();
     });
 
+final lastPlayedStageIdProvider = FutureProvider.autoDispose<String?>((
+  ref,
+) async {
+  return ref.watch(progressRepositoryProvider).lastPlayedStageId();
+});
+
 final stageAvailabilityProvider = FutureProvider.autoDispose
     .family<StageAvailability?, String>((ref, id) async {
       final repository = await ref.watch(levelRepositoryProvider.future);

@@ -10,6 +10,7 @@ import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
 import 'package:piano_tool/main.dart';
+import 'package:piano_tool/ui/home/home_screen.dart';
 import 'package:piano_tool/ui/import/import_screen.dart';
 import 'package:piano_tool/ui/import/review_screen.dart';
 import 'package:piano_tool/ui/levels/level_list_screen.dart';
@@ -61,8 +62,21 @@ void main() {
   }
 
   group('appRouterProvider', () {
-    testWidgets('home route ("/") renders LevelListScreen', (tester) async {
+    testWidgets('home route ("/") renders HomeScreen', (tester) async {
       await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('levels route ("/levels") renders LevelListScreen', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(HomeScreen));
+      GoRouter.of(context).push('/levels');
       await tester.pumpAndSettle();
 
       expect(find.byType(LevelListScreen), findsOneWidget);
@@ -74,11 +88,11 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byTooltip('Import new piece'));
+        await tester.tap(find.byTooltip('Import piece'));
         await tester.pumpAndSettle();
 
         expect(find.byType(ImportScreen), findsOneWidget);
-        expect(find.byType(LevelListScreen), findsNothing);
+        expect(find.byType(HomeScreen), findsNothing);
       },
     );
 
@@ -92,7 +106,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(SettingsScreen), findsOneWidget);
-        expect(find.byType(LevelListScreen), findsNothing);
+        expect(find.byType(HomeScreen), findsNothing);
       },
     );
 
@@ -102,7 +116,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(LevelListScreen));
+      final context = tester.element(find.byType(HomeScreen));
       GoRouter.of(context).push('/review?jobId=job-42');
       await tester.pumpAndSettle();
 
@@ -118,7 +132,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(LevelListScreen));
+      final context = tester.element(find.byType(HomeScreen));
       GoRouter.of(context).push('/practice/stage_1');
       await tester.pumpAndSettle();
 
@@ -132,7 +146,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(LevelListScreen));
+      final context = tester.element(find.byType(HomeScreen));
       GoRouter.of(context).pushNamed(
         'results',
         pathParameters: const {'stageId': 'stage_1'},
@@ -158,7 +172,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(LevelListScreen));
+      final context = tester.element(find.byType(HomeScreen));
       GoRouter.of(context).pushNamed(
         'results',
         pathParameters: const {'stageId': 'stage_1'},
@@ -200,7 +214,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(LevelListScreen));
+      final context = tester.element(find.byType(HomeScreen));
       GoRouter.of(context).push('/does-not-exist');
       await tester.pumpAndSettle();
 

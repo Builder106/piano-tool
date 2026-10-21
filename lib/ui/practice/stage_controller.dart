@@ -109,6 +109,7 @@ class StageController extends StateNotifier<StageUiState> {
     StageUiState initial,
   ) : super(initial) {
     _sub = _engine.events.listen(_onEvent);
+    _progress.setLastPlayed(_stageId).catchError((_) {});
   }
 
   final StageEngine _engine;
@@ -249,11 +250,12 @@ class StageController extends StateNotifier<StageUiState> {
     _sync();
     event.whenOrNull(
       stageCompleted: (accuracy, score, totalNotes, hitNotes) =>
-          _progressWrites = _progressWrites.then(
-            (_) => _progress
+          _progressWrites = _progressWrites.then((_) async {
+            await _progress
                 .record(stageId: _stageId, accuracy: accuracy, score: score)
-                .catchError((_) {}),
-          ),
+                .catchError((_) {});
+            await _progress.setLastPlayed(_stageId).catchError((_) {});
+          }),
     );
   }
 

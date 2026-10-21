@@ -1,5 +1,18 @@
 # Journal
 
+## 2026-10-21: add home navigation and continue hub #ui #navigation #decision
+
+Implemented dedicated root landing route (`/`) with `HomeScreen` serving as
+the primary practice launchpad and continue hub per the v1.1 roadmap.
+Moved `LevelListScreen` to `/levels` with back navigation. `HomeScreen`
+features a landscape-optimized two-column layout: a prominent "Continue Practice"
+hero card highlighting the last played stage (or next unlocked stage) with
+real-time progress metrics and instant resume action, alongside quick hub cards
+for level library completion overview and audio ingestion. Wired `lastPlayedStageIdProvider`
+and stage tracking to `StageController`, ensuring continuous session persistence.
+Verified across landscape form factors with 0 analyzer issues, clean `dart format`,
+and passing test suites on `ampere-dev`.
+
 ## 2026-10-21: add audio review synthesizer #audio #ui #decision
 
 Implemented `AudioSynthesizer` and `ToneGenerator` in `lib/audio/tone_synthesizer.dart`

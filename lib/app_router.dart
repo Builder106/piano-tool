@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'data/ingestion_repository.dart';
 import 'data/level_repository.dart';
 import 'data/progress_repository.dart';
+import 'ui/home/home_screen.dart';
 import 'ui/import/import_screen.dart';
 import 'ui/import/review_screen.dart';
 import 'ui/levels/level_list_screen.dart';
@@ -22,6 +23,11 @@ final appRouterProvider = FutureProvider<GoRouter>((ref) async {
     routes: [
       GoRoute(
         path: '/',
+        name: 'home',
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/levels',
         name: 'levels',
         builder: (context, state) => const LevelListScreen(),
       ),
