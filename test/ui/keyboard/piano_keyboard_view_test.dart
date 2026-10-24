@@ -58,6 +58,6 @@ void main() {
           )
           .first,
     );
-    expect((second.painter as dynamic).shouldRepaint(first.painter), isTrue);
+    expect(second.painter!.shouldRepaint(first.painter!), isTrue);
   });
 }
