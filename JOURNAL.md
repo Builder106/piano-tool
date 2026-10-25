@@ -1,5 +1,9 @@
 # Journal
 
+## 2026-10-25: host showcase at root and flutter web at /app/ #deployment #web #decision
+
+Consolidated deployment into the primary `piano-tool` project on Vercel to serve the Astro showcase at `/` and the Flutter web app under `/app/`. Switched the HTTPS gate in `ingestion_repository.dart` from `bool.fromEnvironment('dart.vm.product')` to `kReleaseMode`, which fixes the web startup exception. Made ingestion initialization optional so web visitors can practice built-in stages without backend service credentials. Updated `scripts/build_web.sh` to assemble both builds into `build/web` and added an SPA rewrite in `vercel.json` for `/app/`.
+
 ## 2026-10-25: add the showcase site in site/ #web #design #decision
 
 Added a showcase site under `site/`, built with Astro 7 and GSAP. It is separate
