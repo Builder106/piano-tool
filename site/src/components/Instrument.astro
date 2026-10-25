@@ -1,0 +1,93 @@
+---
+// The keyboard under your hands: the Blender render of the 61 keys (C2 to C7, the app's
+// keyboard range), with one pressed render per key of the stage octave laid over it.
+// Hit areas come from design/blender/keyboard.py's projected key geometry, so a key's link
+// sits exactly on its pixels at every crop. The band shows all 61 keys on wide screens,
+// C3 to C6 on tablets and B3 to D5 on phones, where every stage key is a full tap target.
+import { getImage } from 'astro:assets';
+import rest from '../assets/keyboard/rest.png';
+import geom from '../assets/keyboard/geometry.json';
+import { units, blackKeys } from '../data/site';
+
+const pressedFiles = import.meta.glob<{ default: ImageMetadata }>('../assets/keyboard/pressed-*.png', { eager: true });
+const restImg = await getImage({ src: rest, widths: [1440, 2160, 2880, 4320], format: 'webp', quality: 80 });
+
+type Key = (typeof geom.keys)[number];
+const byMidi = new Map<number, Key>(geom.keys.map((k) => [k.midi, k]));
+const keyOf = (m: number) => byMidi.get(m)!;
+const pitch = keyOf(38).x0 - keyOf(36).x0; // one white key (C2 to D2), as an image fraction
+const win = (lo: number, hi: number) => ({ l: keyOf(lo).x0 - pitch * 0.35, r: keyOf(hi).x1 + pitch * 0.35 });
+const tablet = win(48, 84);
+const phone = win(59, 74);
+
+const pressed = await Promise.all(
+  Object.entries(pressedFiles).map(async ([path, mod]) => {
+    const midi = Number(path.match(/pressed-(\d+)/)![1]);
+    const crop = (geom.crops as Record<string, { x0: number; x1: number }>)[String(midi)]!;
+    const img = await getImage({ src: mod.default, format: 'webp', quality: 82 });
+    return { midi, crop, src: img.src };
+  }),
+);
+pressed.sort((a, b) => a.midi - b.midi);
+
+const box = (k: Key) =>
+  `left:${k.x0 * 100}%;width:${(k.x1 - k.x0) * 100}%;top:${k.y0 * 100}%;height:${(k.y1 - k.y0) * 100}%`;
+const stageWhite = units.map((u) => ({ u, k: keyOf(u.midi) }));
+const stageBlack = blackKeys.map((b) => ({ b, k: keyOf(b.midi) }));
+const aspect = geom.width / geom.height;
+// Root variables, so the desk padding and the toast know the band height.
+const f = (n: number) => n.toFixed(5);
+const bandCss = `:root{--ar:${f(aspect)};--crop-t:.03;--crop-b:.05;` +
+  `--img-w:min(100vw,calc(24svh / .92 * ${f(aspect)}));--img-x:calc((100vw - var(--img-w)) / 2);` +
+  `--band-h:calc(var(--img-w) / var(--ar) * (1 - var(--crop-t) - var(--crop-b)))}` +
+  `@media (max-width:1199.98px){:root{--img-w:calc(100vw / ${f(tablet.r - tablet.l)});--img-x:calc(var(--img-w) * ${f(-tablet.l)})}}` +
+  `@media (max-width:699.98px){:root{--crop-t:.27;--crop-b:.06;--img-w:calc(100vw / ${f(phone.r - phone.l)});--img-x:calc(var(--img-w) * ${f(-phone.l)})}}`;
+---
+<style is:inline set:html={bandCss}></style>
+<div
+  class="instrument"
+  id="instrument"
+  transition:persist="instrument"
+>
+  <div class="instrument__frame">
+    <div class="instrument__img">
+      <img
+        class="instrument__rest"
+        src={restImg.src}
+        srcset={restImg.srcSet.attribute}
+        sizes="(max-width: 699px) 380vw, (max-width: 1199px) 170vw, 100vw"
+        width={geom.width}
+        height={geom.height}
+        alt="A black lacquered keyboard of 61 keys with Piano Tool in gold on the name board"
+        fetchpriority="high"
+        decoding="async"
+        data-critical
+      />
+      {pressed.map((p) => (
+        <img
+          class="instrument__press"
+          data-press={p.midi}
+          src={p.src}
+          width={Math.round((p.crop.x1 - p.crop.x0) * geom.width)}
+          height={geom.height}
+          alt=""
+          style={`left:${p.crop.x0 * 100}%;width:${(p.crop.x1 - p.crop.x0) * 100}%`}
+          decoding="async"
+          fetchpriority="low"
+        />
+      ))}
+      {stageWhite.map(({ u, k }) => (
+        <a class="key key--white" href={u.route} data-key={u.midi} style={box(k)} tabindex="-1" aria-hidden="true">
+          <span class="key__tint" />
+          <svg class="key__next" viewBox="-10 -8 20 16" aria-hidden="true" focusable="false"><ellipse rx="6.5" ry="5" transform="rotate(-20.05)" /></svg>
+          <span class="key__letter">{u.key}</span>
+        </a>
+      ))}
+      {stageBlack.map(({ b, k }) => (
+        <span class="key key--black" data-key={b.midi} style={box(k)} aria-hidden="true">
+          <span class="key__tint" />
+        </span>
+      ))}
+    </div>
+  </div>
+</div>

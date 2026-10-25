@@ -1,0 +1,84 @@
+/* Tokens. Colours come from the app's Recital Dark theme (lib/ui/theme/tokens.dart), moved to a
+   neutral lacquer black; the state colours are the app's own and appear only on noteheads. */
+
+@font-face {
+  font-family: 'Cormorant';
+  src: url('/fonts/cormorant.woff2') format('woff2');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Cormorant';
+  src: url('/fonts/cormorant-italic.woff2') format('woff2');
+  font-weight: 300 700;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Plex';
+  src: url('/fonts/plex.woff2') format('woff2');
+  font-weight: 100 700;
+  font-style: normal;
+  font-stretch: 100%;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* Bravura, subset to the clef, time signature digits, metronome mark and accidentals. */
+@font-face {
+  font-family: 'Bravura';
+  src: url('/fonts/bravura.woff2') format('woff2');
+  font-display: block;
+}
+
+:root {
+  --c-bg: #0a0a0b;
+  --c-desk: #121214;
+  --c-fg: #ececec;
+  --c-muted: #9b9ba1;
+  --c-line: #2a2a2e;
+  --c-staff: #7a7a82;
+  --c-accent: #6591e1;
+  --c-hit: #5dad70;
+  --c-okay: #ffb74d;
+  --c-miss: #d8625c;
+  --c-focus: #68a1ff;
+  --c-curtain: var(--c-bg);
+
+  --f-display: 'Cormorant', 'Iowan Old Style', Georgia, serif;
+  --f-body: 'Plex', 'Helvetica Neue', Arial, sans-serif;
+  --f-music: 'Bravura';
+
+  --t-mega: clamp(4.25rem, 1.4rem + 12.5vw, 13.5rem);
+  --t-xl: clamp(2.9rem, 1.3rem + 6.2vw, 8rem);
+  --t-l: clamp(1.5rem, 1.15rem + 1.5vw, 2.4rem);
+  --t-m: clamp(1.2rem, 1.05rem + 0.6vw, 1.55rem);
+  --t-body: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --t-s: 0.875rem;
+  --t-xs: 0.8125rem;
+
+  --u: clamp(0.5rem, 0.35rem + 0.6vw, 1rem);
+  --gutter: clamp(1rem, 0.6rem + 1.6vw, 2.5rem);
+  --cols: 12;
+  --radius: 0px;
+  --hud-h: 3.75rem;
+
+  /* The keyboard band. --ar is set from the render; the window decides how much of it shows. */
+  --win-l: 0;
+  --win-r: 1;
+  --crop-t: 0;
+  --crop-b: 0;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-attack: cubic-bezier(0.25, 1, 0.5, 1);
+
+  --z-gl: 0;
+  --z-content: 1;
+  --z-instrument: 40;
+  --z-header: 50;
+  --z-cursor: 80;
+  --z-curtain: 90;
+  --z-loader: 100;
+}

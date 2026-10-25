@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+import Unit from '../components/Unit.astro';
+import YinFigure from '../components/figures/YinFigure.astro';
+import { unitByMidi } from '../data/site';
+
+const unit = unitByMidi.get(62)!;
+---
+<Base title="It listens" description={unit.description} note={unit.midi}>
+  <Unit unit={unit}>
+    <p class="lede" slot="lede" data-split="lines" data-intro data-delay="0.15">
+      Piano Tool hears a real piano through the microphone. No cable, no sensor, no plugin.
+    </p>
+    <div class="prose">
+      <p>
+        Every 2,048 samples, about 46 milliseconds of sound at 44.1&nbsp;kHz, the app runs the YIN pitch
+        estimator. YIN compares the buffer with delayed copies of itself. When the delay matches one period
+        of the note, the difference between the two falls toward zero.
+      </p>
+      <p>
+        The first dip under 0.1 marks the period. A parabola through its neighbours refines it to a fraction
+        of a sample, and the period becomes a frequency, then a MIDI number: 69 plus 12 times the base 2
+        logarithm of the frequency over 440.
+      </p>
+    </div>
+    <YinFigure />
+    <dl class="facts">
+      <div><dt>Sample rate</dt><dd>44,100&nbsp;Hz</dd></div>
+      <div><dt>Buffer</dt><dd>2,048 samples</dd></div>
+      <div><dt>Dip threshold</dt><dd>0.1</dd></div>
+      <div><dt>Pitch range</dt><dd>80 to 1,000&nbsp;Hz</dd></div>
+      <div><dt>Confidence</dt><dd>0.7 or more</dd></div>
+    </dl>
+    <div class="prose">
+      <p>
+        Quiet buffers are skipped, and so is anything outside 80 to 1,000&nbsp;Hz or with a confidence
+        under 0.7. Accuracy is not decided here: the detector only names the pitch, and the scoring engine
+        decides whether it was the right note at the right time.
+      </p>
+    </div>
+  </Unit>
+</Base>

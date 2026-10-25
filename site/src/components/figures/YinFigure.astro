@@ -1,0 +1,30 @@
+---
+// Glaxnimate drawing design/glaxnimate/yin-figure.svg, with its path data kept as data so the
+// microphone can redraw the same paths live (src/instrument/figures.ts).
+import d from '../../../design/glaxnimate/yin_figure_data.json';
+---
+<figure class="figure figure--yin" data-yin>
+  <svg viewBox="0 0 640 290" role="img" aria-labelledby="yin-title" focusable="false">
+    <title id="yin-title">A sound buffer and its YIN difference curve, with the first dip under 0.1 marked as a notehead</title>
+    <line class="fig-rule" x1="20" y1="50" x2="620" y2="50" />
+    <path class="fig-wave" data-yin-wave data-draw d={d.wave} transform="translate(20 10)" pathLength="1" />
+    <line class="fig-rule" x1="20" y1="270" x2="620" y2="270" />
+    <line class="fig-rule fig-rule--dotted" x1="20" y1={120 + d.one_y} x2="620" y2={120 + d.one_y} />
+    <line class="fig-threshold" x1="20" y1={120 + d.threshold_y} x2="620" y2={120 + d.threshold_y} />
+    <path class="fig-curve" data-yin-curve data-draw d={d.cmnd} transform="translate(20 120)" pathLength="1" />
+    <g class="fig-dip" data-yin-dip transform={`translate(${20 + d.dip[0]} ${120 + d.dip[1]})`}>
+      <circle r="14" />
+      <ellipse rx="9.7" ry="7.5" transform="rotate(-20.05)" />
+    </g>
+    <text class="fig-label" x="20" y="96">buffer, 2,048 samples</text>
+    <text class="fig-label" x="12" y={120 + d.threshold_y + 4} text-anchor="end">0.1</text>
+    <text class="fig-label" x="12" y={120 + d.one_y + 4} text-anchor="end">1.0</text>
+    <text class="fig-label" x="20" y="288">delay, 0 to 400 samples</text>
+  </svg>
+  <figcaption>
+    <span data-yin-caption>
+      {`A 440 Hz tone with two overtones. The dip under the dashed line falls at a delay of ${d.tau.toFixed(1)} samples: ${d.freq.toFixed(1)} Hz, which is MIDI ${d.midi}, A4.`}
+    </span>
+    <span class="figure__live" data-yin-live>Switch on Mic at the top and play to draw this from your own piano.</span>
+  </figcaption>
+</figure>

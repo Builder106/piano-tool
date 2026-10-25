@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro';
+import Unit from '../components/Unit.astro';
+import { unitByMidi } from '../data/site';
+
+const unit = unitByMidi.get(69)!;
+---
+<Base title="Or plug the piano in" description={unit.description} note={unit.midi}>
+  <Unit unit={unit}>
+    <p class="lede" slot="lede" data-split="lines" data-intro data-delay="0.15">
+      A digital piano can skip the microphone and send its notes straight in.
+    </p>
+    <figure class="figure figure--midi" data-midi-figure>
+      <svg viewBox="0 0 640 140" role="img" aria-labelledby="midi-title" focusable="false">
+        <title id="midi-title">A three byte MIDI Note On message for A4 becoming a pitch event with confidence 1.0</title>
+        <g class="fig-box">
+          <rect x="20" y="30" width="100" height="56" /><rect x="136" y="30" width="100" height="56" />
+          <rect x="252" y="30" width="100" height="56" />
+        </g>
+        <g class="fig-bytes" text-anchor="middle">
+          <text x="70" y="65" data-midi-byte="0">0x90</text>
+          <text x="186" y="65" data-midi-byte="1">0x45</text>
+          <text x="302" y="65" data-midi-byte="2">0x64</text>
+        </g>
+        <g class="fig-label" text-anchor="middle">
+          <text class="fig-label--bytes" x="70" y="108" data-midi-label="0">note on, channel 1</text>
+          <text class="fig-label--bytes" x="186" y="108" data-midi-label="1">note 69</text>
+          <text class="fig-label--bytes" x="302" y="108" data-midi-label="2">velocity 100</text>
+          <text x="540" y="108" data-midi-label="3">A4, confidence 1.0</text>
+        </g>
+        <path class="fig-arrow" data-draw pathLength="1" d="M372 58 H490 M480 51 L490 58 L480 65" />
+        <g class="fig-active" transform="translate(540 58)">
+          <circle r="15" /><ellipse rx="10.4" ry="8" transform="rotate(-20.05)" />
+        </g>
+      </svg>
+      <figcaption data-midi-caption>
+        A4 pressed on a keyboard: status byte, note number, velocity. Switch on MIDI at the top to see your
+        own keyboard's messages here.
+      </figcaption>
+    </figure>
+    <div class="prose">
+      <p>
+        Piano Tool reads USB MIDI and Bluetooth LE MIDI. A Note On message is three bytes: the status, the
+        note number and how hard the key was struck. The note number is already the MIDI pitch the scoring
+        engine works in, so the app passes it on as a pitch event with a confidence of 1.0, where the
+        microphone has to earn its 0.7.
+      </p>
+      <p>
+        The settings screen has three choices: microphone only, MIDI only, or both at once. Both feed the
+        same stream of pitch events, so the staff and the scoring never know which one heard the note.
+      </p>
+      <p>
+        A4 is note 69, and 440&nbsp;Hz. It is the reference every other pitch in the app is measured from.
+      </p>
+    </div>
+  </Unit>
+</Base>

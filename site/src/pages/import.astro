@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import Unit from '../components/Unit.astro';
+import { unitByMidi } from '../data/site';
+
+const unit = unitByMidi.get(71)!;
+// design/glaxnimate/import-pipeline.svg: transcribed notes as found, and where the quantiser puts them.
+const bars = [
+  { x: 47, w: 46, y: 104, to: 40 },
+  { x: 96, w: 57, y: 104, to: 100 },
+  { x: 166, w: 49, y: 84, to: 160 },
+  { x: 214, w: 60, y: 64, to: 220 },
+];
+const heads = [
+  { x: 410, y: 134 }, { x: 470, y: 134 }, { x: 530, y: 126 }, { x: 590, y: 118 },
+];
+---
+<Base title="A recording becomes a level" description={unit.description} note={unit.midi}>
+  <Unit unit={unit}>
+    <p class="lede" slot="lede" data-split="lines" data-intro data-delay="0.15">
+      Give Piano Tool a recording or a YouTube link, and it writes a level you can practise.
+    </p>
+    <figure class="figure figure--import" data-import>
+      <svg viewBox="0 0 640 230" role="img" aria-labelledby="import-title" focusable="false">
+        <title id="import-title">Four transcribed notes, E E F G, snapped to the beat grid and written on a staff</title>
+        <g class="fig-grid">
+          {[40, 100, 160, 220, 280].map((x) => <line x1={x} y1="40" x2={x} y2="150" />)}
+        </g>
+        <g class="fig-rows">
+          {[60, 80, 100, 120].map((y) => <line x1="20" y1={y} x2="290" y2={y} />)}
+        </g>
+        <g class="fig-bars">
+          {bars.map((b) => <rect data-bar data-to={b.to} x={b.x} y={b.y} width={b.w} height="12" />)}
+        </g>
+        <path class="fig-arrow" data-draw pathLength="1" d="M310 96 H350 M342 90 L350 96 L342 102" />
+        <g class="fig-staff">
+          {[70, 86, 102, 118, 134].map((y) => <line x1="370" y1={y} x2="620" y2={y} />)}
+        </g>
+        <g class="fig-heads">
+          {heads.map((h) => (
+            <g data-head>
+              <ellipse cx={h.x} cy={h.y} rx="10.4" ry="8" transform={`rotate(-20.05 ${h.x} ${h.y})`} />
+              <line x1={h.x + 9.8} y1={h.y - 2} x2={h.x + 9.8} y2={h.y - 56} />
+            </g>
+          ))}
+        </g>
+        <g class="fig-label">
+          <text x="20" y="180">notes from Basic Pitch,</text>
+          <text x="20" y="198">snapped to the beat grid</text>
+          <text x="370" y="180">a level you can practise</text>
+        </g>
+      </svg>
+      <figcaption>The opening of stage two, Ode to Joy, as a transcription would find it and as the level stores it.</figcaption>
+    </figure>
+    <div class="prose">
+      <p>
+        A small FastAPI service and a separate worker do the transcription. Basic Pitch turns the audio into
+        notes with onsets and lengths. A quantiser snaps them to the beat and works out the meter, 4/4, 3/4
+        or 6/8, from how strongly the downbeats repeat and how much energy falls on triplets. Wide music is
+        split across two staves.
+      </p>
+      <p>
+        Transcription makes mistakes, so nothing is saved until you review it. The review screen plays the
+        result back, lets you move a note by a semitone, trim or extend it by a quarter beat, or delete it,
+        and redraws the staff as you go.
+      </p>
+      <p>
+        B is the leading tone of C major. One more note and the scale comes home.
+      </p>
+    </div>
+  </Unit>
+</Base>

@@ -1,0 +1,52 @@
+---
+// One note of the stage, opened: the page on the music desk.
+import { nextUnit, prevUnit, type Unit } from '../data/site';
+
+interface Props {
+  unit: Unit;
+  /** Extra class for page-specific composition. */
+  variant?: string;
+}
+const { unit, variant = '' } = Astro.props;
+const next = nextUnit(unit);
+const prev = prevUnit(unit);
+const restart = next.midi < unit.midi;
+const home = variant.includes('desk--home');
+---
+<article class={`desk ${home ? '' : 'desk--unit'} ${variant}`}>
+  <p class="desk__meta" data-reveal="fade" data-intro>
+    <span class="desk__note">{unit.note}</span>
+    <span>MIDI {unit.midi}</span>
+    <span>Measure {unit.measure}, beat {unit.beat}</span>
+  </p>
+  <h1 class="desk__title" data-split="lines" data-intro>{unit.title}</h1>
+  <slot name="lede" />
+  <div class="desk__body">
+    {!home && (
+      <aside class="mark" data-mark aria-hidden="true">
+        <svg class="mark__head" viewBox="-14 -14 28 28" focusable="false">
+          <circle r="12" /><ellipse rx="8.4" ry="6.5" transform="rotate(-20.05)" />
+        </svg>
+        <span class="mark__note">{unit.note}</span>
+        <span class="mark__meta">MIDI {unit.midi}</span>
+        <span class="mark__meta mark__key">Key {unit.key}</span>
+      </aside>
+    )}
+    <slot />
+  </div>
+  <nav class="cue" aria-label="Next note">
+    <a class="cue__next" href={next.route} data-cue>
+      <span class="cue__label">{restart ? 'Start again on' : 'Play next'}</span>
+      <span class="cue__note">{next.note}</span>
+      <span class="cue__title">{next.label}</span>
+      <span class="cue__how">
+        <span class="cue__how-keys">{`Press ${next.key}, click the key, `}</span>
+        <span class="cue__how-touch">{'Tap the key, '}</span>
+        {'or play it on your piano'}
+      </span>
+    </a>
+    {prev && (
+      <a class="cue__prev" href={prev.route}><span class="cue__prev-note">{`Back to ${prev.note}`}</span></a>
+    )}
+  </nav>
+</article>

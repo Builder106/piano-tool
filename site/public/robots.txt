@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://piano-tool-site.vercel.app/sitemap-index.xml

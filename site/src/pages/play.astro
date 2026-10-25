@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import Unit from '../components/Unit.astro';
+import { site, unitByMidi, units } from '../data/site';
+
+const unit = unitByMidi.get(72)!;
+---
+<Base title="Get the app" description={unit.description} note={unit.midi}>
+  <Unit unit={unit} variant="desk--end">
+    <p class="lede" slot="lede" data-split="lines" data-intro data-delay="0.15">
+      C5 closes the scale an octave above where it began.
+    </p>
+    <p class="result" data-result>
+      <span class="result__count"><span data-result-count>0</span> of {units.length}</span>
+      <span class="result__text" data-result-text>notes of stage one played on this visit.</span>
+    </p>
+    <ul class="get">
+      <li>
+        <a class="get__link" href={site.webApp} rel="noopener">
+          <span class="get__title">Try the web build</span>
+          <span class="get__host">piano-tool.vercel.app</span>
+        </a>
+      </li>
+      <li>
+        <a class="get__link" href={site.repo} rel="noopener">
+          <span class="get__title">Read the source</span>
+          <span class="get__host">github.com/Builder106/piano-tool</span>
+        </a>
+      </li>
+    </ul>
+    <div class="prose">
+      <p>
+        One Flutter codebase builds for Android, iOS, macOS, Windows, Linux and the web. Android needs
+        version 7.0 or later, iOS needs 12. To run it yourself, install Flutter with Dart 3.8 or newer,
+        then run <code>flutter pub get</code> and <code>flutter run</code> in the repository.
+      </p>
+      <p>
+        Importing recordings needs the ingestion service from <code>backend/</code>, which runs on a
+        Linux machine you control. Practice, the staff, the microphone and MIDI all work without it.
+      </p>
+      <p>Piano Tool is open source under the MIT licence.</p>
+    </div>
+  </Unit>
+</Base>
