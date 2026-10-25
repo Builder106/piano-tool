@@ -54,3 +54,5 @@ app.*.map.json
 
 # Design-session mockups, not part of the app
 .superpowers/
+.vercel
+.env*
