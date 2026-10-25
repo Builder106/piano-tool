@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'data/ingestion_repository.dart';
 import 'data/level_repository.dart';
 import 'data/progress_repository.dart';
 import 'ui/home/home_screen.dart';
@@ -16,8 +15,8 @@ import 'ui/settings/settings_screen.dart';
 
 /// GoRouter configuration for the app
 final appRouterProvider = FutureProvider<GoRouter>((ref) async {
-  await ref.watch(ingestionRepositoryProvider.future);
-
+  // No wait on the ingestion service here: a build without it (the hosted web
+  // app) still practises the built-in levels. Only the import flow needs it.
   return GoRouter(
     initialLocation: '/',
     routes: [

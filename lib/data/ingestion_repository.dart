@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:riverpod/riverpod.dart';
@@ -353,7 +354,9 @@ final FutureProvider<IngestionRepository> ingestionRepositoryProvider =
       // Base URL can be configured via --dart-define=INGESTION_API_BASE_URL
       const String baseUrl = String.fromEnvironment('INGESTION_API_BASE_URL');
       const String authToken = String.fromEnvironment('INGESTION_API_TOKEN');
-      final bool requireHttps = bool.fromEnvironment('dart.vm.product');
+      // kReleaseMode, not bool.fromEnvironment('dart.vm.product'): the web compilers do not
+      // define that key, and a non-const fromEnvironment throws there at runtime.
+      const bool requireHttps = kReleaseMode;
       if (authToken.isEmpty) {
         throw const FormatException('INGESTION_API_TOKEN is required');
       }

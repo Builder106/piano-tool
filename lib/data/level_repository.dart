@@ -564,7 +564,13 @@ class LevelRepository {
 /// catalog must hydrate before the level list is rendered.
 final levelRepositoryProvider = FutureProvider<LevelRepository>((ref) async {
   final repository = LevelRepository();
-  final ingestion = await ref.watch(ingestionRepositoryProvider.future);
+  final IngestionRepository ingestion;
+  try {
+    ingestion = await ref.watch(ingestionRepositoryProvider.future);
+  } on FormatException {
+    // Ingestion is not configured in this build: built-in levels only.
+    return repository;
+  }
   final imported = await ingestion.listImportedLevels();
   for (final level in imported) {
     repository.addImportedLevel(level);
