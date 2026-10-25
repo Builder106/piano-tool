@@ -1,151 +1,199 @@
 # Piano Tool showcase: design record
 
+Second composition, 2026-10-25. The first one (Astro desk with a HUD bar, a large title, two
+columns of prose and a "play next" block over a keyboard band) had the right idea and the
+wrong page: it read as an article framed by a staff and a keyboard. This record replaces it.
+
 ## Brief
 
 - Subject: Piano Tool, a Flutter practice tutor. It scrolls a staff, listens to an acoustic
-  piano through the microphone (YIN pitch detection) or a MIDI keyboard, and marks every note
-  as hit or missed, with timing quality. It can also turn a recording into a level.
-- Audience: people learning to read music at a real piano, and developers and reviewers who
-  look at the repository.
-- Job: show what the app does and how it works, and send people to the source and the web build.
-- Assets: the app's own fonts (Cormorant Garamond, IBM Plex Sans, Bravura), its colour tokens,
-  its notehead rules (`lib/ui/staff/note_glyph.dart`), its stage 1 level, its scoring windows.
-  New art: one Blender keyboard (61 keys, C2 to C7, like the app's keyboard view) and
-  Glaxnimate figures.
-- Constraints: no conventional skeleton. Everything runs in the browser, no backend.
+  piano through the microphone (YIN) or a MIDI keyboard, and marks every note as hit or
+  missed, with timing quality. It can turn a recording into a level.
+- Audience: people learning to read music at a real piano; developers and reviewers who come
+  from the repository.
+- Job: show what the app does and how it works, by doing it; send people to the web build and
+  the source.
+- Tone: the hush of a practice room at night. Precise, unhurried, a little private.
 
-## Concepts
+## What is kept, what is new
 
-| | A. Stage one (material) | B. The listening chain (process) | C. The level file (formal) |
-|---|---|---|---|
-| Idea | The site is stage 1 of the app, the C major scale. You read it by playing it: each of the eight notes is a page | The site is the path from a hammer hitting a string to a filled notehead; you travel string, air, microphone, buffer, YIN dip, MIDI number, staff | Every page is a `LevelNote(...)` record; editing the record changes the page |
-| Anchor | `level_1` really is C4 D4 E4 F4, G4 A4 B4 C5 at ♩ = 80; notes are MIDI numbers; state is a notehead shape; the app listens with YIN | the YIN pipeline in `pitch_detector.dart` | the data model in `level_models.dart` |
-| Structure | the instrument at the bench: staff on the desk, keyboard under your hands. Move by playing a key (click, computer keys, MIDI, or the real piano through the microphone). One unit is a note | one horizontal signal chain, scrubbed | one code file, each record a link |
-| Signature | play D4 on your own piano and the site turns to the D4 page; the notehead fills the way the app marks a hit | a live waveform travelling through the stages | records rewrite themselves |
-| O / F / Fe / P / S | 5 / 5 / 3 / 1 / 5 | 4 / 4 / 4 / 2 / 3 | 3 / 3 / 4 / 3 / 4 |
+Kept (named by the user's go-ahead, nothing else is ported):
 
-Pick A. Its navigation is the product's own mechanism, and the swap test fails for any other
-subject (another piano app does not have this stage 1, these notehead rules, or this listener).
-Steal from B for the D4 page: the listening chain is that page's figure, live from the microphone.
+| Kept | File |
+|---|---|
+| Input and listening code: letters, pointer, Web MIDI, microphone YIN, synth | `src/instrument/index.ts`, `yin.ts`, `synth.ts` |
+| Live figure drivers (YIN redraw, tap test, MIDI bytes) | `src/instrument/figures.ts` (rewired to new markup) |
+| Blender keyboard: rest render, 13 pressed renders, key geometry | `src/assets/keyboard/*`, `design/blender/keyboard.py` |
+| Glaxnimate source drawings and the YIN data | `design/glaxnimate/*` |
+| Fonts: Cormorant Garamond, IBM Plex Sans, Bravura | `public/fonts/*` |
+| Unit data (routes, MIDI, keys, measures, meta descriptions) | `src/data/site.ts` |
+| Staff geometry rules (everything in staff spaces, notehead tilt and size) | `src/data/staff.ts` |
+| Page engine (GSAP context per page, Astro router adapter) | `src/engine/*` |
+| `/score/` as the plain list escape hatch | `src/pages/score.astro` (restyled) |
 
-## Concept card
+New: the page model, every component's markup, all CSS, all visible copy except facts, the
+music desk and ledge renders, the paper, the pencil marks.
 
-```
-Idea:        This site is stage one of Piano Tool. Play the C major scale to read it.
-Metaphor:    the practice screen at the instrument: staff on the desk, 61 keys under your hands
-Signature:   play a note (click, A to K keys, MIDI, or your piano through the mic, detected by a
-             browser port of the app's YIN detector) and the site turns to that note's page;
-             the key goes down (Blender pressed render) and the notehead changes state the way
-             the app marks it: hollow, then ringed, then filled
-Emotion:     the hush before you play: a dark lacquered instrument, one lit desk, an invitation
-Motion verb: strike and ring: a fast attack (90 ms down), then a long release (expo.out)
-Screenshot:  the staff with C4 ringed in blue, the keyboard below with middle C held down,
-             "Piano Tool" set large in Cormorant on the desk
-Structure:   the site is the instrument; you move by playing notes; one unit is a note of the
-             scale, with its own URL (/listening/ is D4). Staff noteheads and keys are the
-             navigation. The corner HUD reads like the app's practice HUD (stage, tempo, n of 8)
-Escape hatch: /score/, the plain list of all eight notes with real links, one tap from the HUD
-```
+## Organizing idea
 
-## Units (stage one, measures 1 and 2)
+**The practice copy.** The site is one sheet of music standing on the music desk of the piano
+you are sitting at: stage one of Piano Tool, the C major scale. You read it by playing it.
+Each note you play gets the app's mark on its notehead, and the note's pencil annotation is
+written in beside it, the way a teacher writes in a pupil's copy. Play all eight and the
+sheet has become a marked practice copy.
 
-| Note | MIDI | Route | Unit |
-|---|---|---|---|
-| C4 | 60 | `/` | Piano Tool: what it is, and how to play this site |
-| D4 | 62 | `/listening/` | It listens: YIN, live from your microphone |
-| E4 | 64 | `/staff/` | Measured in staff spaces |
-| F4 | 65 | `/shape/` | Shape before colour |
-| G4 | 67 | `/timing/` | Early, late, on the beat (hit windows, tap demo) |
-| A4 | 69 | `/midi/` | Or plug the piano in |
-| B4 | 71 | `/import/` | A recording becomes a level |
-| C5 | 72 | `/play/` | Stage complete: get the app and the source |
+Why this is Piano Tool's and no one else's: the app's whole job is marking the notes you play
+on a scrolling staff. Its practice screen is literally a score above a keyboard
+(`references/app-practice-screen.png`). The notehead states are the app's rules
+(`note_glyph.dart`), the scale and tempo are `level_1`, the listener is the app's YIN. A
+different piano site could borrow "sheet music", but not this sheet, these marks or this
+listener. Swap test against the genre (any piano-learning site): fails to transfer. Pass.
 
-Black keys inside the octave are pressable and are not in the stage: they flash a struck
-notehead (the app's missed glyph) and go nowhere. The 404 is the same idea at page scale.
+## Structure
+
+Three questions, answered from the metaphor:
+
+- **What the page is.** The view from the bench, one screen tall on desktop. The keyboard
+  is under your hands at the bottom. Above it the lacquered music desk fills the rest of the
+  screen, with its ledge, and one sheet of paper stands on the ledge. No header bar, no
+  footer, no sections.
+- **How you move.** By playing the next note: click or tap its key, type its letter, play it
+  on a MIDI keyboard, or play it on your own piano through the microphone. The noteheads on
+  the sheet are also links. Each note has its own URL; the sheet persists across routes, so
+  only the marks change.
+- **One unit.** A note of the scale and its pencil annotation: a short heading, two or three
+  short paragraphs, and one drawing made on or around the actual staff.
+
+Orientation in 3 seconds: the printed title on the sheet says what this is; the blue ring
+on the due note and the lit key say what to do. Escape hatch: "Score" on the ledge opens
+`/score/`, a plain list of all eight notes with real links. Every route is crawlable HTML
+with its annotation in it.
+
+What sits where, and why:
+
+| Element | Place | Reason (content or action) |
+|---|---|---|
+| Keyboard render | bottom band, fixed | it is the main input; your hands are there |
+| Music desk + ledge (Blender) | behind and under the sheet | the sheet needs something to stand on; the ledge is where small things live on a real piano |
+| Sheet | centred on the desk | it is the content |
+| Printed header (title, stage, tempo, fingering) | top of the sheet, as engraved | a printed score says what it is in its header |
+| Staff, measures 1 and 2 | across the sheet | the eight notes are the eight pages |
+| Pencil annotation | written next to the due note, below the staff | it explains that note, so it hangs off that note with a drawn arrow |
+| Marks from notes already played | small pencil marks left beside their notes | the copy accumulates, like a practised score |
+| Inputs (Keys, Mic, MIDI, Sound), progress, Score link | on the ledge, below the sheet | they are tools at the instrument, not site navigation |
+
+## Signature element
+
+The pencil marginalia drawn on the real staff geometry of the sheet. Not illustrations beside
+text: marks that measure, bracket and point at the printed notes.
+
+- C4: a loop around middle C and the ledger line, "you are here".
+- D4: the YIN dip curve, from `yin_figure_data.json` (real output of the app's algorithm on a
+  440 Hz tone), sketched under D4; live from the microphone when Mic is on.
+- E4: dimension marks drawn on the sheet's own staff: four spaces tall, notehead 1.3 by 1,
+  stem 3.5. They measure the printed staff, so they are exact.
+- F4: the six notehead states sketched in a row under F4; the printed noteheads on the sheet
+  already show three of them.
+- G4: a timing bracket hung under G4's beat: perfect, good, okay windows to scale at 80 bpm,
+  with the tap test plotting your taps into it.
+- A4: the three bytes of a Note On message written out, with an arrow to A4's head.
+- B4: four transcribed note bars snapped to the beat grid, then written as heads.
+- C5: the closing double bar circled, the count of notes you played, two links.
 
 ## Art direction
 
-Palette (from the app's Recital Dark theme, moved to a neutral lacquer black; the app's warm
-paper and ink tones are not used because cream and warm off-white are banned here):
+Palette. Paper is a cool white (no cream or warm off-white). Graphite is cool grey. The
+app's blue marks the due note only; state colours only on noteheads.
 
 | Role | Hex | Use |
 |---|---|---|
-| ground | `#0A0A0B` | lacquer black, page and curtain |
-| desk | `#121214` | the lit music desk panel behind the staff |
-| ink | `#ECECEC` | text, white keys |
-| muted | `#9B9BA1` | secondary text (AA on ground and desk) |
-| line | `#2A2A2E` | hairlines |
-| staff | `#7A7A82` | staff lines and upcoming noteheads |
-| active | `#6591E1` | the note that is due (app `accent`, dark) |
-| hit / okay / miss | `#5DAD70` / `#FFB74D` / `#D8625C` | the app's state colours, only on noteheads |
+| lacquer | `#0A0A0B` | page ground behind the renders |
+| paper | `#ECEEF1` | the sheet |
+| ink | `#141519` | printed staff, notes, title (16.9:1 on paper) |
+| graphite | `#4E535C` | pencil annotation text and marks (6.6:1 on paper) |
+| graphite-soft | `#7D828B` | marks left by earlier notes, decorative only |
+| due | `#2456C8` | the due note and its ring (app light accent, 5.9:1 on paper) |
+| hit / okay / miss | `#1E7A3C` / `#A85F00` / `#B3261E` | notehead states, light-theme values |
+| ledge text | `#A3A3AA` | labels on the ledge (7.6:1 on lacquer) |
 
-Type: Cormorant Garamond (display, titles, the decal), IBM Plex Sans (text, every number and
-label), Bravura (clef, time signature, metronome mark). All three are the app's own bundled
-families. Display: Cormorant 500, tracking -0.02em to -0.035em by size, leading 0.9.
+Type. Three levels on the sheet, big jumps, nothing in between.
 
-Grid: 12 columns, fluid gutter. Two hanging lines: column 1 (titles, staff clef) and column 6
-(body text). Body measure 34rem.
+| Level | Face | Size desktop / phone | Where |
+|---|---|---|---|
+| Printed title | Cormorant Garamond 500 | 44 / 30 px, tracking -0.01em | sheet header, centred, once |
+| Annotation heading | Cormorant Garamond italic 500 | 30 / 24 px | top of the pencil note |
+| Annotation text | Cormorant Garamond italic 400 | 20 / 18 px, leading 1.45 | pencil note body, measure 34ch |
+| Printed small | IBM Plex Sans 400 | 13 px, tabular figures | subtitle line, tempo, measure numbers |
+| Ledge | IBM Plex Sans 500 | 13 px | inputs and progress on the ledge |
 
-Shape: radius 0 everywhere except noteheads and the ring (they are ellipses).
+The pencil note is set in Cormorant italic because a teacher's note is cursive and quick, and
+Cormorant italic at 20 px stays readable on paper. The printed header stays roman, so
+printed and handwritten never look alike. Numbers in figures are Plex. Music glyphs are
+Bravura. No uppercase labels, no monospace, no eyebrow lines.
 
-Motion: one family. Attack `power4.out` 0.09 s, release `expo.out` 0.9 to 1.3 s. Line
-reveals stagger 60 ms. Transitions: the old desk releases (drops 12 px, fades, 0.28 s), the key
-holds, the new desk rings in (lines rise, 1.1 s).
+Space. The sheet is dense where it is printed (header, staff, fingering, tight like an
+engraved page) and open where it is margin: the lower half of the sheet is margin on purpose,
+because that is where pencil goes. The desk around the sheet is open and dark: the
+instrument, not padding.
 
-Idle: the next key's marker breathes very slightly (ring opacity 0.6 to 1 over 2.4 s) and the
-staff's active ring pulses at ♩ = 80 (750 ms), on the GSAP ticker, off under reduced motion.
-This is the app's own active state, so the concept is what moves.
+Lines and labels. Lines exist only where a score has them: staff lines, barlines, ledger
+lines, stems, and the pencil marks. No borders around blocks, no cards, no dividers. Labels
+appear only as a score has them: measure numbers, fingering numbers, tempo mark.
 
-Sound: off by default, a toggle in the HUD. Keys then play the app's review tone (fundamental
-plus 2nd and 3rd harmonics, 5 ms attack, exponential decay).
+Shape. The sheet is a rectangle with a real paper edge (a 1 px lighter top edge, a soft
+contact shadow on the ledge), no radius. Noteheads are ellipses. Pencil strokes are drawn
+paths with a slight wobble and a graphite grain filter; their width varies along the stroke.
 
-## Structure plan
+## References
 
-Desktop 1440:
-```
-┌ Piano Tool (home)                 Stage 1  C major  ♩ = 80   3 of 8   Score  Sound  Listen ┐  HUD, fixed
-│                                                                                            │
-│  𝄞 4/4  o      o      ◉      o   |   o      o      o      o   ‖                            │  staff: 8 links
-│                                                                                            │
-│  E4 · MIDI 64                                                                              │
-│  Measured in                                  body text from column 6                     │  the desk (scrolls)
-│  staff spaces                                 figure (Glaxnimate)                          │
-│                                                                                            │
-│  Next: F4, Shape before colour   (press F, click the key, or play it)                      │
-├────────────────────────────────────────────────────────────────────────────────────────────┤
-│ ▓ cheek │ C2 ........ [C4 D4 E4 F4 G4 A4 B4 C5] ........ C7 │ cheek ▓                      │  keyboard band, fixed
-└────────────────────────────────────────────────────────────────────────────────────────────┘
-```
-Phone 390: HUD collapses to "Piano Tool" left and "3 of 8 / Score" right; the staff is
-re-tuned (space 10 px); the desk is one column; the band zooms to B3 to D5 (10 white keys,
-39 px each) so every stage key is a real tap target. Listen and Sound move into the band's
-top edge.
+| Reference | Still | Craft taken |
+|---|---|---|
+| Maria Vasilyeva portfolio (Awwwards SOTD, 9 Oct 2026) | `references/vasilyeva-live-1440.png`, `vasilyeva-awwwards.png` | a loose hand-drawn layer (loops, arrows) over strict type, and a switch that hides it |
+| Piano Tool practice screen, light theme (golden test image) | `references/app-practice-screen.png` | the composition of the product itself: a score above a keyboard, staff as the largest element |
+| Piano Tool staff states (golden) | `references/app-staff-states.png` | the notehead states and the due-note ring, exactly |
+| Engraved score practice (domain) | none saved | header layout of a printed score: centred title, tempo top left, fingering above notes, measure numbers at system starts |
 
-Opening a unit: the key goes down and holds, the noteheads update, the desk swaps with the
-release then ring motion. Back closes it (it is a route).
+Gap: no photograph of a pupil's pencil-marked score was found under a usable licence in the
+time given; the pencil vocabulary (loops round notes, arrows, brackets, fingering, ticks)
+is common teaching practice and is drawn from that knowledge.
 
-## Decisions made during QA
+## Motion
 
-- Idle motion is the due note keeping time: its ring swells on every beat at ♩ = 80
-  (750 ms), and the next key's hollow head pulses with it. `shoot.mjs` reports
-  `idleMotion: false` because it compares two frames 1.5 s apart, exactly two beats, so both
-  frames land on the same phase. Sampling every 170 ms shows the ring opacity moving between
-  0.22 and 0.42 (checked 2026-10-25). The pulse is real; the check aliases with the tempo.
-- The staff is sized from the space between the HUD and the keyboard band, not the page width,
-  so the first frame always holds the staff, the title and the band together.
-- The band shows all 61 keys on wide screens, C3 to C6 on tablets, and B3 to D5 on phones,
-  where each stage key is a 39 px tap target. Phones crop the name board; the HUD carries the
-  name there.
-- Note names sit below the staff box, so they never collide with C4's ledger line at phone size.
-- The letter keys can be switched off (the Keys toggle), as WCAG 2.1.4 asks of single-character
-  shortcuts. The toggle is hidden on touch devices, where there are no letter keys.
+GSAP only (core, DrawSVGPlugin, Flip). Native scroll, no ScrollSmoother: the desktop page
+does not scroll at all, and the phone page scrolls the sheet natively.
 
-## Genericness test
+- Strike and ring (kept): key down 60 ms `power4.out`, release `expo.out` 0.5 s.
+- Writing: when a note becomes due, its pencil marks draw on in the order a hand would make
+  them (arrow first, then the drawing, stroke by stroke, about 0.45 s each, `power1.inOut`),
+  and the text lines fade up behind the pen, 70 ms apart.
+- Settling: the previous note's annotation shrinks to its leftover mark (a tick, a word) by
+  Flip, 0.6 s `expo.out`; the notehead fills with the app's hit glyph.
+- Due note: the blue ring keeps the beat at 80 bpm (kept idle behaviour).
+- Reduced motion: every mark appears complete, no drawing, no Flip.
 
-- Skeleton: no navbar, no hero, no stacked sections, no footer. The staff and the keyboard are
-  the navigation; the HUD is the app's practice HUD. Pass.
-- Hero: there is no hero; the home is the C4 page of the same instrument. Pass.
-- Palette: near-black with one blue would be generic as a style, but here the blue is the
-  app's own "active note" colour and appears only on the due note. Kept with that reason.
-- Type: Cormorant is the app's title face; Plex is its metric face. Kept, they are the brand.
-- Changed: dropped a loader (the brief does not earn one); dropped WebGL (renders do the job).
+Motion values live in `src/motion/params.ts`.
+
+## Responsive
+
+- 1440 x 900: one screen. Keyboard band 24svh (all 61 keys). Sheet up to 1180 px wide, with
+  dark desk on both sides. Staff space 26 px.
+- 768: keyboard C3 to C6. Sheet full width minus 24 px desk each side. Staff space 20 px.
+- 375 / 320: keyboard B3 to D5 (every stage key a 39 px tap target), fixed at the bottom.
+  Sheet full width minus 10 px desk; the page scrolls the sheet natively above the band.
+  Staff space 9 px so measures 1 and 2 fit; the annotation sits under the staff.
+
+## Assets
+
+| ID | Route | Output | Status |
+|---|---|---|---|
+| A1 | blender | music desk panel, lacquer, lamp falloff | cut: its reflections read as grey bands that compete with the sheet; the ground is plain lacquer |
+| A2 | blender | ledge strip with the paper groove, `src/assets/desk/ledge.png` (`design/blender/desk.py`) | done |
+| A3 | glaxnimate | pencil mark set: loop, arrow, bracket, tick, underline, dimension, `design/glaxnimate/pencil-marks.svg` | done |
+| A4 | glaxnimate | per-note pencil drawings (D4 to C5): the existing Glaxnimate figure geometry, redrawn in pencil strokes on the sheet | in build |
+| A5 | blender | paper grain tile, `src/assets/desk/paper.png`, 512 px, tileable | done |
+
+## Copy
+
+All annotation copy lives in `src/data/annotations.ts`, 60 words or fewer per note so each
+annotation fits the sheet at 1440 x 900 without scrolling. Headings: the home page's printed
+title "Piano Tool" is its `h1`; on every other page the annotation heading is the `h1`.

@@ -11,4 +11,5 @@ them as Astro components and swaps the pen colours for CSS tokens. GSAP animates
 | `staff-spaces.svg` | E4, `/staff/`: staff-space measurements from `staff_geometry.dart` |
 | `hit-windows.svg` | G4, `/timing/`: the normal tolerance windows at 80 bpm; taps are plotted into `#taps` |
 | `midi-message.svg` | A4, `/midi/`: a Note On message becoming a pitch event |
+| `pencil-marks.svg` | the pencil vocabulary on the sheet: loop, arrow, bracket, tick, underline, dimension mark |
 | `import-pipeline.svg` | B4, `/import/`: transcribed notes snapped to beats and written as a level |
