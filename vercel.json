@@ -1,8 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
   "git": {
     "deploymentEnabled": false
   },
   "buildCommand": "bash scripts/build_web.sh",
-  "outputDirectory": "build/web"
+  "outputDirectory": "build/web",
+  "rewrites": [
+    { "source": "/app/(.*)", "destination": "/app/index.html" }
+  ]
 }

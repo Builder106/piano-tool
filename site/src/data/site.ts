@@ -8,11 +8,11 @@
 
 export const site = {
   name: 'Piano Tool',
-  url: 'https://piano-tool-site.vercel.app',
+  url: 'https://piano-tool.vercel.app',
   description:
     'Piano Tool is a practice tutor that listens to your piano through the microphone or MIDI and marks every note you play, with how close you were to the beat.',
   repo: 'https://github.com/Builder106/piano-tool',
-  webApp: 'https://piano-tool.vercel.app',
+  webApp: '/app/',
   author: 'Olayinka Vaughan',
   stage: { number: 1, title: 'C major scale', tempo: 80, beatsPerMeasure: 4 },
 };
