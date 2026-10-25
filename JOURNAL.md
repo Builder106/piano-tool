@@ -1,5 +1,33 @@
 # Journal
 
+## 2026-10-25: add the showcase site in site/ #web #design #decision
+
+Added a showcase site under `site/`, built with Astro 7 and GSAP. It is separate
+from the Flutter web build that Vercel serves from the repository root. The site
+is stage one of the app: the C major scale from `level_1`, with one page per
+note. You move to the next page by playing the next note. That can be a click on
+the keyboard, the letters A to K, a Web MIDI keyboard, or your own piano through
+the microphone, heard by a browser port of the YIN code in `PitchDetector`. The
+staff draws noteheads with the rules in `note_glyph.dart`, so a note you have
+played turns into a filled head.
+
+The keyboard is a Blender render of the app's 61 key range, C2 to C7, built by
+`site/design/blender/keyboard.py`. Each key of the stage octave also has a
+pressed render, and a geometry file places the hit areas on the right pixels.
+The noteheads and figures were drawn in Glaxnimate and sit in
+`site/design/glaxnimate/`. The YIN figure on the D4 page is real output:
+`yin_figure_data.py` runs the same algorithm on a synthesized 440 Hz tone.
+
+The browser detector gates volume at an RMS of 0.01 instead of the app's 0.1.
+Browser microphones arrive quieter than the app's recorder, and the level
+depends on the device. Every other threshold matches the app.
+
+Builds and QA ran on the Linux ARM64 verifier, with output kept outside the
+checkout. The last pass had no audit failures, no axe violations and no
+horizontal overflow, a mobile CLS of 0.001, and 60 fps scrolling on the
+throttled phone profile. The production URL in `site/src/data/site.ts` is a
+placeholder until there is a deploy target.
+
 ## 2026-10-21: implement v1.2 musical notation and meter expansion #ui #music #backend #decision
 
 Delivered all four milestones for roadmap version v1.2:
