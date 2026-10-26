@@ -1,5 +1,25 @@
 # Journal
 
+## 2026-10-25: finish MIDI-only and repeated-note practice #audio #midi #decision
+
+MIDI-only practice still required microphone permission, so a denied microphone
+blocked an otherwise connected keyboard. The practice gate now skips microphone
+setup in MIDI-only mode. Microphone and dual-input modes still request access.
+
+The audio engine also used its default volume threshold and reference frequency
+even though settings stored both values. It now reads the settings-derived audio
+configuration. The app loads saved settings before building its providers, so a
+saved MIDI-only choice cannot trigger an early microphone request and the audio
+engine starts with the saved threshold.
+
+A held pitch could mark the next note of the same pitch missed before its beat.
+The scorer now ignores events earlier than the playable window, leaving the
+note available when its window opens. The pitch stream has no note-onset signal,
+so a held pitch can still score the next note once that window opens.
+
+On Linux ARM64, the Flutter analyzer, formatting check, all 262 Flutter tests,
+and release web build passed. Hardware input was not retested.
+
 ## 2026-10-25: real microphone and MIDI input on the web and devices #audio #midi #web #decision
 
 The hosted web app never reached a practice screen. The build has no
