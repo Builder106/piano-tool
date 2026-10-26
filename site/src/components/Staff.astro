@@ -1,73 +1,55 @@
 ---
-// The stage one staff: measures 1 and 2 of level_1, C4 up to C5. Every notehead is a link to
-// its page. Glyph shapes are the Glaxnimate notehead drawings (design/glaxnimate/noteheads.svg),
-// placed with the app's staff geometry. State classes are set on the client.
 import { units } from '../data/site';
+import { annotations, fingering } from '../data/annotations';
 import {
-  VIEW, LINES, TOP, BOTTOM, G_LINE, HEAD, RING_R, STEM, STROKE, STRIKE, BARLINES, SLOT_W, staffNotes,
-  RUN_END, RUN_BAR, runNotes,
+  VIEW, SPACE, TOP, BOTTOM, G_LINE, LINES, HEAD, RING_R, STEM, STROKE, STRIKE, BARLINES, NOTE_START,
+  LETTER_Y, WORD_Y, staffNotes,
 } from '../data/staff';
 
 const dx = STRIKE.r * Math.cos(STRIKE.angle);
 const dy = STRIKE.r * Math.sin(STRIKE.angle);
+// Letter names as a beginner's copy has them pencilled in: C D E F G A B C.
+const letter = (note: string) => note.charAt(0);
 ---
-<nav class="staff" id="staff" aria-label="Stage one, measures one and two" transition:persist="staff">
-  <svg class="staff__lines" viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true" focusable="false">
-    <g class="staff__rule">
-      {LINES.map((y) => <line x1="12" x2={BARLINES[1]} y1={y} y2={y} />)}
-      {BARLINES.map((x, i) => <line class={i === 1 ? 'is-end' : ''} x1={x} x2={x} y1={TOP} y2={BOTTOM} />)}
-      <line x1={staffNotes[0]!.x - 24} x2={staffNotes[0]!.x + 24} y1={BOTTOM + 24} y2={BOTTOM + 24} />
+<nav class="staff" id="staff" aria-label="Stage one, measures one and two">
+  <svg viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} focusable="false">
+    <g class="staff__rule" aria-hidden="true">
+      {LINES.map((y) => <line x1="8" x2={BARLINES[1]} y1={y} y2={y} />)}
+      {BARLINES.map((x) => <line x1={x} x2={x} y1={TOP} y2={BOTTOM} />)}
+      <line x1={BARLINES[1] + 6} x2={BARLINES[1] + 6} y1={TOP} y2={BOTTOM} />
+      <line x1={(staffNotes[0]?.x ?? NOTE_START) - SPACE} x2={(staffNotes[0]?.x ?? NOTE_START) + SPACE} y1={BOTTOM + SPACE} y2={BOTTOM + SPACE} />
+      <text class="smufl staff__clef" x="7" y={G_LINE}>{''}</text>
+      <text class="smufl staff__time" x="103" y={TOP + 29}>{''}</text>
+      <text class="smufl staff__time" x="103" y={TOP + 77}>{''}</text>
+      <text class="staff__hint" x={(staffNotes[0]?.x ?? NOTE_START) - 6} y={TOP - 44}>finger numbers: thumb is 1</text>
     </g>
-    <defs>
-      <linearGradient id="staff-run-fade" gradientUnits="userSpaceOnUse" x1={BARLINES[1]} x2={RUN_END} y1="0" y2="0">
-        <stop offset="0" stop-color="#fff" stop-opacity="0.55" />
-        <stop offset="1" stop-color="#fff" stop-opacity="0" />
-      </linearGradient>
-      <mask id="staff-run-mask" maskUnits="userSpaceOnUse" x={BARLINES[1]} y="0" width={RUN_END - BARLINES[1]!} height={VIEW.h}>
-        <rect x={BARLINES[1]} y="0" width={RUN_END - BARLINES[1]!} height={VIEW.h} fill="url(#staff-run-fade)" />
-      </mask>
-    </defs>
-    <g class="staff__run" mask="url(#staff-run-mask)">
-      {LINES.map((y) => <line x1={BARLINES[1]} x2={RUN_END} y1={y} y2={y} />)}
-      <line x1={RUN_BAR} x2={RUN_BAR} y1={TOP} y2={BOTTOM} />
-      {runNotes.map((n) => {
-        const sx = n.stemUp ? n.x + HEAD.rx - 1 : n.x - HEAD.rx + 1;
-        return (
-          <g>
-            {n.ledger && <line x1={n.x - 24} x2={n.x + 24} y1={BOTTOM + 24} y2={BOTTOM + 24} />}
-            <ellipse class="staff__ghost" cx={n.x} cy={n.y} rx={HEAD.rx - STROKE / 2} ry={HEAD.ry - STROKE / 2}
-              transform={`rotate(${HEAD.tilt} ${n.x} ${n.y})`} stroke-width={STROKE} />
-            <line x1={sx} x2={sx} y1={n.y} y2={n.stemUp ? n.y - STEM.length : n.y + STEM.length} stroke-width={STEM.width} />
-          </g>
-        );
-      })}
-    </g>
-    <text class="smufl staff__clef" x="22" y={G_LINE}>{''}</text>
-    <text class="smufl staff__time" x="112" y={TOP + 24}>{''}</text>
-    <text class="smufl staff__time" x="112" y={TOP + 72}>{''}</text>
-    <line class="staff__playhead" data-playhead x1="0" x2="0" y1={TOP - 14} y2={BOTTOM + 34} />
-  </svg>
-  <ol class="staff__notes">
+    <line class="staff__playhead" data-playhead x1="0" x2="0" y1={TOP - 8} y2={BOTTOM + SPACE + 8} aria-hidden="true" />
     {staffNotes.map((n, i) => {
-      const u = units[i]!;
+      const u = units[i];
+      if (!u) return null;
       const stemX = n.stemUp ? n.x + HEAD.rx - 1 : n.x - HEAD.rx + 1;
       const stemY = n.stemUp ? n.y - STEM.length : n.y + STEM.length;
-      return (
-        <li style={`--x:${(n.x - SLOT_W / 2) / VIEW.w * 100}%;--w:${SLOT_W / VIEW.w * 100}%`}>
-          <a class="note" href={u.route} data-midi={n.midi} data-state="upcoming">
-            <svg class="note__glyph" viewBox={`${n.x - SLOT_W / 2} 0 ${SLOT_W} ${VIEW.h}`} aria-hidden="true" focusable="false">
-              <g class="note__head">
-                <circle class="note__ring" cx={n.x} cy={n.y} r={RING_R} />
-                <ellipse class="note__oval" cx={n.x} cy={n.y} rx={HEAD.rx - STROKE / 2} ry={HEAD.ry - STROKE / 2}
-                  transform={`rotate(${HEAD.tilt} ${n.x} ${n.y})`} stroke-width={STROKE} />
-                <line class="note__strike" x1={n.x - dx} y1={n.y - dy} x2={n.x + dx} y2={n.y + dy} stroke-width={STRIKE.width} />
-              </g>
-              <line class="note__stem" x1={stemX} x2={stemX} y1={n.y} y2={stemY} stroke-width={STEM.width} />
-            </svg>
-            <span class="note__name">{u.note}<span class="sr-only">, {u.label}</span></span>
-          </a>
-        </li>
-      );
+      const fingerY = Math.min(TOP - 20, (n.stemUp ? stemY : n.y - HEAD.ry) - 14);
+      return <g class="staff__unit">
+        <text class="staff__finger" x={n.x} y={fingerY} aria-hidden="true">{fingering[i]}</text>
+        <a class="note" href={u.route} data-midi={n.midi} data-state="upcoming"
+          aria-label={`${u.note}, ${annotations[i]?.heading ?? u.note}`}>
+          <rect class="note__target" x={n.x - 35} y={n.y - 60} width="70" height="120" />
+          <g class="note__head">
+            <circle class="note__ring" cx={n.x} cy={n.y} r={RING_R} />
+            <ellipse class="note__oval" cx={n.x} cy={n.y} rx={HEAD.rx - STROKE / 2} ry={HEAD.ry - STROKE / 2}
+              transform={`rotate(${HEAD.tilt} ${n.x} ${n.y})`} stroke-width={STROKE} />
+            <line class="note__strike" x1={n.x - dx} y1={n.y - dy} x2={n.x + dx} y2={n.y + dy} stroke-width={STRIKE.width} />
+          </g>
+          <line class="note__stem" x1={stemX} x2={stemX} y1={n.y} y2={stemY} stroke-width={STEM.width} />
+        </a>
+        <g class="staff__letter" data-letter={n.midi} aria-hidden="true">
+          <text x={n.x} y={LETTER_Y}>{letter(u.note)}</text>
+          <path class="staff__tick" d="M2 13 C5 15 8 18 10 22 C14 13 20 6 29 1" transform={`translate(${n.x + 7} ${LETTER_Y - 16}) scale(.5)`} />
+          <text class="staff__word" x={n.x} y={WORD_Y}>{annotations[i]?.mark ?? ''}</text>
+          <text class="staff__cue" x={n.x} y={WORD_Y}>next</text>
+        </g>
+      </g>;
     })}
-  </ol>
+  </svg>
 </nav>

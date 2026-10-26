@@ -1,0 +1,17 @@
+---
+// The three marks a note can get, drawn as the app draws them (lib/ui/staff/note_glyph.dart).
+const marks = [
+  { x: 60, label: 'to play', fill: false, strike: false },
+  { x: 180, label: 'got it', fill: true, strike: false },
+  { x: 300, label: 'missed', fill: false, strike: true },
+];
+---
+<svg class="drawing drawing--marks" viewBox="0 0 360 110" role="img" aria-label="Three marks: a hollow note still to play, a filled note you got, and a note with a line through it that you missed">
+  <g class="pencil-strokes" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none">
+    {marks.map((m) => <g>
+      <ellipse data-draw cx={m.x} cy="40" rx="15" ry="11" transform={`rotate(-20 ${m.x} 40)`} fill={m.fill ? 'currentColor' : 'none'} />
+      {m.strike && <path data-draw d={`M${m.x - 22} 56 L${m.x + 22} 24`} />}
+    </g>)}
+  </g>
+  {marks.map((m) => <text x={m.x} y="92" text-anchor="middle">{m.label}</text>)}
+</svg>

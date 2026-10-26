@@ -1,0 +1,44 @@
+---
+// The pencil note for one note of the scale. It hangs from its note: the block starts under the
+// note's x (the sheet's arrow lands on it) and shifts left only as far as it must to stay on the
+// paper. C4 draws only on the staff (Sheet.astro); G4 and C5 also mark the sheet itself.
+import { annotationByMidi } from '../data/annotations';
+import { site, unitByMidi } from '../data/site';
+import { VIEW, staffNotes } from '../data/staff';
+import Listens from './drawings/Listens.astro';
+import Marks from './drawings/Marks.astro';
+import Timing from './drawings/Timing.astro';
+import Plug from './drawings/Plug.astro';
+import Stages from './drawings/Stages.astro';
+import Tortoise from './drawings/Tortoise.astro';
+import Star from './drawings/Star.astro';
+
+interface Props { midi: number }
+const { midi } = Astro.props;
+const annotation = annotationByMidi.get(midi);
+const unit = unitByMidi.get(midi);
+if (!annotation || !unit) throw new Error(`Missing annotation for ${midi}`);
+const x = staffNotes.find((n) => n.midi === midi)?.x ?? 0;
+const hasDrawing = [62, 64, 65, 67, 69, 71, 72].includes(midi);
+---
+<main id="main" class:list={['annotation', { 'annotation--drawn': hasDrawing }]} style={`--note-x:${(x / VIEW.w).toFixed(4)}`} tabindex="-1" data-note={midi}>
+  <div class="annotation__block">
+    <div class="annotation__copy" data-annotation-copy>
+      {midi === 60 ? <h2>{annotation.heading}</h2> : <h1>{annotation.heading}</h1>}
+      <p>{annotation.body}</p>
+      {midi === 72 && <div class="annotation__finish">
+        <a class="annotation__cta" href={site.webApp}>Try Piano Tool free<svg class="pencil-underline" viewBox="0 0 120 10" preserveAspectRatio="none" aria-hidden="true"><path data-draw d="M2 5 C22 2 44 6 66 4 C84 2 102 5 118 3" /></svg></a>
+        <p>You played <span data-result-count>0</span> of 8 notes.</p>
+      </div>}
+    </div>
+    {hasDrawing && <div class="annotation__drawing">
+      {midi === 62 && <Listens />}
+      {midi === 64 && <Marks />}
+      {midi === 65 && <Timing />}
+      {midi === 69 && <Plug />}
+      {midi === 67 && <Tortoise />}
+      {midi === 71 && <Stages />}
+      {midi === 72 && <Star />}
+    </div>}
+  </div>
+</main>

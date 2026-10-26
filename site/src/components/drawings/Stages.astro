@@ -1,0 +1,14 @@
+---
+// The three built-in stages (lib/data/level_repository.dart); each opens when the one before it is done.
+const stages = ['C major scale', 'A simple tune', 'A rhythm piece'];
+---
+<ol class="stages" aria-label="The three stages">
+  {stages.map((name, i) => (
+    <li class:list={['stages__item', { 'is-here': i === 0 }]}>
+      <span class="stages__n">{i + 1}</span>
+      <span class="stages__name">{name}</span>
+      {i === 0 && <svg class="stages__tick" viewBox="0 0 32 24" aria-hidden="true"><path data-draw d="M2 13 C5 15 8 18 10 22 C14 13 20 6 29 1" /></svg>}
+      {i === 0 && <span class="stages__here">you're here</span>}
+    </li>
+  ))}
+</ol>

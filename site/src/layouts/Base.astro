@@ -1,20 +1,16 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import { site } from '../data/site';
-import Hud from '../components/Hud.astro';
-import Staff from '../components/Staff.astro';
+import Sheet from '../components/Sheet.astro';
+import Rack from '../components/Rack.astro';
+import Ledge from '../components/Ledge.astro';
 import Instrument from '../components/Instrument.astro';
 import '../styles/tokens.css';
 import '../styles/engine.css';
 import '../styles/site.css';
 
-interface Props {
-  title?: string;
-  description?: string;
-  /** MIDI number of the stage note this page belongs to; none for the score and the 404. */
-  note?: number;
-}
-const { title, description = site.description, note } = Astro.props;
+interface Props { title?: string; description?: string; note?: number; page?: 'score' | 'missing' }
+const { title, description = site.description, note, page } = Astro.props;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name}, a piano practice tutor that listens`;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href;
 const ogImage = new URL('/og.jpg', Astro.site ?? site.url).href;
@@ -23,7 +19,7 @@ const jsonLd = {
   '@type': 'SoftwareApplication',
   name: site.name,
   applicationCategory: 'EducationalApplication',
-  operatingSystem: 'Android, iOS, macOS, Windows, Linux, Web',
+  operatingSystem: 'Web',
   description: site.description,
   url: site.url,
   codeRepository: site.repo,
@@ -41,7 +37,7 @@ const jsonLd = {
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content="#0A0A0B" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
@@ -58,27 +54,13 @@ const jsonLd = {
     <link rel="preload" href="/fonts/cormorant.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/plex.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/bravura.woff2" as="font" type="font/woff2" crossorigin />
-    <script is:inline>
-      document.documentElement.classList.add('js');
-      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion');
-    </script>
     <ClientRouter fallback="swap" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <div id="curtain" transition:persist="curtain" aria-hidden="true"><div class="curtain__panel"></div></div>
-    <Hud note={note} />
+    <Rack><Sheet note={note} page={page}><slot /></Sheet></Rack>
+    <Ledge note={note} />
     <Instrument />
-    <div id="smooth-wrapper">
-      <div id="smooth-content">
-        <div class="desk-frame">
-          <Staff />
-          <main id="main" tabindex="-1" data-note={note ?? ''}>
-            <slot />
-          </main>
-        </div>
-      </div>
-    </div>
     <script>
       import { start } from '../engine/astro';
       import { setupMotion } from '../motion/setup';

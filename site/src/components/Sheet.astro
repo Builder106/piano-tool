@@ -1,0 +1,71 @@
+---
+import { getImage } from 'astro:assets';
+import paper from '../assets/desk/paper.png';
+import { site, units, nextUnit, prevUnit } from '../data/site';
+import { missing, scorePage, annotations } from '../data/annotations';
+import { VIEW, TOP, BOTTOM, BARLINES, ARROW_Y, staffNotes } from '../data/staff';
+import Staff from './Staff.astro';
+
+interface Props { note?: number; page?: 'score' | 'missing' }
+const { note, page } = Astro.props;
+const tile = await getImage({ src: paper, widths: [256], format: 'webp', quality: 76 });
+const current = staffNotes.find((n) => n.midi === note);
+const unitIndex = units.findIndex((u) => u.midi === note);
+const unit = units[unitIndex];
+const prev = unit ? prevUnit(unit) : null;
+const next = unit && unitIndex < units.length - 1 ? nextUnit(unit) : null;
+const headingOf = (midi: number) => annotations.find((a) => a.midi === midi)?.heading ?? '';
+// The arrow drops straight from under the note's letter to the annotation, with a hand's wobble.
+const arrow = (x: number) => {
+  const end = VIEW.h - 6;
+  return `M${x} ${ARROW_Y} C${x + 3} ${ARROW_Y + 14} ${x - 3} ${end - 16} ${x + 1} ${end}` +
+    ` M${x - 6} ${end - 9} C${x - 3} ${end - 5} ${x - 1} ${end - 2} ${x + 1} ${end} C${x + 3} ${end - 3} ${x + 5} ${end - 6} ${x + 7} ${end - 10}`;
+};
+---
+<div class="sheet" id="sheet" style={`--paper:url('${tile.src}')`}>
+  <div class="sheet__content" data-sheet-content>
+    <header class="sheet__header">
+      {note === 60 ? <h1>{site.name}</h1> : <p class="sheet__title">{site.name}</p>}
+      <p>Stage one: {site.stage.title}</p>
+      <div class="sheet__meta">
+        <span class="sheet__tempo"><span class="smufl" aria-hidden="true">{''}</span><span class="sr-only">Quarter note</span> = {site.stage.tempo}
+          {note === 67 && <>
+            <svg class="sheet__tempo-strike" viewBox="0 0 80 20" preserveAspectRatio="none" aria-hidden="true"><path data-draw d="M3 14 C24 11 52 8 77 5" /></svg>
+            <span class="sheet__tempo-new"><span class="sr-only">, slowed to </span>40</span>
+          </>}
+        </span>
+        <span>Right hand</span>
+      </div>
+    </header>
+    <div class="sheet__staff-wrap">
+      <Staff />
+      {current && <svg class="sheet__pencil" viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true" focusable="false">
+        <defs><filter id="pencil-grain" x="-4%" y="-4%" width="108%" height="108%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="grain" /><feDisplacementMap in="SourceGraphic" in2="grain" scale="1.2" xChannelSelector="R" yChannelSelector="G" result="sketch" /><feComponentTransfer in="grain" result="opacity"><feFuncA type="linear" slope="0.12" intercept="0.88" /></feComponentTransfer><feComposite in="sketch" in2="opacity" operator="in" /></filter></defs>
+        <g filter="url(#pencil-grain)" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path class="sheet__arrow" data-draw stroke-width="2" d={arrow(current.x)} />
+          {note === 60 && <g transform={`translate(${current.x - 44} ${current.y - 30}) scale(.85)`}>
+            <path data-draw stroke-width="2.2" d="M78 12 C66 1 30 -1 13 10 C-2 20 0 44 18 54 C36 64 72 60 86 46 C97 34 94 18 80 10 C70 5 55 4 46 6" />
+            <path data-draw stroke-width="1.1" opacity=".55" d="M74 9 C60 2 28 2 15 13 C4 23 6 43 22 51 C40 60 70 56 83 43" />
+          </g>}
+          {note === 65 && <path data-draw d={`M${current.x - 40} ${BOTTOM + 12} q40 5 80 0 m-80-7 v14 m80-14 v14`} stroke-width="1.8" />}
+          {note === 72 && <g transform={`translate(${BARLINES[1] - 32} ${TOP - 24}) scale(.65 2)`}><path data-draw stroke-width="2.2" d="M78 12 C66 1 30 -1 13 10 C-2 20 0 44 18 54 C36 64 72 60 86 46 C97 34 94 18 80 10 C70 5 55 4 46 6" /></g>}
+        </g>
+        {note === 65 && <g class="sheet__labels"><text x={current.x + 46} y={BOTTOM + 27}>on time</text></g>}
+      </svg>}
+    </div>
+    {page === 'score' ? <main id="main" class="annotation annotation--score" tabindex="-1" data-note="">
+      <div class="annotation__copy"><h1>{scorePage.heading}</h1><p>{scorePage.body}</p>
+        <ol class="score__list">{units.map((u, index) => <li class="score__row" data-midi={u.midi}><span>{u.note}</span><a href={u.route}>{annotations[index]?.heading ?? u.note}</a></li>)}</ol>
+        <p class="score__colophon">Made by <a href={site.repo}>{site.author}</a>, with Blender and Glaxnimate.</p>
+      </div>
+    </main> : page === 'missing' ? <main id="main" class="annotation annotation--missing" tabindex="-1" data-note="">
+      <div class="annotation__copy"><svg class="missing__head" viewBox="0 0 60 60" role="img" aria-label="A hollow notehead struck through"><ellipse cx="30" cy="30" rx="16" ry="12" transform="rotate(-20 30 30)" /><path d="M7 48 L53 12" /></svg><h1>{missing.heading}</h1><p>{missing.body}</p><div class="annotation__links"><a href="/">Back to middle C</a><a href="/score/">The score</a></div></div>
+    </main> : <slot />}
+    {unit && <nav class="sheet__foot" aria-label="Pages">
+      {prev ? <a class="sheet__turn" href={prev.route} rel="prev"><span aria-hidden="true">‹</span> {prev.note} <span class="sheet__turn-title">{headingOf(prev.midi)}</span></a> : <span />}
+      <span class="sheet__page">{unitIndex + 1} of {units.length}<a href="/score/">The score</a></span>
+      {next ? <a class="sheet__turn sheet__turn--next" href={next.route} rel="next"><span class="sheet__turn-title">{headingOf(next.midi)}</span> {next.note} <span aria-hidden="true">›</span></a>
+        : <a class="sheet__turn sheet__turn--next" href="/">Start again on C4 <span aria-hidden="true">›</span></a>}
+    </nav>}
+  </div>
+</div>

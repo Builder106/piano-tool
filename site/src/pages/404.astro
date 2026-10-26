@@ -1,20 +1,4 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Not in this stage" description="This page does not exist. Piano Tool marks a missed note hollow and struck through, and so does this page.">
-  <article class="desk desk--missing">
-    <svg class="missing__head" viewBox="-14 -14 28 28" aria-hidden="true" focusable="false">
-      <ellipse rx="6.5" ry="5" transform="rotate(-20.05)" />
-      <line x1="-9.12" y1="6.24" x2="9.12" y2="-6.24" />
-    </svg>
-    <p class="desk__meta" data-reveal="fade" data-intro><span>Missed</span><span>No such page</span></p>
-    <h1 class="desk__title" data-split="lines" data-intro>That note isn't in this stage.</h1>
-    <p class="lede">
-      Nothing lives at this address. A hollow head with a stroke through it is how Piano Tool marks a
-      note that never sounded.
-    </p>
-    <p class="aside">
-      <a class="link" href="/">Back to middle C</a> or read <a class="link" href="/score/">the score</a>.
-    </p>
-  </article>
-</Base>
+<Base page="missing" title="Not in this stage" description="This page does not exist. Piano Tool marks a missed note hollow and struck through, and so does this page." />

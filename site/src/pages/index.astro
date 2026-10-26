@@ -1,31 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import Unit from '../components/Unit.astro';
+import Annotation from '../components/Annotation.astro';
 import { units } from '../data/site';
-
-const unit = units[0]!;
 ---
-<Base note={unit.midi}>
-  <Unit unit={unit} variant="desk--home">
-    <p class="lede" slot="lede" data-split="lines" data-intro data-delay="0.15">
-      A practice tutor that listens to your piano and marks every note you play.
-    </p>
-    <div class="prose">
-      <p>
-        It scrolls a staff across a phone or tablet, hears an acoustic piano through the microphone or a
-        digital one over MIDI, and fills in each note as you hit it, with how close you came to the beat.
-      </p>
-      <p>
-        This site is the app's first stage, the C major scale. Each of its eight notes is a page, and you
-        are on middle C. To turn the page, play the next note.
-      </p>
-    </div>
-    <ul class="ways" aria-label="Ways to play">
-      <li><span class="ways__n">Keys</span> Click a key on the keyboard below, or tap it.</li>
-      <li class="ways__keys"><span class="ways__n">Letters</span> Type A to K on a computer keyboard.</li>
-      <li><span class="ways__n">MIDI</span> Plug in a digital piano and switch on MIDI at the top.</li>
-      <li><span class="ways__n">Mic</span> Switch on the microphone and play your own piano.</li>
-    </ul>
-    <p class="aside">Prefer to read it straight through? <a class="link" href="/score/">The score</a> lists every note.</p>
-  </Unit>
-</Base>
+<Base note={60} description={units[0]?.description}><Annotation midi={60} /></Base>
