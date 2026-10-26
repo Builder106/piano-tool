@@ -1,5 +1,55 @@
 # Journal
 
+## 2026-10-25: real microphone and MIDI input on the web and devices #audio #midi #web #decision
+
+The hosted web app never reached a practice screen. The build has no
+`INGESTION_API_TOKEN`, so `ingestionRepositoryProvider` throws a
+`FormatException`, and Riverpod 3 retries a failed provider up to 10 times,
+about 38 seconds in all. `levelRepositoryProvider` awaits it, so the first
+screen showed a spinner the whole time. A missing build setting won't fix
+itself on retry, so the ingestion provider now sets `retry` to return null.
+
+flutter_sound's web recorder does not give usable 16-bit PCM at the requested
+rate. In headless Chromium, with a fake microphone playing the stage 1 scale, it
+scored nothing and lit the wrong key. The web build now uses `WebPcmRecorder`.
+It opens the microphone with getUserMedia, with echo cancellation, noise
+suppression and gain control turned off. An AudioWorklet loaded from a Blob URL
+posts 1024-frame batches, and `PcmFrameConverter` resamples them to the
+detector's 44.1 kHz. Without the resample, 48 kHz audio reads 1.5 semitones
+flat and C4 comes out as B3. A conditional import picks the recorder, so phones
+and desktops keep `FlutterSoundPcmRecorder`. The YIN code is unchanged.
+
+`StageEngine` used to add 16 ms of beat on every timer tick. A late tick lost
+time, so the playhead fell behind the music whenever frames ran long. On the
+verifier the transport ran at half speed or less. The playhead now follows a
+`clock.stopwatch()` from the beat it starts at, and a seek during playback
+re-anchors it. package:clock means fake time in widget tests moves the playhead
+too.
+
+MIDI input uses flutter_midi_command 1.4.0 with flutter_midi_command_ble. Both
+are BSD-3-Clause from a verified publisher, released 2026-10-09. They cover
+CoreMIDI on iOS and macOS, Android MIDI, and Bluetooth LE through universal_ble.
+On the web, `WebMidiTransport` calls `navigator.requestMIDIAccess` through
+package:web. A browser can't pair Bluetooth MIDI, so a keyboard has to be paired
+in the system settings first. Safari has no Web MIDI. The plugin delivers one
+complete message per packet, and each one goes straight to `handleMidiBytes`.
+Nothing is opened until the player presses Scan.
+
+`midiPitchStreamProvider` watched the whole `MidiService`. Every message calls
+`notifyListeners` before its pitch is emitted, so the provider rebuilt and
+dropped the note that caused the rebuild. No MIDI key could ever score. The
+provider now selects the stream.
+
+macOS had no microphone usage description or audio-input entitlement. Both are
+added, along with the Bluetooth keys the BLE package asks for on iOS and macOS.
+
+Verification ran in headless Chromium on the Linux ARM64 verifier. Web MIDI
+scored 16 of 16 from a virtual ALSA keyboard. The microphone scored between 7
+and 15 of 16 across four runs. The host has no GPU, so software rendering fills
+the main thread, and the notes that miss are the ones queued behind it. A silent
+control run showed the same backlog. Real Bluetooth and USB keyboards have not
+been tested.
+
 ## 2026-10-25: host showcase at root and flutter web at /app/ #deployment #web #decision
 
 Consolidated deployment into the primary `piano-tool` project on Vercel to serve the Astro showcase at `/` and the Flutter web app under `/app/`. Switched the HTTPS gate in `ingestion_repository.dart` from `bool.fromEnvironment('dart.vm.product')` to `kReleaseMode`, which fixes the web startup exception. Made ingestion initialization optional so web visitors can practice built-in stages without backend service credentials. Updated `scripts/build_web.sh` to assemble both builds into `build/web` and added an SPA rewrite in `vercel.json` for `/app/`.
