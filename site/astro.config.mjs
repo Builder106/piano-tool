@@ -8,5 +8,13 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [sitemap()],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
+  // The pages were renamed when the site was rewritten for beginners; old links still land.
+  redirects: {
+    '/listening': '/listens/',
+    '/staff': '/marks/',
+    '/shape': '/timing/',
+    '/midi': '/plug-in/',
+    '/import': '/stages/',
+  },
   build: { inlineStylesheets: 'auto' },
 });

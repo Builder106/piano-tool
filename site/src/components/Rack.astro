@@ -1,0 +1,19 @@
+---
+// The music rack the sheet stands on: the Blender render (design/blender/desk-props.blend) as a
+// stretchable frame, so the moulding and the ledge keep their shape at any size. Two page clips
+// hold the top of the sheet, and the pencil that wrote the marks lies on the ledge.
+import { getImage } from 'astro:assets';
+import rack from '../assets/desk/rack.png';
+import clip from '../assets/desk/clip.png';
+import pencil from '../assets/desk/pencil.png';
+
+const rackImg = await getImage({ src: rack, width: 1600, format: 'webp', quality: 82 });
+const clipImg = await getImage({ src: clip, width: 140, format: 'webp', quality: 85 });
+const pencilImg = await getImage({ src: pencil, width: 900, format: 'webp', quality: 85 });
+---
+<div class="rack" id="rack" transition:persist="rack" style={`--rack:url('${rackImg.src}')`}>
+  <slot />
+  <img class="rack__clip rack__clip--l" src={clipImg.src} width="140" height="170" alt="" decoding="async" />
+  <img class="rack__clip rack__clip--r" src={clipImg.src} width="140" height="170" alt="" decoding="async" />
+  <img class="rack__pencil" src={pencilImg.src} width="900" height="105" alt="" decoding="async" />
+</div>

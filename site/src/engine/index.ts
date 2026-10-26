@@ -67,7 +67,7 @@ export async function boot(setup?: () => void) {
   if (booted) return;
   booted = true;
   syncFlags();
-  initScroll();
+  if (document.getElementById('smooth-content')) initScroll();
   initCursor();
   setup?.();
   stopScroll();
@@ -96,7 +96,7 @@ export function cleanup() {
 export async function enter({ transition = true, scrollTop = true } = {}) {
   if (!booted) return;
   cleanup(); // no-op if the adapter already cleaned up
-  initScroll(); // rebuilds the smoother if the router replaced <body>
+  if (document.getElementById('smooth-content')) initScroll();
   if (scrollTop) resetScroll();
   initPage();
   if (transition) await playEnter();

@@ -1,0 +1,25 @@
+---
+// The strip of piano body under the music rack: how you play. Each switch says what it is and whether
+// it is on, so nothing has to be guessed from a highlight.
+const inputs = [
+  { id: 'sound', label: 'Sound', on: true, title: 'Hear each key you play' },
+  { id: 'keys', label: 'Letter keys', on: true, title: 'Type A to K on your computer keyboard to play C4 to C5' },
+  { id: 'midi', label: 'Digital piano', on: false, title: 'Play from a digital piano connected to this computer', hidden: true },
+  { id: 'mic', label: 'Microphone', on: false, title: 'Play your own piano and the site listens' },
+];
+---
+<aside class="ledge" id="ledge" aria-label="Controls" transition:persist="ledge">
+  <div class="ledge__face">
+    <span class="ledge__label" id="ledge-label">Play with</span>
+    <div class="ledge__play" role="group" aria-labelledby="ledge-label">
+      {inputs.map((i) => (
+        <button type="button" class="switch" data-input={i.id} aria-pressed={i.on ? 'true' : 'false'} title={i.title} hidden={i.hidden}>
+          <span class="switch__label">{i.label}</span>
+          <span class="switch__state" aria-hidden="true" data-state-text>{i.on ? 'on' : 'off'}</span>
+        </button>
+      ))}
+    </div>
+    <span class="ledge__hear" data-hear aria-live="polite"></span>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><svg viewBox="-14 -14 28 28" aria-hidden="true"><ellipse cx="0" cy="0" rx="6.5" ry="5" transform="rotate(-20.05)" /><line x1="-9.12" y1="6.24" x2="9.12" y2="-6.24" /></svg><span data-toast-text></span></div>
+</aside>

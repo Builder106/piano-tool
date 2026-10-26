@@ -24,8 +24,8 @@ const reduced: Transition = {
 };
 
 export const setTransition = (t: Transition) => { current = t; };
-const pick = () => (prefersReducedMotion() ? reduced : current);
-const curtain = () => document.getElementById('curtain') as HTMLElement;
+const pick = () => (prefersReducedMotion() && document.getElementById('curtain') ? reduced : current);
+const curtain = () => document.getElementById('curtain') ?? document.body;
 
 export const playLeave = () => Promise.resolve(pick().leave(curtain()));
 export const playEnter = () => Promise.resolve(pick().enter(curtain()));

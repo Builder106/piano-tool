@@ -5,10 +5,14 @@ them as Astro components and swaps the pen colours for CSS tokens. GSAP animates
 
 | File | Used in |
 |---|---|
-| `noteheads.svg` | every staff: the six note states from `lib/ui/staff/note_glyph.dart` (`src/components/Notehead.astro`) |
-| `mark.svg` | favicon and the active notehead mark |
-| `yin-figure.svg` | D4, `/listening/`: a 2048-sample buffer and its YIN curve; `yin_figure_data.py` makes the path data |
-| `staff-spaces.svg` | E4, `/staff/`: staff-space measurements from `staff_geometry.dart` |
-| `hit-windows.svg` | G4, `/timing/`: the normal tolerance windows at 80 bpm; taps are plotted into `#taps` |
-| `midi-message.svg` | A4, `/midi/`: a Note On message becoming a pitch event |
-| `import-pipeline.svg` | B4, `/import/`: transcribed notes snapped to beats and written as a level |
+| `listen-sketch.svg` | D4, `/listens/`: a phone on the music stand hearing the piano |
+| `plug-sketch.svg` | A4, `/plug-in/`: a digital piano connected to a tablet |
+| `tortoise.svg` | G4, `/slow-down/`: the teacher's doodle for taking it slowly |
+| `star.svg` | C5, `/play/`: the star a teacher draws when a piece is done |
+| `pencil-marks.svg` | the pencil vocabulary on the sheet: loop, arrow, bracket, tick, underline |
+| `mark.svg`, `touch-icon.svg` | favicon and touch icon |
+
+Drawings from the first composition, kept as sources but no longer on the site: `noteheads.svg`,
+`yin-figure.svg` (with `yin_figure_data.py` and its JSON), `staff-spaces.svg`,
+`hit-windows.svg`, `midi-message.svg` and `import-pipeline.svg`. They explained the app's
+internals, and the site now speaks to learners (see `site/DESIGN.md`).

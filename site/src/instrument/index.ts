@@ -1,5 +1,5 @@
 // The instrument: the one driver behind the concept. A note played by any input goes through
-// play(); the page's own note (main[data-note]) decides what the staff, the keys and the HUD show.
+// play(); the page's note decides what the staff, keys, and ledge show.
 // Everything animates on the GSAP ticker; nothing here owns a requestAnimationFrame loop.
 import { gsap } from 'gsap';
 import { navigate } from 'astro:transitions/client';
@@ -12,7 +12,7 @@ import { detect, type Detection } from './yin';
 type Source = 'pointer' | 'keys' | 'midi' | 'mic';
 
 const PLAYED_KEY = 'piano-tool:played';
-const PREFS_KEY = 'piano-tool:prefs';
+const PREFS_KEY = 'piano-tool:prefs:2'; // 2: sound now starts on
 const LETTERS: Record<string, number> = {
   a: 60, w: 61, s: 62, e: 63, d: 64, f: 65, t: 66, g: 67, y: 68, h: 69, u: 70, j: 71, k: 72,
 };
@@ -36,7 +36,8 @@ function write(store: Storage, key: string, value: unknown) {
 
 let current: number | null = null;
 let played = new Set<number>();
-const prefs = { keys: true, sound: false };
+// Sound starts on: a key that makes no sound when you press it reads as broken.
+const prefs = { keys: true, sound: true };
 
 // Listeners for figures that show live input.
 const hearFns = new Set<(d: Detection, buffer: Float32Array) => void>();
@@ -112,83 +113,87 @@ function sync() {
   }
   const reduced = prefersReducedMotion();
 
-  // Staff: upcoming is hollow, the page's note is due (filled and ringed), played notes are hits.
-  for (const a of $$<HTMLAnchorElement>('.staff .note')) {
+  // What to play next: the note after this page's, or C4 again from the top of the octave.
+  const idx = units.findIndex((u) => u.midi === note);
+  const next = idx >= 0 ? units[(idx + 1) % units.length] ?? null : units[0] ?? null;
+  const again = idx === units.length - 1;
+
+  // Staff, as the app marks it: the note to play next is due (blue, ringed, keeping the beat);
+  // this page's note and every note already played are hits; the rest are still to come.
+  for (const a of $$<SVGElement>('.staff .note')) {
     const m = Number(a.dataset.midi);
-    const state = m === note ? 'active' : played.has(m) ? 'hit' : 'upcoming';
+    const state = m === next?.midi && m !== note ? 'next' : m === note ? 'current' : played.has(m) ? 'hit' : 'upcoming';
     const was = a.dataset.state;
     a.dataset.state = state;
     if (m === note) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
-    const at = staffNotes.find((s) => s.midi === m)!;
-    if (state === 'active' && was !== 'active' && !reduced) {
+    const at = staffNotes.find((s) => s.midi === m);
+    if (!at) continue;
+    if (state === 'next' && was !== 'next' && !reduced) {
       gsap.fromTo(a.querySelector('.note__head'), { scale: 0.55, svgOrigin: `${at.x} ${at.y}` },
         { scale: 1, svgOrigin: `${at.x} ${at.y}`, duration: 0.9, ease: 'expo.out' });
     }
   }
 
-  // Playhead: the app's playhead, resting on the due note.
+  // Letters under the staff: a tick and a word beside each note played, "next" under the due one.
+  for (const row of $$<SVGGElement>('[data-letter]')) {
+    const m = Number(row.dataset.letter);
+    row.classList.toggle('is-played', played.has(m));
+    row.classList.toggle('is-current', m === note);
+    row.classList.toggle('is-next', m === next?.midi && m !== note);
+    const cue = row.querySelector('.staff__cue');
+    if (cue) cue.textContent = again && m === next?.midi ? 'again' : 'next';
+  }
+
+  // Playhead: the app's playhead, resting just ahead of the due note.
   const head = $<SVGLineElement>('[data-playhead]');
   if (head) {
-    const n = staffNotes.find((s) => s.midi === note);
-    if (n) {
-      const x = n.x - 34; // just ahead of the head, clear of stems and ledger lines
+    const n = staffNotes.find((s) => s.midi === next?.midi);
+    if (n && note) {
+      const x = n.x - 34; // clear of stems and ledger lines
       if (previous === null || reduced) gsap.set(head, { attr: { x1: x, x2: x } });
       gsap.to(head, { attr: { x1: x, x2: x }, autoAlpha: 1, duration: reduced ? 0 : 0.9, ease: 'expo.out' });
     } else gsap.to(head, { autoAlpha: 0, duration: reduced ? 0 : 0.3 });
   }
 
-  // Keys: hold the page's key down, release the last one, mark the next one.
+  // Keys: hold the page's key down, release the last one, light the next one's sticker.
   if (previous && previous !== note) release(previous);
   if (note) strike(note, false);
-  const idx = units.findIndex((u) => u.midi === note);
-  const next = idx >= 0 ? units[(idx + 1) % units.length]! : units[0]!;
   for (const k of $$('.key--white')) {
     const m = Number(k.dataset.key);
     k.classList.toggle('is-current', m === note);
-    k.classList.toggle('is-next', m === next.midi && m !== note);
+    k.classList.toggle('is-next', m === next?.midi && m !== note && note !== null);
   }
 
-  // HUD and the C5 result.
-  const count = $('[data-progress]');
-  if (count) count.textContent = idx >= 0 ? `Note ${idx + 1} of ${units.length}` : `${played.size} of ${units.length} played`;
-  for (const row of $$('.score__row')) row.classList.toggle('is-played', played.has(Number(row.dataset.midi)));
-  const path = location.pathname;
-  $('[data-hud-home]')?.toggleAttribute('aria-current', path === '/');
-  if (path === '/') $('[data-hud-home]')?.setAttribute('aria-current', 'page');
-  const score = $('.hud__score');
-  if (path.startsWith('/score')) score?.setAttribute('aria-current', 'page');
-  else score?.removeAttribute('aria-current');
   const result = $('[data-result-count]');
   if (result) result.textContent = String(played.size);
-  const resultText = $('[data-result-text]');
-  if (resultText && played.size === units.length) resultText.textContent = 'notes of stage one played. Stage complete.';
+  // Astro replaces <html> attributes on every page swap, so the flag is set again here.
+  document.documentElement.classList.toggle('letters-off', !prefs.keys);
 }
 
 // ---------------------------------------------------------------- idle: the due note keeps time
 
 function startIdle() {
   if (prefersReducedMotion()) return;
-  let staffVisible = true;
-  const io = new IntersectionObserver(([e]) => { staffVisible = !!e?.isIntersecting; });
-  const staff = $('#staff');
-  if (staff) io.observe(staff); // persisted, so one observer lasts the visit
   gsap.ticker.add((t) => {
     if (document.hidden) return;
     // A beat at 80 bpm: a sharp onset and a slow decay, like a struck string. CSS reads --pulse,
     // set on the two elements that use it so a write restyles nothing else.
     const phase = (t / BEAT) % 1;
     const amp = Math.exp(-phase * 5).toFixed(2);
-    if (staffVisible) $('.staff .note[data-state="active"]')?.style.setProperty('--pulse', amp);
+    $('.staff .note[data-state="next"]')?.style.setProperty('--pulse', amp);
     $('.key--white.is-next')?.style.setProperty('--pulse', amp);
-    $('.mark')?.style.setProperty('--pulse', amp);
   });
 }
 
 // ---------------------------------------------------------------- inputs
 
 function setPressed(input: string, on: boolean) {
-  $(`[data-input="${input}"]`)?.setAttribute('aria-pressed', String(on));
+  const btn = $(`[data-input="${input}"]`);
+  btn?.setAttribute('aria-pressed', String(on));
+  const state = btn?.querySelector('[data-state-text]');
+  if (state) state.textContent = on ? 'on' : 'off';
+  if (input === 'keys') document.documentElement.classList.toggle('letters-off', !on);
 }
 
 function hear(text: string) {
@@ -196,11 +201,18 @@ function hear(text: string) {
   if (el && el.textContent !== text) el.textContent = text;
 }
 
-// Letter keys. WCAG 2.1.4: single-character shortcuts can be switched off with the Keys toggle.
+// Letter keys. WCAG 2.1.4: single-character shortcuts can be switched off on the ledge.
 function onKeyDown(e: KeyboardEvent) {
-  if (!prefs.keys || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
   const t = e.target as HTMLElement;
   if (t.closest('input, textarea, select, [contenteditable="true"]')) return;
+  // Arrow keys turn the page, like the page links at the foot of the sheet.
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const link = $<HTMLAnchorElement>(e.key === 'ArrowLeft' ? '.sheet__foot [rel="prev"]' : '.sheet__foot .sheet__turn--next');
+    if (link) { e.preventDefault(); void navigate(link.href); }
+    return;
+  }
+  if (!prefs.keys) return;
   const midi = LETTERS[e.key.toLowerCase()];
   if (midi === undefined) return;
   e.preventDefault();
@@ -232,9 +244,9 @@ async function toggleMidi() {
     attachMidi(true);
     midiAccess.onstatechange = () => attachMidi(true);
     setPressed('midi', true);
-    toast(midiAccess.inputs.size ? 'MIDI on. Play a key.' : 'MIDI on. No keyboard connected yet.');
+    toast(midiAccess.inputs.size ? 'Digital piano on. Play a key.' : 'No digital piano connected yet.');
   } catch {
-    toast('MIDI is not available in this browser');
+    toast("This browser can't connect to a digital piano. Try Chrome or Edge.");
   }
 }
 
@@ -298,7 +310,7 @@ async function toggleMic() {
   hear('Listening');
 }
 
-function onHudClick(e: MouseEvent) {
+function onLedgeClick(e: MouseEvent) {
   const btn = (e.target as Element).closest<HTMLButtonElement>('[data-input]');
   if (!btn) return;
   const input = btn.dataset.input;
@@ -317,6 +329,20 @@ function onPointerDown(e: PointerEvent) {
   if (prefs.sound) tone(midi);
   strike(midi, midi === current);
 }
+
+// A note on the staff and its key light together, so the page shows which key plays which note.
+function link(midi: number | null) {
+  for (const el of $$('.is-linked')) el.classList.remove('is-linked');
+  if (midi === null) return;
+  for (const el of $$(`.key[data-key="${midi}"], .staff .note[data-midi="${midi}"], [data-letter="${midi}"]`)) el.classList.add('is-linked');
+}
+function linkedMidi(target: EventTarget | null) {
+  const el = (target as Element | null)?.closest<HTMLElement | SVGElement>('.key--white, .staff .note');
+  if (!el) return null;
+  return Number(el.dataset.key ?? el.dataset.midi) || null;
+}
+const onLinkOver = (e: Event) => link(linkedMidi(e.target));
+const onLinkOut = (e: Event) => { if (linkedMidi((e as FocusEvent).relatedTarget) === null) link(null); };
 
 // Hover: under a fine pointer the key starts to sink, a shallow version of the strike.
 function onPointerOver(e: PointerEvent) {
@@ -347,10 +373,14 @@ export function startInstrument() {
   setPressed('sound', prefs.sound);
   if ('requestMIDIAccess' in navigator) $('[data-input="midi"]')?.removeAttribute('hidden');
   document.addEventListener('keydown', onKeyDown);
-  document.addEventListener('click', onHudClick);
+  document.addEventListener('click', onLedgeClick);
   document.addEventListener('pointerdown', onPointerDown);
   document.addEventListener('pointerover', onPointerOver);
   document.addEventListener('pointerout', onPointerOut);
+  document.addEventListener('pointerover', onLinkOver);
+  document.addEventListener('pointerout', onLinkOut);
+  document.addEventListener('focusin', onLinkOver);
+  document.addEventListener('focusout', onLinkOut);
   // Not onPage: page contexts revert their tweens on leave, and the instrument persists.
   sync();
   document.addEventListener('astro:after-swap', sync);
