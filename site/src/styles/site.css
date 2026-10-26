@@ -1,4 +1,9 @@
 html { background: var(--c-bg); color-scheme: light; }
+/* At night the lamp over the rack is turned down: the same sheet, dimmer, so it does not glare in a
+   dark room. Every text colour still passes AA on the dimmer paper. */
+@media (prefers-color-scheme: dark) {
+  :root { --c-paper: #d9dce1; --c-soft: #575c65; --lamp: .16; --dim: .08; }
+}
 /* flow-root keeps the sheet's top margin inside the body, so the desk never scrolls. */
 body { display: flow-root; background: var(--c-bg); color: var(--c-paper); overflow-x: hidden; }
 ::selection { background: var(--c-due); color: #fff; }
@@ -39,10 +44,11 @@ body { display: flow-root; background: var(--c-bg); color: var(--c-paper); overf
   padding: 15px clamp(22px, 5%, 58px) 0;
   /* The lamp over the rack: brightest at the top of the page, falling off toward the ledge. */
   background:
-    radial-gradient(120% 70% at 50% -10%, rgb(255 255 255 / .38), transparent 62%),
+    linear-gradient(rgb(0 0 0 / var(--dim, 0)), rgb(0 0 0 / var(--dim, 0))),
+    radial-gradient(120% 70% at 50% -10%, rgb(255 255 255 / var(--lamp, .38)), transparent 62%),
     linear-gradient(to bottom, transparent 72%, rgb(20 24 32 / .06)),
     var(--paper) repeat, var(--c-paper);
-  background-size: auto, auto, 256px 256px, auto;
+  background-size: auto, auto, auto, 256px 256px, auto;
   color: var(--c-ink);
   overflow-x: clip;
 }
