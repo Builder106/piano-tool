@@ -70,4 +70,34 @@ void main() {
       );
     },
   );
+
+  // Ticks arrive late whenever a frame takes longer than 16 ms. The playhead
+  // must follow real time anyway, or a player in time with the music is
+  // judged against a beat that has fallen behind.
+  test('late ticks do not slow the playhead', () async {
+    final e = engineForStage1();
+    addTearDown(e.dispose);
+
+    e.start();
+    // Hold the event loop for 600 ms, the way a long frame does.
+    final busy = Stopwatch()..start();
+    while (busy.elapsedMilliseconds < 600) {}
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+
+    // About 0.64 s at 80 BPM is 0.85 beats. With a fixed step per tick, the
+    // blocked stretch would have counted as a single 16 ms tick.
+    expect(e.state.currentBeat, inInclusiveRange(0.75, 1.1));
+  });
+
+  test('seeking while playing continues from the new beat', () async {
+    final e = engineForStage1();
+    addTearDown(e.dispose);
+
+    e.start();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    e.seekToBeat(8);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    expect(e.state.currentBeat, inInclusiveRange(8.0, 8.4));
+  });
 }
