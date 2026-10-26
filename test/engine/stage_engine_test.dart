@@ -69,6 +69,60 @@ void main() {
     expect(engine.state.hitCount, 1);
   });
 
+  test('a held pitch does not miss the next note before its beat', () {
+    const repeated = LevelModel(
+      id: 'repeated',
+      title: 'Repeated C',
+      description: '',
+      tempo: 120,
+      beatsPerMeasure: 4,
+      totalMeasures: 1,
+      measures: [
+        LevelMeasure(
+          index: 0,
+          startBeat: 0,
+          beatsPerMeasure: 4,
+          notes: [
+            LevelNote(
+              midiNote: 60,
+              startBeat: 0,
+              durationBeats: 1,
+              measureIndex: 0,
+              beatIndex: 0,
+            ),
+            LevelNote(
+              midiNote: 60,
+              startBeat: 1,
+              durationBeats: 1,
+              measureIndex: 0,
+              beatIndex: 1,
+            ),
+          ],
+        ),
+      ],
+    );
+    final engine = StageEngine(level: repeated);
+    addTearDown(engine.dispose);
+    const event = PitchEvent(
+      frequency: 261.63,
+      confidence: 1,
+      midiNote: 60,
+      timestamp: 0,
+      volume: 1,
+    );
+
+    engine.start();
+    engine.processPitchEvent(event);
+    engine.seekToBeat(0.55);
+    engine.processPitchEvent(event);
+    expect(engine.state.noteStates[1], isNot(NoteState.missed));
+
+    engine.seekToBeat(1);
+    engine.processPitchEvent(event);
+    expect(engine.state.hitCount, 2);
+    expect(engine.state.missCount, 0);
+  });
+
   group('timing windows', () {
     const config = StageEngineConfig(
       perfectWindow: 0.125,
@@ -188,23 +242,27 @@ void main() {
       expect(engine.state.accuracy, 0);
     });
 
-    test('counts an early miss-window event as a miss', () {
+    test('an early event leaves the note available for an on-time hit', () {
       final engine = engineAt(-0.4);
       addTearDown(engine.dispose);
-      engine.processPitchEvent(
-        const PitchEvent(
-          frequency: 261.63,
-          confidence: 1,
-          midiNote: 60,
-          timestamp: 0,
-          volume: 1,
-        ),
+      const event = PitchEvent(
+        frequency: 261.63,
+        confidence: 1,
+        midiNote: 60,
+        timestamp: 0,
+        volume: 1,
       );
+      engine.processPitchEvent(event);
 
-      expect(engine.state.noteStates.single, NoteState.missed);
+      expect(engine.state.noteStates.single, isNot(NoteState.missed));
       expect(engine.state.hitCount, 0);
-      expect(engine.state.missCount, 1);
+      expect(engine.state.missCount, 0);
       expect(engine.state.accuracy, 0);
+
+      engine.seekToBeat(1);
+      engine.processPitchEvent(event);
+      expect(engine.state.hitCount, 1);
+      expect(engine.state.missCount, 0);
     });
 
     test('registers a note only once', () {
