@@ -1,0 +1,16 @@
+{"t":1792972507628,"type":"console.debug","text":"Injecting <script> tag. Using callback."}
+{"t":1792972509544,"type":"console.warning","text":"[.WebGL-0x3c010d1a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"}
+{"t":1792972509568,"type":"console.warning","text":"[.WebGL-0x3c010d1a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"}
+{"t":1792972509611,"type":"console.warning","text":"[.WebGL-0x3c010d1a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"}
+{"t":1792972509627,"type":"console.warning","text":"[.WebGL-0x3c010d1a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"}
+{"t":1792972509700,"type":"console.log","text":"harness: getUserMedia resolved {\"audio\":true}"}
+{"t":1792972509704,"type":"console.log","text":"AudioEngine: Microphone permission granted"}
+{"t":1792972509844,"type":"console.log","text":"harness: getUserMedia resolved {\"audio\":{\"channelCount\":1,\"echoCancellation\":false,\"noiseSuppression\":false,\"autoGainControl\":false}}"}
+{"t":1792972509903,"type":"console.log","text":"WebPcmRecorder: 44100 Hz to 44100 Hz"}
+{"t":1792972509904,"type":"console.log","text":"PitchDetector: Started audio streaming at 44100Hz"}
+{"t":1792972509904,"type":"console.log","text":"AudioEngine: Started"}
+{"t":1792972517908,"type":"harness","text":"Play clicked 66 ms after the first onset"}
+{"t":1792972524039,"type":"harness","text":"first 6 s after Play: 14 long tasks, 1956 ms"}
+{"t":1792972530241,"type":"console.log","text":"PitchDetector: Stopped"}
+{"t":1792972530241,"type":"console.log","text":"AudioEngine: Stopped"}
+{"t":1792972531803,"type":"harness","text":"worklet frames 865, lag ms {\"at2s\":-1100.216099725559,\"at6s\":-1094.6482992958863,\"at10s\":-1053.8804988185293,\"at14s\":-966.6126984007769,\"at18s\":-924.064852571948,\"max\":114.85578234868808}"}

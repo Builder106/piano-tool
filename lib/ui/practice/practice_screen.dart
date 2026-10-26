@@ -98,8 +98,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
 
     return Scaffold(
       body: SafeArea(
-        // Without a microphone nothing can be scored, so the transport and the
-        // staff stay unreachable rather than pretending to listen.
+        // Microphone and dual-input practice wait for a recorder; MIDI-only
+        // practice can open the transport without microphone permission.
         child: MicPermissionGate(
           startAudio: true,
           child: Row(

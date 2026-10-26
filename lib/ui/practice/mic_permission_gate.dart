@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../data/settings_repository.dart';
 import '../theme/tokens.dart';
 import 'stage_controller.dart';
 
-/// Practice needs the microphone, so a denial has to be visible. The previous
-/// screen ignored the permission result and simply never scored anything.
+/// Microphone and dual-input practice need permission. MIDI-only practice can
+/// score without opening a recorder.
 class MicPermissionGate extends ConsumerWidget {
   const MicPermissionGate({
     super.key,
@@ -19,6 +20,13 @@ class MicPermissionGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final midiOnly = ref.watch(
+      settingsProvider.select(
+        (settings) => settings.inputSource == PracticeInputSource.midi,
+      ),
+    );
+    if (midiOnly) return child;
+
     // Invalidating rebuilds the provider from scratch, so a permission that
     // was denied and then granted from system settings recovers rather than
     // leaving the gate latched on its error state.

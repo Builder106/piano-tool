@@ -232,8 +232,14 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
 });
 
 class SettingsNotifier extends Notifier<AppSettings> {
+  SettingsNotifier({AppSettings? initialSettings})
+    : _initialSettings = initialSettings;
+
+  final AppSettings? _initialSettings;
+
   @override
   AppSettings build() {
+    if (_initialSettings != null) return _initialSettings;
     final repo = ref.watch(settingsRepositoryProvider);
     // Asynchronously hydrate persisted preferences
     repo.read().then((persisted) {

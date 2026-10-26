@@ -13,7 +13,17 @@ Future<void> main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  runApp(const ProviderScope(child: PianoToolApp()));
+  final settings = await SettingsRepository().read();
+  runApp(
+    ProviderScope(
+      overrides: [
+        settingsProvider.overrideWith(
+          () => SettingsNotifier(initialSettings: settings),
+        ),
+      ],
+      child: const PianoToolApp(),
+    ),
+  );
 }
 
 class PianoToolApp extends ConsumerWidget {

@@ -188,6 +188,10 @@ class StageEngine extends ChangeNotifier {
       final timingError = currentBeat - note.startBeat;
       final absError = timingError.abs();
 
+      // An early sound may be the tail of the previous note. Keep this note
+      // available for a later pitch event inside its scoring window.
+      if (timingError < -_config.okayWindow) continue;
+
       // Check if within any hit window
       if (absError <= _config.missWindow) {
         if (absError < bestTimingError) {
