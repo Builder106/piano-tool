@@ -163,11 +163,11 @@ def paper_grain(size=512):
     fx = np.fft.fftfreq(size)[None, :]
     fy = np.fft.fftfreq(size)[:, None]
     f = np.sqrt((fx * 2.5) ** 2 + fy ** 2) + 1 / size
-    spectrum = np.fft.fft2(rng.standard_normal((size, size))) / f ** 0.9
+    spectrum = np.fft.fft2(rng.standard_normal((size, size))) / f ** 0.5
     acc = np.real(np.fft.ifft2(spectrum))
     acc = (acc - acc.mean()) / (acc.std() + 1e-9)
     base = np.array([0xEC, 0xEE, 0xF1]) / 255.0
-    rgb = np.clip(base[None, None, :] + acc[..., None] * 0.012, 0, 1)
+    rgb = np.clip(base[None, None, :] + acc[..., None] * 0.006, 0, 1)
     rgba = np.concatenate([rgb, np.ones((size, size, 1))], axis=2)
     img = bpy.data.images.new('paper', size, size, alpha=True)
     img.pixels = rgba[::-1].astype(np.float32).ravel()
