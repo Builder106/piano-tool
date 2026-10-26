@@ -14,6 +14,11 @@ dependencies:
   # Audio & Pitch Detection
   flutter_sound: ^9.2.13
   fft: ^0.5.1
+  web: ^1.1.1
+
+  # MIDI input
+  flutter_midi_command: ^1.4.0
+  flutter_midi_command_ble: ^1.4.0
 
   # State Management
   flutter_riverpod: ^3.1.0
@@ -25,6 +30,7 @@ dependencies:
   json_annotation: ^4.9.0
 
   # Utilities
+  clock: ^1.1.2
   collection: ^1.18.0
   path: ^1.9.0
   synchronized: ^3.5.0

@@ -3,6 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import '../models/audio_models.dart';
+// flutter_sound's web recorder does not deliver usable 16-bit PCM at the
+// requested rate, so the web build captures the microphone itself.
+import 'pcm_recorder_native.dart'
+    if (dart.library.js_interop) 'web_pcm_recorder.dart';
 
 abstract interface class PcmRecorder {
   Future<void> open();
@@ -84,7 +88,7 @@ class PitchDetector {
     PcmRecorder Function()? recorderFactory,
     ElapsedClock? clock,
   }) : config = config ?? const AudioEngineConfig(),
-       _recorderFactory = recorderFactory ?? (() => FlutterSoundPcmRecorder()),
+       _recorderFactory = recorderFactory ?? createPcmRecorder,
        _clock = clock ?? StopwatchElapsedClock();
 
   Future<void> start() async {

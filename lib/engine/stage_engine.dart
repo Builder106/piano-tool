@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import '../models/level_models.dart';
 import '../models/audio_models.dart';
@@ -33,6 +34,11 @@ class StageEngine extends ChangeNotifier {
   );
 
   Timer? _playbackTimer;
+
+  /// Real time since the playhead was last anchored at [_anchorBeat]. From
+  /// package:clock, so tests that fake time move the playhead too.
+  final Stopwatch _playbackClock = clock.stopwatch();
+  double _anchorBeat = 0;
   StreamSubscription<PitchEvent>? _pitchSubscription;
   var _disposed = false;
   final List<LevelNote> _allNotes = [];
@@ -267,16 +273,25 @@ class StageEngine extends ChangeNotifier {
   }
 
   /// Start the playback timer
+  ///
+  /// The playhead follows the wall clock from the beat it starts at. A tick
+  /// only decides when to look at the clock: when frames run long and ticks
+  /// arrive late, the playhead still matches the music the player hears,
+  /// instead of losing 16 ms of beat for every tick that never fired.
   void _startPlaybackTimer() {
     _stopPlaybackTimer();
 
     const tickInterval = Duration(milliseconds: 16); // ~60 FPS
     final beatsPerSecond = _level.tempo / 60.0 * _playbackSpeed;
+    _anchorBeat = _state.currentBeat;
+    _playbackClock
+      ..reset()
+      ..start();
 
     _playbackTimer = Timer.periodic(tickInterval, (timer) {
-      final deltaBeats =
-          beatsPerSecond * (tickInterval.inMilliseconds / 1000.0);
-      _updatePlayback(deltaBeats);
+      final elapsed = _playbackClock.elapsedMicroseconds / 1000000.0;
+      final targetBeat = _anchorBeat + beatsPerSecond * elapsed;
+      _updatePlayback(targetBeat - _state.currentBeat);
     });
   }
 
@@ -284,6 +299,7 @@ class StageEngine extends ChangeNotifier {
   void _stopPlaybackTimer() {
     _playbackTimer?.cancel();
     _playbackTimer = null;
+    _playbackClock.stop();
   }
 
   /// Update playback position
@@ -442,6 +458,11 @@ class StageEngine extends ChangeNotifier {
     }
 
     _state = _state.copyWith(currentBeat: clampedBeat, noteStates: newStates);
+    // Re-anchor the clock, or the next tick would pull the playhead back to
+    // where it was before the seek.
+    if (_state.engineState == StageEngineStatus.playing) {
+      _startPlaybackTimer();
+    }
 
     _eventController.add(
       StageEvent.playbackPosition(

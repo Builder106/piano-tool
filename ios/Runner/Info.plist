@@ -68,6 +68,8 @@
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs microphone access to listen to your piano playing and provide real-time feedback.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Piano Tool uses Bluetooth to read the keys you press on a Bluetooth MIDI keyboard.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

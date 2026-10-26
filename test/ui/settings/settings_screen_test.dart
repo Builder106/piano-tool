@@ -4,9 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:piano_tool/data/settings_repository.dart';
+import 'package:piano_tool/services/midi_service.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
 import 'package:piano_tool/ui/settings/settings_screen.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
+
+import '../../services/fake_midi_transport.dart';
 
 class FakeSettingsNotifier extends SettingsNotifier {
   FakeSettingsNotifier(this._initial);
@@ -48,6 +51,17 @@ void main() {
     return ProviderScope(
       overrides: [
         audioGrantedProvider.overrideWith((ref) async => micGranted),
+        midiServiceProvider.overrideWith(
+          (ref) => MidiService(
+            transport: FakeMidiTransport(const [
+              MidiDevice(
+                id: 'usb-1',
+                name: 'Digital Piano',
+                type: MidiDeviceType.usb,
+              ),
+            ]),
+          ),
+        ),
         settingsProvider.overrideWith(
           () => FakeSettingsNotifier(initialSettings),
         ),
@@ -211,7 +225,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('MIDI Keyboard (USB & Bluetooth)'), findsOneWidget);
-      expect(find.text('Connect'), findsWidgets);
+      expect(find.text('Connect a keyboard, then press Scan.'), findsOneWidget);
+      expect(find.text('Connect'), findsNothing);
+
+      final scan = find.text('Scan');
+      await tester.ensureVisible(scan);
+      await tester.tap(scan);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Digital Piano'), findsOneWidget);
 
       // Connect first device
       await tester.tap(find.text('Connect').first);

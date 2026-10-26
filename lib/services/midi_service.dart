@@ -6,11 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../models/audio_models.dart';
+import 'midi_transport.dart';
+import 'midi_transport_native.dart'
+    if (dart.library.js_interop) 'midi_transport_web.dart';
 
 /// Connection interface type for digital piano hardware.
 enum MidiDeviceType {
   usb('USB MIDI', 'Direct cable connection via USB-MIDI interface'),
-  bluetooth('Bluetooth LE MIDI', 'Wireless connection via BLE MIDI');
+  bluetooth('Bluetooth LE MIDI', 'Wireless connection via BLE MIDI'),
+  other('MIDI input', 'A MIDI input the system or browser provides');
 
   const MidiDeviceType(this.label, this.description);
   final String label;
@@ -81,13 +85,23 @@ class MidiMessage {
 
 /// Service managing USB and Bluetooth MIDI keyboard input for practice.
 class MidiService extends ChangeNotifier {
-  MidiService() {
-    _initDefaultDevices();
+  MidiService({MidiTransport? transport})
+    : _transport = transport ?? createMidiTransport() {
+    _messageSub = _transport.messages.listen(handleMidiBytes);
+    _setupSub = _transport.setupChanged.listen((_) {
+      if (_scanned) unawaited(_refresh());
+    });
   }
+
+  final MidiTransport _transport;
+  late final StreamSubscription<List<int>> _messageSub;
+  late final StreamSubscription<void> _setupSub;
 
   final List<MidiDevice> _devices = [];
   MidiDevice? _selectedDevice;
   bool _isScanning = false;
+  bool _scanned = false;
+  String? _error;
   MidiMessage? _lastMessage;
 
   final StreamController<PitchEvent> _pitchController =
@@ -102,39 +116,73 @@ class MidiService extends ChangeNotifier {
   MidiMessage? get lastMessage => _lastMessage;
   bool get isConnected => _selectedDevice != null;
 
+  /// Why the last scan or connection failed, worded for the player.
+  String? get error => _error;
+
   Stream<PitchEvent> get pitchStream => _pitchController.stream;
   Stream<MidiMessage> get messageStream => _messageController.stream;
 
-  void _initDefaultDevices() {
-    _devices.addAll([
-      const MidiDevice(
-        id: 'usb_keyboard_generic',
-        name: 'USB Digital Piano / Keyboard',
-        type: MidiDeviceType.usb,
-      ),
-      const MidiDevice(
-        id: 'ble_keyboard_generic',
-        name: 'Bluetooth LE MIDI Keyboard',
-        type: MidiDeviceType.bluetooth,
-      ),
-    ]);
-  }
-
-  /// Scan for newly attached USB and discoverable Bluetooth MIDI devices.
+  /// Lists attached MIDI inputs, after a short Bluetooth LE scan where the
+  /// platform has one. Nothing is opened before the first scan, so the app
+  /// never asks for MIDI or Bluetooth access until the player looks for a
+  /// keyboard.
   Future<void> scanDevices() async {
+    if (_isScanning) return;
     _isScanning = true;
+    _error = null;
     notifyListeners();
 
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    try {
+      await _transport.scanBluetooth();
+    } on MidiUnavailableException catch (e) {
+      // A cable keyboard still works with Bluetooth off.
+      _error = e.message;
+    } catch (e) {
+      debugPrint('MidiService: Bluetooth scan failed: $e');
+      _error = 'The Bluetooth scan failed.';
+    }
+    await _refresh();
+    _scanned = true;
     _isScanning = false;
     notifyListeners();
   }
 
-  /// Connect to a specific digital piano device.
-  void connectDevice(String id) {
+  Future<void> _refresh() async {
+    try {
+      final found = await _transport.listDevices();
+      final selectedId = _selectedDevice?.id;
+      _devices
+        ..clear()
+        ..addAll(found.map((d) => d.copyWith(connected: d.id == selectedId)));
+      // An unplugged keyboard is no longer selected.
+      if (selectedId != null && !found.any((d) => d.id == selectedId)) {
+        _selectedDevice = null;
+      }
+    } on MidiUnavailableException catch (e) {
+      _error = e.message;
+    } catch (e) {
+      debugPrint('MidiService: listing MIDI devices failed: $e');
+      _error = 'MIDI devices could not be listed.';
+    }
+    notifyListeners();
+  }
+
+  /// Connect to a specific digital piano device. Practice reads one keyboard,
+  /// so any other connected device is disconnected first.
+  Future<void> connectDevice(String id) async {
     final index = _devices.indexWhere((d) => d.id == id);
     if (index == -1) return;
 
+    await disconnectDevice();
+    try {
+      await _transport.connect(id);
+    } catch (e) {
+      debugPrint('MidiService: connecting $id failed: $e');
+      _error = 'Could not connect to ${_devices[index].name}.';
+      notifyListeners();
+      return;
+    }
+    _error = null;
     for (var i = 0; i < _devices.length; i++) {
       _devices[i] = _devices[i].copyWith(connected: i == index);
     }
@@ -143,12 +191,19 @@ class MidiService extends ChangeNotifier {
   }
 
   /// Disconnect the active MIDI device.
-  void disconnectDevice() {
+  Future<void> disconnectDevice() async {
+    final selected = _selectedDevice;
     for (var i = 0; i < _devices.length; i++) {
       _devices[i] = _devices[i].copyWith(connected: false);
     }
     _selectedDevice = null;
     notifyListeners();
+    if (selected == null) return;
+    try {
+      await _transport.disconnect(selected.id);
+    } catch (e) {
+      debugPrint('MidiService: disconnecting ${selected.id} failed: $e');
+    }
   }
 
   /// Decode raw MIDI byte stream packet.
@@ -195,6 +250,9 @@ class MidiService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _messageSub.cancel();
+    _setupSub.cancel();
+    _transport.dispose();
     _pitchController.close();
     _messageController.close();
     super.dispose();
@@ -207,6 +265,10 @@ final midiServiceProvider = ChangeNotifierProvider<MidiService>((ref) {
 });
 
 /// Stream provider for pitch events coming from MIDI hardware.
+///
+/// Selects only the stream. Every message calls notifyListeners just before
+/// its pitch is emitted, and watching the whole service rebuilt this provider
+/// and dropped that pitch on resubscription.
 final midiPitchStreamProvider = StreamProvider<PitchEvent>(
-  (ref) => ref.watch(midiServiceProvider).pitchStream,
+  (ref) => ref.watch(midiServiceProvider.select((s) => s.pitchStream)),
 );

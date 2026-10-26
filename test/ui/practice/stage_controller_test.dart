@@ -9,28 +9,34 @@ import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/audio_models.dart';
 import 'package:piano_tool/models/engine_models.dart';
+import 'package:piano_tool/services/midi_service.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
+
+import '../../services/fake_midi_transport.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  ProviderContainer harness({ProgressRepository? progressRepository}) =>
-      ProviderContainer(
-        overrides: [
-          audioGrantedProvider.overrideWith((ref) async => true),
-          // stageControllerProvider reads levelRepositoryProvider
-          // synchronously (requireValue) -- overrideWithValue makes it
-          // resolved immediately instead of leaving it in AsyncLoading,
-          // which is what the default (ingestion-hydrated) definition would
-          // do since nothing here awaits it first.
-          levelRepositoryProvider.overrideWith(
-            (ref) => SynchronousFuture(LevelRepository()),
-          ),
-          if (progressRepository != null)
-            progressRepositoryProvider.overrideWithValue(progressRepository),
-        ],
-      );
+  ProviderContainer harness({
+    ProgressRepository? progressRepository,
+    MidiService? midi,
+  }) => ProviderContainer(
+    overrides: [
+      audioGrantedProvider.overrideWith((ref) async => true),
+      if (midi != null) midiServiceProvider.overrideWith((ref) => midi),
+      // stageControllerProvider reads levelRepositoryProvider
+      // synchronously (requireValue) -- overrideWithValue makes it
+      // resolved immediately instead of leaving it in AsyncLoading,
+      // which is what the default (ingestion-hydrated) definition would
+      // do since nothing here awaits it first.
+      levelRepositoryProvider.overrideWith(
+        (ref) => SynchronousFuture(LevelRepository()),
+      ),
+      if (progressRepository != null)
+        progressRepositoryProvider.overrideWithValue(progressRepository),
+    ],
+  );
 
   test('start awaits persistence of the last played stage', () async {
     final writeGate = Completer<void>();
@@ -51,6 +57,30 @@ void main() {
     writeGate.complete();
     await observed;
     expect(progressRepository.startCompleted, isTrue);
+  });
+
+  // handleMidiBytes notifies listeners before it emits the pitch, which used
+  // to rebuild the pitch stream provider and drop the very note that caused
+  // the rebuild.
+  test('a MIDI key press scores through the practice controller', () async {
+    final midi = MidiService(transport: FakeMidiTransport(const []));
+    final c = harness(midi: midi);
+    addTearDown(c.dispose);
+    // The practice screen watches the controller; an unwatched provider is
+    // paused and would not hear the MIDI stream at all.
+    c.listen(stageControllerProvider('stage_1'), (_, _) {});
+    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+    await ctrl.start();
+    midi
+      ..simulateNotePress(60)
+      ..simulateNoteRelease(60);
+    await pumpEventQueue();
+
+    final s = c.read(stageControllerProvider('stage_1'));
+    expect(s.score, greaterThan(0));
+    expect(s.noteStates.first, isNot(NoteState.upcoming));
+    expect(s.noteStates.first, isNot(NoteState.missed));
   });
 
   test('starts idle at beat zero with a real level', () {
