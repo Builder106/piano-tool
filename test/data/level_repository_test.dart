@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
@@ -89,5 +90,19 @@ void main() {
       final sorted = [...beats]..sort();
       expect(beats, sorted, reason: stage.id);
     }
+  });
+
+  // The hosted web app is built without INGESTION_API_TOKEN, so the real
+  // ingestion provider fails. The catalog must still load the built-in stages
+  // instead of hanging the first screen on a spinner.
+  test('loads built-in stages when ingestion is not configured', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final repository = await container
+        .read(levelRepositoryProvider.future)
+        .timeout(const Duration(seconds: 5));
+
+    expect(repository.getStage('stage_1'), isNotNull);
   });
 }

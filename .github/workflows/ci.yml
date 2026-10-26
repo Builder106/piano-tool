@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
@@ -14,6 +15,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  workflows:
+    name: Workflow regression checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: node --test .github/scripts/*.test.cjs
+
   secrets:
     name: Secret scan
     runs-on: ubuntu-24.04
@@ -151,12 +161,12 @@ jobs:
   summary:
     name: Summary
     runs-on: ubuntu-24.04
-    needs: [secrets, flutter, python]
+    needs: [workflows, secrets, flutter, android, python]
     if: always()
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.secrets.result }}" != "success" ]] || [[ "${{ needs.flutter.result }}" != "success" ]] || [[ "${{ needs.python.result }}" != "success" ]]; then
+          if [[ "${{ needs.workflows.result }}" != "success" ]] || [[ "${{ needs.secrets.result }}" != "success" ]] || [[ "${{ needs.flutter.result }}" != "success" ]] || [[ "${{ needs.android.result }}" != "success" ]] || [[ "${{ needs.python.result }}" != "success" ]]; then
             echo "One or more jobs failed"
             exit 1
           fi
@@ -165,7 +175,7 @@ jobs:
   deploy:
     name: Deploy to Vercel
     needs: [summary]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

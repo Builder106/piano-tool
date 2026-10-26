@@ -1,5 +1,104 @@
 # Journal
 
+## 2026-10-26: verify bot merges before deployment #ci #deployment #decision
+
+PR #26 merged through the repository's `GITHUB_TOKEN`. GitHub suppresses push
+workflows caused by that token, so the merge never reached the CI job that
+calls the production deploy hook. Production was deployed separately at
+`fe561fc` and its app route returned HTTP 200.
+
+Auto-Merge now handles successful PR CI completion as well. It waits briefly
+for auto-merge, confirms that the tested PR belongs to this repository and its
+merge is still the default-branch head, then requests CI
+with `workflow_dispatch`. GitHub permits that event with `GITHUB_TOKEN`.
+An existing push or manual CI run for the merge prevents another dispatch.
+Failed checks, forked PRs, updated heads and older merges cannot dispatch it.
+
+The handler checks out only the default branch and does not consume PR code or
+artifacts with its write token. No additional credential is required. The CI
+summary now waits for the Android build and emulator check, plus workflow
+regression checks, before permitting a production deployment.
+
+On Linux ARM64, all 15 workflow regression tests and 262 Flutter tests passed.
+The Flutter analyzer, Dart formatting check and actionlint also passed. The
+live handoff still needs a published merge to verify it end to end.
+
+A production browser check opened MIDI-only practice with microphone access
+deliberately unavailable. The Play button appeared with zero microphone
+requests and no browser errors. The capture is in `docs/evidence/web-mic-midi/`.
+Physical input verification remains pending because no instrument is available
+for this session.
+
+## 2026-10-25: finish MIDI-only and repeated-note practice #audio #midi #decision
+
+MIDI-only practice still required microphone permission, so a denied microphone
+blocked an otherwise connected keyboard. The practice gate now skips microphone
+setup in MIDI-only mode. Microphone and dual-input modes still request access.
+
+The audio engine also used its default volume threshold and reference frequency
+even though settings stored both values. It now reads the settings-derived audio
+configuration. The app loads saved settings before building its providers, so a
+saved MIDI-only choice cannot trigger an early microphone request and the audio
+engine starts with the saved threshold.
+
+A held pitch could mark the next note of the same pitch missed before its beat.
+The scorer now ignores events earlier than the playable window, leaving the
+note available when its window opens. The pitch stream has no note-onset signal,
+so a held pitch can still score the next note once that window opens.
+
+On Linux ARM64, the Flutter analyzer, formatting check, all 262 Flutter tests,
+and release web build passed. Hardware input was not retested.
+
+## 2026-10-25: real microphone and MIDI input on the web and devices #audio #midi #web #decision
+
+The hosted web app never reached a practice screen. The build has no
+`INGESTION_API_TOKEN`, so `ingestionRepositoryProvider` throws a
+`FormatException`, and Riverpod 3 retries a failed provider up to 10 times,
+about 38 seconds in all. `levelRepositoryProvider` awaits it, so the first
+screen showed a spinner the whole time. A missing build setting won't fix
+itself on retry, so the ingestion provider now sets `retry` to return null.
+
+flutter_sound's web recorder does not give usable 16-bit PCM at the requested
+rate. In headless Chromium, with a fake microphone playing the stage 1 scale, it
+scored nothing and lit the wrong key. The web build now uses `WebPcmRecorder`.
+It opens the microphone with getUserMedia, with echo cancellation, noise
+suppression and gain control turned off. An AudioWorklet loaded from a Blob URL
+posts 1024-frame batches, and `PcmFrameConverter` resamples them to the
+detector's 44.1 kHz. Without the resample, 48 kHz audio reads 1.5 semitones
+flat and C4 comes out as B3. A conditional import picks the recorder, so phones
+and desktops keep `FlutterSoundPcmRecorder`. The YIN code is unchanged.
+
+`StageEngine` used to add 16 ms of beat on every timer tick. A late tick lost
+time, so the playhead fell behind the music whenever frames ran long. On the
+verifier the transport ran at half speed or less. The playhead now follows a
+`clock.stopwatch()` from the beat it starts at, and a seek during playback
+re-anchors it. package:clock means fake time in widget tests moves the playhead
+too.
+
+MIDI input uses flutter_midi_command 1.4.0 with flutter_midi_command_ble. Both
+are BSD-3-Clause from a verified publisher, released 2026-10-09. They cover
+CoreMIDI on iOS and macOS, Android MIDI, and Bluetooth LE through universal_ble.
+On the web, `WebMidiTransport` calls `navigator.requestMIDIAccess` through
+package:web. A browser can't pair Bluetooth MIDI, so a keyboard has to be paired
+in the system settings first. Safari has no Web MIDI. The plugin delivers one
+complete message per packet, and each one goes straight to `handleMidiBytes`.
+Nothing is opened until the player presses Scan.
+
+`midiPitchStreamProvider` watched the whole `MidiService`. Every message calls
+`notifyListeners` before its pitch is emitted, so the provider rebuilt and
+dropped the note that caused the rebuild. No MIDI key could ever score. The
+provider now selects the stream.
+
+macOS had no microphone usage description or audio-input entitlement. Both are
+added, along with the Bluetooth keys the BLE package asks for on iOS and macOS.
+
+Verification ran in headless Chromium on the Linux ARM64 verifier. Web MIDI
+scored 16 of 16 from a virtual ALSA keyboard. The microphone scored between 7
+and 15 of 16 across four runs. The host has no GPU, so software rendering fills
+the main thread, and the notes that miss are the ones queued behind it. A silent
+control run showed the same backlog. Real Bluetooth and USB keyboards have not
+been tested.
+
 ## 2026-10-25: host showcase at root and flutter web at /app/ #deployment #web #decision
 
 Consolidated deployment into the primary `piano-tool` project on Vercel to serve the Astro showcase at `/` and the Flutter web app under `/app/`. Switched the HTTPS gate in `ingestion_repository.dart` from `bool.fromEnvironment('dart.vm.product')` to `kReleaseMode`, which fixes the web startup exception. Made ingestion initialization optional so web visitors can practice built-in stages without backend service credentials. Updated `scripts/build_web.sh` to assemble both builds into `build/web` and added an SPA rewrite in `vercel.json` for `/app/`.

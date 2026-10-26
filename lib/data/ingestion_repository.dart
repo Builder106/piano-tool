@@ -349,24 +349,30 @@ class AppConfig {
 }
 
 /// Riverpod provider for IngestionRepository
-final FutureProvider<IngestionRepository> ingestionRepositoryProvider =
-    FutureProvider<IngestionRepository>((final Ref ref) async {
-      // Base URL can be configured via --dart-define=INGESTION_API_BASE_URL
-      const String baseUrl = String.fromEnvironment('INGESTION_API_BASE_URL');
-      const String authToken = String.fromEnvironment('INGESTION_API_TOKEN');
-      // kReleaseMode, not bool.fromEnvironment('dart.vm.product'): the web compilers do not
-      // define that key, and a non-const fromEnvironment throws there at runtime.
-      const bool requireHttps = kReleaseMode;
-      if (authToken.isEmpty) {
-        throw const FormatException('INGESTION_API_TOKEN is required');
-      }
+final FutureProvider<IngestionRepository>
+ingestionRepositoryProvider = FutureProvider<IngestionRepository>(
+  (final Ref ref) async {
+    // Base URL can be configured via --dart-define=INGESTION_API_BASE_URL
+    const String baseUrl = String.fromEnvironment('INGESTION_API_BASE_URL');
+    const String authToken = String.fromEnvironment('INGESTION_API_TOKEN');
+    // kReleaseMode, not bool.fromEnvironment('dart.vm.product'): the web compilers do not
+    // define that key, and a non-const fromEnvironment throws there at runtime.
+    const bool requireHttps = kReleaseMode;
+    if (authToken.isEmpty) {
+      throw const FormatException('INGESTION_API_TOKEN is required');
+    }
 
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      return IngestionRepository(
-        client: http.Client(),
-        baseUrl: baseUrl,
-        authToken: authToken,
-        requireHttps: requireHttps,
-        prefs: prefs,
-      );
-    });
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return IngestionRepository(
+      client: http.Client(),
+      baseUrl: baseUrl,
+      authToken: authToken,
+      requireHttps: requireHttps,
+      prefs: prefs,
+    );
+  },
+  // A missing or invalid build-time configuration never fixes itself.
+  // Riverpod 3 retries a failed provider for about 38 seconds by default,
+  // and every `.future` waiting on it stays pending for that whole time.
+  retry: (_, _) => null,
+);

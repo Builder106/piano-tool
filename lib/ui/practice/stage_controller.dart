@@ -17,7 +17,10 @@ import '../../services/midi_service.dart';
 /// One engine for the whole app. Permission and the pitch stream both hang off
 /// it, so a single microphone is opened rather than one per provider.
 final audioEngineProvider = Provider<AudioEngine>((ref) {
-  final engine = AudioEngine();
+  final config = ref.watch(
+    settingsProvider.select((settings) => settings.toAudioEngineConfig()),
+  );
+  final engine = AudioEngine(config: config);
   ref.onDispose(engine.dispose);
   return engine;
 });

@@ -600,6 +600,13 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
+          if (midiService.error case final error?) ...[
+            const SizedBox(height: PianoSpacing.xs),
+            Text(
+              error,
+              style: textTheme.bodySmall?.copyWith(color: colors.error),
+            ),
+          ],
           const SizedBox(height: PianoSpacing.sm),
           const Divider(height: 1),
           const SizedBox(height: PianoSpacing.sm),
@@ -608,15 +615,22 @@ class SettingsScreen extends ConsumerWidget {
             style: textTheme.labelSmall?.copyWith(color: colors.muted),
           ),
           const SizedBox(height: PianoSpacing.xs),
+          if (midiService.devices.isEmpty)
+            Text(
+              'Connect a keyboard, then press Scan.',
+              style: textTheme.bodySmall?.copyWith(color: colors.muted),
+            ),
           for (final device in midiService.devices)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(
                 children: [
                   Icon(
-                    device.type == MidiDeviceType.usb
-                        ? Icons.usb_rounded
-                        : Icons.bluetooth_rounded,
+                    switch (device.type) {
+                      MidiDeviceType.usb => Icons.usb_rounded,
+                      MidiDeviceType.bluetooth => Icons.bluetooth_rounded,
+                      MidiDeviceType.other => Icons.piano_rounded,
+                    },
                     size: 16,
                     color: colors.muted,
                   ),
