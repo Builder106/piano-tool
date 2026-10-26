@@ -265,6 +265,10 @@ final midiServiceProvider = ChangeNotifierProvider<MidiService>((ref) {
 });
 
 /// Stream provider for pitch events coming from MIDI hardware.
+///
+/// Selects only the stream. Every message calls notifyListeners just before
+/// its pitch is emitted, and watching the whole service rebuilt this provider
+/// and dropped that pitch on resubscription.
 final midiPitchStreamProvider = StreamProvider<PitchEvent>(
-  (ref) => ref.watch(midiServiceProvider).pitchStream,
+  (ref) => ref.watch(midiServiceProvider.select((s) => s.pitchStream)),
 );
