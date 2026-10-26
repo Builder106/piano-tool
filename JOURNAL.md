@@ -1,5 +1,24 @@
 # Journal
 
+## 2026-10-26: bound CI job runtimes #ci #deployment
+
+Dependabot PR #23 was the first bot merge after the deployment handoff landed.
+Auto-Merge dispatched CI for merge `a5ff746` as designed. That run then stalled
+for over 20 minutes in the Python job's `apt-get` step, which normally takes
+under a minute. The job had no timeout, so it could have held deployment for
+GitHub's six-hour default. After a cancel and rerun, the dispatched run passed
+and its deploy hook published `a5ff746`. Vercel reports that deployment ready.
+The handoff now has a live end-to-end check.
+
+Every CI and Auto-Merge job now has a timeout. Flutter and Python get 15
+minutes, and both usually finish in two. The short jobs get 5. Android keeps 20
+and deploy keeps 10. A stalled step now fails the run in minutes.
+
+The dispatch call logs a REST API deprecation notice for the 2022-11-28 API
+version, with removal scheduled for 10 March 2028.
+
+On Linux ARM64, actionlint and all 15 workflow regression tests passed.
+
 ## 2026-10-26: verify bot merges before deployment #ci #deployment #decision
 
 PR #26 merged through the repository's `GITHUB_TOKEN`. GitHub suppresses push
