@@ -1,5 +1,34 @@
 # Journal
 
+## 2026-10-26: verify bot merges before deployment #ci #deployment #decision
+
+PR #26 merged through the repository's `GITHUB_TOKEN`. GitHub suppresses push
+workflows caused by that token, so the merge never reached the CI job that
+calls the production deploy hook. Production was deployed separately at
+`fe561fc` and its app route returned HTTP 200.
+
+Auto-Merge now handles successful PR CI completion as well. It waits briefly
+for auto-merge, confirms that the tested PR belongs to this repository and its
+merge is still the default-branch head, then requests CI
+with `workflow_dispatch`. GitHub permits that event with `GITHUB_TOKEN`.
+An existing push or manual CI run for the merge prevents another dispatch.
+Failed checks, forked PRs, updated heads and older merges cannot dispatch it.
+
+The handler checks out only the default branch and does not consume PR code or
+artifacts with its write token. No additional credential is required. The CI
+summary now waits for the Android build and emulator check, plus workflow
+regression checks, before permitting a production deployment.
+
+On Linux ARM64, all 15 workflow regression tests and 262 Flutter tests passed.
+The Flutter analyzer, Dart formatting check and actionlint also passed. The
+live handoff still needs a published merge to verify it end to end.
+
+A production browser check opened MIDI-only practice with microphone access
+deliberately unavailable. The Play button appeared with zero microphone
+requests and no browser errors. The capture is in `docs/evidence/web-mic-midi/`.
+Physical input verification remains pending because no instrument is available
+for this session.
+
 ## 2026-10-25: finish MIDI-only and repeated-note practice #audio #midi #decision
 
 MIDI-only practice still required microphone permission, so a denied microphone
