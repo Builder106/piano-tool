@@ -28,5 +28,7 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Piano Tool uses Bluetooth to read the keys you press on a Bluetooth MIDI keyboard.</string>
 </dict>
 </plist>
