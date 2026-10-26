@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:piano_tool/data/settings_repository.dart';
 import 'package:piano_tool/ui/practice/mic_permission_gate.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
@@ -16,6 +17,39 @@ Widget _harness(Future<bool> Function(Ref) grant) => ProviderScope(
 );
 
 void main() {
+  testWidgets('MIDI-only practice opens without microphone permission', (
+    tester,
+  ) async {
+    var requested = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          settingsProvider.overrideWith(
+            () => SettingsNotifier(
+              initialSettings: const AppSettings(
+                inputSource: PracticeInputSource.midi,
+              ),
+            ),
+          ),
+          audioGrantedProvider.overrideWith((ref) async {
+            requested = true;
+            return false;
+          }),
+        ],
+        child: MaterialApp(
+          theme: PianoTheme.light(),
+          home: const Scaffold(
+            body: MicPermissionGate(startAudio: true, child: Text('practice')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('practice'), findsOneWidget);
+    expect(requested, isFalse);
+  });
+
   testWidgets('shows the child once the microphone is granted', (tester) async {
     await tester.pumpWidget(_harness((ref) async => true));
     await tester.pumpAndSettle();

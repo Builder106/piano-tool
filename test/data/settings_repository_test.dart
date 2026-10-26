@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,6 +8,23 @@ import 'package:piano_tool/data/settings_repository.dart';
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+  });
+
+  test('preloaded settings are available before the first build', () {
+    const saved = AppSettings(
+      inputSource: PracticeInputSource.midi,
+      minVolumeThreshold: 0.15,
+    );
+    final container = ProviderContainer(
+      overrides: [
+        settingsProvider.overrideWith(
+          () => SettingsNotifier(initialSettings: saved),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    expect(container.read(settingsProvider), saved);
   });
 
   group('SettingsRepository', () {
