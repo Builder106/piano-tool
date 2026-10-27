@@ -1,5 +1,9 @@
 # Journal
 
+## 2026-10-27: Check and build the Astro site in CI #ci #decision
+
+The Flutter CI job now runs `npm ci`, a production dependency audit, `npm run check`, and `npm run build` in `site/`. A macOS job also builds the iOS target without code signing.
+
 ## 2026-10-26: bound CI job runtimes #ci #deployment
 
 Dependabot PR #23 was the first bot merge after the deployment handoff landed.

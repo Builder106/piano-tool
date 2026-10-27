@@ -43,6 +43,24 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Install site dependencies
+        working-directory: site
+        run: npm ci
+      - name: Audit production dependencies
+        working-directory: site
+        run: npm audit --omit=dev --audit-level=high
+      - name: Check Astro site
+        working-directory: site
+        run: npm run check
+      - name: Build Astro site
+        working-directory: site
+        run: npm run build
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.0'
@@ -58,6 +76,22 @@ jobs:
         run: flutter test
       - name: Build web release
         run: flutter build web --release
+
+  ios:
+    name: iOS build
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: 'stable'
+          cache: true
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Build iOS without code signing
+        run: flutter build ios --no-codesign
 
   android:
     name: Android build + emulator smoke test
@@ -166,12 +200,12 @@ jobs:
     name: Summary
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    needs: [workflows, secrets, flutter, android, python]
+    needs: [workflows, secrets, flutter, ios, android, python]
     if: always()
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.workflows.result }}" != "success" ]] || [[ "${{ needs.secrets.result }}" != "success" ]] || [[ "${{ needs.flutter.result }}" != "success" ]] || [[ "${{ needs.android.result }}" != "success" ]] || [[ "${{ needs.python.result }}" != "success" ]]; then
+          if [[ "${{ needs.workflows.result }}" != "success" ]] || [[ "${{ needs.secrets.result }}" != "success" ]] || [[ "${{ needs.flutter.result }}" != "success" ]] || [[ "${{ needs.ios.result }}" != "success" ]] || [[ "${{ needs.android.result }}" != "success" ]] || [[ "${{ needs.python.result }}" != "success" ]]; then
             echo "One or more jobs failed"
             exit 1
           fi
