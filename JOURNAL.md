@@ -1,5 +1,66 @@
 # Journal
 
+## 2026-10-29: the app becomes the music desk #design #ui #decision
+
+The app screens were stock Material: tinted grey cards, outlined chips, and a
+settings page full of engine detail (YIN, sample buffers, ONNX). They shared
+nothing with the site. Two home-screen directions were mocked up: the site's
+music desk, and colour-coded method books. The user chose a mix of the two
+and asked for the art to come from Blender and Glaxnimate.
+
+Every screen now stands on piano lacquer. Things you read sit on paper
+sheets, tilted a degree or so and held by the music rack's clip. Each stage
+is a cloth-bound method book in blue, green or rust. Imported pieces are
+slate. Choices are words circled in blue pencil. The margins carry doodles:
+tortoise and hare by the speeds, a metronome by timing, a lamp whose light
+follows the lamp setting. Cleared books get a star sticker.
+
+The dark theme is now a lower lamp over the same paper, as on the site, not
+an inverted page. The desk and cover colours are fixed tokens. Settings
+speaks to learners: the pitch-detection and backend cards are gone, and
+the input and timing labels are plain words.
+
+Art sources: `design/blender/covers.py` (covers), the site's `keyboard.py`
+(the keyboard, whose fallboard now carries the nickel mark and name
+instead of gold), and `design/glaxnimate/app-marks.svg` and
+`app-doodles.svg`. The app keyboard draws the render and tints keys over it
+from the render's own key geometry, which matches `KeyboardGeometry`
+exactly.
+
+A build without `INGESTION_API_TOKEN` (the public web build, by design)
+no longer offers "Import a piece" anywhere; `importAvailableProvider`
+decides. Before, the action opened a raw `FormatException`, and on the new
+lacquer ground it also had no way back. If someone reaches `/import`
+anyway, a sheet explains in plain words and offers the way back.
+
+The site's only link to `/app/` was on `/play/`, after all eight notes, so
+most visitors never found the app. "Open the app" now sits at the right
+end of the ledge on every page, and under the sheet's title on phones,
+where the ledge is full. Both app links carry `data-astro-reload`: the
+client router must not try to swap in the Flutter page.
+
+## 2026-10-29: brand mark and one cool palette #design #brand #decision
+
+Piano Tool had no mark. The apps shipped Flutter's stock launcher icon, and
+the web manifest still read "A new Flutter project". The app's neutrals were
+warm (hue 72, with a cream `paper2`), while the site's were cool, so the two
+never looked like one product.
+
+The mark is middle C on its ledger line, circled in pencil. Two other marks
+were drawn and dropped: a notehead in the app's due ring (it read as an eye
+or a target) and a notehead on a piano key (it looks like most piano app
+icons). The circled C ties to what the app does, marking each note, and to
+the site's home page, which draws the same loop.
+
+Pencil Blue `#2456C8` is the only accent. A fallboard gold was considered and
+dropped, so blue now covers both the brand and the app's due note. Every app
+neutral moved from hue 72 to 262 at the same lightness and chroma, which
+supersedes the warm-ground choice in `docs/specs/2026-08-17-ui-revamp-design.md`.
+Contrast stays AA. The three staff goldens were regenerated.
+
+`brand/mark.py` builds the SVGs and `brand/icons.py` builds every platform's
+icons, so the mark has one source. `brand/README.md` is the usage guide.
+
 ## 2026-10-27: Check and build the Astro site in CI #ci #decision
 
 The Flutter CI job now runs `npm ci`, a production dependency audit, `npm run check`, and `npm run build` in `site/`. A macOS job also builds the iOS target without code signing.
