@@ -56,9 +56,9 @@ class Win32Window {
   RECT GetClientArea();
 
  protected:
-  // Processes and route salient window messages for mouse handling,
+  // Processes and routes salient window messages for mouse handling,
   // size change and DPI. Delegates handling of these to member overloads that
-  // inheriting classes can handle.
+  // derived classes can handle.
   virtual LRESULT MessageHandler(HWND window,
                                  UINT const message,
                                  WPARAM const wparam,
