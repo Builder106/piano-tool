@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="brand/mark-dark.svg">
+  <img src="brand/mark.svg" width="72" height="72" alt="Piano Tool mark: middle C circled in pencil">
+</picture>
+
 # Piano Tool
 
 > **Interactive piano practice tutor with real-time pitch detection.** Scrolls sheet music, listens via your device's microphone, and scores your notes as you play.
