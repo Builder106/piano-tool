@@ -205,6 +205,7 @@ Motion values live in `src/motion/params.ts`.
 | A4b | inline | E4 marks and the F4 beat line are drawn from the app's glyph rules and timing windows in `src/components/drawings/`, with the A3 pencil vocabulary | done |
 | A5 | blender | paper grain tile, `src/assets/desk/paper.png`, 512 px, tileable | done |
 | A6 | blender | music rack frame with its ledge, two page clips, and the pencil on the ledge: `rack.png`, `clip.png`, `pencil.png` from `design/blender/desk-props.blend` (Cycles) | done |
+| A7 | brand | the mark (middle C circled in pencil) printed before the title like a publisher's device, the favicon, touch icon and `og.jpg`, all from `brand/mark.py`; see `brand/README.md` | done |
 
 ## Copy
 

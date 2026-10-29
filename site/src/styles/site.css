@@ -55,6 +55,8 @@ body { display: flow-root; background: var(--c-bg); color: var(--c-paper); overf
 .sheet__content { position: relative; flex: 1 0 auto; display: flex; flex-direction: column; }
 .sheet__header { text-align: center; line-height: 1; }
 .sheet__header h1, .sheet__title { font: 500 44px / .95 var(--f-display); letter-spacing: -.01em; }
+/* The brand mark printed before the title, like a publisher's device; sized to the type so the header keeps its height. */
+.sheet__mark { display: inline-block; position: relative; top: .14em; width: 1.2em; height: 1.2em; margin: -.3em .12em -.3em -.3em; }
 .sheet__header > p:not(.sheet__title) { margin-top: 5px; font: 400 13px / 1.3 var(--f-body); }
 .sheet__meta { display: flex; align-items: center; justify-content: space-between; width: var(--score-w); margin: 3px auto 0; font: 400 13px / 1.25 var(--f-body); font-variant-numeric: tabular-nums; }
 .sheet__meta > span:last-child { font: italic 15px / 1 var(--f-display); }

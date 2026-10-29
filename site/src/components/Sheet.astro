@@ -5,6 +5,7 @@ import { site, units, nextUnit, prevUnit } from '../data/site';
 import { missing, scorePage, annotations } from '../data/annotations';
 import { VIEW, TOP, BOTTOM, BARLINES, ARROW_Y, staffNotes } from '../data/staff';
 import Staff from './Staff.astro';
+import Mark from '../assets/brand/mark.svg';
 
 interface Props { note?: number; page?: 'score' | 'missing' }
 const { note, page } = Astro.props;
@@ -25,7 +26,8 @@ const arrow = (x: number) => {
 <div class="sheet" id="sheet" style={`--paper:url('${tile.src}')`}>
   <div class="sheet__content" data-sheet-content>
     <header class="sheet__header">
-      {note === 60 ? <h1>{site.name}</h1> : <p class="sheet__title">{site.name}</p>}
+      {note === 60 ? <h1><Mark class="sheet__mark" aria-hidden="true" />{site.name}</h1>
+        : <p class="sheet__title"><Mark class="sheet__mark" aria-hidden="true" />{site.name}</p>}
       <p>Stage one: {site.stage.title}</p>
       <div class="sheet__meta">
         <span class="sheet__tempo"><span class="smufl" aria-hidden="true">{''}</span><span class="sr-only">Quarter note</span> = {site.stage.tempo}

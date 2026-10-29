@@ -81,6 +81,53 @@ def box(name, x0, x1, y0, y1, z0, z1, mat, bevel=0.0012, origin=None, taper_top=
     return ob
 
 
+def mark_mesh(name, mat, height):
+    """The brand mark as one flat mesh, built from brand/mark.py so the decal and the SVGs
+    share their geometry. Faces in XY, centred on the origin, `height` metres tall."""
+    import importlib.util
+    import re
+    spec = importlib.util.spec_from_file_location('mark', os.path.join(HERE, '..', '..', '..', 'brand', 'mark.py'))
+    mk = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mk)
+
+    outlines = []
+    for d in mk.loop_paths():
+        nums = [float(v) for v in re.findall(r'-?\d+\.?\d*', d)]
+        outlines.append(list(zip(nums[0::2], nums[1::2])))
+    cx, cy, rx, ry, tilt = mk.HEAD.values()
+    a = math.radians(tilt)
+    outlines.append([(cx + rx * math.cos(u) * math.cos(a) - ry * math.sin(u) * math.sin(a),
+                      cy + rx * math.cos(u) * math.sin(a) + ry * math.sin(u) * math.cos(a))
+                     for u in (2 * math.pi * i / 48 for i in range(48))])
+    sx, sy, sw, sh = mk.STEM
+    outlines.append([(sx, sy), (sx + sw, sy), (sx + sw, sy + sh), (sx, sy + sh)])
+    x1, x2, ly, lw = mk.LEDGER
+    h = lw / 2
+    cap = [(x2 + h * math.cos(u), ly + h * math.sin(u)) for u in (math.pi * (i / 8 - 0.5) for i in range(9))]
+    outlines.append(cap + [(x1 + h * math.cos(u), ly + h * math.sin(u)) for u in (math.pi * (i / 8 + 0.5) for i in range(9))])
+    for x, y, r in mk.end_caps():
+        outlines.append([(x + r * math.cos(u), y + r * math.sin(u)) for u in (2 * math.pi * i / 16 for i in range(16))])
+
+    pts = [p for o in outlines for p in o]
+    x0, x1b = min(p[0] for p in pts), max(p[0] for p in pts)
+    y0, y1b = min(p[1] for p in pts), max(p[1] for p in pts)
+    s = height / (y1b - y0)
+    mx, my = (x0 + x1b) / 2, (y0 + y1b) / 2
+
+    bm = bmesh.new()
+    for o in outlines:
+        verts = [bm.verts.new(((x - mx) * s, -(y - my) * s, 0.0)) for x, y in o]
+        bm.faces.new(verts)
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    me.materials.append(mat)
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(ob)
+    bpy.context.view_layer.update()
+    return ob
+
+
 def build():
     scene = bpy.context.scene
     for ob in list(bpy.data.objects):
@@ -90,7 +137,8 @@ def build():
     ebony = material('key_black', (0.006, 0.006, 0.007), 0.55, **{'Specular IOR Level': 0.12})
     lacquer = material('lacquer', (0.006, 0.006, 0.007), 0.06, **{'Coat Weight': 1.0, 'Coat Roughness': 0.02})
     felt = material('felt', (0.022, 0.0025, 0.0035), 1.0, **{'Sheen Weight': 0.3})
-    gold = material('decal_gold', (0.80, 0.60, 0.30), 0.28, **{'Metallic': 1.0})
+    # Nickel, not gold: the brand is ink, paper and one blue (brand/README.md).
+    nickel = material('decal_nickel', (0.72, 0.74, 0.77), 0.3, **{'Metallic': 1.0})
 
     for m in range(LOWEST, HIGHEST + 1):
         if is_black(m):
@@ -124,12 +172,24 @@ def build():
     cu.size = 0.019
     cu.space_character = 1.06
     decal = bpy.data.objects.new('decal', cu)
-    decal.data.materials.append(gold)
+    decal.data.materials.append(nickel)
+    scene.collection.objects.link(decal)
+    bpy.context.view_layer.update()
+
+    # The maker's lockup: the brand mark, then the name, centred together.
+    mark = mark_mesh('decal_mark', nickel, height=cu.size * 0.94)
+    gap = cu.size * 0.3
+    lockup = mark.dimensions.x + gap + decal.dimensions.x
     t = math.radians(BOARD_TILT)
     zc = 0.043
-    decal.location = (SPAN / 2, WHITE_L + 0.0098 + zc * math.sin(t) - 0.0004 * math.cos(t), -0.010 + zc * math.cos(t) + 0.0004 * math.sin(t))
-    decal.rotation_euler.x = math.radians(90 - BOARD_TILT)
-    scene.collection.objects.link(decal)
+    y = WHITE_L + 0.0098 + zc * math.sin(t) - 0.0004 * math.cos(t)
+    z = -0.010 + zc * math.cos(t) + 0.0004 * math.sin(t)
+    left = SPAN / 2 - lockup / 2
+    decal.location = (left + mark.dimensions.x + gap + decal.dimensions.x / 2, y, z)
+    # The mark's origin is its visual centre; lift it a touch so the notehead sits on the baseline.
+    mark.location = (left + mark.dimensions.x / 2, y - 0.0012 * math.sin(t), z + 0.0012 * math.cos(t))
+    for ob in (decal, mark):
+        ob.rotation_euler.x = math.radians(90 - BOARD_TILT)
 
     # Light: a soft warm key from above the player's head, a cool rim behind, a dark room.
     def area(name, loc, rot, size, energy, color, shape='RECTANGLE', size_y=None):
