@@ -27,7 +27,7 @@ const hasDrawing = [62, 64, 65, 67, 69, 71, 72].includes(midi);
       {midi === 60 ? <h2>{annotation.heading}</h2> : <h1>{annotation.heading}</h1>}
       <p>{annotation.body}</p>
       {midi === 72 && <div class="annotation__finish">
-        <a class="annotation__cta" href={site.webApp}>Try Piano Tool free<svg class="pencil-underline" viewBox="0 0 120 10" preserveAspectRatio="none" aria-hidden="true"><path data-draw d="M2 5 C22 2 44 6 66 4 C84 2 102 5 118 3" /></svg></a>
+        <a class="annotation__cta" href={site.webApp} data-astro-reload>Try Piano Tool free<svg class="pencil-underline" viewBox="0 0 120 10" preserveAspectRatio="none" aria-hidden="true"><path data-draw d="M2 5 C22 2 44 6 66 4 C84 2 102 5 118 3" /></svg></a>
         <p>You played <span data-result-count>0</span> of 8 notes.</p>
       </div>}
     </div>

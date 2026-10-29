@@ -1,4 +1,5 @@
 ---
+import { site } from '../data/site';
 // The strip of piano body under the music rack: how you play. Each switch says what it is and whether
 // it is on, so nothing has to be guessed from a highlight.
 const inputs = [
@@ -20,6 +21,8 @@ const inputs = [
       ))}
     </div>
     <span class="ledge__hear" data-hear aria-live="polite"></span>
+    <!-- The way into the app from every page. A full load: the app is not an Astro page. -->
+    <a class="ledge__app" href={site.webApp} data-astro-reload>Open the app</a>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"><svg viewBox="-14 -14 28 28" aria-hidden="true"><ellipse cx="0" cy="0" rx="6.5" ry="5" transform="rotate(-20.05)" /><line x1="-9.12" y1="6.24" x2="9.12" y2="-6.24" /></svg><span data-toast-text></span></div>
 </aside>

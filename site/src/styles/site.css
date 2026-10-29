@@ -210,6 +210,15 @@ body { display: flow-root; background: var(--c-bg); color: var(--c-paper); overf
 .ledge__hear { max-width: 220px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #ececec; }
 .ledge__hear:empty { display: none; }
 .ledge :focus-visible { outline-color: #ececec; }
+/* The one way into the app, on every page: pinned to the right end of the ledge, in the brand blue. */
+.ledge__app {
+  position: absolute; right: 16px; top: 50%; translate: 0 -50%;
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 16px;
+  border-radius: 16px; background: var(--c-due); color: #fff; font-weight: 600; white-space: nowrap;
+  transition: background-color .2s;
+}
+.ledge__app:hover { background: #2f63d8; }
+.sheet__app { display: none; }
 .toast { position: fixed; right: 14px; bottom: calc(var(--band-h) + var(--ledge-h) + 12px); z-index: 8; display: flex; gap: 6px; align-items: center; max-width: calc(100vw - 28px); padding: 8px 12px; background: var(--c-bg); color: var(--c-paper); font: 13px var(--f-body); opacity: 0; pointer-events: none; }
 .toast.is-on { opacity: 1; }
 .toast svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
@@ -306,6 +315,12 @@ body { display: flow-root; background: var(--c-bg); color: var(--c-paper); overf
   .ledge__play { gap: 6px; }
   .switch { min-height: 44px; padding: 0 10px; border-radius: 22px; }
   .ledge__hear { position: absolute; right: 8px; top: -26px; font-size: 12px; }
+  /* The ledge is full on a phone: the app link moves to the top of the sheet instead. */
+  .ledge__app { display: none; }
+  .sheet__app {
+    display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; padding: 0 20px;
+    border-radius: 22px; background: var(--c-due); color: #fff; font: 600 14px var(--f-body);
+  }
 }
 @media (max-width: 380px) {
   .switch { padding: 0 8px; font-size: 12px; }

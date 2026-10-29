@@ -14,7 +14,9 @@ wrong page: it read as an article framed by a staff and a keyboard. This record 
   staff spaces, quantising).
 - Job: show what a learner gets from the app, one plain benefit per page, by letting them play
   the page; then send them to the free browser build at `/app/`. That is the only call to
-  action.
+  action. It appears twice: as "Open the app" at the right end of the ledge on every page (on a
+  phone, whose ledge is full, under the sheet's title), so nobody has to finish the scale to
+  find it, and as the closing link on `/play/`.
 - Tone: the hush of a practice room at night. Precise, unhurried, a little private.
 
 ## What is kept, what is new
@@ -83,6 +85,7 @@ What sits where, and why:
 | Pencil annotation | written next to the due note, below the staff | it explains that note, so it hangs off that note with a drawn arrow |
 | Marks from notes already played | small pencil marks left beside their notes | the copy accumulates, like a practised score |
 | Inputs (Sound, Letter keys, Digital piano, Microphone) | on the ledge, below the sheet | they are tools at the instrument, not site navigation |
+| Open the app | right end of the ledge, every page; under the title on phones | the way to the real thing has to be findable without playing to the end |
 
 ## Signature element
 

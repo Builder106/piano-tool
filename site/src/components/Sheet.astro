@@ -29,6 +29,8 @@ const arrow = (x: number) => {
       {note === 60 ? <h1><Mark class="sheet__mark" aria-hidden="true" />{site.name}</h1>
         : <p class="sheet__title"><Mark class="sheet__mark" aria-hidden="true" />{site.name}</p>}
       <p>Stage one: {site.stage.title}</p>
+      <!-- Phones only: their ledge has no room, so the way into the app sits under the title. -->
+      <a class="sheet__app" href={site.webApp} data-astro-reload>Open the app</a>
       <div class="sheet__meta">
         <span class="sheet__tempo"><span class="smufl" aria-hidden="true">{''}</span><span class="sr-only">Quarter note</span> = {site.stage.tempo}
           {note === 67 && <>
