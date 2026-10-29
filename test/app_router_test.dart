@@ -47,6 +47,7 @@ void main() {
   Widget createTestWidget() {
     return ProviderScope(
       overrides: [
+        importAvailableProvider.overrideWithValue(true),
         ingestionRepositoryProvider.overrideWith(
           (ref) async => mockIngestionRepo,
         ),
@@ -88,7 +89,7 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byTooltip('Import piece'));
+        await tester.tap(find.text('Import a piece'));
         await tester.pumpAndSettle();
 
         expect(find.byType(ImportScreen), findsOneWidget);
@@ -102,7 +103,7 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byTooltip('Settings & Calibration'));
+        await tester.tap(find.text('Settings'));
         await tester.pumpAndSettle();
 
         expect(find.byType(SettingsScreen), findsOneWidget);

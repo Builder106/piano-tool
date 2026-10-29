@@ -9,6 +9,7 @@ import '../../data/ingestion_repository.dart';
 import '../../data/level_repository.dart';
 import '../../models/level_models.dart';
 import '../../models/engine_models.dart';
+import '../desk/desk.dart';
 import '../keyboard/piano_keyboard_view.dart';
 import '../practice/transport_column.dart';
 import '../staff/staff_geometry.dart' show Clef;
@@ -100,12 +101,25 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     if (_error != null) {
       return Scaffold(
-        body: SafeArea(child: Center(child: Text('Error: $_error'))),
+        body: SafeArea(
+          child: Center(
+            child: Text(
+              'Error: $_error',
+              style: TextStyle(color: PianoTheme.colorsOf(context).deskInk),
+            ),
+          ),
+        ),
       );
     }
 
     final level = _level!;
     final totalBeats = (level.totalMeasures * level.beatsPerMeasure).toDouble();
+    final colors = PianoTheme.colorsOf(context);
+    // Outlined actions sit on the lacquer, so they take the desk's light ink.
+    final deskOutline = OutlinedButton.styleFrom(
+      foregroundColor: colors.deskInk,
+      side: BorderSide(color: colors.deskRule),
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -129,7 +143,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                         Expanded(
                           child: Text(
                             level.title,
-                            style: Theme.of(context).textTheme.headlineMedium,
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(color: colors.deskInk),
                           ),
                         ),
                         IconButton(
@@ -139,6 +154,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                                 : Icons.volume_up_rounded,
                             size: 26,
                           ),
+                          color: colors.deskInk,
                           onPressed: () {
                             setState(() => _isMuted = !_isMuted);
                             _synthesizer?.isMuted = _isMuted;
@@ -154,14 +170,17 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       flex: _showNoteEditor ? 2 : 3,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          return StaffView(
-                            systems: _buildSystems(level),
-                            currentBeat: _currentBeat,
-                            totalBeats: totalBeats,
-                            beatsPerMeasure: level.beatsPerMeasure,
-                            beatUnit: level.beatUnit,
-                            pixelsPerBeat: 70,
-                            maxStaffHeight: constraints.maxHeight * 0.8,
+                          return PaperSheet(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: StaffView(
+                              systems: _buildSystems(level),
+                              currentBeat: _currentBeat,
+                              totalBeats: totalBeats,
+                              beatsPerMeasure: level.beatsPerMeasure,
+                              beatUnit: level.beatUnit,
+                              pixelsPerBeat: 70,
+                              maxStaffHeight: constraints.maxHeight * 0.8,
+                            ),
                           );
                         },
                       ),
@@ -182,17 +201,21 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     LinearProgressIndicator(
                       value: totalBeats > 0 ? _currentBeat / totalBeats : 0,
                       minHeight: 4,
+                      backgroundColor: colors.deskRule,
                     ),
                     const SizedBox(height: PianoSpacing.xs),
                     Text(
                       '${_formatTime(_currentBeat, level.tempo)} / '
                       '${_formatTime(totalBeats, level.tempo)}',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: colors.deskMuted),
                     ),
                     const SizedBox(height: PianoSpacing.md),
                     Row(
                       children: [
                         OutlinedButton.icon(
+                          style: deskOutline,
                           icon: Icon(
                             _showNoteEditor
                                 ? Icons.visibility_rounded
@@ -207,6 +230,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                         ),
                         const Spacer(),
                         OutlinedButton(
+                          style: deskOutline,
                           onPressed: _discard,
                           child: const Text('Discard'),
                         ),

@@ -9,6 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:record/record.dart';
 
 import '../../data/ingestion_repository.dart';
+import '../desk/desk.dart';
+import '../desk/pencil_mark.dart';
 import '../practice/mic_permission_gate.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
@@ -85,10 +87,19 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         youtubeError: _youtubeError,
         onCancelJob: _cancelJob,
       ),
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, stack) => Scaffold(
-        body: Center(child: Text('Error loading ingestion service: $error')),
+      loading: () => DeskScaffold(
+        title: 'Import a piece',
+        onBack: () => Navigator.of(context).maybePop(),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      // A build without the import service, or one that cannot reach it: say
+      // so in plain words and offer the way back, not an exception.
+      error: (error, stack) => _ImportUnavailable(
+        notSetUp: error is FormatException,
+        onBack: () => Navigator.of(context).maybePop(),
+        onRetry: error is FormatException
+            ? null
+            : () => ref.invalidate(ingestionRepositoryProvider),
       ),
     );
   }
@@ -338,21 +349,19 @@ class _BuildImportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
+    return DeskScaffold(
+      title: 'Import a piece',
+      subtitle: 'A recording becomes a stage you can practise',
+      onBack: () => Navigator.of(context).maybePop(),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(PianoSpacing.lg),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
-            child: Padding(
-              padding: const EdgeInsets.all(PianoSpacing.lg),
+            child: PaperSheet(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    'Import Audio',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: PianoSpacing.lg),
                   _SourcePicker(
                     selectedSource: selectedSource,
                     onChanged: onSourceChanged,
@@ -387,6 +396,80 @@ class _BuildImportScreen extends StatelessWidget {
                       recordedBytes: recordedBytes,
                     ),
                   ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown when importing cannot start, in a learner's words.
+class _ImportUnavailable extends StatelessWidget {
+  const _ImportUnavailable({
+    required this.notSetUp,
+    required this.onBack,
+    this.onRetry,
+  });
+
+  /// The build has no import service at all, so trying again cannot help.
+  final bool notSetUp;
+  final VoidCallback onBack;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = PianoTheme.colorsOf(context);
+    final text = PianoTheme.textThemeOf(context);
+    return DeskScaffold(
+      title: 'Import a piece',
+      onBack: onBack,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(PianoSpacing.lg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: PaperSheet(
+              tilt: -0.6,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  PencilMark(Pencil.plug, color: colors.muted, height: 64),
+                  const SizedBox(height: PianoSpacing.md),
+                  Text(
+                    notSetUp
+                        ? 'Importing is not available here'
+                        : 'Importing could not start',
+                    style: text.headlineLarge,
+                  ),
+                  const SizedBox(height: PianoSpacing.xs),
+                  Text(
+                    notSetUp
+                        ? 'Turning a recording into a stage needs the Piano Tool '
+                              'import service, and this version is not connected '
+                              'to one. Every built-in stage still works.'
+                        : 'The import service did not answer. Check your '
+                              'connection and try again.',
+                    style: text.bodyLarge,
+                  ),
+                  const SizedBox(height: PianoSpacing.lg),
+                  Wrap(
+                    spacing: PianoSpacing.sm,
+                    children: [
+                      FilledButton(
+                        onPressed: onBack,
+                        child: const Text('Back to your books'),
+                      ),
+                      if (onRetry case final onRetry?)
+                        TextButton(
+                          onPressed: onRetry,
+                          child: const Text('Try again'),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),

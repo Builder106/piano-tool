@@ -105,7 +105,7 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(find.textContaining('BPM'), findsOneWidget);
+      expect(find.textContaining('Tempo'), findsOneWidget);
       expect(find.textContaining('Score'), findsOneWidget);
       expect(find.textContaining('Acc'), findsOneWidget);
     });
@@ -123,7 +123,7 @@ void main() {
     await tester.pump();
 
     expect(tester.takeException(), isNull);
-    expect(find.textContaining('BPM'), findsOneWidget);
+    expect(find.textContaining('Tempo'), findsOneWidget);
     expect(find.textContaining('Score'), findsOneWidget);
     expect(find.textContaining('Acc'), findsOneWidget);
   });
@@ -175,7 +175,7 @@ void main() {
 
     // Every metric stays on screen even at the narrowest width; the title is
     // the thing that ellipsizes.
-    expect(find.textContaining('BPM'), findsOneWidget);
+    expect(find.textContaining('Tempo'), findsOneWidget);
     expect(find.textContaining('Score'), findsOneWidget);
     expect(find.textContaining('Acc'), findsOneWidget);
   });
@@ -192,14 +192,16 @@ void main() {
     final size = tester.getSize(find.byType(PianoKeyboardView));
     expect(size.width, 640 - TransportColumn.width);
 
-    // The keys are laid out from the pane width, so assert the real geometry:
-    // the last white key ends exactly at the right edge, and no key is so thin
-    // that "fits" would mean "unreadable".
-    final geometry = KeyboardGeometry(width: size.width, height: size.height);
+    // The keys span the rendered keyboard between its cheeks, so assert the
+    // real geometry there: all 36 white keys fill that span, and no key is so
+    // thin that "fits" would mean "unreadable".
+    final span =
+        size.width * (PianoKeyboardView.keysRight - PianoKeyboardView.keysLeft);
+    final geometry = KeyboardGeometry(width: span, height: size.height);
     expect(geometry.whiteKeyWidth, greaterThan(12));
     expect(
       geometry.whiteKeyRect(KeyboardGeometry.whiteKeyCount - 1).right,
-      moreOrLessEquals(size.width),
+      moreOrLessEquals(span),
     );
   });
 

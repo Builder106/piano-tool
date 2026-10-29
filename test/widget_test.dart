@@ -18,7 +18,8 @@ void main() {
         ),
       ),
     );
-    expect(Theme.of(ctx).scaffoldBackgroundColor, PianoColors.light().paper);
+    // The ground is the piano's lacquer; paper sheets sit on it.
+    expect(Theme.of(ctx).scaffoldBackgroundColor, PianoColors.light().desk);
     expect(PianoTheme.colorsOf(ctx).accent, PianoColors.light().accent);
   });
 }

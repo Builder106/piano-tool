@@ -25,7 +25,7 @@ void main() {
     expect(colors.accent, PianoColors.light().accent);
 
     final theme = Theme.of(ctx);
-    expect(theme.scaffoldBackgroundColor, PianoColors.light().paper);
+    expect(theme.scaffoldBackgroundColor, PianoColors.light().desk);
     expect(theme.textTheme.bodyMedium!.fontFamily, 'IBMPlexSans');
     expect(theme.textTheme.headlineSmall!.fontFamily, 'CormorantGaramond');
   });

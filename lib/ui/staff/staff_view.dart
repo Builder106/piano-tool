@@ -18,6 +18,7 @@ class StaffView extends StatelessWidget {
     required this.pixelsPerBeat,
     this.beatUnit = 4,
     this.maxStaffHeight = kDefaultMaxStaffHeight,
+    this.showPlayhead = true,
   });
 
   final List<StaffSystem> systems;
@@ -31,6 +32,9 @@ class StaffView extends StatelessWidget {
   /// tall band; it just spends the extra on air above and below the staff
   /// rather than on a bigger clef.
   final double maxStaffHeight;
+
+  /// False for a still preview of the music.
+  final bool showPlayhead;
 
   /// The geometry a single system gets in a band of [bandHeight]. Exposed so
   /// a test can assert on the staff that is actually drawn rather than on
@@ -60,6 +64,7 @@ class StaffView extends StatelessWidget {
                 pixelsPerBeat: pixelsPerBeat,
                 maxStaffHeight: maxStaffHeight,
                 showPlayheadCap: index == 0,
+                showPlayhead: showPlayhead,
               ),
             ),
           ),
@@ -67,20 +72,18 @@ class StaffView extends StatelessWidget {
     );
 
     if (systems.length >= 2) {
-      return ColoredBox(
-        color: colors.paper,
-        child: CustomPaint(
-          painter: GrandStaffConnectorPainter(
-            colors: colors,
-            systemCount: systems.length,
-            maxStaffHeight: maxStaffHeight,
-          ),
-          child: staffColumn,
+      // No fill of its own: the staff is engraved on whatever sheet holds it.
+      return CustomPaint(
+        painter: GrandStaffConnectorPainter(
+          colors: colors,
+          systemCount: systems.length,
+          maxStaffHeight: maxStaffHeight,
         ),
+        child: staffColumn,
       );
     }
 
-    return ColoredBox(color: colors.paper, child: staffColumn);
+    return staffColumn;
   }
 }
 

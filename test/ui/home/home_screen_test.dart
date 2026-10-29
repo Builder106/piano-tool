@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mockito/mockito.dart';
 
+import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
@@ -25,9 +26,13 @@ void main() {
     when(mockProgressRepo.lastPlayedStageId()).thenAnswer((_) async => null);
   });
 
-  Widget createTestWidget({LevelRepository? customRepo}) {
+  Widget createTestWidget({
+    LevelRepository? customRepo,
+    bool canImport = true,
+  }) {
     return ProviderScope(
       overrides: [
+        importAvailableProvider.overrideWithValue(canImport),
         levelRepositoryProvider.overrideWith(
           (ref) async => customRepo ?? levelRepository,
         ),
@@ -66,38 +71,30 @@ void main() {
   }
 
   group('HomeScreen', () {
-    testWidgets('renders app header, subtitle, and top bar action buttons', (
+    testWidgets('shows the lockup and the desk actions', (tester) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Piano Tool'), findsOneWidget);
+      expect(find.text('Library'), findsOneWidget);
+      expect(find.text('Import a piece'), findsOneWidget);
+      expect(find.text('Settings'), findsOneWidget);
+    });
+
+    testWidgets('opens the first stage when nothing has been played', (
       tester,
     ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Piano Tool'), findsOneWidget);
-      expect(
-        find.text('Interactive practice tutor and transcription studio'),
-        findsOneWidget,
-      );
-      expect(find.byTooltip('All levels'), findsOneWidget);
-      expect(find.byTooltip('Import piece'), findsOneWidget);
-      expect(find.byTooltip('Settings & Calibration'), findsOneWidget);
+      expect(find.text('Stage 1 of 3'), findsOneWidget);
+      expect(find.text('Up next'), findsOneWidget);
+      // The open book's cover, its sheet and its place on the shelf.
+      expect(find.text('C Major Scale'), findsNWidgets(3));
+      expect(find.text('Start'), findsOneWidget);
     });
 
-    testWidgets(
-      'shows Continue Practice card with first unlocked stage when unplayed',
-      (tester) async {
-        await tester.pumpWidget(createTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.text('Continue Practice'), findsOneWidget);
-        expect(find.text('Up Next'), findsOneWidget);
-        expect(find.text('C Major Scale'), findsOneWidget);
-        expect(find.text('Start'), findsOneWidget);
-      },
-    );
-
-    testWidgets('tapping Start on continue card navigates to practice route', (
-      tester,
-    ) async {
+    testWidgets('Start opens the stage', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -107,102 +104,98 @@ void main() {
       expect(find.text('Practice: stage_1'), findsOneWidget);
     });
 
-    testWidgets(
-      'prioritizes last played stage with progress metrics and Resume action',
-      (tester) async {
-        when(
-          mockProgressRepo.lastPlayedStageId(),
-        ).thenAnswer((_) async => 'stage_2');
-        when(mockProgressRepo.readAll()).thenAnswer(
-          (_) async => {
-            'stage_1': const StageProgress(
-              stageId: 'stage_1',
-              bestAccuracy: 0.95,
-              bestScore: 1000,
-              attempts: 2,
-              completed: true,
-              unlocked: true,
-            ),
-            'stage_2': const StageProgress(
-              stageId: 'stage_2',
-              bestAccuracy: 0.75,
-              bestScore: 450,
-              attempts: 3,
-              completed: false,
-              unlocked: true,
-            ),
-          },
-        );
+    testWidgets('reopens the last stage played, with its best run', (
+      tester,
+    ) async {
+      when(
+        mockProgressRepo.lastPlayedStageId(),
+      ).thenAnswer((_) async => 'stage_2');
+      when(mockProgressRepo.readAll()).thenAnswer(
+        (_) async => {
+          'stage_1': const StageProgress(
+            stageId: 'stage_1',
+            bestAccuracy: 0.95,
+            bestScore: 1000,
+            attempts: 2,
+            completed: true,
+            unlocked: true,
+          ),
+          'stage_2': const StageProgress(
+            stageId: 'stage_2',
+            bestAccuracy: 0.75,
+            bestScore: 450,
+            attempts: 3,
+            completed: false,
+            unlocked: true,
+          ),
+        },
+      );
 
-        await tester.pumpWidget(createTestWidget());
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
 
-        expect(find.text('Continue Practice'), findsOneWidget);
-        expect(find.text('In Progress'), findsOneWidget);
-        expect(find.text('Ode to Joy'), findsOneWidget);
-        expect(find.text('75% accuracy'), findsOneWidget);
-        expect(find.text('450 pts | 3 runs'), findsOneWidget);
-        expect(find.text('Resume'), findsOneWidget);
+      expect(find.text('Stage 2 of 3'), findsOneWidget);
+      expect(find.text('In progress'), findsOneWidget);
+      expect(find.text('75%'), findsOneWidget);
+      expect(find.text('Runs'), findsOneWidget);
+      // Stage one is cleared on the shelf.
+      expect(find.text('Cleared'), findsOneWidget);
 
-        await tester.tap(find.text('Resume'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Resume'));
+      await tester.pumpAndSettle();
 
-        expect(find.text('Practice: stage_2'), findsOneWidget);
-      },
-    );
+      expect(find.text('Practice: stage_2'), findsOneWidget);
+    });
 
-    testWidgets(
-      'navigates to /levels when clicking Browse all levels on summary card',
-      (tester) async {
-        await tester.pumpWidget(createTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.text('Level Library'), findsOneWidget);
-        expect(find.text('0 of 3 cleared'), findsOneWidget);
-
-        await tester.tap(find.text('Browse all levels'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Level List Screen'), findsOneWidget);
-      },
-    );
-
-    testWidgets('navigates to /levels when tapping top bar library button', (
+    testWidgets('the shelf counts cleared books and locks the rest', (
       tester,
     ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('All levels'));
+      expect(find.text('0 of 3 cleared'), findsOneWidget);
+      expect(find.text('Locked'), findsNWidgets(2));
+
+      await tester.tap(find.text('Open the library'));
       await tester.pumpAndSettle();
 
       expect(find.text('Level List Screen'), findsOneWidget);
     });
 
-    testWidgets('navigates to /import when tapping Import piece card', (
-      tester,
-    ) async {
+    testWidgets('a locked book on the shelf does not open', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Import Piece'), findsOneWidget);
-
-      await tester.tap(find.text('Import audio'));
+      await tester.tap(find.text('Ode to Joy'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Import Screen'), findsOneWidget);
+      expect(find.textContaining('Practice:'), findsNothing);
     });
 
-    testWidgets('navigates to /settings when tapping settings top bar icon', (
+    testWidgets('offers no import when this build has no import service', (
       tester,
     ) async {
-      await tester.pumpWidget(createTestWidget());
+      await tester.pumpWidget(createTestWidget(canImport: false));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Settings & Calibration'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Settings Screen'), findsOneWidget);
+      expect(find.text('Import a piece'), findsNothing);
+      expect(find.text('Library'), findsOneWidget);
     });
+
+    for (final (label, screen) in [
+      ('Library', 'Level List Screen'),
+      ('Import a piece', 'Import Screen'),
+      ('Settings', 'Settings Screen'),
+    ]) {
+      testWidgets('$label in the header opens its screen', (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text(label));
+        await tester.pumpAndSettle();
+
+        expect(find.text(screen), findsOneWidget);
+      });
+    }
   });
 }

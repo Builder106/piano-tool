@@ -51,21 +51,19 @@ class TransportColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = PianoTheme.colorsOf(context);
-    return Container(
+    // Stands on the desk beside the music, like the controls on a piano's cheek.
+    return SizedBox(
       width: width,
-      decoration: BoxDecoration(
-        color: colors.paper3,
-        border: Border(right: BorderSide(color: colors.rule)),
-      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           IconButton(
             onPressed: onPlayPause,
-            iconSize: 22,
+            iconSize: 26,
             style: IconButton.styleFrom(
               backgroundColor: colors.accent,
               foregroundColor: colors.accentInk,
+              minimumSize: const Size(48, 48),
             ),
             icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
             tooltip: isPlaying ? 'Pause' : 'Play',
@@ -73,13 +71,15 @@ class TransportColumn extends StatelessWidget {
           const SizedBox(height: PianoSpacing.sm),
           IconButton(
             onPressed: onStop,
-            iconSize: 18,
+            iconSize: 20,
+            color: colors.deskInk,
             icon: const Icon(Icons.stop),
             tooltip: 'Stop and hold position',
           ),
           IconButton(
             onPressed: onReplay,
-            iconSize: 18,
+            iconSize: 20,
+            color: colors.deskInk,
             icon: const Icon(Icons.replay),
             tooltip: 'Replay from the start',
           ),
@@ -98,7 +98,9 @@ class TransportColumn extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   _label,
-                  style: Theme.of(context).textTheme.labelSmall,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(color: colors.deskInk),
                 ),
               ),
             ),

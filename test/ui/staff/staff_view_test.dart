@@ -40,7 +40,9 @@ const _scrollingTreble = (
 
 Widget _harness(ThemeData theme, List<StaffSystem> systems) => MaterialApp(
   theme: theme,
+  // The staff has no fill of its own; in the app it sits on a paper sheet.
   home: Scaffold(
+    backgroundColor: theme.colorScheme.surface,
     body: SizedBox(
       width: 740,
       height: 220,

@@ -9,7 +9,7 @@ import '../models/engine_models.dart';
 enum ToleranceLevel {
   relaxed(
     label: 'Relaxed',
-    description: 'Generous timing window for beginners',
+    description: 'Notes count even when they land a little early or late',
     perfectWindow: 0.15,
     goodWindow: 0.30,
     okayWindow: 0.45,
@@ -17,7 +17,7 @@ enum ToleranceLevel {
   ),
   normal(
     label: 'Normal',
-    description: 'Standard timing accuracy',
+    description: 'Notes need to land close to the beat',
     perfectWindow: 0.10,
     goodWindow: 0.20,
     okayWindow: 0.30,
@@ -25,7 +25,7 @@ enum ToleranceLevel {
   ),
   strict(
     label: 'Strict',
-    description: 'Narrow timing window for advanced precision',
+    description: 'Notes need to land right on the beat',
     perfectWindow: 0.06,
     goodWindow: 0.12,
     okayWindow: 0.20,
@@ -51,9 +51,9 @@ enum ToleranceLevel {
 
 /// Available audio and hardware input sources for practice.
 enum PracticeInputSource {
-  microphone('Microphone', 'Acoustic pitch detection via device mic'),
-  midi('MIDI Keyboard', 'Direct digital connection via USB or Bluetooth'),
-  both('Dual Input', 'Listen via microphone and MIDI keyboard simultaneously');
+  microphone('Microphone', 'Hears your piano through the microphone'),
+  midi('Digital piano', 'Reads a digital piano over USB or Bluetooth'),
+  both('Both', 'Listens and reads a digital piano at the same time');
 
   const PracticeInputSource(this.label, this.description);
   final String label;

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/engine_models.dart';
 import '../../models/level_models.dart';
+import '../desk/desk.dart';
 import '../keyboard/piano_keyboard_view.dart';
 import '../staff/staff_geometry.dart';
 import '../staff/staff_painter.dart';
@@ -108,13 +109,12 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // The keyboard takes a fifth of the height, floored and
-                    // capped so it stays legible on a short screen without
-                    // eating a tall one.
-                    final keyboardHeight = (constraints.maxHeight * 0.21).clamp(
-                      64.0,
-                      88.0,
-                    );
+                    // The keyboard is the rendered instrument at its own
+                    // proportions, so its height follows the width; on a short
+                    // screen it gives up the top of the fallboard, never keys.
+                    final keyboardHeight =
+                        (constraints.maxWidth / PianoKeyboardView.imageAspect)
+                            .clamp(64.0, constraints.maxHeight * 0.3);
 
                     return Column(
                       children: [
@@ -122,7 +122,13 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                         // The staff takes the remainder, so it grows on a
                         // larger screen instead of leaving a dead band.
                         Expanded(
-                          child: _StaffPane(stageId: stageId, level: level),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 4, 12, 10),
+                            child: PaperSheet(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: _StaffPane(stageId: stageId, level: level),
+                            ),
+                          ),
                         ),
                         SizedBox(
                           height: keyboardHeight,

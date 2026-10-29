@@ -348,6 +348,13 @@ class AppConfig {
   }
 }
 
+/// Whether this build can import pieces at all. The public web build is made
+/// without an ingestion token (a token compiled into a web app is readable by
+/// anyone), so it offers no import rather than a door that leads nowhere.
+final Provider<bool> importAvailableProvider = Provider<bool>(
+  (ref) => const String.fromEnvironment('INGESTION_API_TOKEN').isNotEmpty,
+);
+
 /// Riverpod provider for IngestionRepository
 final FutureProvider<IngestionRepository>
 ingestionRepositoryProvider = FutureProvider<IngestionRepository>(

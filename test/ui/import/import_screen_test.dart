@@ -447,4 +447,29 @@ void main() {
       },
     );
   });
+
+  testWidgets('a build without the import service explains itself', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ingestionRepositoryProvider.overrideWith(
+            (ref) async => throw const FormatException('no token'),
+          ),
+          audioGrantedProvider.overrideWith((ref) async => true),
+        ],
+        child: MaterialApp(
+          theme: PianoTheme.light(),
+          home: const ImportScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Importing is not available here'), findsOneWidget);
+    expect(find.text('Back to your books'), findsOneWidget);
+    expect(find.text('Try again'), findsNothing);
+    expect(find.textContaining('FormatException'), findsNothing);
+  });
 }

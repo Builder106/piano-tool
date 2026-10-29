@@ -39,4 +39,42 @@ void main() {
     expect(replayed, isTrue);
     expect(returnedToLevels, isTrue);
   });
+
+  testWidgets('golden: a cleared run, circled and starred', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(820, 560));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: PianoTheme.light(),
+        home: ResultsScreen(
+          result: const StageResult(
+            stageId: 'stage_1',
+            title: 'C Major Scale',
+            score: 1200,
+            accuracy: 0.95,
+            totalNotes: 20,
+            hitNotes: 19,
+          ),
+          onReplay: () {},
+          onReturnToLevels: () {},
+        ),
+      ),
+    );
+    // The paper grain and the page clip are image assets; load them before
+    // the frame is compared.
+    await tester.runAsync(() async {
+      final context = tester.element(find.byType(ResultsScreen));
+      for (final asset in ['assets/art/paper.png', 'assets/art/clip.png']) {
+        await precacheImage(AssetImage(asset), context);
+      }
+    });
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cleared. The next stage is open.'), findsOneWidget);
+    await expectLater(
+      find.byType(ResultsScreen),
+      matchesGoldenFile('goldens/results_cleared.png'),
+    );
+  });
 }

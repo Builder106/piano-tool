@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../data/progress_repository.dart';
+import '../desk/desk.dart';
+import '../desk/pencil_mark.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 
@@ -39,75 +42,146 @@ class ResultsScreen extends StatelessWidget {
     final colors = PianoTheme.colorsOf(context);
     final text = Theme.of(context).textTheme;
     final accuracyPercent = (result.accuracy * 100).round();
+    final cleared = result.accuracy >= ProgressRepository.completionThreshold;
 
+    // The marked sheet: the teacher circles the accuracy, and a run that
+    // clears the stage gets a star in the margin.
     return Scaffold(
-      backgroundColor: colors.paper,
+      backgroundColor: colors.desk,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(PianoSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+              PianoSpacing.lg,
+              PianoSpacing.xl,
+              PianoSpacing.lg,
+              PianoSpacing.lg,
+            ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Stage complete', style: text.headlineMedium),
-                  const SizedBox(height: PianoSpacing.xs),
-                  Text(result.title, style: text.titleLarge),
-                  const SizedBox(height: PianoSpacing.xl),
-                  _ResultMetric(label: 'Score', value: '${result.score}'),
-                  const SizedBox(height: PianoSpacing.md),
-                  _ResultMetric(label: 'Accuracy', value: '$accuracyPercent%'),
-                  const SizedBox(height: PianoSpacing.sm),
-                  Text(
-                    '${result.hitNotes} of ${result.totalNotes} notes matched',
-                    style: text.bodyMedium,
-                  ),
-                  const SizedBox(height: PianoSpacing.xl),
-                  FilledButton.icon(
-                    onPressed: onReplay,
-                    icon: const Icon(Icons.replay),
-                    label: const Text('Replay stage'),
-                  ),
-                  const SizedBox(height: PianoSpacing.sm),
-                  OutlinedButton(
-                    onPressed: onReturnToLevels,
-                    child: const Text('All levels'),
-                  ),
-                ],
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: PaperSheet(
+                tilt: 0.8,
+                clipped: true,
+                padding: const EdgeInsets.fromLTRB(
+                  PianoSpacing.xl,
+                  PianoSpacing.lg,
+                  PianoSpacing.xl,
+                  PianoSpacing.lg,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Stage complete',
+                      style: text.bodySmall?.copyWith(color: colors.muted),
+                    ),
+                    Text(result.title, style: text.displayLarge),
+                    const SizedBox(height: PianoSpacing.lg),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 190,
+                          height: 120,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              PencilMark(
+                                Pencil.loop,
+                                color: colors.accent,
+                                width: 186,
+                                drawOn: true,
+                                delay: const Duration(milliseconds: 300),
+                                duration: const Duration(milliseconds: 800),
+                              ),
+                              Text(
+                                '$accuracyPercent%',
+                                style: text.displayLarge?.copyWith(
+                                  fontSize: 64,
+                                  color: colors.ink,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: PianoSpacing.lg),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${result.hitNotes} of ${result.totalNotes} notes matched',
+                                style: text.bodyLarge,
+                              ),
+                              const SizedBox(height: PianoSpacing.xs),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  Text(
+                                    'Score ',
+                                    style: text.labelSmall?.copyWith(
+                                      color: colors.muted,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${result.score}',
+                                    style: text.labelLarge?.copyWith(
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: PianoSpacing.sm),
+                              Text(
+                                cleared
+                                    ? 'Cleared. The next stage is open.'
+                                    : 'Nine in ten clears the stage. Try it again, slower if it helps.',
+                                style: text.titleLarge?.copyWith(
+                                  color: colors.muted,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w400,
+                                  fontVariations: const [
+                                    FontVariation('wght', 400),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (cleared)
+                          PencilMark(
+                            Pencil.star,
+                            color: colors.accent,
+                            width: 64,
+                            drawOn: true,
+                            delay: const Duration(milliseconds: 1100),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: PianoSpacing.xl),
+                    Wrap(
+                      spacing: PianoSpacing.sm,
+                      runSpacing: PianoSpacing.sm,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: onReplay,
+                          icon: const Icon(Icons.replay),
+                          label: const Text('Replay stage'),
+                        ),
+                        TextButton(
+                          onPressed: onReturnToLevels,
+                          child: const Text('All levels'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ResultMetric extends StatelessWidget {
-  const _ResultMetric({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = PianoTheme.colorsOf(context);
-    final text = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(PianoSpacing.md),
-      decoration: BoxDecoration(
-        color: colors.paper2,
-        border: Border.all(color: colors.rule),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: text.titleMedium),
-          Text(value, style: text.headlineSmall),
-        ],
       ),
     );
   }

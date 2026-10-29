@@ -31,7 +31,9 @@ class PianoColorsExtension extends ThemeExtension<PianoColorsExtension> {
 
 abstract final class PianoTheme {
   static ThemeData light() => _build(PianoColors.light(), Brightness.light);
-  static ThemeData dark() => _build(PianoColors.dark(), Brightness.dark);
+  // The paper stays paper under a low lamp, so both themes are light schemes;
+  // only the token values dim.
+  static ThemeData dark() => _build(PianoColors.dark(), Brightness.light);
 
   static PianoColors colorsOf(BuildContext context) =>
       Theme.of(context).extension<PianoColorsExtension>()!.colors;
@@ -88,7 +90,8 @@ abstract final class PianoTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      scaffoldBackgroundColor: c.paper,
+      // The ground is the piano's lacquer; content sits on paper sheets.
+      scaffoldBackgroundColor: c.desk,
       canvasColor: c.paper,
       dividerColor: c.rule,
       textTheme: text,
@@ -107,6 +110,18 @@ abstract final class PianoTheme {
       ),
       // Depth is weight and lightness, never shadow.
       cardTheme: const CardThemeData(elevation: 0, margin: EdgeInsets.zero),
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.paper,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(PianoRadius.sm),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: c.desk2,
+        contentTextStyle: body(14, 400, 1.4, c.deskInk),
+        actionTextColor: c.deskAccent,
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: c.accent),
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,

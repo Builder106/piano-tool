@@ -20,6 +20,7 @@ class StaffPainter extends CustomPainter {
     this.beatUnit = 4,
     this.maxStaffHeight = kDefaultMaxStaffHeight,
     this.showPlayheadCap = true,
+    this.showPlayhead = true,
   });
 
   final Clef clef;
@@ -47,6 +48,9 @@ class StaffPainter extends CustomPainter {
   /// grand staff each system draws its own playhead line, so only the first
   /// system should draw the cap to avoid two dots stacking.
   final bool showPlayheadCap;
+
+  /// A preview of the music (the home screen's opening bars) has no playhead.
+  final bool showPlayhead;
 
   /// The geometry this painter would use in a band of [bandHeight]. The
   /// staff takes the middle of the band, capped so a tall band gives more
@@ -133,21 +137,23 @@ class StaffPainter extends CustomPainter {
       );
     }
 
-    final playheadX = _xForBeat(currentBeat, g);
-    final playheadPaint = Paint()
-      ..color = colors.accent
-      ..strokeWidth = 1.5;
-    canvas.drawLine(
-      Offset(playheadX, 0),
-      Offset(playheadX, size.height),
-      playheadPaint,
-    );
-    if (showPlayheadCap) {
-      canvas.drawCircle(
+    if (showPlayhead) {
+      final playheadX = _xForBeat(currentBeat, g);
+      final playheadPaint = Paint()
+        ..color = colors.accent
+        ..strokeWidth = 1.5;
+      canvas.drawLine(
         Offset(playheadX, 0),
-        3.5,
-        Paint()..color = colors.accent,
+        Offset(playheadX, size.height),
+        playheadPaint,
       );
+      if (showPlayheadCap) {
+        canvas.drawCircle(
+          Offset(playheadX, 0),
+          3.5,
+          Paint()..color = colors.accent,
+        );
+      }
     }
 
     canvas.restore();
@@ -259,6 +265,7 @@ class StaffPainter extends CustomPainter {
       old.colors != colors ||
       old.pixelsPerBeat != pixelsPerBeat ||
       old.showPlayheadCap != showPlayheadCap ||
+      old.showPlayhead != showPlayhead ||
       old.maxStaffHeight != maxStaffHeight ||
       old.beatsPerMeasure != beatsPerMeasure ||
       old.beatUnit != beatUnit ||

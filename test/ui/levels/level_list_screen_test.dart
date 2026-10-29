@@ -9,6 +9,7 @@ import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
+import 'package:piano_tool/ui/desk/shelf_book.dart';
 import 'package:piano_tool/ui/levels/level_list_screen.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
@@ -36,6 +37,7 @@ void main() {
   Widget createTestWidget() {
     return ProviderScope(
       overrides: [
+        importAvailableProvider.overrideWithValue(true),
         levelRepositoryProvider.overrideWith((ref) async => levelRepository),
         ingestionRepositoryProvider.overrideWith(
           (ref) async => mockIngestionRepo,
@@ -76,7 +78,8 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Level Library'), findsOneWidget);
+      expect(find.text('Library'), findsOneWidget);
+      expect(find.text('3 books, 0 cleared'), findsOneWidget);
       expect(find.byTooltip('Back to home'), findsOneWidget);
     });
 
@@ -91,24 +94,24 @@ void main() {
       expect(find.text('Ode to Joy'), findsOneWidget);
       expect(find.text('Mixed Rhythms'), findsOneWidget);
 
-      // Check order
-      final scaleIndex =
-          tester.getSemantics(find.text('C Major Scale')).indexInParent as int;
-      final odeIndex =
-          tester.getSemantics(find.text('Ode to Joy')).indexInParent as int;
-      final mixedIndex =
-          tester.getSemantics(find.text('Mixed Rhythms')).indexInParent as int;
-      expect(scaleIndex, lessThan(odeIndex));
-      expect(odeIndex, lessThan(mixedIndex));
+      // In reading order on the shelf.
+      expect(
+        _shelfOrder(tester, 'C Major Scale'),
+        lessThan(_shelfOrder(tester, 'Ode to Joy')),
+      );
+      expect(
+        _shelfOrder(tester, 'Ode to Joy'),
+        lessThan(_shelfOrder(tester, 'Mixed Rhythms')),
+      );
     });
 
-    testWidgets('shows import button in app bar', (tester) async {
+    testWidgets('shows the import action in the header', (tester) async {
       when(mockProgressRepo.read(any)).thenAnswer((_) async => null);
 
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.add_rounded), findsOneWidget);
+      expect(find.text('Import a piece'), findsOneWidget);
     });
 
     testWidgets('tapping import button navigates to import screen', (
@@ -119,7 +122,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.add_rounded));
+      await tester.tap(find.text('Import a piece'));
       await tester.pumpAndSettle();
 
       expect(find.text('Import Screen'), findsOneWidget);
@@ -213,11 +216,10 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      final secondIndex =
-          tester.getSemantics(find.text('Second Import')).indexInParent as int;
-      final firstIndex =
-          tester.getSemantics(find.text('First Import')).indexInParent as int;
-      expect(secondIndex, lessThan(firstIndex));
+      expect(
+        _shelfOrder(tester, 'Second Import'),
+        lessThan(_shelfOrder(tester, 'First Import')),
+      );
     });
 
     testWidgets('shows progress for completed stages', (tester) async {
@@ -239,7 +241,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('95%'), findsOneWidget);
+      expect(find.text('Cleared'), findsOneWidget);
     });
 
     testWidgets('long press on imported level shows delete dialog', (
@@ -319,4 +321,14 @@ void main() {
       expect(find.text('My Song'), findsOneWidget);
     });
   });
+}
+
+/// Reading order of a book on the shelf grid: row first, then column.
+double _shelfOrder(WidgetTester tester, String title) {
+  final book = find.ancestor(
+    of: find.text(title),
+    matching: find.byType(ShelfBook),
+  );
+  final at = tester.getTopLeft(book);
+  return at.dy.roundToDouble() * 10000 + at.dx;
 }

@@ -39,7 +39,12 @@ class TolerantGoldenFileComparator extends LocalFileComparator {
       return defaultUri;
     }
     final keyStr = key.toString();
-    for (final prefix in ['test/ui/staff', 'test/ui/practice', 'test']) {
+    for (final prefix in [
+      'test/ui/staff',
+      'test/ui/practice',
+      'test/ui/results',
+      'test',
+    ]) {
       final candidate = p.join(prefix, keyStr);
       if (File(candidate).existsSync()) {
         return Uri.file(p.absolute(candidate));

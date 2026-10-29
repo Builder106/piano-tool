@@ -2,14 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/ingestion_repository.dart';
 import '../../data/level_repository.dart';
 import '../../data/progress_repository.dart';
+import '../../models/engine_models.dart';
 import '../../models/level_models.dart';
-import '../levels/level_list_screen.dart';
+import '../desk/desk.dart';
+import '../desk/pencil_mark.dart';
+import '../desk/shelf_book.dart';
+import '../staff/staff_geometry.dart';
+import '../staff/staff_view.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 
-/// Landing home screen and continue hub for practice.
+/// Home: the music desk. The stage you are on stands open, its cloth cover
+/// beside the practice sheet, and the rest of your books wait on the shelf.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -19,482 +26,440 @@ class HomeScreen extends ConsumerWidget {
     final repositoryAsync = ref.watch(levelRepositoryProvider);
 
     return repositoryAsync.when(
-      data: (repository) => _buildScaffold(context, ref, repository),
+      data: (repository) => _HomeDesk(repository: repository),
       loading: () => Scaffold(
-        backgroundColor: colors.paper,
-        body: const SafeArea(child: Center(child: CircularProgressIndicator())),
+        backgroundColor: colors.desk,
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, _) => Scaffold(
-        backgroundColor: colors.paper,
-        body: SafeArea(
-          child: Center(
-            child: Text(
-              'Error loading stages: $error',
-              style: TextStyle(color: colors.error),
-            ),
+        backgroundColor: colors.desk,
+        body: Center(
+          child: Text(
+            'The stages could not be loaded: $error',
+            style: TextStyle(color: colors.deskInk),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildScaffold(
-    BuildContext context,
-    WidgetRef ref,
-    LevelRepository repository,
-  ) {
+/// What the shelf needs to know about each stage.
+typedef _Book = ({
+  StageModel stage,
+  int index,
+  bool imported,
+  bool unlocked,
+  StageProgress? progress,
+});
+
+class _HomeDesk extends ConsumerWidget {
+  const _HomeDesk({required this.repository});
+
+  final LevelRepository repository;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = PianoTheme.colorsOf(context);
-    final textTheme = PianoTheme.textThemeOf(context);
-    final stages = repository.getAllStages();
-
     final progressAsync = ref.watch(stageProgressProvider);
     final lastPlayedAsync = ref.watch(lastPlayedStageIdProvider);
 
     if (progressAsync.isLoading || lastPlayedAsync.isLoading) {
       return Scaffold(
-        backgroundColor: colors.paper,
-        body: const SafeArea(child: Center(child: CircularProgressIndicator())),
+        backgroundColor: colors.desk,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     final progress = progressAsync.value ?? <String, StageProgress>{};
-    final lastPlayedId = lastPlayedAsync.value;
-
-    StageModel? continueStage;
-    if (lastPlayedId != null) {
-      final candidate = repository.getStage(lastPlayedId);
-      if (candidate != null) {
-        final isUnlocked = candidate.prerequisites.every(
-          (id) => progress[id]?.completed == true,
-        );
-        if (isUnlocked) {
-          continueStage = candidate;
-        }
-      }
-    }
-
-    // Fall back to the first unlocked stage, or the first stage in the repository
-    continueStage ??= stages.cast<StageModel?>().firstWhere(
-      (s) =>
-          s != null &&
-          s.prerequisites.every((id) => progress[id]?.completed == true),
-      orElse: () => stages.isNotEmpty ? stages.first : null,
-    );
-
-    final totalStages = stages.length;
-    final completedCount = stages
-        .where((s) => progress[s.id]?.completed == true)
-        .length;
-
-    return Scaffold(
-      backgroundColor: colors.paper,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: PianoSpacing.lg,
-            vertical: PianoSpacing.md,
+    final stages = repository.getAllStages();
+    final books = <_Book>[
+      for (final (index, stage) in stages.indexed)
+        (
+          stage: stage,
+          index: index,
+          imported: repository.isImportedLevel(stage.level.id),
+          unlocked: stage.prerequisites.every(
+            (id) => progress[id]?.completed == true,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header Row
-              Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+          progress: progress[stage.id],
+        ),
+    ];
+
+    // The last stage played, if it is still open; otherwise the first open one.
+    final lastPlayedId = lastPlayedAsync.value;
+    final _Book? current =
+        books
+            .where((b) => b.stage.id == lastPlayedId && b.unlocked)
+            .firstOrNull ??
+        books.where((b) => b.unlocked).firstOrNull ??
+        books.firstOrNull;
+
+    void open(_Book book) => context.push('/practice/${book.stage.id}');
+    final canImport = ref.watch(importAvailableProvider);
+
+    return DeskScaffold(
+      brand: true,
+      actions: [
+        DeskAction(
+          label: 'Library',
+          icon: Icons.menu_book_outlined,
+          onPressed: () => context.push('/levels'),
+        ),
+        if (canImport)
+          DeskAction(
+            label: 'Import a piece',
+            icon: Icons.add_rounded,
+            onPressed: () => context.push('/import'),
+          ),
+        DeskAction(
+          label: 'Settings',
+          icon: Icons.tune_rounded,
+          onPressed: () => context.push('/settings'),
+        ),
+      ],
+      body: current == null
+          ? _EmptyDesk(
+              onImport: canImport ? () => context.push('/import') : null,
+            )
+          : LayoutBuilder(
+              builder: (context, box) {
+                final wide = box.maxWidth >= 760;
+                final shelf = _Shelf(
+                  books: books,
+                  currentId: current.stage.id,
+                  onOpen: open,
+                  onLibrary: () => context.push('/levels'),
+                );
+                final cover = Semantics(
+                  button: true,
+                  label: 'Open ${current.stage.title}',
+                  excludeSemantics: true,
+                  child: LiftingBook(
+                    onTap: () => open(current),
+                    child: StageCover(
+                      cloth: CoverCloth.forStage(
+                        index: current.index,
+                        imported: current.imported,
+                      ),
+                      number: current.imported ? null : current.index + 1,
+                      title: current.stage.title,
+                      sticker: current.progress?.completed ?? false,
+                    ),
+                  ),
+                );
+                final sheet = _PracticeSheet(
+                  book: current,
+                  stageCount: books.length,
+                  onStart: () => open(current),
+                );
+
+                if (!wide) {
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      PianoSpacing.md,
+                      PianoSpacing.xs,
+                      PianoSpacing.md,
+                      PianoSpacing.xl,
+                    ),
                     children: [
-                      Text(
-                        'Piano Tool',
-                        style: textTheme.headlineMedium?.copyWith(
-                          color: colors.ink,
-                          fontWeight: FontWeight.w700,
+                      Center(child: SizedBox(width: 180, child: cover)),
+                      const SizedBox(height: PianoSpacing.lg),
+                      sheet,
+                      const SizedBox(height: PianoSpacing.xl),
+                      shelf,
+                    ],
+                  );
+                }
+
+                // One scrolling desk: the sheet sizes to its content, so
+                // nothing on it is ever clipped by a box beside the cover.
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    PianoSpacing.xl,
+                    PianoSpacing.xs,
+                    PianoSpacing.xl,
+                    PianoSpacing.lg,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        // Room for the page clip above the sheet.
+                        padding: const EdgeInsets.only(top: PianoSpacing.md),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // About the width of a method book lying on the
+                            // desk beside its open page.
+                            SizedBox(
+                              width: (box.maxWidth * 0.2).clamp(180.0, 260.0),
+                              child: cover,
+                            ),
+                            const SizedBox(width: PianoSpacing.xl),
+                            Expanded(child: sheet),
+                          ],
                         ),
                       ),
-                      Text(
-                        'Interactive practice tutor and transcription studio',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colors.muted,
-                        ),
-                      ),
+                      const _DeskPencil(),
+                      shelf,
                     ],
                   ),
-                  const Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      Icons.library_music_outlined,
-                      color: colors.ink,
-                      size: 26,
-                    ),
-                    onPressed: () => context.push('/levels'),
-                    tooltip: 'All levels',
-                  ),
-                  const SizedBox(width: PianoSpacing.xs),
-                  IconButton(
-                    icon: Icon(Icons.add_rounded, color: colors.ink, size: 28),
-                    onPressed: () => context.push('/import'),
-                    tooltip: 'Import piece',
-                  ),
-                  const SizedBox(width: PianoSpacing.xs),
-                  IconButton(
-                    icon: Icon(
-                      Icons.settings_outlined,
-                      color: colors.ink,
-                      size: 26,
-                    ),
-                    onPressed: () => context.push('/settings'),
-                    tooltip: 'Settings & Calibration',
-                  ),
-                ],
-              ),
-              const SizedBox(height: PianoSpacing.md),
+                );
+              },
+            ),
+    );
+  }
+}
 
-              // Main Content Area (Landscape Two-Column Layout)
+/// The practice sheet for the open stage: printed header, the opening bars,
+/// the teacher's note, and the one action, circled in pencil.
+class _PracticeSheet extends StatelessWidget {
+  const _PracticeSheet({
+    required this.book,
+    required this.stageCount,
+    required this.onStart,
+  });
+
+  final _Book book;
+  final int stageCount;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = PianoTheme.colorsOf(context);
+    final text = PianoTheme.textThemeOf(context);
+    final stage = book.stage;
+    final attempts = book.progress?.attempts ?? 0;
+    final cleared = book.progress?.completed ?? false;
+    final status = cleared
+        ? 'Cleared'
+        : attempts > 0
+        ? 'In progress'
+        : 'Up next';
+
+    return PaperSheet(
+      tilt: -0.6,
+      clipped: true,
+      padding: const EdgeInsets.fromLTRB(
+        PianoSpacing.xl,
+        PianoSpacing.lg,
+        PianoSpacing.xl,
+        PianoSpacing.lg,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
               Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Text(
+                  book.imported
+                      ? 'Your piece'
+                      : 'Stage ${book.index + 1} of $stageCount',
+                  style: text.bodySmall?.copyWith(color: colors.muted),
+                ),
+              ),
+              if (cleared) ...[
+                PencilMark(Pencil.tick, color: colors.success, height: 14),
+                const SizedBox(width: PianoSpacing.xs2),
+              ],
+              Text(
+                status,
+                style: text.titleLarge?.copyWith(
+                  color: colors.muted,
+                  fontStyle: FontStyle.italic,
+                  fontWeight: FontWeight.w500,
+                  fontVariations: const [FontVariation('wght', 500)],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: PianoSpacing.xs),
+          Text(
+            stage.title,
+            style: text.displayLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+              fontVariations: const [FontVariation('wght', 500)],
+            ),
+          ),
+          const SizedBox(height: PianoSpacing.md),
+          SizedBox(
+            height: stage.level.clef == LevelClef.grand ? 150 : 96,
+            child: _OpeningBars(level: stage.level),
+          ),
+          const SizedBox(height: PianoSpacing.md),
+          Text(
+            stage.description,
+            style: text.headlineSmall?.copyWith(
+              color: colors.muted,
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w400,
+              fontVariations: const [FontVariation('wght', 400)],
+            ),
+          ),
+          const SizedBox(height: PianoSpacing.lg),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: PianoSpacing.lg,
+                  runSpacing: PianoSpacing.xs,
                   children: [
-                    // Primary Continue Hero Card
-                    Expanded(
-                      flex: 5,
-                      child: continueStage != null
-                          ? _ContinueCard(
-                              stage: continueStage,
-                              progress: progress[continueStage.id],
-                              isImported: repository.isImportedLevel(
-                                continueStage.level.id,
-                              ),
-                              onContinue: () => context.push(
-                                '/practice/${continueStage!.id}',
-                              ),
-                            )
-                          : _EmptyStagesCard(
-                              onImport: () => context.push('/import'),
-                            ),
+                    _Fact(label: 'Tempo', value: '${stage.level.tempo}'),
+                    _Fact(
+                      label: 'Time',
+                      value:
+                          '${stage.level.beatsPerMeasure}/${stage.level.beatUnit}',
                     ),
-                    const SizedBox(width: PianoSpacing.md),
-
-                    // Secondary Hub Cards Column
-                    Expanded(
-                      flex: 4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: _LibrarySummaryCard(
-                              totalStages: totalStages,
-                              completedCount: completedCount,
-                              onBrowse: () => context.push('/levels'),
-                            ),
-                          ),
-                          const SizedBox(height: PianoSpacing.md),
-                          Expanded(
-                            child: _QuickImportCard(
-                              onImport: () => context.push('/import'),
-                            ),
-                          ),
-                        ],
+                    if (attempts > 0) ...[
+                      _Fact(
+                        label: 'Best',
+                        value:
+                            '${((book.progress?.bestAccuracy ?? 0) * 100).round()}%',
                       ),
-                    ),
+                      _Fact(
+                        label: attempts == 1 ? 'Run' : 'Runs',
+                        value: '$attempts',
+                      ),
+                    ],
                   ],
                 ),
               ),
+              PencilButton(
+                label: attempts > 0 ? 'Resume' : 'Start',
+                semanticLabel:
+                    '${attempts > 0 ? 'Resume' : 'Start'} ${stage.title}',
+                onPressed: onStart,
+              ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-/// Hero card highlighting the active or next recommended practice stage.
-class _ContinueCard extends StatelessWidget {
-  const _ContinueCard({
-    required this.stage,
-    required this.progress,
-    required this.isImported,
-    required this.onContinue,
-  });
+/// The first bars of the stage, engraved on the sheet.
+class _OpeningBars extends StatelessWidget {
+  const _OpeningBars({required this.level});
 
-  final StageModel stage;
-  final StageProgress? progress;
-  final bool isImported;
-  final VoidCallback onContinue;
+  final LevelModel level;
 
   @override
   Widget build(BuildContext context) {
-    final colors = PianoTheme.colorsOf(context);
-    final textTheme = PianoTheme.textThemeOf(context);
-
-    final attempts = progress?.attempts ?? 0;
-    final isCompleted = progress?.completed ?? false;
-    final bestAccuracy = progress?.bestAccuracy ?? 0.0;
-    final bestScore = progress?.bestScore ?? 0;
-
-    final String statusLabel = isCompleted
-        ? 'Cleared'
-        : attempts > 0
-        ? 'In Progress'
-        : 'Up Next';
-
-    final Color statusColor = isCompleted
-        ? colors.success
-        : attempts > 0
-        ? colors.accent
-        : colors.muted;
-
-    return Material(
-      color: colors.paper3,
-      borderRadius: BorderRadius.circular(PianoRadius.lg),
-      child: InkWell(
-        onTap: onContinue,
-        borderRadius: BorderRadius.circular(PianoRadius.lg),
-        child: Padding(
-          padding: const EdgeInsets.all(PianoSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Row: Card section name and status badge
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Continue Practice',
-                      style: textTheme.titleMedium?.copyWith(
-                        color: colors.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: PianoSpacing.xs),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: PianoSpacing.sm,
-                      vertical: PianoSpacing.xs2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(PianoRadius.sm),
-                    ),
-                    child: Text(
-                      statusLabel,
-                      style: textTheme.labelSmall?.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-
-              // Title and Description
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: stageDifficultyColor(
-                        stage.difficulty,
-                        colors,
-                      ).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(PianoRadius.md),
-                    ),
-                    child: Icon(
-                      isImported
-                          ? Icons.upload_file_rounded
-                          : stageDifficultyIcon(stage.difficulty),
-                      color: stageDifficultyColor(stage.difficulty, colors),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: PianoSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          stage.title,
-                          style: textTheme.titleLarge?.copyWith(
-                            color: colors.ink,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: PianoSpacing.xs2),
-                        Text(
-                          stage.description,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colors.muted,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-
-              // Metrics & Action Row
-              Row(
-                children: [
-                  Expanded(
-                    child: attempts > 0
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${(bestAccuracy * 100).round()}% accuracy',
-                                style: textTheme.labelMedium?.copyWith(
-                                  color: colors.ink,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                '$bestScore pts | $attempts ${attempts == 1 ? "run" : "runs"}',
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: colors.muted,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          )
-                        : Text(
-                            '${stage.level.tempo} BPM | 4/4 meter',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colors.muted,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                  ),
-                  const SizedBox(width: PianoSpacing.sm),
-                  FilledButton.icon(
-                    onPressed: onContinue,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colors.accent,
-                      foregroundColor: colors.accentInk,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: PianoSpacing.lg,
-                        vertical: PianoSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(PianoRadius.md),
-                      ),
-                    ),
-                    icon: Icon(
-                      attempts > 0
-                          ? Icons.play_arrow_rounded
-                          : Icons.arrow_forward_rounded,
-                      size: 20,
-                    ),
-                    label: Text(
-                      attempts > 0 ? 'Resume' : 'Start',
-                      style: textTheme.labelLarge?.copyWith(
-                        color: colors.accentInk,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    final notes = [
+      for (final measure in level.measures)
+        for (final note in measure.notes)
+          (
+            midi: note.midiNote,
+            startBeat: note.startBeat,
+            state: NoteState.upcoming,
           ),
+    ]..sort((a, b) => a.startBeat.compareTo(b.startBeat));
+    final systems = switch (level.clef) {
+      LevelClef.treble => [(clef: Clef.treble, notes: notes)],
+      LevelClef.bass => [(clef: Clef.bass, notes: notes)],
+      LevelClef.grand => [
+        (
+          clef: Clef.treble,
+          notes: [
+            for (final n in notes)
+              if (n.midi >= 60) n,
+          ],
         ),
+        (
+          clef: Clef.bass,
+          notes: [
+            for (final n in notes)
+              if (n.midi < 60) n,
+          ],
+        ),
+      ],
+    };
+    return ExcludeSemantics(
+      child: StaffView(
+        systems: systems,
+        currentBeat: 0,
+        totalBeats: (level.totalMeasures * level.beatsPerMeasure).toDouble(),
+        beatsPerMeasure: level.beatsPerMeasure,
+        beatUnit: level.beatUnit,
+        pixelsPerBeat: 44,
+        showPlayhead: false,
       ),
     );
   }
 }
 
-/// Secondary card showing overall library completion and a link to all levels.
-class _LibrarySummaryCard extends StatelessWidget {
-  const _LibrarySummaryCard({
-    required this.totalStages,
-    required this.completedCount,
-    required this.onBrowse,
-  });
+class _Fact extends StatelessWidget {
+  const _Fact({required this.label, required this.value});
 
-  final int totalStages;
-  final int completedCount;
-  final VoidCallback onBrowse;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
     final colors = PianoTheme.colorsOf(context);
-    final textTheme = PianoTheme.textThemeOf(context);
-    final double ratio = totalStages > 0 ? (completedCount / totalStages) : 0.0;
+    final text = PianoTheme.textThemeOf(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: text.labelSmall?.copyWith(color: colors.muted)),
+        Text(value, style: text.labelLarge?.copyWith(fontSize: 16)),
+      ],
+    );
+  }
+}
 
-    return Material(
-      color: colors.paper3,
-      borderRadius: BorderRadius.circular(PianoRadius.lg),
+/// The sheet's one action: the word in the app's blue with a pencil loop
+/// drawn round it, the way a teacher circles where to begin.
+class PencilButton extends StatelessWidget {
+  const PencilButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.semanticLabel,
+  });
+
+  final String label;
+  final VoidCallback onPressed;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = PianoTheme.colorsOf(context);
+    final text = PianoTheme.textThemeOf(context);
+    return Semantics(
+      button: true,
+      label: semanticLabel ?? label,
+      excludeSemantics: true,
       child: InkWell(
-        onTap: onBrowse,
-        borderRadius: BorderRadius.circular(PianoRadius.lg),
-        child: Padding(
-          padding: const EdgeInsets.all(PianoSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(40),
+        child: SizedBox(
+          width: 160,
+          height: 72,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.library_music_rounded,
-                    color: colors.accent,
-                    size: 20,
-                  ),
-                  const SizedBox(width: PianoSpacing.xs),
-                  Text(
-                    'Level Library',
-                    style: textTheme.titleSmall?.copyWith(
-                      color: colors.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '$completedCount of $totalStages cleared',
-                    style: textTheme.labelSmall?.copyWith(color: colors.muted),
-                  ),
-                ],
+              PencilMark(
+                Pencil.loop,
+                color: colors.accent,
+                width: 150,
+                drawOn: true,
+                delay: const Duration(milliseconds: 250),
               ),
-              const Spacer(),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(PianoRadius.sm),
-                child: LinearProgressIndicator(
-                  value: ratio,
-                  minHeight: 6,
-                  backgroundColor: colors.rule2,
-                  valueColor: AlwaysStoppedAnimation(colors.accent),
+              Text(
+                label,
+                style: text.displayLarge?.copyWith(
+                  color: colors.accent,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w600,
+                  fontVariations: const [FontVariation('wght', 600)],
                 ),
               ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'Browse all levels',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: colors.accent,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: PianoSpacing.xs2),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: colors.accent,
-                    size: 14,
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -503,120 +468,134 @@ class _LibrarySummaryCard extends StatelessWidget {
   }
 }
 
-/// Secondary card offering a quick path to audio import and transcription.
-class _QuickImportCard extends StatelessWidget {
-  const _QuickImportCard({required this.onImport});
+/// Every stage as a book on the shelf, with its standing pencilled beneath.
+class _Shelf extends StatelessWidget {
+  const _Shelf({
+    required this.books,
+    required this.currentId,
+    required this.onOpen,
+    required this.onLibrary,
+  });
 
-  final VoidCallback onImport;
+  final List<_Book> books;
+  final String currentId;
+  final ValueChanged<_Book> onOpen;
+  final VoidCallback onLibrary;
 
   @override
   Widget build(BuildContext context) {
     final colors = PianoTheme.colorsOf(context);
-    final textTheme = PianoTheme.textThemeOf(context);
+    final text = PianoTheme.textThemeOf(context);
+    final cleared = books.where((b) => b.progress?.completed == true).length;
 
-    return Material(
-      color: colors.paper3,
-      borderRadius: BorderRadius.circular(PianoRadius.lg),
-      child: InkWell(
-        onTap: onImport,
-        borderRadius: BorderRadius.circular(PianoRadius.lg),
-        child: Padding(
-          padding: const EdgeInsets.all(PianoSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.upload_file_rounded,
-                    color: colors.accent,
-                    size: 20,
-                  ),
-                  const SizedBox(width: PianoSpacing.xs),
-                  Text(
-                    'Import Piece',
-                    style: textTheme.titleSmall?.copyWith(
-                      color: colors.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Your books',
+              style: text.titleLarge?.copyWith(color: colors.deskInk),
+            ),
+            const SizedBox(width: PianoSpacing.sm),
+            Text(
+              '$cleared of ${books.length} cleared',
+              style: text.bodySmall?.copyWith(color: colors.deskMuted),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: onLibrary,
+              style: TextButton.styleFrom(foregroundColor: colors.deskAccent),
+              child: const Text('Open the library'),
+            ),
+          ],
+        ),
+        const SizedBox(height: PianoSpacing.xs),
+        SizedBox(
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: books.length,
+            separatorBuilder: (_, _) => const SizedBox(width: PianoSpacing.md),
+            itemBuilder: (context, i) => ShelfBook(
+              cloth: CoverCloth.forStage(
+                index: books[i].index,
+                imported: books[i].imported,
               ),
-              const Spacer(),
-              Text(
-                'Transcribe audio recordings into playable practice levels.',
-                style: textTheme.bodySmall?.copyWith(color: colors.muted),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'Import audio',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: colors.accent,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: PianoSpacing.xs2),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: colors.accent,
-                    size: 14,
-                  ),
-                ],
-              ),
-            ],
+              stage: books[i].stage,
+              number: books[i].imported ? null : books[i].index + 1,
+              unlocked: books[i].unlocked,
+              progress: books[i].progress,
+              current: books[i].stage.id == currentId,
+              onOpen: books[i].unlocked ? () => onOpen(books[i]) : null,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
 
-/// Fallback card when no stages are found.
-class _EmptyStagesCard extends StatelessWidget {
-  const _EmptyStagesCard({required this.onImport});
+/// The pencil the teacher left on the desk, rolled a little off square.
+class _DeskPencil extends StatelessWidget {
+  const _DeskPencil();
 
-  final VoidCallback onImport;
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerRight,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(
+        0,
+        PianoSpacing.sm,
+        PianoSpacing.xl,
+        0,
+      ),
+      child: Transform.rotate(
+        angle: -0.04,
+        child: Image.asset(
+          'assets/art/pencil.png',
+          width: 300,
+          excludeFromSemantics: true,
+        ),
+      ),
+    ),
+  );
+}
+
+/// No stages at all: the desk is bare apart from an invitation to import.
+class _EmptyDesk extends StatelessWidget {
+  const _EmptyDesk({required this.onImport});
+
+  /// Null when this build cannot import.
+  final VoidCallback? onImport;
 
   @override
   Widget build(BuildContext context) {
-    final colors = PianoTheme.colorsOf(context);
-    final textTheme = PianoTheme.textThemeOf(context);
-
-    return Material(
-      color: colors.paper3,
-      borderRadius: BorderRadius.circular(PianoRadius.lg),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(PianoSpacing.lg),
+    final text = PianoTheme.textThemeOf(context);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: PaperSheet(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.music_off_rounded, color: colors.muted, size: 40),
-              const SizedBox(height: PianoSpacing.sm),
-              Text(
-                'No stages available',
-                style: textTheme.titleMedium?.copyWith(color: colors.ink),
-              ),
+              Text('No stages yet', style: text.headlineLarge),
               const SizedBox(height: PianoSpacing.xs),
               Text(
-                'Import an audio piece to begin practice.',
-                style: textTheme.bodySmall?.copyWith(color: colors.muted),
+                onImport != null
+                    ? 'Import a recording and it becomes a stage you can practise.'
+                    : 'Stages will appear here once there are some to play.',
+                textAlign: TextAlign.center,
+                style: text.bodyMedium,
               ),
-              const SizedBox(height: PianoSpacing.md),
-              FilledButton.icon(
-                onPressed: onImport,
-                style: FilledButton.styleFrom(
-                  backgroundColor: colors.accent,
-                  foregroundColor: colors.accentInk,
+              if (onImport case final onImport?) ...[
+                const SizedBox(height: PianoSpacing.md),
+                FilledButton(
+                  onPressed: onImport,
+                  child: const Text('Import a piece'),
                 ),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Import piece'),
-              ),
+              ],
             ],
           ),
         ),

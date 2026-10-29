@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/settings_repository.dart';
+import '../desk/desk.dart';
 import '../theme/tokens.dart';
 import 'stage_controller.dart';
 
@@ -73,42 +74,44 @@ class _Denied extends StatelessWidget {
         padding: const EdgeInsets.all(PianoSpacing.lg),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('No microphone', style: text.headlineSmall),
-              const SizedBox(height: PianoSpacing.xs),
-              Text(message, style: text.bodyMedium),
-              const SizedBox(height: PianoSpacing.md),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FilledButton(
-                    onPressed: onRetry,
-                    child: const Text('Try again'),
-                  ),
-                  const SizedBox(width: PianoSpacing.sm),
-                  // A permanently denied permission never prompts again, so
-                  // retry alone would be a dead end.
-                  TextButton(
-                    // openAppSettings() reports whether it could open the
-                    // settings screen; a plain tear-off would discard that
-                    // exactly like the boolean this task exists to stop
-                    // ignoring, so a failure is at least logged.
-                    onPressed: () async {
-                      final opened = await openAppSettings();
-                      if (!opened) {
-                        debugPrint(
-                          'MicPermissionGate: could not open app settings',
-                        );
-                      }
-                    },
-                    child: const Text('Open settings'),
-                  ),
-                ],
-              ),
-            ],
+          child: PaperSheet(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('No microphone', style: text.headlineSmall),
+                const SizedBox(height: PianoSpacing.xs),
+                Text(message, style: text.bodyMedium),
+                const SizedBox(height: PianoSpacing.md),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FilledButton(
+                      onPressed: onRetry,
+                      child: const Text('Try again'),
+                    ),
+                    const SizedBox(width: PianoSpacing.sm),
+                    // A permanently denied permission never prompts again, so
+                    // retry alone would be a dead end.
+                    TextButton(
+                      // openAppSettings() reports whether it could open the
+                      // settings screen; a plain tear-off would discard that
+                      // exactly like the boolean this task exists to stop
+                      // ignoring, so a failure is at least logged.
+                      onPressed: () async {
+                        final opened = await openAppSettings();
+                        if (!opened) {
+                          debugPrint(
+                            'MicPermissionGate: could not open app settings',
+                          );
+                        }
+                      },
+                      child: const Text('Open settings'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

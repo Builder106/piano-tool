@@ -39,17 +39,15 @@ class PracticeHud extends StatelessWidget {
             horizontal: PianoSpacing.sm,
             vertical: PianoSpacing.xs2,
           ),
-          decoration: BoxDecoration(
-            color: colors.paper2,
-            border: Border(bottom: BorderSide(color: colors.rule)),
-          ),
+          // On the desk: lacquer, light type, nothing boxed.
           child: Row(
             children: [
               if (onBack != null)
                 IconButton(
                   onPressed: onBack,
-                  iconSize: 18,
-                  icon: const Icon(Icons.chevron_left),
+                  iconSize: 26,
+                  color: colors.deskInk,
+                  icon: const Icon(Icons.chevron_left_rounded),
                   tooltip: 'Back',
                 ),
               // Both sides are flex children, so neither can push the other off
@@ -61,7 +59,7 @@ class PracticeHud extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: text.titleLarge,
+                  style: text.headlineSmall?.copyWith(color: colors.deskInk),
                 ),
               ),
               const SizedBox(width: PianoSpacing.sm),
@@ -73,13 +71,13 @@ class PracticeHud extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _Metric(label: 'BPM', value: '$tempo'),
-                      const SizedBox(width: PianoSpacing.md),
+                      _Metric(label: 'Tempo', value: '$tempo'),
+                      const SizedBox(width: PianoSpacing.lg),
                       _Metric(label: 'Score', value: '$score'),
-                      const SizedBox(width: PianoSpacing.md),
+                      const SizedBox(width: PianoSpacing.lg),
                       _Metric(
-                        label: 'Acc',
-                        value: '${(accuracy * 100).toStringAsFixed(1)}%',
+                        label: 'Accuracy',
+                        value: '${(accuracy * 100).round()}%',
                       ),
                     ],
                   ),
@@ -92,7 +90,7 @@ class PracticeHud extends StatelessWidget {
           height: 2,
           child: LinearProgressIndicator(
             value: progress,
-            backgroundColor: colors.rule2,
+            backgroundColor: colors.deskRule,
             valueColor: AlwaysStoppedAnimation<Color>(colors.accent),
           ),
         ),
@@ -109,12 +107,21 @@ class _Metric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = PianoTheme.colorsOf(context);
     final text = Theme.of(context).textTheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       children: [
-        Text('$label ', style: text.labelSmall),
-        Text(value, style: text.labelLarge),
+        Text(
+          '$label ',
+          style: text.labelSmall?.copyWith(color: colors.deskMuted),
+        ),
+        Text(
+          value,
+          style: text.labelLarge?.copyWith(color: colors.deskInk, fontSize: 15),
+        ),
       ],
     );
   }

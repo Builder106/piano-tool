@@ -12,6 +12,7 @@ import 'ui/practice/practice_screen.dart';
 import 'ui/practice/stage_controller.dart';
 import 'ui/results/results_screen.dart';
 import 'ui/settings/settings_screen.dart';
+import 'ui/theme/app_theme.dart';
 
 /// GoRouter configuration for the app
 final appRouterProvider = FutureProvider<GoRouter>((ref) async {
@@ -78,8 +79,13 @@ final appRouterProvider = FutureProvider<GoRouter>((ref) async {
           final result = state.extra;
           if (result is! StageResult ||
               result.stageId != state.pathParameters['stageId']) {
-            return const Scaffold(
-              body: Center(child: Text('Missing stage results')),
+            return Scaffold(
+              body: Center(
+                child: Text(
+                  'Missing stage results',
+                  style: TextStyle(color: PianoTheme.colorsOf(context).deskInk),
+                ),
+              ),
             );
           }
 
