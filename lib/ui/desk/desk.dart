@@ -60,7 +60,14 @@ class DeskScaffold extends StatelessWidget {
                   else
                     const SizedBox(width: PianoSpacing.xs),
                   const SizedBox(width: PianoSpacing.xs),
-                  if (brand) const BrandLockup(),
+                  if (brand)
+                    const Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: BrandLockup(),
+                      ),
+                    ),
                   if (!brand && title != null)
                     Flexible(
                       child: Column(
@@ -151,6 +158,14 @@ class DeskAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = PianoTheme.colorsOf(context);
+    if (MediaQuery.sizeOf(context).width < 500) {
+      return IconButton(
+        onPressed: onPressed,
+        tooltip: label,
+        color: colors.deskMuted,
+        icon: Icon(icon, size: 20),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(left: PianoSpacing.xs),
       child: TextButton.icon(

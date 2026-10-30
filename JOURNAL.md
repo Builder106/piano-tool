@@ -1,5 +1,12 @@
 # Journal
 
+## 2026-10-29: start at the practice desk #ux #decision
+
+The public homepage now leads to the practice desk. The playable scale remains
+an optional tour at `/tour/`, linked from the desk, and returns to practice.
+The app continues to live under `/app/` so existing links and saved browser
+data keep their existing origin and path.
+
 ## 2026-10-29: choose practice input before listening #ux #decision
 
 New learners choose microphone or digital piano before practice requests a

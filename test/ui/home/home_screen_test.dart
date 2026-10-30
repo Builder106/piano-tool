@@ -81,6 +81,19 @@ void main() {
       expect(find.text('Settings'), findsOneWidget);
     });
 
+    testWidgets('keeps settings accessible on a phone', (tester) async {
+      tester.view.physicalSize = const Size(320, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Settings'));
+      await tester.pumpAndSettle();
+      expect(find.text('Settings Screen'), findsOneWidget);
+    });
+
     testWidgets('opens the first stage when nothing has been played', (
       tester,
     ) async {
@@ -166,6 +179,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.text('Ode to Joy'));
       await tester.tap(find.text('Ode to Joy'));
       await tester.pumpAndSettle();
 

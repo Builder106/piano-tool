@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,7 @@ import '../staff/staff_geometry.dart';
 import '../staff/staff_view.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
+import 'tour_link.dart' if (dart.library.js_interop) 'tour_link_web.dart';
 
 /// Home: the music desk. The stage you are on stands open, its cloth cover
 /// beside the practice sheet, and the rest of your books wait on the shelf.
@@ -283,6 +285,13 @@ class _PracticeSheet extends StatelessWidget {
               fontVariations: const [FontVariation('wght', 500)],
             ),
           ),
+          if (attempts == 0) ...[
+            const SizedBox(height: PianoSpacing.sm),
+            Text(
+              'Play your piano while Piano Tool follows the music and marks your notes.',
+              style: text.bodyMedium,
+            ),
+          ],
           const SizedBox(height: PianoSpacing.md),
           SizedBox(
             height: stage.level.clef == LevelClef.grand ? 150 : 96,
@@ -298,6 +307,14 @@ class _PracticeSheet extends StatelessWidget {
               fontVariations: const [FontVariation('wght', 400)],
             ),
           ),
+          if (kIsWeb)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: openTour,
+                child: const Text('How it works'),
+              ),
+            ),
           const SizedBox(height: PianoSpacing.lg),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,

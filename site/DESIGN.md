@@ -1,5 +1,10 @@
 # Piano Tool showcase: design record
 
+Update, 2026-10-29: the practice desk is the public entry point. This sheet is
+an optional tour at `/tour/`, opened from the desk. Its return links say
+"Back to practice". The composition and note sequence below still describe
+the tour; references to its former homepage and call to action are historical.
+
 Second composition, 2026-10-25. The first one (Astro desk with a HUD bar, a large title, two
 columns of prose and a "play next" block over a keyboard band) had the right idea and the
 wrong page: it read as an article framed by a staff and a keyboard. This record replaces it.

@@ -33,7 +33,7 @@ export type Unit = {
 
 export const units: Unit[] = [
   {
-    midi: 60, note: 'C4', route: '/', title: 'Piano Tool', label: 'Start here', key: 'A', measure: 1, beat: 1,
+    midi: 60, note: 'C4', route: '/tour/', title: 'Piano Tool', label: 'Start here', key: 'A', measure: 1, beat: 1,
     description: site.description,
   },
   {

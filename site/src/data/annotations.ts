@@ -13,7 +13,7 @@ export const annotations: Annotation[] = [
   {
     midi: 60,
     heading: 'Start here.',
-    body: 'Piano Tool listens while you practise and shows how each note went. Explore this tour by tapping the blue D key below, or press S on your computer. Open the app to practise with a scrolling score and see your results.',
+    body: 'Piano Tool listens while you practise and shows how each note went. Explore this tour by tapping the blue D key below, or press S on your computer. Return to practice whenever you are ready.',
     mark: 'start',
   },
   {

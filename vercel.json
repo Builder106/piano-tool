@@ -6,6 +6,9 @@
   },
   "buildCommand": "bash scripts/build_web.sh",
   "outputDirectory": "build/web",
+  "redirects": [
+    { "source": "/", "destination": "/app/", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/app/(.*)", "destination": "/app/index.html" }
   ]
