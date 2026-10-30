@@ -77,6 +77,7 @@ void main() {
   setUp(
     () => SharedPreferences.setMockInitialValues({
       'settings.inputConfigured': true,
+      'settings.verifiedInput': 'both',
     }),
   );
 

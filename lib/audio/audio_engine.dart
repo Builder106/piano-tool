@@ -11,6 +11,9 @@ class AudioEngine {
       StreamController<PitchEvent>.broadcast();
 
   Stream<PitchEvent> get pitchStream => _pitchController.stream;
+
+  /// Frame levels, for telling silence from a weak or unclear signal.
+  Stream<double> get levelStream => _pitchDetector.levelStream;
   bool get isRunning => _pitchDetector.isRunning;
   Future<void> _lifecycle = Future<void>.value();
   bool _disposed = false;

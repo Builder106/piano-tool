@@ -71,6 +71,7 @@ class AppSettings {
     this.customApiBaseUrl,
     this.inputSource = PracticeInputSource.both,
     this.inputConfigured = true,
+    this.verifiedInput,
   });
 
   final ThemeMode themeMode;
@@ -81,6 +82,10 @@ class AppSettings {
   final String? customApiBaseUrl;
   final PracticeInputSource inputSource;
   final bool inputConfigured;
+
+  /// The input Piano Tool last actually heard a note from, as an
+  /// [inputCheckKey]. Permission alone never sets it.
+  final String? verifiedInput;
 
   StageEngineConfig toStageEngineConfig() => StageEngineConfig(
     perfectWindow: toleranceLevel.perfectWindow,
@@ -104,7 +109,9 @@ class AppSettings {
     String? customApiBaseUrl,
     PracticeInputSource? inputSource,
     bool? inputConfigured,
+    String? verifiedInput,
     bool clearCustomApiBaseUrl = false,
+    bool clearVerifiedInput = false,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     defaultPlaybackSpeed: defaultPlaybackSpeed ?? this.defaultPlaybackSpeed,
@@ -116,6 +123,9 @@ class AppSettings {
         : (customApiBaseUrl ?? this.customApiBaseUrl),
     inputSource: inputSource ?? this.inputSource,
     inputConfigured: inputConfigured ?? this.inputConfigured,
+    verifiedInput: clearVerifiedInput
+        ? null
+        : (verifiedInput ?? this.verifiedInput),
   );
 
   @override
@@ -130,7 +140,8 @@ class AppSettings {
           referenceFrequency == other.referenceFrequency &&
           customApiBaseUrl == other.customApiBaseUrl &&
           inputSource == other.inputSource &&
-          inputConfigured == other.inputConfigured;
+          inputConfigured == other.inputConfigured &&
+          verifiedInput == other.verifiedInput;
 
   @override
   int get hashCode => Object.hash(
@@ -142,6 +153,7 @@ class AppSettings {
     customApiBaseUrl,
     inputSource,
     inputConfigured,
+    verifiedInput,
   );
 }
 
@@ -156,6 +168,7 @@ class SettingsRepository {
   static const _customApiUrlKey = '${_prefix}customApiUrl';
   static const _inputSourceKey = '${_prefix}inputSource';
   static const _inputConfiguredKey = '${_prefix}inputConfigured';
+  static const _verifiedInputKey = '${_prefix}verifiedInput';
 
   Future<AppSettings> read() async {
     final prefs = await SharedPreferences.getInstance();
@@ -198,6 +211,7 @@ class SettingsRepository {
       inputConfigured:
           prefs.getBool(_inputConfiguredKey) ??
           prefs.containsKey(_inputSourceKey),
+      verifiedInput: prefs.getString(_verifiedInputKey),
     );
   }
 
@@ -210,6 +224,11 @@ class SettingsRepository {
     await prefs.setDouble(_referenceFreqKey, settings.referenceFrequency);
     await prefs.setString(_inputSourceKey, settings.inputSource.name);
     await prefs.setBool(_inputConfiguredKey, settings.inputConfigured);
+    if (settings.verifiedInput != null) {
+      await prefs.setString(_verifiedInputKey, settings.verifiedInput!);
+    } else {
+      await prefs.remove(_verifiedInputKey);
+    }
 
     if (settings.customApiBaseUrl != null &&
         settings.customApiBaseUrl!.trim().isNotEmpty) {
@@ -279,6 +298,14 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setInputSource(PracticeInputSource source) async {
     state = state.copyWith(inputSource: source, inputConfigured: true);
+    final repo = ref.read(settingsRepositoryProvider);
+    await repo.save(state);
+  }
+
+  /// Records the input a note was actually heard from, or clears it so the
+  /// next practice checks again.
+  Future<void> setVerifiedInput(String? key) async {
+    state = state.copyWith(verifiedInput: key, clearVerifiedInput: key == null);
     final repo = ref.read(settingsRepositoryProvider);
     await repo.save(state);
   }
