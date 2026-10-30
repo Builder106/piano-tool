@@ -1,5 +1,42 @@
 # Journal
 
+## 2026-10-30: revise the roadmap around practice and UI #roadmap #decision
+
+Updated `ROADMAP.md` with the package study and the follow-up concern that
+the UI feels lifeless. Existing source capabilities now have a separate
+implemented-foundation list, with physical and rendered validation still
+explicitly pending where it has not been observed.
+
+The first release slice combines notation and input trust with a more
+expressive book-to-practice-to-results journey. Later slices add clean
+phrase attempts, coaching, tempo-aware progress, and a small authored
+learning path. OMR, source separation, spaced repetition, and ear training
+remain on the roadmap. Learner settings keep backend credentials separate.
+The visual direction retains cool paper, lacquer, cloth covers, and pencil
+marks, with stronger composition, tactile response, and reduced-motion
+equivalents. This update plans the work; it does not implement the features.
+
+## 2026-10-30: study Simply Piano's teaching flow #research #ux
+
+Unpacked the supplied Simply Piano 7.33.10 Android package and compared its
+bundled lesson data, onboarding configs, localization, and notation assets
+with the current app. The research and archive fingerprint are in
+`docs/research/2026-10-30-simply-piano-study.md` and its evidence JSON.
+
+The proposed next work keeps the music desk and focuses on faithful rhythm
+notation, an actual input check, short phrase practice, and useful results.
+`PlacedNote` currently drops duration and rest data; notehead fill carries
+scoring state, so the score cannot faithfully teach those distinctions.
+Existing seek support also preserves note results and score, which needs
+explicit attempt handling before it can support repeated phrase practice.
+
+The roadmap has unchecked items already present in source, including the
+Continue desk, several settings, MIDI, review playback/editing, and staff
+and meter expansion. No roadmap status was changed: source support does not
+establish completed calibration or physical instrument verification.
+Simply's package was not launched, and bundled assets do not prove which
+controls are enabled on Android. These findings are research proposals.
+
 ## 2026-10-29: start at the practice desk #ux #decision
 
 The public homepage now leads to the practice desk. The playable scale remains

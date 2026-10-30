@@ -1,0 +1,63 @@
+{
+  "review_date": "2026-10-30",
+  "source_filename": "Simply+Piano_+Learn+Piano+Fast_7.33.10_APKPure.xapk",
+  "source_sha256": "08c72a4fe07b4ff80201d20362d1b5dff502c10ffb500f08c5b82c0dcb7b9f86",
+  "package": "com.joytunes.simplypiano",
+  "version_name": "7.33.10",
+  "version_code": 5293,
+  "piano_tool_commit": "21c5d2e2ae6486a0d23f779e7a39785c57e01bcb",
+  "method": [
+    "ZIP extraction of XAPK and base/English/density APKs",
+    "Parsed bundled JSON and decoded UTF-16 English localization",
+    "Viewed original notation/gameplay sprite atlases",
+    "Read DEX class descriptors; did not decompile method bodies",
+    "Read current piano-tool source and journal",
+    "Checked official Simply help pages"
+  ],
+  "counts": {
+    "course_definitions": 48,
+    "level_definitions": 6576,
+    "song_definitions": 3197,
+    "library_records": 3198,
+    "journey_files": 125,
+    "workout_files": 158,
+    "stages_by_type": {
+      "note_sequence": 44235,
+      "moving": 20436,
+      "video": 377,
+      "one_note": 254
+    }
+  },
+  "count_caveat": "Bundled definitions include legacy, regional, hidden, and experimental variants. Counts are not unique live courses or available songs.",
+  "selected_bundled_configuration": {
+    "failsBeforePracticeMode": 2,
+    "hintInvocationInterval": 4.0,
+    "defaultAudioVideoLatency": 0.13,
+    "retriggerTranscriberNoteOffThreshold": 1.0,
+    "onboardingFlowConfig": "Onboarding9_V2.obfc.json",
+    "coursePathsFile": "DefaultCoursePaths.cdc.json",
+    "play_enabled": false,
+    "useComposeInGameOverlay": false
+  },
+  "configuration_caveat": "Packaged defaults only; active server configuration and device behavior were not verified.",
+  "official_sources": [
+    {
+      "url": "https://piano-help.hellosimply.com/en/articles/16945914-simply-piano-song-library-menu-navigation",
+      "article_date": "2026-09-14",
+      "finding": "Android documentation lists play, restart, menu, tempo. iOS documentation additionally lists listen, hands, practice wait/hints, metronome, finger numbers. Song Library supports dragging to seek; Courses do not."
+    },
+    {
+      "url": "https://piano-help.hellosimply.com/en/articles/2791126-best-practice-tips",
+      "article_date": "2026-06-15",
+      "finding": "Recommends measurable goals, passage repetition, slower tempo, and one-hand practice."
+    }
+  ],
+  "unverified": [
+    "Installed Android screen appearance and interactions",
+    "Active remote configuration",
+    "Simply Piano audio recognition accuracy and timing",
+    "Physical instrument operation",
+    "Current rendered piano-tool UI"
+  ],
+  "original_assets_reused_in_piano_tool": false
+}
