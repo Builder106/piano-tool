@@ -1,5 +1,45 @@
 # Journal
 
+## 2026-10-30: v1.1 notation, input check and practice journey #ui #engine #decision
+
+Implemented most of the v1.1 roadmap on `feat/practice-journey`.
+
+Notation: levels store silence as gaps, so the staff derives rests per
+measure, aligned to the beats they cover. A note that rings past the
+barline is written up to it; ties are not engraved yet. Black keys are
+sharps unless `LevelNote.alter` gives a spelling. Beat spacing grows by
+the shortest duration to the power 0.75 so accidentals clear the note
+before them. Scoring is a mark beside the head (tick, ring, underline,
+strike) and never changes the head, which now always follows the
+written value. The engine skips rest entries.
+
+Repeated notes: a pitch event scores only as a fresh strike. MIDI
+note-ons carry `struck`. Microphone frames count as a strike on a pitch
+change, after 0.15 s without a detection, or on a 1.6x volume swell.
+These values are first estimates and need checking against real pianos.
+
+Input check: practice opens with an unscored "play middle C" step until
+a note is heard. A pass is saved per source and MIDI device; a skip is
+for the session only. A new detector level stream separates silence,
+weak signal, unclear sound, unstable pitch and wrong note. Settings no
+longer claims the piano is heard from permission alone.
+
+UI: the current lesson is an open method book under a desk lamp; the
+right page flies into practice and on to results (`scoreHeroTag`).
+Practice keeps its layout under the spinner while the microphone starts,
+or the flight has nothing to land on. The keyboard opens on the piece's
+octaves, keys press and release, marks pencil in, clean bars get a tick,
+and view options appear only when paused. Results show the marked score
+with the bars that had the most misses looped and named.
+`keyboard.json`'s white-key bottom (0.884) is the rail; tints now stop
+at the front lip (0.815).
+
+Verification: the full Flutter gate passed on Linux ARM64.
+Chromium captures of a release web build looked right in both themes.
+Headless rendering stalls about 1.3 s on route build, so the sheet's
+flight could not be observed there. Lesson illustrations, calibration,
+polyphony and physical input checks remain open.
+
 ## 2026-10-30: revise the roadmap around practice and UI #roadmap #decision
 
 Updated `ROADMAP.md` with the package study and the follow-up concern that

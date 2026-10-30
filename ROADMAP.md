@@ -39,20 +39,26 @@ reliability so the interaction is both expressive and accurate.
 
 ### Musical notation and scoring
 
-- [ ] **Faithful rhythm engraving:** Carry `durationBeats` and `isRest`
+- [x] **Faithful rhythm engraving:** Carry `durationBeats` and `isRest`
   through `PlacedNote` and staff layout. Draw conventional whole, half,
   quarter, and eighth notes, dots, flags, and rests for supported content.
-  The current placed-note data drops duration and rests.
-- [ ] **Separate notation from feedback:** Keep the musical notehead intact
+  Rests are derived from the gaps in each measure. Ties across a barline
+  are not engraved yet; such a note is written up to the barline.
+- [x] **Separate notation from feedback:** Keep the musical notehead intact
   when a note becomes active, hit, or missed. Use an outline, underline, or
   adjacent mark for performance state, with shape/text support beyond color.
   A half note must remain recognizable before and after scoring.
-- [ ] **Accidentals and note spelling:** Preserve the written pitch needed
+- [x] **Accidentals and note spelling:** Preserve the written pitch needed
   for sharps, flats, and later key signatures before expanding the lesson
   vocabulary. MIDI pitch alone does not encode enharmonic spelling.
+  `LevelNote.alter` carries an authored spelling; black keys default to
+  sharps. Key signatures remain.
 - [ ] **Fresh strikes for repeated notes:** Preserve MIDI note-on identity
   and evaluate microphone onset detection. A held or decaying pitch must not
   score the next repeated note solely because its timing window opens.
+  Implemented: MIDI note-ons are strikes, and microphone frames start a
+  strike on a pitch change, a silence, or a swell. The microphone
+  thresholds still need evaluation on real pianos.
 - [ ] **Honest polyphony support:** Verify simultaneous-note matching and
   chord behavior separately from grand staff rendering. The microphone's
   YIN detector estimates a fundamental pitch; require and label MIDI for
@@ -60,11 +66,11 @@ reliability so the interaction is both expressive and accurate.
 
 ### Instrument setup and calibration
 
-- [ ] **Unscored input check:** After the existing source choice, ask for a
+- [x] **Unscored input check:** After the existing source choice, ask for a
   central key and show the incoming pitch and corresponding keyboard key.
   Distinguish permission granted, a device connected, and a note received.
   Provide retry and explicit skip; repeat the check after device changes.
-- [ ] **Useful input diagnostics:** Distinguish silence, weak signal, and
+- [x] **Useful input diagnostics:** Distinguish silence, weak signal, and
   unstable pitch. MIDI-only setup must remain free of microphone requests.
   Permission alone must not display a claim that the piano was heard.
 - [ ] **Measured calibration:** Validate input latency, microphone threshold,
@@ -74,32 +80,33 @@ reliability so the interaction is both expressive and accurate.
 
 ### UI composition and response
 
-- [ ] **A stronger home composition:** Make the current lesson an open
+- [x] **A stronger home composition:** Make the current lesson an open
   method book with its score visible; arrange the remaining books as a
-  smaller collection. Use deliberate scale and spacing, plus original
-  illustrations tied to the lessons. Retain the distinction for imported
-  pieces and avoid an equal-card dashboard.
-- [ ] **Clearer material and color hierarchy:** Strengthen separation between
+  smaller collection. Use deliberate scale and spacing. Retain the
+  distinction for imported pieces and avoid an equal-card dashboard.
+- [ ] **Lesson illustrations:** Original artwork tied to each lesson,
+  authored in Blender or Glaxnimate, for the open book's pages.
+- [x] **Clearer material and color hierarchy:** Strengthen separation between
   lacquer, cool neutral paper, cloth covers, and blue pencil actions. Give
   the current lesson the richest emphasis. Preserve contrast and avoid
   cream surfaces or decoration that competes with reading.
-- [ ] **A practice composition built around playing:** Rebalance the existing
+- [x] **A practice composition built around playing:** Rebalance the existing
   control column, metrics strip, score, and keyboard. Give the current
   musical task priority; keep controls stable while playing and move
   secondary choices into the paused state.
-- [ ] **Book-to-score continuity:** Carry the selected book into its practice
+- [x] **Book-to-score continuity:** Carry the selected book into its practice
   sheet; mark that sheet on completion and reflect the result on the book
   when returning to the desk. Keep navigation usable throughout and provide
   immediate equivalent states with reduced motion.
-- [ ] **Tactile musical feedback:** Add a brief press/release response to
+- [x] **Tactile musical feedback:** Add a brief press/release response to
   detected keys, a restrained completion treatment around notes, and a
   pencil acknowledgement when a measure is resolved successfully. Keep
   notation steady and distinguish completion from successful playing.
-- [ ] **A readable keyboard range:** Offer a closer view of the relevant
+- [x] **A readable keyboard range:** Offer a closer view of the relevant
   octave or two, clear target/played-key states, and optional note labels.
   Retain full-keyboard orientation and explicit range navigation. Avoid
   automatic viewport shifts while the learner is reading.
-- [ ] **An expressive results sheet:** Draw the accuracy circle and place a
+- [x] **An expressive results sheet:** Draw the accuracy circle and place a
   completion star once when earned. Annotate the actual difficult passage
   and carry the marked score into the next action. Keep summary text visible
   without waiting for animation; avoid persistent celebratory loops.
@@ -184,6 +191,9 @@ reliability so the interaction is both expressive and accurate.
   on current builds at phone and tablet sizes, including 320, 375, 414, and
   768 px widths, landscape layouts, and larger text. Assess hierarchy,
   keyboard legibility, clipping, material contrast, and transition continuity.
+  Done so far: Chromium captures at 1280x800, 844x390 and 375x812 in light
+  and dark. The sheet's flight between screens is covered by widget tests
+  only; headless rendering without a GPU drops every frame of it.
 - [ ] **Accessible interaction and motion:** Verify keyboard/focus behavior,
   assistive-technology labels, non-color feedback, contrast, and reduced
   motion. Every animation needs a useful static equivalent. Use existing
