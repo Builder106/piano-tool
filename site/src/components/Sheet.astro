@@ -28,7 +28,7 @@ const arrow = (x: number) => {
     <header class="sheet__header">
       {note === 60 ? <h1><Mark class="sheet__mark" aria-hidden="true" />{site.name}</h1>
         : <p class="sheet__title"><Mark class="sheet__mark" aria-hidden="true" />{site.name}</p>}
-      <p>Stage one: {site.stage.title}</p>
+      <p>Interactive tour: {site.stage.title}</p>
       <!-- Phones only: their ledge has no room, so the way into the app sits under the title. -->
       <a class="sheet__app" href={site.webApp} data-astro-reload>Open the app</a>
       <div class="sheet__meta">
@@ -63,12 +63,12 @@ const arrow = (x: number) => {
         <p class="score__colophon">Made by <a href={site.repo}>{site.author}</a>, with Blender and Glaxnimate.</p>
       </div>
     </main> : page === 'missing' ? <main id="main" class="annotation annotation--missing" tabindex="-1" data-note="">
-      <div class="annotation__copy"><svg class="missing__head" viewBox="0 0 60 60" role="img" aria-label="A hollow notehead struck through"><ellipse cx="30" cy="30" rx="16" ry="12" transform="rotate(-20 30 30)" /><path d="M7 48 L53 12" /></svg><h1>{missing.heading}</h1><p>{missing.body}</p><div class="annotation__links"><a href="/">Back to middle C</a><a href="/score/">The score</a></div></div>
+      <div class="annotation__copy"><svg class="missing__head" viewBox="0 0 60 60" role="img" aria-label="A hollow notehead struck through"><ellipse cx="30" cy="30" rx="16" ry="12" transform="rotate(-20 30 30)" /><path d="M7 48 L53 12" /></svg><h1>{missing.heading}</h1><p>{missing.body}</p><div class="annotation__links"><a href="/">Back to middle C</a><a href="/score/">Explore the tour</a></div></div>
     </main> : <slot />}
     {unit && <nav class="sheet__foot" aria-label="Pages">
       {prev ? <a class="sheet__turn" href={prev.route} rel="prev"><span aria-hidden="true">‹</span> {prev.note} <span class="sheet__turn-title">{headingOf(prev.midi)}</span></a> : <span />}
-      <span class="sheet__page">{unitIndex + 1} of {units.length}<a href="/score/">The score</a></span>
-      {next ? <a class="sheet__turn sheet__turn--next" href={next.route} rel="next"><span class="sheet__turn-title">{headingOf(next.midi)}</span> {next.note} <span aria-hidden="true">›</span></a>
+      <span class="sheet__page">{unitIndex + 1} of {units.length}<a href="/score/">Explore the tour</a></span>
+      {next ? <a class="sheet__turn sheet__turn--next" href={next.route} rel="next">Next: <span class="sheet__turn-title">{next.label}</span> <span aria-hidden="true">›</span></a>
         : <a class="sheet__turn sheet__turn--next" href="/">Start again on C4 <span aria-hidden="true">›</span></a>}
     </nav>}
   </div>

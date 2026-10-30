@@ -13,7 +13,7 @@ export const annotations: Annotation[] = [
   {
     midi: 60,
     heading: 'Start here.',
-    body: 'Piano Tool is an app that listens while you practise and shows you how each note went. This page works the same way. Press the blue key on the keyboard below to turn the page.',
+    body: 'Piano Tool listens while you practise and shows how each note went. Explore this tour by tapping the blue D key below, or press S on your computer. Open the app to practise with a scrolling score and see your results.',
     mark: 'start',
   },
   {
@@ -68,8 +68,8 @@ export const missing = {
 };
 
 export const scorePage = {
-  heading: 'The score.',
-  body: 'Every page of this site in one list.',
+  heading: 'Explore the tour.',
+  body: 'Choose a topic to learn more about Piano Tool.',
 };
 
 /** Right-hand fingering for the C major scale, C4 to C5. */

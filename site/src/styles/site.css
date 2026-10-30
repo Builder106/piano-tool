@@ -152,7 +152,7 @@ body { display: flow-root; background: var(--c-bg); color: var(--c-paper); overf
 .annotation--drawn .annotation__copy { flex-basis: 440px; }
 .annotation__drawing { flex: 1 1 340px; min-width: 0; padding-top: 6px; color: var(--c-graphite); }
 .annotation__copy h1, .annotation__copy h2 { color: var(--c-graphite); font: 600 30px / 1.05 var(--f-display); margin-bottom: 6px; }
-.annotation__copy > p { font: italic 400 20px / 1.42 var(--f-display); }
+.annotation__copy > p { font: 400 20px / 1.42 var(--f-display); }
 .drawing { width: 100%; max-height: 170px; overflow: visible; color: var(--c-graphite); }
 .drawing text { fill: currentColor; font: italic 27px var(--f-display); }
 .drawing .drawing__big { font: italic 600 30px var(--f-display); }
@@ -309,7 +309,7 @@ body { display: flow-root; background: var(--c-bg); color: var(--c-paper); overf
   .score__row a, .annotation__links a, .annotation__cta, .pencil-button, .sheet__turn, .sheet__page a { min-height: 44px; }
   .sheet__foot { grid-template-columns: 1fr 1fr; }
   .sheet__page { grid-column: 1 / -1; grid-row: 1; justify-content: center; }
-  .sheet__turn-title { display: none; }
+  .sheet__turn-title { font-size: 15px; }
   .ledge__label { display: none; }
   .ledge__face { gap: 6px; padding-inline: 6px; }
   .ledge__play { gap: 6px; }
