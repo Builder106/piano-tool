@@ -347,4 +347,41 @@ void main() {
       StageEngineStatus.stopped,
     );
   });
+
+  testWidgets('view choices wait for a pause and keep their place', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(915, 412));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    Widget column({required bool playing}) => MaterialApp(
+      theme: PianoTheme.light(),
+      home: Scaffold(
+        body: TransportColumn(
+          isPlaying: playing,
+          speed: 1,
+          onPlayPause: () {},
+          onStop: () {},
+          onReplay: () {},
+          onSpeedChanged: (_) {},
+          onCloseUpChanged: (_) {},
+          onNoteNamesChanged: (_) {},
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(column(playing: false));
+    await tester.pumpAndSettle();
+    final pausedAt = tester.getCenter(find.text('1.0x'));
+    expect(find.byTooltip('Show these keys closer'), findsOneWidget);
+
+    await tester.pumpWidget(column(playing: true));
+    await tester.pumpAndSettle();
+    expect(tester.getCenter(find.text('1.0x')), pausedAt);
+    final ignore = tester.widget<IgnorePointer>(
+      find
+          .ancestor(of: find.text('1.0x'), matching: find.byType(IgnorePointer))
+          .first,
+    );
+    expect(ignore.ignoring, isTrue);
+  });
 }
