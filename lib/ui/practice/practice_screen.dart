@@ -8,6 +8,7 @@ import '../../models/engine_models.dart';
 import '../../models/level_models.dart';
 import '../desk/desk.dart';
 import '../keyboard/piano_keyboard_view.dart';
+import '../staff/notation.dart';
 import '../staff/staff_geometry.dart';
 import '../staff/staff_painter.dart';
 import '../staff/staff_view.dart';
@@ -226,7 +227,11 @@ class _StaffPane extends ConsumerWidget {
       totalBeats: (level.totalMeasures * level.beatsPerMeasure).toDouble(),
       beatsPerMeasure: level.beatsPerMeasure,
       beatUnit: level.beatUnit,
-      pixelsPerBeat: 70,
+      pixelsPerBeat: pixelsPerBeatFor([
+        for (final m in level.measures)
+          for (final n in m.notes)
+            if (!n.isRest) n.durationBeats,
+      ]),
     );
   }
 }
@@ -245,6 +250,8 @@ List<StaffSystem> _buildSystems(
       (
         midi: levelNotes[i].midiNote,
         startBeat: levelNotes[i].startBeat,
+        durationBeats: levelNotes[i].durationBeats,
+        alter: levelNotes[i].alter,
         state: i < states.length ? states[i] : NoteState.upcoming,
       ),
   ];
@@ -307,6 +314,8 @@ List<PlacedNote> _placedNotes(WidgetRef ref, String stageId) {
       (
         midi: levelNotes[i].midiNote,
         startBeat: levelNotes[i].startBeat,
+        durationBeats: levelNotes[i].durationBeats,
+        alter: levelNotes[i].alter,
         state: i < states.length ? states[i] : NoteState.upcoming,
       ),
   ];

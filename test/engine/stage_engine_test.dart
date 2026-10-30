@@ -123,6 +123,46 @@ void main() {
     expect(engine.state.missCount, 0);
   });
 
+  test('rest entries are never scored', () {
+    const withRest = LevelModel(
+      id: 'rest',
+      title: 'Rest',
+      description: '',
+      tempo: 120,
+      beatsPerMeasure: 4,
+      totalMeasures: 1,
+      measures: [
+        LevelMeasure(
+          index: 0,
+          startBeat: 0,
+          beatsPerMeasure: 4,
+          notes: [
+            LevelNote(
+              midiNote: 60,
+              startBeat: 0,
+              durationBeats: 1,
+              measureIndex: 0,
+              beatIndex: 0,
+            ),
+            LevelNote(
+              midiNote: 0,
+              startBeat: 1,
+              durationBeats: 1,
+              measureIndex: 0,
+              beatIndex: 1,
+              isRest: true,
+            ),
+          ],
+        ),
+      ],
+    );
+    final engine = StageEngine(level: withRest);
+    addTearDown(engine.dispose);
+
+    expect(engine.allNotes.map((n) => n.midiNote), [60]);
+    expect(engine.state.noteStates, hasLength(1));
+  });
+
   group('timing windows', () {
     const config = StageEngineConfig(
       perfectWindow: 0.125,

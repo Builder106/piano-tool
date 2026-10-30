@@ -57,12 +57,13 @@ class StageEngine extends ChangeNotifier {
     );
   }
 
-  /// Initialize the flat list of all notes from measures
+  /// Initialize the flat list of all notes from measures. Rests are
+  /// silence and are never scored.
   void _initializeNotes() {
     _allNotes.clear();
     for (final measure in _level.measures) {
       for (final note in measure.notes) {
-        _allNotes.add(note);
+        if (!note.isRest) _allNotes.add(note);
       }
     }
     // Sort by start beat

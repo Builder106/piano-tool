@@ -13,6 +13,7 @@ import '../desk/desk.dart';
 import '../keyboard/piano_keyboard_view.dart';
 import '../practice/transport_column.dart';
 import '../staff/staff_geometry.dart' show Clef;
+import '../staff/notation.dart';
 import '../staff/staff_painter.dart' show PlacedNote;
 import '../staff/staff_view.dart';
 import '../theme/app_theme.dart';
@@ -178,7 +179,11 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                               totalBeats: totalBeats,
                               beatsPerMeasure: level.beatsPerMeasure,
                               beatUnit: level.beatUnit,
-                              pixelsPerBeat: 70,
+                              pixelsPerBeat: pixelsPerBeatFor([
+                                for (final m in level.measures)
+                                  for (final n in m.notes)
+                                    if (!n.isRest) n.durationBeats,
+                              ]),
                               maxStaffHeight: constraints.maxHeight * 0.8,
                             ),
                           );
@@ -504,7 +509,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       LevelClef.bass => [(clef: Clef.bass, notes: placed)],
       LevelClef.grand => () {
         final allNotes = [
-          for (final measure in level.measures) ...measure.notes,
+          for (final measure in level.measures)
+            for (final note in measure.notes)
+              if (!note.isRest) note,
         ];
         final hasMultiVoice = allNotes.any((n) => n.voiceIndex != 0);
         final trebleNotes = <PlacedNote>[];
@@ -535,9 +542,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     for (final measure in level.measures) {
       for (final note in measure.notes) {
+        if (note.isRest) continue;
         notes.add((
           midi: note.midiNote,
           startBeat: note.startBeat,
+          durationBeats: note.durationBeats,
+          alter: note.alter,
           state:
               _currentBeat >= note.startBeat &&
                   _currentBeat < note.startBeat + note.durationBeats

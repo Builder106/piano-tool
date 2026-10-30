@@ -52,7 +52,9 @@ class StaffGeometry {
   /// staff position with its natural.
   static const List<int> _degree = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
 
-  static int _diatonic(int midi) {
+  /// The diatonic step a pitch is written on. A black key lands on the
+  /// natural below it, which is where a sharp is written.
+  static int diatonicStep(int midi) {
     final octave = (midi ~/ 12) - 1;
     return octave * 7 + _degree[midi % 12];
   }
@@ -62,13 +64,19 @@ class StaffGeometry {
     Clef.bass => _bassBottom,
   };
 
-  /// Each diatonic step moves half a space.
-  double yForMidi(int midi, Clef clef) =>
-      bottomLineY - (_diatonic(midi) - _bottomFor(clef)) * (space / 2);
+  /// Each diatonic step moves half a space. [alter] is the written
+  /// accidental, so a flat sits on the natural above the black key.
+  double yForMidi(int midi, Clef clef, {int alter = 0}) =>
+      bottomLineY -
+      (diatonicStep(midi - alter) - _bottomFor(clef)) * (space / 2);
+
+  /// Whether a written pitch sits on a line rather than in a space.
+  bool isOnLine(int midi, Clef clef, {int alter = 0}) =>
+      (diatonicStep(midi - alter) - _bottomFor(clef)).isEven;
 
   /// Ledger lines between the staff and a note that sits outside it.
-  List<double> ledgerLinesFor(int midi, Clef clef) {
-    final steps = _diatonic(midi) - _bottomFor(clef);
+  List<double> ledgerLinesFor(int midi, Clef clef, {int alter = 0}) {
+    final steps = diatonicStep(midi - alter) - _bottomFor(clef);
     final lines = <double>[];
     if (steps < 0) {
       for (var s = -2; s >= steps; s -= 2) {

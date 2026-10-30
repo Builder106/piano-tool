@@ -369,11 +369,14 @@ class _OpeningBars extends StatelessWidget {
     final notes = [
       for (final measure in level.measures)
         for (final note in measure.notes)
-          (
-            midi: note.midiNote,
-            startBeat: note.startBeat,
-            state: NoteState.upcoming,
-          ),
+          if (!note.isRest)
+            (
+              midi: note.midiNote,
+              startBeat: note.startBeat,
+              durationBeats: note.durationBeats,
+              alter: note.alter,
+              state: NoteState.upcoming,
+            ),
     ]..sort((a, b) => a.startBeat.compareTo(b.startBeat));
     final systems = switch (level.clef) {
       LevelClef.treble => [(clef: Clef.treble, notes: notes)],

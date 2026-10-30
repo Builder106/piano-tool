@@ -7,34 +7,141 @@ import 'package:piano_tool/ui/staff/staff_painter.dart';
 import 'package:piano_tool/ui/staff/staff_view.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
+// Two bars that exercise the engraving: open and filled heads, a dot, a
+// beamed pair, a sharp, derived rests, and every scoring mark.
 const _treble = (
   clef: Clef.treble,
   notes: <PlacedNote>[
-    (midi: 60, startBeat: 0, state: NoteState.hitPerfect),
-    (midi: 64, startBeat: 1, state: NoteState.missed),
-    (midi: 67, startBeat: 2, state: NoteState.active),
-    (midi: 72, startBeat: 3, state: NoteState.upcoming),
+    (
+      midi: 60,
+      startBeat: 0,
+      durationBeats: 2,
+      alter: null,
+      state: NoteState.hitPerfect,
+    ),
+    (
+      midi: 64,
+      startBeat: 2,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.hitOkay,
+    ),
+    (
+      midi: 67,
+      startBeat: 3,
+      durationBeats: 0.5,
+      alter: null,
+      state: NoteState.missed,
+    ),
+    (
+      midi: 69,
+      startBeat: 3.5,
+      durationBeats: 0.5,
+      alter: null,
+      state: NoteState.hitGood,
+    ),
+    (
+      midi: 66,
+      startBeat: 4,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.active,
+    ),
+    (
+      midi: 71,
+      startBeat: 5,
+      durationBeats: 1.5,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
+    (
+      midi: 72,
+      startBeat: 6.5,
+      durationBeats: 0.5,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
   ],
 );
 const _bass = (
   clef: Clef.bass,
   notes: <PlacedNote>[
-    (midi: 48, startBeat: 0, state: NoteState.hitGood),
-    (midi: 55, startBeat: 2, state: NoteState.upcoming),
+    (
+      midi: 48,
+      startBeat: 0,
+      durationBeats: 2,
+      alter: null,
+      state: NoteState.hitGood,
+    ),
+    (
+      midi: 55,
+      startBeat: 2,
+      durationBeats: 2,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
   ],
 );
 
 const _scrollingTreble = (
   clef: Clef.treble,
   notes: <PlacedNote>[
-    (midi: 60, startBeat: 0, state: NoteState.upcoming),
-    (midi: 62, startBeat: 4, state: NoteState.upcoming),
-    (midi: 64, startBeat: 8, state: NoteState.active),
-    (midi: 65, startBeat: 12, state: NoteState.upcoming),
-    (midi: 67, startBeat: 16, state: NoteState.upcoming),
-    (midi: 69, startBeat: 20, state: NoteState.upcoming),
-    (midi: 71, startBeat: 24, state: NoteState.upcoming),
-    (midi: 72, startBeat: 28, state: NoteState.upcoming),
+    (
+      midi: 60,
+      startBeat: 0,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
+    (
+      midi: 62,
+      startBeat: 4,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
+    (
+      midi: 64,
+      startBeat: 8,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.active,
+    ),
+    (
+      midi: 65,
+      startBeat: 12,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
+    (
+      midi: 67,
+      startBeat: 16,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
+    (
+      midi: 69,
+      startBeat: 20,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
+    (
+      midi: 71,
+      startBeat: 24,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
+    (
+      midi: 72,
+      startBeat: 28,
+      durationBeats: 1,
+      alter: null,
+      state: NoteState.upcoming,
+    ),
   ],
 );
 
@@ -48,7 +155,7 @@ Widget _harness(ThemeData theme, List<StaffSystem> systems) => MaterialApp(
       height: 220,
       child: StaffView(
         systems: systems,
-        currentBeat: 2,
+        currentBeat: 4,
         totalBeats: 8,
         beatsPerMeasure: 4,
         pixelsPerBeat: 70,

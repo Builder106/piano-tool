@@ -15,6 +15,10 @@ sealed class LevelNote with _$LevelNote {
     required int beatIndex,
     @Default(false) bool isRest,
     @Default(0) int voiceIndex,
+
+    /// Written alteration: -1 flat, 0 natural, 1 sharp. Null lets the
+    /// staff spell black keys as sharps.
+    int? alter,
   }) = _LevelNote;
 
   factory LevelNote.fromJson(Map<String, dynamic> json) =>

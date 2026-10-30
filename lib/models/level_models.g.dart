@@ -14,6 +14,7 @@ _LevelNote _$LevelNoteFromJson(Map<String, dynamic> json) => _LevelNote(
   beatIndex: (json['beatIndex'] as num).toInt(),
   isRest: json['isRest'] as bool? ?? false,
   voiceIndex: (json['voiceIndex'] as num?)?.toInt() ?? 0,
+  alter: (json['alter'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$LevelNoteToJson(_LevelNote instance) =>
@@ -25,6 +26,7 @@ Map<String, dynamic> _$LevelNoteToJson(_LevelNote instance) =>
       'beatIndex': instance.beatIndex,
       'isRest': instance.isRest,
       'voiceIndex': instance.voiceIndex,
+      'alter': instance.alter,
     };
 
 _LevelMeasure _$LevelMeasureFromJson(Map<String, dynamic> json) =>
