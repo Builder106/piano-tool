@@ -302,7 +302,7 @@ class _InputCheckState extends State<InputCheck> {
                 ),
                 const SizedBox(height: PianoSpacing.md),
                 SizedBox(
-                  height: 72,
+                  height: 120,
                   child: ExcludeSemantics(
                     child: PianoKeyboardView(
                       due: const {_middleC},
