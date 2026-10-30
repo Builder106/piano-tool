@@ -110,7 +110,6 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
         itemBuilder: (context, index) {
           final stage = stages[index];
           final imported = repository.isImportedLevel(stage.level.id);
-          const unlocked = true;
           final delete = imported
               ? () => _confirmDelete(context, repository, stage.level.id)
               : null;
@@ -122,12 +121,10 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
                 cloth: CoverCloth.forStage(index: index, imported: imported),
                 stage: stage,
                 number: imported ? null : index + 1,
-                unlocked: unlocked,
+                unlocked: true,
                 progress: progress[stage.id],
                 imported: imported,
-                onOpen: unlocked
-                    ? () => context.push('/practice/${stage.id}')
-                    : null,
+                onOpen: () => context.push('/practice/${stage.id}'),
                 onLongPress: delete,
                 trailing: delete == null
                     ? null
