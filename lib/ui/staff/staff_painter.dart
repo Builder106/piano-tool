@@ -62,7 +62,11 @@ class StaffPainter extends CustomPainter {
 
   /// Total width of the music, header included, at a given geometry.
   double contentWidthFor(StaffGeometry g) =>
-      _headerWidth(g) + totalBeats * pixelsPerBeat + g.space * 2;
+      _musicOrigin(g) + totalBeats * pixelsPerBeat + g.space * 2;
+
+  /// Space for the first notehead and its ledger line inside the music clip.
+  static double _musicOrigin(StaffGeometry g) =>
+      _headerWidth(g) + g.space * 1.5;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -170,7 +174,7 @@ class StaffPainter extends CustomPainter {
   }
 
   double _xForBeat(double beat, StaffGeometry g) =>
-      _headerWidth(g) + beat * pixelsPerBeat;
+      _musicOrigin(g) + beat * pixelsPerBeat;
 
   /// The pixel x where notes may begin, at a given staff geometry. Notes
   /// must never start before this. Public (and static, since it needs no
