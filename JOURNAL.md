@@ -1,5 +1,15 @@
 # Journal
 
+## 2026-10-29: choose practice input before listening #ux #decision
+
+New learners choose microphone or digital piano before practice requests a
+microphone. The choice is saved with the existing settings. Existing saved
+input settings remain configured; changing another setting does not complete
+the choice. Digital piano setup uses the existing connection controls in
+Settings. Recording still requires the microphone regardless of the practice
+input. The site calls its playable scale an interactive tour and labels the
+next topic and computer key explicitly.
+
 ## 2026-10-29: the app becomes the music desk #design #ui #decision
 
 The app screens were stock Material: tinted grey cards, outlined chips, and a
