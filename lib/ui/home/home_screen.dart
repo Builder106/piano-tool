@@ -83,9 +83,7 @@ class _HomeDesk extends ConsumerWidget {
           stage: stage,
           index: index,
           imported: repository.isImportedLevel(stage.level.id),
-          unlocked: stage.prerequisites.every(
-            (id) => progress[id]?.completed == true,
-          ),
+          unlocked: true,
           progress: progress[stage.id],
         ),
     ];

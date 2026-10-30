@@ -160,14 +160,14 @@ void main() {
       expect(find.text('Practice: stage_2'), findsOneWidget);
     });
 
-    testWidgets('the shelf counts cleared books and locks the rest', (
+    testWidgets('the shelf counts cleared books and leaves every book open', (
       tester,
     ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
       expect(find.text('0 of 3 cleared'), findsOneWidget);
-      expect(find.text('Locked'), findsNWidgets(2));
+      expect(find.text('Locked'), findsNothing);
 
       await tester.tap(find.text('Open the library'));
       await tester.pumpAndSettle();
@@ -175,7 +175,7 @@ void main() {
       expect(find.text('Level List Screen'), findsOneWidget);
     });
 
-    testWidgets('a locked book on the shelf does not open', (tester) async {
+    testWidgets('any book on the shelf opens', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -183,7 +183,7 @@ void main() {
       await tester.tap(find.text('Ode to Joy'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Practice:'), findsNothing);
+      expect(find.textContaining('Practice:'), findsOneWidget);
     });
 
     testWidgets('offers no import when this build has no import service', (

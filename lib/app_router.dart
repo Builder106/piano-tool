@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'data/level_repository.dart';
-import 'data/progress_repository.dart';
 import 'ui/home/home_screen.dart';
 import 'ui/import/import_screen.dart';
 import 'ui/import/review_screen.dart';
@@ -61,11 +60,7 @@ final appRouterProvider = FutureProvider<GoRouter>((ref) async {
           final repository = await ref.read(levelRepositoryProvider.future);
           final stage = repository.getStage(stageId);
           if (stage == null) return '/';
-          final progress = await ref.read(progressRepositoryProvider).readAll();
-          final unlocked = stage.prerequisites.every(
-            (id) => progress[id]?.completed == true,
-          );
-          return unlocked ? null : '/';
+          return null;
         },
         builder: (context, state) {
           final stageId = state.pathParameters['stageId']!;

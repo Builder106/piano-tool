@@ -110,9 +110,7 @@ class _LevelListScreenState extends ConsumerState<LevelListScreen> {
         itemBuilder: (context, index) {
           final stage = stages[index];
           final imported = repository.isImportedLevel(stage.level.id);
-          final unlocked = stage.prerequisites.every(
-            (id) => progress[id]?.completed == true,
-          );
+          const unlocked = true;
           final delete = imported
               ? () => _confirmDelete(context, repository, stage.level.id)
               : null;
