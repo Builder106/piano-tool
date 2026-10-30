@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show listEquals, mapEquals;
 import 'package:flutter/rendering.dart';
 import '../../models/engine_models.dart';
 import '../theme/tokens.dart';
@@ -21,6 +21,21 @@ typedef PlacedNote = ({
   NoteState state,
 });
 
+/// Measures whose notes are all played and all hit. A measure still being
+/// played is not finished, whatever came before in it.
+Set<int> cleanMeasures(List<PlacedNote> notes, {required int beatsPerMeasure}) {
+  const hits = {NoteState.hitPerfect, NoteState.hitGood, NoteState.hitOkay};
+  bool open(NoteState s) => s == NoteState.upcoming || s == NoteState.active;
+  final resolved = resolvedMeasures([
+    for (final n in notes)
+      if (!open(n.state)) (startBeat: n.startBeat, hit: hits.contains(n.state)),
+  ], beatsPerMeasure: beatsPerMeasure);
+  return resolved.difference({
+    for (final n in notes)
+      if (open(n.state)) (n.startBeat / beatsPerMeasure + 1e-6).floor(),
+  });
+}
+
 class StaffPainter extends CustomPainter {
   StaffPainter({
     required this.clef,
@@ -34,6 +49,8 @@ class StaffPainter extends CustomPainter {
     this.maxStaffHeight = kDefaultMaxStaffHeight,
     this.showPlayheadCap = true,
     this.showPlayhead = true,
+    this.markProgress = const {},
+    this.bracket,
   });
 
   final Clef clef;
@@ -64,6 +81,14 @@ class StaffPainter extends CustomPainter {
 
   /// A preview of the music (the home screen's opening bars) has no playhead.
   final bool showPlayhead;
+
+  /// How far each fresh pencil mark has been drawn, 0 to 1, by [noteKey] for
+  /// notes and by `m` plus the measure index for a measure's tick. Missing
+  /// means complete.
+  final Map<String, double> markProgress;
+
+  /// A pencil loop round a span of beats: the passage to look at.
+  final ({double start, double end})? bracket;
 
   /// The geometry this painter would use in a band of [bandHeight]. The
   /// staff takes the middle of the band, capped so a tall band gives more
@@ -133,6 +158,8 @@ class StaffPainter extends CustomPainter {
 
     _paintRests(canvas, g);
     _paintNotes(canvas, g, linePaint);
+    _paintMeasureTicks(canvas, g);
+    _paintBracket(canvas, g);
 
     if (showPlayhead) {
       final playheadX = _xForBeat(currentBeat, g);
@@ -384,6 +411,8 @@ class StaffPainter extends CustomPainter {
           durations[i].value,
           NoteGlyphStyle.forState(notes[i].state, colors),
           markBelow: !down,
+          progress:
+              markProgress[noteKey(notes[i].midi, notes[i].startBeat)] ?? 1,
         );
       }
     }
@@ -423,6 +452,56 @@ class StaffPainter extends CustomPainter {
         );
       }
     }
+  }
+
+  /// A small pencil tick over the barline of every measure played clean.
+  void _paintMeasureTicks(Canvas canvas, StaffGeometry g) {
+    final clean = cleanMeasures(notes, beatsPerMeasure: beatsPerMeasure);
+    final s = g.space;
+    final pencil = Paint()
+      ..color = colors.success
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.16
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    for (final m in clean) {
+      final x = _xForBeat(((m + 1) * beatsPerMeasure).toDouble(), g) - s * 1.1;
+      final y = g.topLineY - s * 1.4;
+      NoteGlyph.drawPartial(
+        canvas,
+        Path()
+          ..moveTo(x - s * 0.5, y)
+          ..lineTo(x - s * 0.1, y + s * 0.45)
+          ..lineTo(x + s * 0.65, y - s * 0.55),
+        pencil,
+        markProgress['m$m'] ?? 1,
+      );
+    }
+  }
+
+  /// The teacher's loop round the passage to look at again: drawn round the
+  /// bars themselves, so it never collides with a mark above or below a note.
+  void _paintBracket(Canvas canvas, StaffGeometry g) {
+    final span = bracket;
+    if (span == null) return;
+    final s = g.space;
+    final loop = RRect.fromLTRBR(
+      _xForBeat(span.start, g) - s * 1.6,
+      g.topLineY - s * 1.8,
+      _xForBeat(span.end, g) - s * 0.6,
+      g.bottomLineY + s * 1.8,
+      Radius.circular(s * 1.6),
+    );
+    NoteGlyph.drawPartial(
+      canvas,
+      Path()..addRRect(loop),
+      Paint()
+        ..color = colors.accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = s * 0.2
+        ..strokeCap = StrokeCap.round,
+      markProgress['bracket'] ?? 1,
+    );
   }
 
   static int _accidentalCodepoint(int alter) => switch (alter) {
@@ -533,5 +612,7 @@ class StaffPainter extends CustomPainter {
       old.beatsPerMeasure != beatsPerMeasure ||
       old.beatUnit != beatUnit ||
       old.totalBeats != totalBeats ||
+      old.bracket != bracket ||
+      !mapEquals(old.markProgress, markProgress) ||
       !listEquals(old.notes, notes);
 }

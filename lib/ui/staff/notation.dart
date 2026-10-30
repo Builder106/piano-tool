@@ -272,3 +272,21 @@ double pixelsPerBeatFor(Iterable<double> durations, {double base = 70}) {
   final shortest = durations.where((d) => d > 0).fold<double>(1, math.min);
   return shortest >= 1 ? base : base / math.pow(shortest, 0.75);
 }
+
+/// Identifies a note on a staff across rebuilds: its pitch and its beat.
+String noteKey(int midi, double startBeat) => '$midi@$startBeat';
+
+/// Measures, by index, in which every note was hit. A measure with no notes
+/// is never resolved; there was nothing to play.
+Set<int> resolvedMeasures(
+  Iterable<({double startBeat, bool hit})> notes, {
+  required int beatsPerMeasure,
+}) {
+  final hit = <int>{};
+  final missed = <int>{};
+  for (final n in notes) {
+    final m = (n.startBeat / beatsPerMeasure + _eps).floor();
+    (n.hit ? hit : missed).add(m);
+  }
+  return hit.difference(missed);
+}

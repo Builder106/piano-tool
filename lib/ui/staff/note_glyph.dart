@@ -147,6 +147,9 @@ abstract final class NoteGlyph {
 
   /// Draws the performance marks for a head. [markBelow] puts the tick on
   /// the side away from the stem.
+  ///
+  /// [progress] runs from 0 to 1 as the pencil draws the marks in, so a
+  /// note just played gets its tick a stroke at a time.
   static void paintMarks(
     Canvas canvas,
     Offset center,
@@ -154,13 +157,17 @@ abstract final class NoteGlyph {
     NoteValue value,
     GlyphStyle style, {
     required bool markBelow,
+    double progress = 1,
   }) {
+    if (progress <= 0) return;
     final width = headWidth(g, value);
 
     if (style.ringed) {
-      canvas.drawCircle(
-        center,
-        width * 0.78,
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: width * 0.78),
+        -math.pi / 2,
+        2 * math.pi * progress,
+        false,
         Paint()
           ..color = style.color
           ..style = PaintingStyle.stroke
@@ -182,13 +189,16 @@ abstract final class NoteGlyph {
         ..moveTo(center.dx - s * 0.4, y - s * 0.05)
         ..lineTo(center.dx - s * 0.1, y + s * 0.3)
         ..lineTo(center.dx + s * 0.45, y - s * 0.4);
-      canvas.drawPath(tick, pencil);
+      drawPartial(canvas, tick, pencil, progress);
       if (style.underlined) {
         final uy = y + s * 0.55;
-        canvas.drawLine(
-          Offset(center.dx - s * 0.4, uy),
-          Offset(center.dx + s * 0.45, uy),
+        drawPartial(
+          canvas,
+          Path()
+            ..moveTo(center.dx - s * 0.4, uy)
+            ..lineTo(center.dx + s * 0.45, uy),
           pencil,
+          progress,
         );
       }
     }
@@ -197,11 +207,36 @@ abstract final class NoteGlyph {
       final r = width * 0.85;
       final dx = r * math.cos(-0.6);
       final dy = r * math.sin(-0.6);
-      canvas.drawLine(
-        Offset(center.dx - dx, center.dy - dy),
-        Offset(center.dx + dx, center.dy + dy),
+      drawPartial(
+        canvas,
+        Path()
+          ..moveTo(center.dx - dx, center.dy - dy)
+          ..lineTo(center.dx + dx, center.dy + dy),
         pencil,
+        progress,
       );
+    }
+  }
+
+  /// Draws the first [progress] of [path]'s length, the way a pencil lays
+  /// a stroke down.
+  static void drawPartial(
+    Canvas canvas,
+    Path path,
+    Paint paint,
+    double progress,
+  ) {
+    if (progress >= 1) {
+      canvas.drawPath(path, paint);
+      return;
+    }
+    final metrics = path.computeMetrics().toList();
+    final total = metrics.fold<double>(0, (sum, m) => sum + m.length);
+    var remaining = total * progress;
+    for (final m in metrics) {
+      if (remaining <= 0) break;
+      canvas.drawPath(m.extractPath(0, math.min(remaining, m.length)), paint);
+      remaining -= m.length;
     }
   }
 }
