@@ -74,7 +74,11 @@ Widget _hud({required double textScale, required double width}) => MaterialApp(
 const _sizes = [Size(640, 360), Size(740, 360), Size(915, 412)];
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(
+    () => SharedPreferences.setMockInitialValues({
+      'settings.inputConfigured': true,
+    }),
+  );
 
   for (final size in _sizes) {
     testWidgets('renders without overflow at ${size.width}x${size.height}', (

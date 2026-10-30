@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:piano_tool/data/settings_repository.dart';
 import 'package:piano_tool/ui/practice/mic_permission_gate.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
@@ -17,6 +18,71 @@ Widget _harness(Future<bool> Function(Ref) grant) => ProviderScope(
 );
 
 void main() {
+  testWidgets('new learners choose an input before microphone permission', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    var requested = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          settingsProvider.overrideWith(
+            () => SettingsNotifier(
+              initialSettings: const AppSettings(inputConfigured: false),
+            ),
+          ),
+          audioGrantedProvider.overrideWith((ref) async {
+            requested = true;
+            return true;
+          }),
+          practiceAudioSessionProvider.overrideWith((ref) async {}),
+        ],
+        child: MaterialApp(
+          theme: PianoTheme.light(),
+          home: const Scaffold(
+            body: MicPermissionGate(startAudio: true, child: Text('practice')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('How will you play?'), findsOneWidget);
+    expect(requested, isFalse);
+    await tester.tap(find.text('Use microphone'));
+    await tester.pumpAndSettle();
+    expect(find.text('practice'), findsOneWidget);
+    expect(requested, isTrue);
+    expect((await SettingsRepository().read()).inputConfigured, isTrue);
+  });
+
+  testWidgets('recording still requires a microphone in MIDI mode', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          settingsProvider.overrideWith(
+            () => SettingsNotifier(
+              initialSettings: const AppSettings(
+                inputSource: PracticeInputSource.midi,
+              ),
+            ),
+          ),
+          audioGrantedProvider.overrideWith((ref) async => false),
+        ],
+        child: MaterialApp(
+          theme: PianoTheme.light(),
+          home: const Scaffold(
+            body: MicPermissionGate(child: Text('recording')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('No microphone'), findsOneWidget);
+    expect(find.text('recording'), findsNothing);
+  });
+
   testWidgets('MIDI-only practice opens without microphone permission', (
     tester,
   ) async {

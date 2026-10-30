@@ -70,6 +70,7 @@ class AppSettings {
     this.referenceFrequency = 440.0,
     this.customApiBaseUrl,
     this.inputSource = PracticeInputSource.both,
+    this.inputConfigured = true,
   });
 
   final ThemeMode themeMode;
@@ -79,6 +80,7 @@ class AppSettings {
   final double referenceFrequency;
   final String? customApiBaseUrl;
   final PracticeInputSource inputSource;
+  final bool inputConfigured;
 
   StageEngineConfig toStageEngineConfig() => StageEngineConfig(
     perfectWindow: toleranceLevel.perfectWindow,
@@ -101,6 +103,7 @@ class AppSettings {
     double? referenceFrequency,
     String? customApiBaseUrl,
     PracticeInputSource? inputSource,
+    bool? inputConfigured,
     bool clearCustomApiBaseUrl = false,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
@@ -112,6 +115,7 @@ class AppSettings {
         ? null
         : (customApiBaseUrl ?? this.customApiBaseUrl),
     inputSource: inputSource ?? this.inputSource,
+    inputConfigured: inputConfigured ?? this.inputConfigured,
   );
 
   @override
@@ -125,7 +129,8 @@ class AppSettings {
           minVolumeThreshold == other.minVolumeThreshold &&
           referenceFrequency == other.referenceFrequency &&
           customApiBaseUrl == other.customApiBaseUrl &&
-          inputSource == other.inputSource;
+          inputSource == other.inputSource &&
+          inputConfigured == other.inputConfigured;
 
   @override
   int get hashCode => Object.hash(
@@ -136,6 +141,7 @@ class AppSettings {
     referenceFrequency,
     customApiBaseUrl,
     inputSource,
+    inputConfigured,
   );
 }
 
@@ -149,6 +155,7 @@ class SettingsRepository {
   static const _referenceFreqKey = '${_prefix}referenceFreq';
   static const _customApiUrlKey = '${_prefix}customApiUrl';
   static const _inputSourceKey = '${_prefix}inputSource';
+  static const _inputConfiguredKey = '${_prefix}inputConfigured';
 
   Future<AppSettings> read() async {
     final prefs = await SharedPreferences.getInstance();
@@ -188,6 +195,9 @@ class SettingsRepository {
       referenceFrequency: refFreq,
       customApiBaseUrl: customUrl,
       inputSource: inputSource,
+      inputConfigured:
+          prefs.getBool(_inputConfiguredKey) ??
+          prefs.containsKey(_inputSourceKey),
     );
   }
 
@@ -199,6 +209,7 @@ class SettingsRepository {
     await prefs.setDouble(_volumeKey, settings.minVolumeThreshold);
     await prefs.setDouble(_referenceFreqKey, settings.referenceFrequency);
     await prefs.setString(_inputSourceKey, settings.inputSource.name);
+    await prefs.setBool(_inputConfiguredKey, settings.inputConfigured);
 
     if (settings.customApiBaseUrl != null &&
         settings.customApiBaseUrl!.trim().isNotEmpty) {
@@ -267,7 +278,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 
   Future<void> setInputSource(PracticeInputSource source) async {
-    state = state.copyWith(inputSource: source);
+    state = state.copyWith(inputSource: source, inputConfigured: true);
     final repo = ref.read(settingsRepositoryProvider);
     await repo.save(state);
   }

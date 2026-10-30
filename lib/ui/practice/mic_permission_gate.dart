@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/settings_repository.dart';
@@ -21,12 +22,17 @@ class MicPermissionGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final midiOnly = ref.watch(
-      settingsProvider.select(
-        (settings) => settings.inputSource == PracticeInputSource.midi,
-      ),
-    );
-    if (midiOnly) return child;
+    final settings = ref.watch(settingsProvider);
+    if (startAudio && !settings.inputConfigured) {
+      return _InputChoice(
+        onSelect: (source) =>
+            ref.read(settingsProvider.notifier).setInputSource(source),
+        onSettings: () => context.push('/settings'),
+      );
+    }
+    if (startAudio && settings.inputSource == PracticeInputSource.midi) {
+      return child;
+    }
 
     // Invalidating rebuilds the provider from scratch, so a permission that
     // was denied and then granted from system settings recovers rather than
@@ -45,8 +51,9 @@ class MicPermissionGate extends ConsumerWidget {
       error: (err, stack) => _Denied(
         message:
             'The microphone could not be started. '
-            'Piano Tool listens for the notes you play, so practice needs it.',
+            'Check your browser or device permissions and try again.',
         onRetry: retry,
+        onDigitalPiano: startAudio ? () => context.push('/settings') : null,
       ),
       data: (granted) => granted
           ? child
@@ -55,16 +62,74 @@ class MicPermissionGate extends ConsumerWidget {
                   'Piano Tool needs the microphone to hear what you play. '
                   'Without it, notes cannot be scored.',
               onRetry: retry,
+              onDigitalPiano: startAudio
+                  ? () => context.push('/settings')
+                  : null,
             ),
     );
   }
 }
 
+class _InputChoice extends StatelessWidget {
+  const _InputChoice({required this.onSelect, required this.onSettings});
+
+  final ValueChanged<PracticeInputSource> onSelect;
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.all(PianoSpacing.lg),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: PaperSheet(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'How will you play?',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: PianoSpacing.sm),
+              const Text(
+                'Choose how Piano Tool will hear your notes. You can change this in Settings.',
+              ),
+              const SizedBox(height: PianoSpacing.md),
+              FilledButton(
+                onPressed: () => onSelect(PracticeInputSource.microphone),
+                child: const Text('Use microphone'),
+              ),
+              const SizedBox(height: PianoSpacing.xs),
+              const Text('Listen to an acoustic or digital piano.'),
+              const SizedBox(height: PianoSpacing.sm),
+              OutlinedButton(
+                onPressed: () {
+                  onSelect(PracticeInputSource.midi);
+                  onSettings();
+                },
+                child: const Text('Connect a digital piano'),
+              ),
+              const SizedBox(height: PianoSpacing.xs),
+              const Text('Connect over USB or Bluetooth in Settings.'),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class _Denied extends StatelessWidget {
-  const _Denied({required this.message, required this.onRetry});
+  const _Denied({
+    required this.message,
+    required this.onRetry,
+    this.onDigitalPiano,
+  });
 
   final String message;
   final VoidCallback onRetry;
+  final VoidCallback? onDigitalPiano;
 
   @override
   Widget build(BuildContext context) {
@@ -83,14 +148,13 @@ class _Denied extends StatelessWidget {
                 const SizedBox(height: PianoSpacing.xs),
                 Text(message, style: text.bodyMedium),
                 const SizedBox(height: PianoSpacing.md),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                Wrap(
+                  spacing: PianoSpacing.sm,
                   children: [
                     FilledButton(
                       onPressed: onRetry,
                       child: const Text('Try again'),
                     ),
-                    const SizedBox(width: PianoSpacing.sm),
                     // A permanently denied permission never prompts again, so
                     // retry alone would be a dead end.
                     TextButton(
@@ -108,6 +172,11 @@ class _Denied extends StatelessWidget {
                       },
                       child: const Text('Open settings'),
                     ),
+                    if (onDigitalPiano != null)
+                      TextButton(
+                        onPressed: onDigitalPiano,
+                        child: const Text('Use a digital piano'),
+                      ),
                   ],
                 ),
               ],

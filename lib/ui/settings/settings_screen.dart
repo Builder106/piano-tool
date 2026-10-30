@@ -19,7 +19,9 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
-    final audioGrantedAsync = ref.watch(audioGrantedProvider);
+    final audioGrantedAsync = settings.inputSource == PracticeInputSource.midi
+        ? const AsyncData(false)
+        : ref.watch(audioGrantedProvider);
 
     final colors = PianoTheme.colorsOf(context);
     final practice = PaperSheet(
@@ -287,6 +289,8 @@ class _MicStatus extends ConsumerWidget {
     final colors = PianoTheme.colorsOf(context);
     final text = PianoTheme.textThemeOf(context);
     final granted = audioGrantedAsync.whenOrNull(data: (d) => d) == true;
+    final midiOnly =
+        ref.watch(settingsProvider).inputSource == PracticeInputSource.midi;
 
     return Row(
       children: [
@@ -297,7 +301,9 @@ class _MicStatus extends ConsumerWidget {
         const SizedBox(width: PianoSpacing.sm),
         Expanded(
           child: Text(
-            granted
+            midiOnly
+                ? 'Microphone is not needed for digital piano practice.'
+                : granted
                 ? 'On. Piano Tool can hear your piano.'
                 : 'Off. Allow the microphone so Piano Tool can hear you play.',
             style: text.bodyMedium?.copyWith(
