@@ -99,6 +99,10 @@ class _HomeDesk extends ConsumerWidget {
         books.where((b) => b.unlocked).firstOrNull ??
         books.firstOrNull;
 
+    // Practice opens on the keyboard render; load it while the desk is up so
+    // it does not pop in a frame after the sheet lands.
+    precacheImage(const AssetImage('assets/art/keyboard.png'), context);
+
     void open(_Book book) => context.push('/practice/${book.stage.id}');
     final canImport = ref.watch(importAvailableProvider);
 

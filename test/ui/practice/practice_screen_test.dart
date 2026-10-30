@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -383,5 +385,37 @@ void main() {
           .first,
     );
     expect(ignore.ignoring, isTrue);
+  });
+
+  testWidgets('the sheet is there to land on while the microphone starts', (
+    tester,
+  ) async {
+    // The score flies in from the desk on the first frame of the route; if
+    // practice showed only a spinner then, there would be nothing to fly to.
+    final session = Completer<void>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          audioGrantedProvider.overrideWith((ref) async => true),
+          practiceAudioSessionProvider.overrideWith((ref) => session.future),
+          levelRepositoryProvider.overrideWith(
+            (ref) => SynchronousFuture(LevelRepository()),
+          ),
+        ],
+        child: _screen(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Hero && w.tag == scoreHeroTag('stage_1'),
+      ),
+      findsOneWidget,
+    );
+    session.complete();
+    await tester.pump();
   });
 }

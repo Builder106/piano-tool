@@ -54,7 +54,16 @@ class MicPermissionGate extends ConsumerWidget {
     final state = startAudio ? session!.whenData((_) => true) : permission;
 
     return state.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      // Practice stays on screen, inert, while the microphone starts, so the
+      // sheet arriving from the desk has somewhere to land.
+      loading: () => startAudio
+          ? Stack(
+              children: [
+                IgnorePointer(child: child),
+                const Center(child: CircularProgressIndicator()),
+              ],
+            )
+          : const Center(child: CircularProgressIndicator()),
       error: (err, stack) => _Denied(
         message:
             'The microphone could not be started. '
