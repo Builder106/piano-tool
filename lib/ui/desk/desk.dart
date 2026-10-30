@@ -188,6 +188,36 @@ class DeskAction extends StatelessWidget {
   }
 }
 
+/// The lamp over the desk: a cool pool of light where the work is, falling
+/// off into the lacquer at the edges.
+class DeskLamp extends StatelessWidget {
+  const DeskLamp({
+    super.key,
+    required this.child,
+    this.center = const Alignment(0, -0.45),
+    this.radius = 0.9,
+  });
+
+  final Widget child;
+  final Alignment center;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = PianoTheme.colorsOf(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: center,
+          radius: radius,
+          colors: [colors.deskRule.withValues(alpha: 0.75), colors.desk],
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
 /// A sheet of paper lying on the desk: the grain from the Blender render, a
 /// lighter top edge and a soft contact shadow. Everything on it is ink.
 class PaperSheet extends StatelessWidget {
