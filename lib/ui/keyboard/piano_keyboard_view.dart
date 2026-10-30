@@ -43,7 +43,10 @@ class PianoKeyboardView extends StatelessWidget {
   static const double keysLeft = 0.06716;
   static const double keysRight = 0.93284;
   static const double whiteTop = 0.41978;
-  static const double whiteBottom = 0.88404;
+  /// keyboard.json gives 0.884 here, which is the foot of the key rail; the
+  /// white keys' front lip ends higher, at 0.815, measured on the render.
+  /// A tint drawn to the rail spills below the key.
+  static const double whiteBottom = 0.815;
   static const double blackTop = 0.346;
   static const double blackBottom = 0.64079;
 
