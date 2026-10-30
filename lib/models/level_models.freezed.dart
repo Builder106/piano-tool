@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LevelNote implements DiagnosticableTreeMixin {
 
- int get midiNote; double get startBeat; double get durationBeats; int get measureIndex; int get beatIndex; bool get isRest; int get voiceIndex;
+ int get midiNote; double get startBeat; double get durationBeats; int get measureIndex; int get beatIndex; bool get isRest; int get voiceIndex;/// Written alteration: -1 flat, 0 natural, 1 sharp. Null lets the
+/// staff spell black keys as sharps.
+ int? get alter;
 /// Create a copy of LevelNote
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,21 +31,21 @@ $LevelNoteCopyWith<LevelNote> get copyWith => _$LevelNoteCopyWithImpl<LevelNote>
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'LevelNote'))
-    ..add(DiagnosticsProperty('midiNote', midiNote))..add(DiagnosticsProperty('startBeat', startBeat))..add(DiagnosticsProperty('durationBeats', durationBeats))..add(DiagnosticsProperty('measureIndex', measureIndex))..add(DiagnosticsProperty('beatIndex', beatIndex))..add(DiagnosticsProperty('isRest', isRest))..add(DiagnosticsProperty('voiceIndex', voiceIndex));
+    ..add(DiagnosticsProperty('midiNote', midiNote))..add(DiagnosticsProperty('startBeat', startBeat))..add(DiagnosticsProperty('durationBeats', durationBeats))..add(DiagnosticsProperty('measureIndex', measureIndex))..add(DiagnosticsProperty('beatIndex', beatIndex))..add(DiagnosticsProperty('isRest', isRest))..add(DiagnosticsProperty('voiceIndex', voiceIndex))..add(DiagnosticsProperty('alter', alter));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LevelNote&&(identical(other.midiNote, midiNote) || other.midiNote == midiNote)&&(identical(other.startBeat, startBeat) || other.startBeat == startBeat)&&(identical(other.durationBeats, durationBeats) || other.durationBeats == durationBeats)&&(identical(other.measureIndex, measureIndex) || other.measureIndex == measureIndex)&&(identical(other.beatIndex, beatIndex) || other.beatIndex == beatIndex)&&(identical(other.isRest, isRest) || other.isRest == isRest)&&(identical(other.voiceIndex, voiceIndex) || other.voiceIndex == voiceIndex));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LevelNote&&(identical(other.midiNote, midiNote) || other.midiNote == midiNote)&&(identical(other.startBeat, startBeat) || other.startBeat == startBeat)&&(identical(other.durationBeats, durationBeats) || other.durationBeats == durationBeats)&&(identical(other.measureIndex, measureIndex) || other.measureIndex == measureIndex)&&(identical(other.beatIndex, beatIndex) || other.beatIndex == beatIndex)&&(identical(other.isRest, isRest) || other.isRest == isRest)&&(identical(other.voiceIndex, voiceIndex) || other.voiceIndex == voiceIndex)&&(identical(other.alter, alter) || other.alter == alter));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,midiNote,startBeat,durationBeats,measureIndex,beatIndex,isRest,voiceIndex);
+int get hashCode => Object.hash(runtimeType,midiNote,startBeat,durationBeats,measureIndex,beatIndex,isRest,voiceIndex,alter);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'LevelNote(midiNote: $midiNote, startBeat: $startBeat, durationBeats: $durationBeats, measureIndex: $measureIndex, beatIndex: $beatIndex, isRest: $isRest, voiceIndex: $voiceIndex)';
+  return 'LevelNote(midiNote: $midiNote, startBeat: $startBeat, durationBeats: $durationBeats, measureIndex: $measureIndex, beatIndex: $beatIndex, isRest: $isRest, voiceIndex: $voiceIndex, alter: $alter)';
 }
 
 
@@ -54,7 +56,7 @@ abstract mixin class $LevelNoteCopyWith<$Res>  {
   factory $LevelNoteCopyWith(LevelNote value, $Res Function(LevelNote) _then) = _$LevelNoteCopyWithImpl;
 @useResult
 $Res call({
- int midiNote, double startBeat, double durationBeats, int measureIndex, int beatIndex, bool isRest, int voiceIndex
+ int midiNote, double startBeat, double durationBeats, int measureIndex, int beatIndex, bool isRest, int voiceIndex, int? alter
 });
 
 
@@ -71,7 +73,7 @@ class _$LevelNoteCopyWithImpl<$Res>
 
 /// Create a copy of LevelNote
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? midiNote = null,Object? startBeat = null,Object? durationBeats = null,Object? measureIndex = null,Object? beatIndex = null,Object? isRest = null,Object? voiceIndex = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? midiNote = null,Object? startBeat = null,Object? durationBeats = null,Object? measureIndex = null,Object? beatIndex = null,Object? isRest = null,Object? voiceIndex = null,Object? alter = freezed,}) {
   return _then(_self.copyWith(
 midiNote: null == midiNote ? _self.midiNote : midiNote // ignore: cast_nullable_to_non_nullable
 as int,startBeat: null == startBeat ? _self.startBeat : startBeat // ignore: cast_nullable_to_non_nullable
@@ -80,7 +82,8 @@ as double,measureIndex: null == measureIndex ? _self.measureIndex : measureIndex
 as int,beatIndex: null == beatIndex ? _self.beatIndex : beatIndex // ignore: cast_nullable_to_non_nullable
 as int,isRest: null == isRest ? _self.isRest : isRest // ignore: cast_nullable_to_non_nullable
 as bool,voiceIndex: null == voiceIndex ? _self.voiceIndex : voiceIndex // ignore: cast_nullable_to_non_nullable
-as int,
+as int,alter: freezed == alter ? _self.alter : alter // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -162,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int midiNote,  double startBeat,  double durationBeats,  int measureIndex,  int beatIndex,  bool isRest,  int voiceIndex)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int midiNote,  double startBeat,  double durationBeats,  int measureIndex,  int beatIndex,  bool isRest,  int voiceIndex,  int? alter)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LevelNote() when $default != null:
-return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measureIndex,_that.beatIndex,_that.isRest,_that.voiceIndex);case _:
+return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measureIndex,_that.beatIndex,_that.isRest,_that.voiceIndex,_that.alter);case _:
   return orElse();
 
 }
@@ -183,10 +186,10 @@ return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measure
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int midiNote,  double startBeat,  double durationBeats,  int measureIndex,  int beatIndex,  bool isRest,  int voiceIndex)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int midiNote,  double startBeat,  double durationBeats,  int measureIndex,  int beatIndex,  bool isRest,  int voiceIndex,  int? alter)  $default,) {final _that = this;
 switch (_that) {
 case _LevelNote():
-return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measureIndex,_that.beatIndex,_that.isRest,_that.voiceIndex);}
+return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measureIndex,_that.beatIndex,_that.isRest,_that.voiceIndex,_that.alter);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -200,10 +203,10 @@ return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measure
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int midiNote,  double startBeat,  double durationBeats,  int measureIndex,  int beatIndex,  bool isRest,  int voiceIndex)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int midiNote,  double startBeat,  double durationBeats,  int measureIndex,  int beatIndex,  bool isRest,  int voiceIndex,  int? alter)?  $default,) {final _that = this;
 switch (_that) {
 case _LevelNote() when $default != null:
-return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measureIndex,_that.beatIndex,_that.isRest,_that.voiceIndex);case _:
+return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measureIndex,_that.beatIndex,_that.isRest,_that.voiceIndex,_that.alter);case _:
   return null;
 
 }
@@ -215,7 +218,7 @@ return $default(_that.midiNote,_that.startBeat,_that.durationBeats,_that.measure
 @JsonSerializable()
 
 class _LevelNote with DiagnosticableTreeMixin implements LevelNote {
-  const _LevelNote({required this.midiNote, required this.startBeat, required this.durationBeats, required this.measureIndex, required this.beatIndex, this.isRest = false, this.voiceIndex = 0});
+  const _LevelNote({required this.midiNote, required this.startBeat, required this.durationBeats, required this.measureIndex, required this.beatIndex, this.isRest = false, this.voiceIndex = 0, this.alter});
   factory _LevelNote.fromJson(Map<String, dynamic> json) => _$LevelNoteFromJson(json);
 
 @override final  int midiNote;
@@ -225,6 +228,9 @@ class _LevelNote with DiagnosticableTreeMixin implements LevelNote {
 @override final  int beatIndex;
 @override@JsonKey() final  bool isRest;
 @override@JsonKey() final  int voiceIndex;
+/// Written alteration: -1 flat, 0 natural, 1 sharp. Null lets the
+/// staff spell black keys as sharps.
+@override final  int? alter;
 
 /// Create a copy of LevelNote
 /// with the given fields replaced by the non-null parameter values.
@@ -240,21 +246,21 @@ Map<String, dynamic> toJson() {
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'LevelNote'))
-    ..add(DiagnosticsProperty('midiNote', midiNote))..add(DiagnosticsProperty('startBeat', startBeat))..add(DiagnosticsProperty('durationBeats', durationBeats))..add(DiagnosticsProperty('measureIndex', measureIndex))..add(DiagnosticsProperty('beatIndex', beatIndex))..add(DiagnosticsProperty('isRest', isRest))..add(DiagnosticsProperty('voiceIndex', voiceIndex));
+    ..add(DiagnosticsProperty('midiNote', midiNote))..add(DiagnosticsProperty('startBeat', startBeat))..add(DiagnosticsProperty('durationBeats', durationBeats))..add(DiagnosticsProperty('measureIndex', measureIndex))..add(DiagnosticsProperty('beatIndex', beatIndex))..add(DiagnosticsProperty('isRest', isRest))..add(DiagnosticsProperty('voiceIndex', voiceIndex))..add(DiagnosticsProperty('alter', alter));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LevelNote&&(identical(other.midiNote, midiNote) || other.midiNote == midiNote)&&(identical(other.startBeat, startBeat) || other.startBeat == startBeat)&&(identical(other.durationBeats, durationBeats) || other.durationBeats == durationBeats)&&(identical(other.measureIndex, measureIndex) || other.measureIndex == measureIndex)&&(identical(other.beatIndex, beatIndex) || other.beatIndex == beatIndex)&&(identical(other.isRest, isRest) || other.isRest == isRest)&&(identical(other.voiceIndex, voiceIndex) || other.voiceIndex == voiceIndex));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LevelNote&&(identical(other.midiNote, midiNote) || other.midiNote == midiNote)&&(identical(other.startBeat, startBeat) || other.startBeat == startBeat)&&(identical(other.durationBeats, durationBeats) || other.durationBeats == durationBeats)&&(identical(other.measureIndex, measureIndex) || other.measureIndex == measureIndex)&&(identical(other.beatIndex, beatIndex) || other.beatIndex == beatIndex)&&(identical(other.isRest, isRest) || other.isRest == isRest)&&(identical(other.voiceIndex, voiceIndex) || other.voiceIndex == voiceIndex)&&(identical(other.alter, alter) || other.alter == alter));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,midiNote,startBeat,durationBeats,measureIndex,beatIndex,isRest,voiceIndex);
+int get hashCode => Object.hash(runtimeType,midiNote,startBeat,durationBeats,measureIndex,beatIndex,isRest,voiceIndex,alter);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'LevelNote(midiNote: $midiNote, startBeat: $startBeat, durationBeats: $durationBeats, measureIndex: $measureIndex, beatIndex: $beatIndex, isRest: $isRest, voiceIndex: $voiceIndex)';
+  return 'LevelNote(midiNote: $midiNote, startBeat: $startBeat, durationBeats: $durationBeats, measureIndex: $measureIndex, beatIndex: $beatIndex, isRest: $isRest, voiceIndex: $voiceIndex, alter: $alter)';
 }
 
 
@@ -265,7 +271,7 @@ abstract mixin class _$LevelNoteCopyWith<$Res> implements $LevelNoteCopyWith<$Re
   factory _$LevelNoteCopyWith(_LevelNote value, $Res Function(_LevelNote) _then) = __$LevelNoteCopyWithImpl;
 @override @useResult
 $Res call({
- int midiNote, double startBeat, double durationBeats, int measureIndex, int beatIndex, bool isRest, int voiceIndex
+ int midiNote, double startBeat, double durationBeats, int measureIndex, int beatIndex, bool isRest, int voiceIndex, int? alter
 });
 
 
@@ -282,7 +288,7 @@ class __$LevelNoteCopyWithImpl<$Res>
 
 /// Create a copy of LevelNote
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? midiNote = null,Object? startBeat = null,Object? durationBeats = null,Object? measureIndex = null,Object? beatIndex = null,Object? isRest = null,Object? voiceIndex = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? midiNote = null,Object? startBeat = null,Object? durationBeats = null,Object? measureIndex = null,Object? beatIndex = null,Object? isRest = null,Object? voiceIndex = null,Object? alter = freezed,}) {
   return _then(_LevelNote(
 midiNote: null == midiNote ? _self.midiNote : midiNote // ignore: cast_nullable_to_non_nullable
 as int,startBeat: null == startBeat ? _self.startBeat : startBeat // ignore: cast_nullable_to_non_nullable
@@ -291,7 +297,8 @@ as double,measureIndex: null == measureIndex ? _self.measureIndex : measureIndex
 as int,beatIndex: null == beatIndex ? _self.beatIndex : beatIndex // ignore: cast_nullable_to_non_nullable
 as int,isRest: null == isRest ? _self.isRest : isRest // ignore: cast_nullable_to_non_nullable
 as bool,voiceIndex: null == voiceIndex ? _self.voiceIndex : voiceIndex // ignore: cast_nullable_to_non_nullable
-as int,
+as int,alter: freezed == alter ? _self.alter : alter // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

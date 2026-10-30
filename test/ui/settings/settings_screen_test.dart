@@ -37,6 +37,11 @@ class FakeSettingsNotifier extends SettingsNotifier {
   Future<void> setInputSource(PracticeInputSource source) async {
     state = state.copyWith(inputSource: source);
   }
+
+  @override
+  Future<void> setVerifiedInput(String? key) async {
+    state = state.copyWith(verifiedInput: key, clearVerifiedInput: key == null);
+  }
 }
 
 void main() {
@@ -145,12 +150,33 @@ void main() {
       );
     });
 
-    testWidgets('says plainly when the microphone is on', (tester) async {
+    testWidgets('permission alone does not claim the piano was heard', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject(micGranted: true));
       await tester.pumpAndSettle();
 
       expect(find.text('Microphone'), findsWidgets);
-      expect(find.text('On. Piano Tool can hear your piano.'), findsOneWidget);
+      expect(find.textContaining('On.'), findsNothing);
+      expect(find.textContaining('has heard'), findsNothing);
+      expect(find.textContaining('Allowed.'), findsOneWidget);
+    });
+
+    testWidgets('says plainly once the input check heard the piano', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildSubject(
+          micGranted: true,
+          initialSettings: const AppSettings(
+            inputSource: PracticeInputSource.microphone,
+            verifiedInput: 'microphone',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('On. Piano Tool has heard your piano.'), findsOneWidget);
     });
 
     testWidgets('says plainly when the microphone is off', (tester) async {

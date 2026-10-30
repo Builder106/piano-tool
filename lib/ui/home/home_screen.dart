@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -97,6 +99,10 @@ class _HomeDesk extends ConsumerWidget {
         books.where((b) => b.unlocked).firstOrNull ??
         books.firstOrNull;
 
+    // Practice opens on the keyboard render; load it while the desk is up so
+    // it does not pop in a frame after the sheet lands.
+    precacheImage(const AssetImage('assets/art/keyboard.png'), context);
+
     void open(_Book book) => context.push('/practice/${book.stage.id}');
     final canImport = ref.watch(importAvailableProvider);
 
@@ -133,79 +139,33 @@ class _HomeDesk extends ConsumerWidget {
                   onOpen: open,
                   onLibrary: () => context.push('/levels'),
                 );
-                final cover = Semantics(
-                  button: true,
-                  label: 'Open ${current.stage.title}',
-                  excludeSemantics: true,
-                  child: LiftingBook(
-                    onTap: () => open(current),
-                    child: StageCover(
-                      cloth: CoverCloth.forStage(
-                        index: current.index,
-                        imported: current.imported,
-                      ),
-                      number: current.imported ? null : current.index + 1,
-                      title: current.stage.title,
-                      sticker: current.progress?.completed ?? false,
-                    ),
-                  ),
-                );
-                final sheet = _PracticeSheet(
+                final book = _OpenBook(
                   book: current,
                   stageCount: books.length,
                   onStart: () => open(current),
+                  stacked: !wide,
                 );
 
-                if (!wide) {
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      PianoSpacing.md,
+                // The lamp over the desk: the open book sits in its light,
+                // and the shelf falls off into the lacquer.
+                return DeskLamp(
+                  radius: wide ? 0.9 : 1.2,
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      wide ? PianoSpacing.xl : PianoSpacing.md,
                       PianoSpacing.xs,
-                      PianoSpacing.md,
-                      PianoSpacing.xl,
+                      wide ? PianoSpacing.xl : PianoSpacing.md,
+                      PianoSpacing.lg,
                     ),
-                    children: [
-                      Center(child: SizedBox(width: 180, child: cover)),
-                      const SizedBox(height: PianoSpacing.lg),
-                      sheet,
-                      const SizedBox(height: PianoSpacing.xl),
-                      shelf,
-                    ],
-                  );
-                }
-
-                // One scrolling desk: the sheet sizes to its content, so
-                // nothing on it is ever clipped by a box beside the cover.
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    PianoSpacing.xl,
-                    PianoSpacing.xs,
-                    PianoSpacing.xl,
-                    PianoSpacing.lg,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        // Room for the page clip above the sheet.
-                        padding: const EdgeInsets.only(top: PianoSpacing.md),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // About the width of a method book lying on the
-                            // desk beside its open page.
-                            SizedBox(
-                              width: (box.maxWidth * 0.2).clamp(180.0, 260.0),
-                              child: cover,
-                            ),
-                            const SizedBox(width: PianoSpacing.xl),
-                            Expanded(child: sheet),
-                          ],
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1180),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [book, const _DeskPencil(), shelf],
                         ),
                       ),
-                      const _DeskPencil(),
-                      shelf,
-                    ],
+                    ),
                   ),
                 );
               },
@@ -214,18 +174,184 @@ class _HomeDesk extends ConsumerWidget {
   }
 }
 
-/// The practice sheet for the open stage: printed header, the opening bars,
-/// the teacher's note, and the one action, circled in pencil.
-class _PracticeSheet extends StatelessWidget {
-  const _PracticeSheet({
+/// The current stage's method book, lying open on the desk: the cloth
+/// boards, the lesson on the left page and the music on the right. The
+/// right page is the sheet that carries over into practice.
+class _OpenBook extends StatelessWidget {
+  const _OpenBook({
     required this.book,
     required this.stageCount,
     required this.onStart,
+    required this.stacked,
   });
 
   final _Book book;
   final int stageCount;
   final VoidCallback onStart;
+
+  /// Narrow screens read the pages one above the other.
+  final bool stacked;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = PianoTheme.colorsOf(context);
+    final cloth = switch (CoverCloth.forStage(
+      index: book.index,
+      imported: book.imported,
+    )) {
+      CoverCloth.blue => colors.coverBlue,
+      CoverCloth.green => colors.coverGreen,
+      CoverCloth.rust => colors.coverRust,
+      CoverCloth.slate => colors.coverSlate,
+    };
+    final lesson = _BookPage(
+      gutter: stacked ? null : AxisDirection.right,
+      child: _LessonPage(book: book, stageCount: stageCount),
+    );
+    final music = HeroMode(
+      enabled: !MediaQuery.of(context).disableAnimations,
+      child: Hero(
+        tag: scoreHeroTag(book.stage.id),
+        child: _BookPage(
+          gutter: stacked ? null : AxisDirection.left,
+          child: _MusicPage(book: book, onStart: onStart, fill: !stacked),
+        ),
+      ),
+    );
+
+    return Padding(
+      // Room for the ribbon above the boards.
+      padding: const EdgeInsets.only(top: PianoSpacing.md),
+      child: Transform.rotate(
+        angle: -0.4 * math.pi / 180,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: cloth,
+            borderRadius: BorderRadius.circular(6),
+            image: DecorationImage(
+              image: const AssetImage('assets/art/paper.png'),
+              repeat: ImageRepeat.repeat,
+              scale: 1.5,
+              // The paper grain, multiplied in, reads as the cloth's weave.
+              colorFilter: ColorFilter.mode(cloth, BlendMode.multiply),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0xCC000000),
+                blurRadius: 36,
+                spreadRadius: -6,
+                offset: Offset(0, 22),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 16),
+            child: stacked
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [lesson, const SizedBox(height: 6), music],
+                  )
+                : IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(flex: 2, child: lesson),
+                        Expanded(flex: 3, child: music),
+                      ],
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One page of the open book. The edge toward the spine darkens where the
+/// paper curves down into the binding.
+class _BookPage extends StatelessWidget {
+  const _BookPage({required this.child, this.gutter});
+
+  final Widget child;
+
+  /// Which side the spine is on; null for a page read on its own.
+  final AxisDirection? gutter;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = PianoTheme.colorsOf(context);
+    final side = gutter;
+    final page = Material(
+      type: MaterialType.transparency,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.paper,
+          image: DecorationImage(
+            image: const AssetImage('assets/art/paper.png'),
+            repeat: ImageRepeat.repeat,
+            scale: 2,
+            colorFilter: ColorFilter.mode(colors.paper, BlendMode.multiply),
+          ),
+        ),
+        child: DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            gradient: side == null
+                ? null
+                : LinearGradient(
+                    begin: side == AxisDirection.right
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    end: side == AxisDirection.right
+                        ? Alignment.centerLeft
+                        : Alignment.centerRight,
+                    stops: const [0, 0.07, 0.2],
+                    colors: [
+                      Colors.black.withValues(alpha: 0.22),
+                      Colors.black.withValues(alpha: 0.06),
+                      Colors.black.withValues(alpha: 0),
+                    ],
+                  ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              PianoSpacing.xl,
+              PianoSpacing.lg,
+              PianoSpacing.xl,
+              PianoSpacing.lg,
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+    // The leaves beneath show along the bottom edge: a book has thickness.
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        for (final (drop, shade) in [
+          (4.0, colors.paper3),
+          (2.0, colors.paper2),
+        ])
+          Positioned(
+            left: 2,
+            right: 2,
+            top: drop,
+            bottom: -drop,
+            child: ColoredBox(color: shade),
+          ),
+        page,
+      ],
+    );
+  }
+}
+
+/// The left page: which lesson this is, what it teaches, and how it went.
+class _LessonPage extends StatelessWidget {
+  const _LessonPage({required this.book, required this.stageCount});
+
+  final _Book book;
+  final int stageCount;
 
   @override
   Widget build(BuildContext context) {
@@ -240,120 +366,131 @@ class _PracticeSheet extends StatelessWidget {
         ? 'In progress'
         : 'Up next';
 
-    return PaperSheet(
-      tilt: -0.6,
-      clipped: true,
-      padding: const EdgeInsets.fromLTRB(
-        PianoSpacing.xl,
-        PianoSpacing.lg,
-        PianoSpacing.xl,
-        PianoSpacing.lg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  book.imported
-                      ? 'Your piece'
-                      : 'Stage ${book.index + 1} of $stageCount',
-                  style: text.bodySmall?.copyWith(color: colors.muted),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                book.imported
+                    ? 'Your piece'
+                    : 'Stage ${book.index + 1} of $stageCount',
+                style: text.bodySmall?.copyWith(color: colors.muted),
               ),
-              if (cleared) ...[
-                PencilMark(Pencil.tick, color: colors.success, height: 14),
-                const SizedBox(width: PianoSpacing.xs2),
-              ],
-              Text(
-                status,
-                style: text.titleLarge?.copyWith(
-                  color: colors.muted,
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.w500,
-                  fontVariations: const [FontVariation('wght', 500)],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: PianoSpacing.xs),
-          Text(
-            stage.title,
-            style: text.displayLarge?.copyWith(
-              fontWeight: FontWeight.w500,
-              fontVariations: const [FontVariation('wght', 500)],
             ),
-          ),
-          if (attempts == 0) ...[
-            const SizedBox(height: PianoSpacing.sm),
+            if (cleared) ...[
+              PencilMark(Pencil.tick, color: colors.success, height: 14),
+              const SizedBox(width: PianoSpacing.xs2),
+            ],
             Text(
-              'Play your piano while Piano Tool follows the music and marks your notes.',
-              style: text.bodyMedium,
+              status,
+              style: text.titleLarge?.copyWith(
+                color: colors.muted,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w500,
+                fontVariations: const [FontVariation('wght', 500)],
+              ),
             ),
           ],
-          const SizedBox(height: PianoSpacing.md),
-          SizedBox(
-            height: stage.level.clef == LevelClef.grand ? 150 : 96,
-            child: _OpeningBars(level: stage.level),
+        ),
+        const SizedBox(height: PianoSpacing.xs),
+        Text(
+          stage.title,
+          style: text.displayLarge?.copyWith(
+            fontWeight: FontWeight.w500,
+            fontVariations: const [FontVariation('wght', 500)],
           ),
-          const SizedBox(height: PianoSpacing.md),
-          Text(
-            stage.description,
-            style: text.headlineSmall?.copyWith(
-              color: colors.muted,
-              fontStyle: FontStyle.italic,
-              fontWeight: FontWeight.w400,
-              fontVariations: const [FontVariation('wght', 400)],
+        ),
+        const SizedBox(height: PianoSpacing.sm),
+        Text(
+          stage.description,
+          style: text.headlineSmall?.copyWith(
+            color: colors.ink2,
+            fontStyle: FontStyle.italic,
+            fontWeight: FontWeight.w400,
+            fontVariations: const [FontVariation('wght', 400)],
+          ),
+        ),
+        const SizedBox(height: PianoSpacing.lg),
+        Wrap(
+          spacing: PianoSpacing.lg,
+          runSpacing: PianoSpacing.xs,
+          children: [
+            _Fact(label: 'Tempo', value: '${stage.level.tempo}'),
+            _Fact(
+              label: 'Time',
+              value: '${stage.level.beatsPerMeasure}/${stage.level.beatUnit}',
             ),
+            if (attempts > 0) ...[
+              _Fact(
+                label: 'Best',
+                value: '${((book.progress?.bestAccuracy ?? 0) * 100).round()}%',
+              ),
+              _Fact(label: attempts == 1 ? 'Run' : 'Runs', value: '$attempts'),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// The right page: the opening bars and the one action, circled in pencil.
+class _MusicPage extends StatelessWidget {
+  const _MusicPage({
+    required this.book,
+    required this.onStart,
+    required this.fill,
+  });
+
+  final _Book book;
+  final VoidCallback onStart;
+
+  /// Beside the lesson page, the action sits at the foot of a page as tall
+  /// as its neighbour.
+  final bool fill;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = PianoTheme.textThemeOf(context);
+    final stage = book.stage;
+    final attempts = book.progress?.attempts ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: stage.level.clef == LevelClef.grand ? 170 : 116,
+          child: _OpeningBars(level: stage.level),
+        ),
+        if (attempts == 0) ...[
+          const SizedBox(height: PianoSpacing.sm),
+          Text(
+            'Play your piano while Piano Tool follows the music and marks your notes.',
+            style: text.bodyMedium,
           ),
-          if (kIsWeb)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
+        ],
+        if (fill) const Spacer(),
+        const SizedBox(height: PianoSpacing.md),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (kIsWeb)
+              TextButton(
                 onPressed: openTour,
                 child: const Text('How it works'),
               ),
+            const Spacer(),
+            PencilButton(
+              label: attempts > 0 ? 'Resume' : 'Start',
+              semanticLabel:
+                  '${attempts > 0 ? 'Resume' : 'Start'} ${stage.title}',
+              onPressed: onStart,
             ),
-          const SizedBox(height: PianoSpacing.lg),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Wrap(
-                  spacing: PianoSpacing.lg,
-                  runSpacing: PianoSpacing.xs,
-                  children: [
-                    _Fact(label: 'Tempo', value: '${stage.level.tempo}'),
-                    _Fact(
-                      label: 'Time',
-                      value:
-                          '${stage.level.beatsPerMeasure}/${stage.level.beatUnit}',
-                    ),
-                    if (attempts > 0) ...[
-                      _Fact(
-                        label: 'Best',
-                        value:
-                            '${((book.progress?.bestAccuracy ?? 0) * 100).round()}%',
-                      ),
-                      _Fact(
-                        label: attempts == 1 ? 'Run' : 'Runs',
-                        value: '$attempts',
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              PencilButton(
-                label: attempts > 0 ? 'Resume' : 'Start',
-                semanticLabel:
-                    '${attempts > 0 ? 'Resume' : 'Start'} ${stage.title}',
-                onPressed: onStart,
-              ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -369,11 +506,14 @@ class _OpeningBars extends StatelessWidget {
     final notes = [
       for (final measure in level.measures)
         for (final note in measure.notes)
-          (
-            midi: note.midiNote,
-            startBeat: note.startBeat,
-            state: NoteState.upcoming,
-          ),
+          if (!note.isRest)
+            (
+              midi: note.midiNote,
+              startBeat: note.startBeat,
+              durationBeats: note.durationBeats,
+              alter: note.alter,
+              state: NoteState.upcoming,
+            ),
     ]..sort((a, b) => a.startBeat.compareTo(b.startBeat));
     final systems = switch (level.clef) {
       LevelClef.treble => [(clef: Clef.treble, notes: notes)],
@@ -511,16 +651,22 @@ class _Shelf extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              'Your books',
-              style: text.titleLarge?.copyWith(color: colors.deskInk),
+            Expanded(
+              child: Wrap(
+                spacing: PianoSpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Your books',
+                    style: text.titleLarge?.copyWith(color: colors.deskInk),
+                  ),
+                  Text(
+                    '$cleared of ${books.length} cleared',
+                    style: text.bodySmall?.copyWith(color: colors.deskMuted),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(width: PianoSpacing.sm),
-            Text(
-              '$cleared of ${books.length} cleared',
-              style: text.bodySmall?.copyWith(color: colors.deskMuted),
-            ),
-            const Spacer(),
             TextButton(
               onPressed: onLibrary,
               style: TextButton.styleFrom(foregroundColor: colors.deskAccent),

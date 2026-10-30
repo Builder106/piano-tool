@@ -233,6 +233,7 @@ class MidiService extends ChangeNotifier {
         midiNote: note,
         timestamp: msg.timestamp.millisecondsSinceEpoch / 1000.0,
         volume: (velocity / 127.0).clamp(0.1, 1.0),
+        struck: true,
       );
       _pitchController.add(event);
     }

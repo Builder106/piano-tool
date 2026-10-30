@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/settings_repository.dart';
+import '../../services/midi_service.dart';
 import '../desk/desk.dart';
 import '../theme/tokens.dart';
+import 'input_check.dart';
 import 'stage_controller.dart';
+
+/// Set when the learner skips the input check. A skip lasts for this
+/// session and is never saved.
+final inputCheckSkippedProvider = StateProvider<bool>((ref) => false);
 
 /// Microphone and dual-input practice need permission. MIDI-only practice can
 /// score without opening a recorder.
@@ -31,7 +38,7 @@ class MicPermissionGate extends ConsumerWidget {
       );
     }
     if (startAudio && settings.inputSource == PracticeInputSource.midi) {
-      return child;
+      return _CheckedInput(child: child);
     }
 
     // Invalidating rebuilds the provider from scratch, so a permission that
@@ -47,7 +54,16 @@ class MicPermissionGate extends ConsumerWidget {
     final state = startAudio ? session!.whenData((_) => true) : permission;
 
     return state.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      // Practice stays on screen, inert, while the microphone starts, so the
+      // sheet arriving from the desk has somewhere to land.
+      loading: () => startAudio
+          ? Stack(
+              children: [
+                IgnorePointer(child: child),
+                const Center(child: CircularProgressIndicator()),
+              ],
+            )
+          : const Center(child: CircularProgressIndicator()),
       error: (err, stack) => _Denied(
         message:
             'The microphone could not be started. '
@@ -56,7 +72,7 @@ class MicPermissionGate extends ConsumerWidget {
         onDigitalPiano: startAudio ? () => context.push('/settings') : null,
       ),
       data: (granted) => granted
-          ? child
+          ? (startAudio ? _CheckedInput(child: child) : child)
           : _Denied(
               message:
                   'Piano Tool needs the microphone to hear what you play. '
@@ -66,6 +82,46 @@ class MicPermissionGate extends ConsumerWidget {
                   ? () => context.push('/settings')
                   : null,
             ),
+    );
+  }
+}
+
+/// Shows the input check until a note has been heard from this setup.
+class _CheckedInput extends ConsumerWidget {
+  const _CheckedInput({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    // Only the device identity: the service notifies on every message.
+    final deviceId = ref.watch(
+      midiServiceProvider.select((m) => m.selectedDevice?.id),
+    );
+    final key = inputCheckKey(settings.inputSource, deviceId);
+    if (settings.verifiedInput == key || ref.watch(inputCheckSkippedProvider)) {
+      return child;
+    }
+
+    final source = settings.inputSource;
+    final usesMic = source != PracticeInputSource.midi;
+    final usesMidi = source != PracticeInputSource.microphone;
+    final engine = ref.read(audioEngineProvider);
+    final midi = ref.read(midiServiceProvider);
+    return InputCheck(
+      key: ValueKey(key),
+      source: source,
+      pitchSources: [
+        if (usesMic) engine.pitchStream,
+        if (usesMidi) midi.pitchStream,
+      ],
+      levels: usesMic ? engine.levelStream : null,
+      clearLevel: settings.minVolumeThreshold,
+      midiConnected: deviceId != null,
+      onHeard: () => ref.read(settingsProvider.notifier).setVerifiedInput(key),
+      onSkip: () => ref.read(inputCheckSkippedProvider.notifier).state = true,
+      onConnectPiano: () => context.push('/settings'),
     );
   }
 }

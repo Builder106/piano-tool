@@ -2,51 +2,82 @@ import 'dart:math' as math;
 import 'package:flutter/rendering.dart';
 import '../../models/engine_models.dart';
 import '../theme/tokens.dart';
+import 'notation.dart';
 import 'staff_geometry.dart';
 
-typedef GlyphStyle = ({Color color, bool filled, bool ringed, bool struck});
+typedef GlyphStyle = ({
+  Color color,
 
-/// Note state is a shape first and a colour second.
+  /// A soft disc behind the head: the note to play now.
+  bool halo,
+
+  /// An outline circle around the head: a perfectly timed hit.
+  bool ringed,
+
+  /// A pencil tick beside the head: any hit.
+  bool ticked,
+
+  /// A short line under the tick: a hit outside the good window.
+  bool underlined,
+
+  /// A diagonal stroke through the head: a miss.
+  bool struck,
+});
+
+/// Performance state is drawn as a mark beside the note.
 ///
-/// Encoding state only as green against red is invisible to red-green colour
-/// blindness. Filled against hollow noteheads is real notation, so carrying
-/// the distinction in shape costs nothing.
+/// The notehead belongs to the music: open for a half note, filled for a
+/// quarter. Scoring must not change it, or a hit half note would read as a
+/// quarter. Each state gets its own mark so it survives without colour;
+/// colour only reinforces it.
 abstract final class NoteGlyphStyle {
   static GlyphStyle forState(NoteState state, PianoColors c) => switch (state) {
     NoteState.hitPerfect => (
       color: c.success,
-      filled: true,
+      halo: false,
       ringed: true,
+      ticked: true,
+      underlined: false,
       struck: false,
     ),
     NoteState.hitGood => (
       color: c.success,
-      filled: true,
+      halo: false,
       ringed: false,
+      ticked: true,
+      underlined: false,
       struck: false,
     ),
     NoteState.hitOkay => (
       color: c.warning,
-      filled: true,
+      halo: false,
       ringed: false,
+      ticked: true,
+      underlined: true,
       struck: false,
     ),
     NoteState.missed => (
       color: c.error,
-      filled: false,
+      halo: false,
       ringed: false,
+      ticked: false,
+      underlined: false,
       struck: true,
     ),
     NoteState.active => (
       color: c.accent,
-      filled: true,
-      ringed: true,
+      halo: true,
+      ringed: false,
+      ticked: false,
+      underlined: false,
       struck: false,
     ),
     NoteState.upcoming => (
-      color: c.muted,
-      filled: false,
+      color: c.ink,
+      halo: false,
       ringed: false,
+      ticked: false,
+      underlined: false,
       struck: false,
     ),
   };
@@ -56,67 +87,156 @@ abstract final class NoteGlyph {
   /// Noteheads are tilted the way engraved heads are.
   static const double _tilt = -0.35; // radians, about -20 degrees
 
-  static void paint(
+  /// Width of the head for [value], in pixels. Whole notes are broader.
+  static double headWidth(StaffGeometry g, NoteValue value) =>
+      value == NoteValue.whole ? g.space * 1.6 : g.noteheadSize.width;
+
+  /// Draws the notehead and its augmentation dot. Stems, flags and beams
+  /// are the painter's, since they can join several heads.
+  static void paintHead(
     Canvas canvas,
     Offset center,
     StaffGeometry g,
-    NoteState state,
-    PianoColors colors, {
-    bool stemDown = true,
+    WrittenDuration duration,
+    Color color, {
+    required bool onLine,
   }) {
-    final style = NoteGlyphStyle.forState(state, colors);
-    final size = g.noteheadSize;
-    final stroke = g.space * 0.18;
-
-    if (style.ringed) {
-      canvas.drawCircle(
-        center,
-        size.width * 0.72,
-        Paint()..color = style.color.withValues(alpha: 0.22),
-      );
-    }
+    final width = headWidth(g, duration.value);
+    final height = g.noteheadSize.height;
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
-    canvas.rotate(_tilt);
+    if (duration.value != NoteValue.whole) canvas.rotate(_tilt);
     final rect = Rect.fromCenter(
       center: Offset.zero,
-      width: size.width,
-      height: size.height,
+      width: width,
+      height: height,
     );
-    canvas.drawOval(
-      rect,
-      Paint()
-        ..color = style.color
-        ..style = style.filled ? PaintingStyle.fill : PaintingStyle.stroke
-        ..strokeWidth = stroke,
-    );
+    if (duration.value.hollow) {
+      // An engraved open head is a thick ring with a thin, slanted hole.
+      final hole = Rect.fromCenter(
+        center: Offset.zero,
+        width: width * (duration.value == NoteValue.whole ? 0.5 : 0.62),
+        height: height * 0.52,
+      );
+      final holeAngle = duration.value == NoteValue.whole ? 0.9 : -0.25;
+      final path = Path()
+        ..fillType = PathFillType.evenOdd
+        ..addOval(rect)
+        ..addPath(
+          Path()..addOval(hole),
+          Offset.zero,
+          matrix4: Matrix4.rotationZ(holeAngle).storage,
+        );
+      canvas.drawPath(path, Paint()..color = color);
+    } else {
+      canvas.drawOval(rect, Paint()..color = color);
+    }
     canvas.restore();
 
-    // Stems are drawn in staff space, not inside the rotated head, so they
-    // stay vertical instead of inheriting the tilt.
-    final stemX = center.dx + (stemDown ? -size.width / 2 : size.width / 2);
-    final stemY = center.dy + (stemDown ? g.stemLength : -g.stemLength);
-    canvas.drawLine(
-      Offset(stemX, center.dy),
-      Offset(stemX, stemY),
-      Paint()
-        ..color = style.color
-        ..strokeWidth = g.space * 0.12,
-    );
+    if (duration.dotted) {
+      // A dot on a line moves up into the space above.
+      final dy = onLine ? -g.space / 2 : 0.0;
+      canvas.drawCircle(
+        Offset(center.dx + width / 2 + g.space * 0.5, center.dy + dy),
+        g.space * 0.2,
+        Paint()..color = color,
+      );
+    }
+  }
 
-    if (style.struck) {
-      final r = size.width * 0.85;
-      final dx = r * math.cos(-0.6);
-      final dy = r * math.sin(-0.6);
-      canvas.drawLine(
-        Offset(center.dx - dx, center.dy - dy),
-        Offset(center.dx + dx, center.dy + dy),
+  /// Draws the performance marks for a head. [markBelow] puts the tick on
+  /// the side away from the stem.
+  ///
+  /// [progress] runs from 0 to 1 as the pencil draws the marks in, so a
+  /// note just played gets its tick a stroke at a time.
+  static void paintMarks(
+    Canvas canvas,
+    Offset center,
+    StaffGeometry g,
+    NoteValue value,
+    GlyphStyle style, {
+    required bool markBelow,
+    double progress = 1,
+  }) {
+    if (progress <= 0) return;
+    final width = headWidth(g, value);
+
+    if (style.ringed) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: width * 0.78),
+        -math.pi / 2,
+        2 * math.pi * progress,
+        false,
         Paint()
           ..color = style.color
-          ..strokeWidth = g.space * 0.16
-          ..strokeCap = StrokeCap.round,
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = g.space * 0.12,
       );
+    }
+
+    final pencil = Paint()
+      ..color = style.color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = g.space * 0.16
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    if (style.ticked) {
+      final s = g.space;
+      final y = center.dy + (markBelow ? s * 1.5 : -s * 1.5);
+      final tick = Path()
+        ..moveTo(center.dx - s * 0.4, y - s * 0.05)
+        ..lineTo(center.dx - s * 0.1, y + s * 0.3)
+        ..lineTo(center.dx + s * 0.45, y - s * 0.4);
+      drawPartial(canvas, tick, pencil, progress);
+      if (style.underlined) {
+        final uy = y + s * 0.55;
+        drawPartial(
+          canvas,
+          Path()
+            ..moveTo(center.dx - s * 0.4, uy)
+            ..lineTo(center.dx + s * 0.45, uy),
+          pencil,
+          progress,
+        );
+      }
+    }
+
+    if (style.struck) {
+      final r = width * 0.85;
+      final dx = r * math.cos(-0.6);
+      final dy = r * math.sin(-0.6);
+      drawPartial(
+        canvas,
+        Path()
+          ..moveTo(center.dx - dx, center.dy - dy)
+          ..lineTo(center.dx + dx, center.dy + dy),
+        pencil,
+        progress,
+      );
+    }
+  }
+
+  /// Draws the first [progress] of [path]'s length, the way a pencil lays
+  /// a stroke down.
+  static void drawPartial(
+    Canvas canvas,
+    Path path,
+    Paint paint,
+    double progress,
+  ) {
+    if (progress >= 1) {
+      canvas.drawPath(path, paint);
+      return;
+    }
+    final metrics = path.computeMetrics().toList();
+    final total = metrics.fold<double>(0, (sum, m) => sum + m.length);
+    var remaining = total * progress;
+    for (final m in metrics) {
+      if (remaining <= 0) break;
+      canvas.drawPath(m.extractPath(0, math.min(remaining, m.length)), paint);
+      remaining -= m.length;
     }
   }
 }

@@ -102,8 +102,8 @@ void main() {
 
       expect(find.text('Stage 1 of 3'), findsOneWidget);
       expect(find.text('Up next'), findsOneWidget);
-      // The open book's cover, its sheet and its place on the shelf.
-      expect(find.text('C Major Scale'), findsNWidgets(3));
+      // The open book's lesson page and its place on the shelf.
+      expect(find.text('C Major Scale'), findsNWidgets(2));
       expect(find.text('Start'), findsOneWidget);
     });
 

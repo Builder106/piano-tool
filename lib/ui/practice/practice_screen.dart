@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/engine_models.dart';
 import '../../models/level_models.dart';
 import '../desk/desk.dart';
 import '../keyboard/piano_keyboard_view.dart';
+import '../staff/notation.dart';
 import '../staff/staff_geometry.dart';
 import '../staff/staff_painter.dart';
 import '../staff/staff_view.dart';
@@ -16,6 +18,13 @@ import 'mic_permission_gate.dart';
 import 'practice_hud.dart';
 import 'stage_controller.dart';
 import 'transport_column.dart';
+
+/// The keyboard shows the piece's own octaves until the learner asks for
+/// all 61 keys. Kept for the session, across pieces.
+final keyboardCloseUpProvider = StateProvider<bool>((ref) => true);
+
+/// Letter names on the white keys, off until asked for.
+final keyNamesProvider = StateProvider<bool>((ref) => false);
 
 /// The practice loop: a fixed control column on the left, with the HUD, the
 /// staff, and the keyboard stacked beside it.
@@ -54,6 +63,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         stageCompleted: (accuracy, score, totalNotes, hitNotes) {
           if (!mounted || _showingResults) return;
           _showingResults = true;
+          final played = ref.read(stageControllerProvider(widget.stageId));
           context.goNamed(
             'results',
             pathParameters: {'stageId': widget.stageId},
@@ -64,6 +74,9 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               accuracy: accuracy,
               totalNotes: totalNotes,
               hitNotes: hitNotes,
+              level: played.level,
+              notes: played.notes,
+              noteStates: played.noteStates,
             ),
           );
         },
@@ -96,6 +109,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     final level = ref.watch(
       stageControllerProvider(stageId).select((s) => s.level),
     );
+    final closeUp = ref.watch(keyboardCloseUpProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -112,9 +126,12 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                     // The keyboard is the rendered instrument at its own
                     // proportions, so its height follows the width; on a short
                     // screen it gives up the top of the fallboard, never keys.
-                    final keyboardHeight =
-                        (constraints.maxWidth / PianoKeyboardView.imageAspect)
-                            .clamp(64.0, constraints.maxHeight * 0.3);
+                    // Closer up, the keys get a little more of the height:
+                    // that is what makes them big enough to read.
+                    final keyboardHeight = closeUp
+                        ? constraints.maxHeight * 0.34
+                        : (constraints.maxWidth / PianoKeyboardView.imageAspect)
+                              .clamp(64.0, constraints.maxHeight * 0.3);
 
                     return Column(
                       children: [
@@ -124,9 +141,22 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(0, 4, 12, 10),
-                            child: PaperSheet(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: _StaffPane(stageId: stageId, level: level),
+                            child: HeroMode(
+                              enabled: !MediaQuery.of(
+                                context,
+                              ).disableAnimations,
+                              child: Hero(
+                                tag: scoreHeroTag(stageId),
+                                child: PaperSheet(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                  ),
+                                  child: _StaffPane(
+                                    stageId: stageId,
+                                    level: level,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -158,6 +188,8 @@ class _TransportPane extends ConsumerWidget {
     final status = ref.watch(engineStatusProvider(stageId));
     final speed = ref.watch(playbackSpeedProvider(stageId));
     final controller = ref.read(stageControllerProvider(stageId).notifier);
+    final closeUp = ref.watch(keyboardCloseUpProvider);
+    final noteNames = ref.watch(keyNamesProvider);
 
     return TransportColumn(
       isPlaying: status == StageEngineStatus.playing,
@@ -175,6 +207,11 @@ class _TransportPane extends ConsumerWidget {
       onStop: controller.stop,
       onReplay: controller.replay,
       onSpeedChanged: controller.setSpeed,
+      closeUp: closeUp,
+      onCloseUpChanged: (v) =>
+          ref.read(keyboardCloseUpProvider.notifier).state = v,
+      noteNames: noteNames,
+      onNoteNamesChanged: (v) => ref.read(keyNamesProvider.notifier).state = v,
     );
   }
 }
@@ -220,13 +257,25 @@ class _StaffPane extends ConsumerWidget {
     final currentBeat = ref.watch(currentBeatProvider(stageId));
     final systems = _buildSystems(ref, stageId, level);
 
-    return StaffView(
-      systems: systems,
-      currentBeat: currentBeat,
-      totalBeats: (level.totalMeasures * level.beatsPerMeasure).toDouble(),
-      beatsPerMeasure: level.beatsPerMeasure,
-      beatUnit: level.beatUnit,
-      pixelsPerBeat: 70,
+    return LayoutBuilder(
+      builder: (context, box) => StaffView(
+        systems: systems,
+        // A big screen gets a bigger staff, up to the point where it would
+        // stop reading as notation; a small one keeps the usual cap.
+        maxStaffHeight: (box.maxHeight / systems.length * 0.34).clamp(
+          kDefaultMaxStaffHeight,
+          124.0,
+        ),
+        currentBeat: currentBeat,
+        totalBeats: (level.totalMeasures * level.beatsPerMeasure).toDouble(),
+        beatsPerMeasure: level.beatsPerMeasure,
+        beatUnit: level.beatUnit,
+        pixelsPerBeat: pixelsPerBeatFor([
+          for (final m in level.measures)
+            for (final n in m.notes)
+              if (!n.isRest) n.durationBeats,
+        ]),
+      ),
     );
   }
 }
@@ -245,35 +294,13 @@ List<StaffSystem> _buildSystems(
       (
         midi: levelNotes[i].midiNote,
         startBeat: levelNotes[i].startBeat,
+        durationBeats: levelNotes[i].durationBeats,
+        alter: levelNotes[i].alter,
         state: i < states.length ? states[i] : NoteState.upcoming,
       ),
   ];
 
-  return switch (level.clef) {
-    LevelClef.bass => [(clef: Clef.bass, notes: placed)],
-    LevelClef.grand => () {
-      final hasMultiVoice = levelNotes.any((n) => n.voiceIndex != 0);
-      final trebleNotes = <PlacedNote>[];
-      final bassNotes = <PlacedNote>[];
-      for (var i = 0; i < levelNotes.length; i++) {
-        final ln = levelNotes[i];
-        final pn = placed[i];
-        final isBass = hasMultiVoice
-            ? (ln.voiceIndex == 1)
-            : (ln.midiNote < 60);
-        if (isBass) {
-          bassNotes.add(pn);
-        } else {
-          trebleNotes.add(pn);
-        }
-      }
-      return [
-        (clef: Clef.treble, notes: trebleNotes),
-        (clef: Clef.bass, notes: bassNotes),
-      ];
-    }(),
-    LevelClef.treble => [(clef: Clef.treble, notes: placed)],
-  };
+  return staffSystemsFor(level.clef, levelNotes, placed);
 }
 
 class _KeyboardPane extends ConsumerWidget {
@@ -290,7 +317,21 @@ class _KeyboardPane extends ConsumerWidget {
         if (note.state == NoteState.active) note.midi,
     };
     final playing = ref.watch(soundingProvider(stageId));
-    return PianoKeyboardView(due: due, playing: playing);
+    final closeUp = ref.watch(keyboardCloseUpProvider);
+    // Fixed for the whole piece, so the keys never slide while reading.
+    final range = closeUp
+        ? keyRangeFor(
+            ref
+                .watch(stageControllerProvider(stageId).select((s) => s.notes))
+                .map((n) => n.midiNote),
+          )
+        : null;
+    return PianoKeyboardView(
+      due: due,
+      playing: playing,
+      range: range,
+      noteNames: ref.watch(keyNamesProvider),
+    );
   }
 }
 
@@ -307,6 +348,8 @@ List<PlacedNote> _placedNotes(WidgetRef ref, String stageId) {
       (
         midi: levelNotes[i].midiNote,
         startBeat: levelNotes[i].startBeat,
+        durationBeats: levelNotes[i].durationBeats,
+        alter: levelNotes[i].alter,
         state: i < states.length ? states[i] : NoteState.upcoming,
       ),
   ];

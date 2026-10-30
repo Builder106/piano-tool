@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -77,6 +79,7 @@ void main() {
   setUp(
     () => SharedPreferences.setMockInitialValues({
       'settings.inputConfigured': true,
+      'settings.verifiedInput': 'both',
     }),
   );
 
@@ -345,5 +348,74 @@ void main() {
       container.read(engineStatusProvider('stage_1')),
       StageEngineStatus.stopped,
     );
+  });
+
+  testWidgets('view choices wait for a pause and keep their place', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(915, 412));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    Widget column({required bool playing}) => MaterialApp(
+      theme: PianoTheme.light(),
+      home: Scaffold(
+        body: TransportColumn(
+          isPlaying: playing,
+          speed: 1,
+          onPlayPause: () {},
+          onStop: () {},
+          onReplay: () {},
+          onSpeedChanged: (_) {},
+          onCloseUpChanged: (_) {},
+          onNoteNamesChanged: (_) {},
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(column(playing: false));
+    await tester.pumpAndSettle();
+    final pausedAt = tester.getCenter(find.text('1.0x'));
+    expect(find.byTooltip('Show these keys closer'), findsOneWidget);
+
+    await tester.pumpWidget(column(playing: true));
+    await tester.pumpAndSettle();
+    expect(tester.getCenter(find.text('1.0x')), pausedAt);
+    final ignore = tester.widget<IgnorePointer>(
+      find
+          .ancestor(of: find.text('1.0x'), matching: find.byType(IgnorePointer))
+          .first,
+    );
+    expect(ignore.ignoring, isTrue);
+  });
+
+  testWidgets('the sheet is there to land on while the microphone starts', (
+    tester,
+  ) async {
+    // The score flies in from the desk on the first frame of the route; if
+    // practice showed only a spinner then, there would be nothing to fly to.
+    final session = Completer<void>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          audioGrantedProvider.overrideWith((ref) async => true),
+          practiceAudioSessionProvider.overrideWith((ref) => session.future),
+          levelRepositoryProvider.overrideWith(
+            (ref) => SynchronousFuture(LevelRepository()),
+          ),
+        ],
+        child: _screen(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Hero && w.tag == scoreHeroTag('stage_1'),
+      ),
+      findsOneWidget,
+    );
+    session.complete();
+    await tester.pump();
   });
 }

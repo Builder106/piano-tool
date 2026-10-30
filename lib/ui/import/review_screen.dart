@@ -12,7 +12,7 @@ import '../../models/engine_models.dart';
 import '../desk/desk.dart';
 import '../keyboard/piano_keyboard_view.dart';
 import '../practice/transport_column.dart';
-import '../staff/staff_geometry.dart' show Clef;
+import '../staff/notation.dart';
 import '../staff/staff_painter.dart' show PlacedNote;
 import '../staff/staff_view.dart';
 import '../theme/app_theme.dart';
@@ -178,7 +178,11 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                               totalBeats: totalBeats,
                               beatsPerMeasure: level.beatsPerMeasure,
                               beatUnit: level.beatUnit,
-                              pixelsPerBeat: 70,
+                              pixelsPerBeat: pixelsPerBeatFor([
+                                for (final m in level.measures)
+                                  for (final n in m.notes)
+                                    if (!n.isRest) n.durationBeats,
+                              ]),
                               maxStaffHeight: constraints.maxHeight * 0.8,
                             ),
                           );
@@ -498,46 +502,24 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     return '$note$octave ($midi)';
   }
 
-  List<StaffSystem> _buildSystems(LevelModel level) {
-    final placed = _buildPlacedNotes(level);
-    return switch (level.clef) {
-      LevelClef.bass => [(clef: Clef.bass, notes: placed)],
-      LevelClef.grand => () {
-        final allNotes = [
-          for (final measure in level.measures) ...measure.notes,
-        ];
-        final hasMultiVoice = allNotes.any((n) => n.voiceIndex != 0);
-        final trebleNotes = <PlacedNote>[];
-        final bassNotes = <PlacedNote>[];
-        for (var i = 0; i < allNotes.length && i < placed.length; i++) {
-          final ln = allNotes[i];
-          final pn = placed[i];
-          final isBass = hasMultiVoice
-              ? (ln.voiceIndex == 1)
-              : (ln.midiNote < 60);
-          if (isBass) {
-            bassNotes.add(pn);
-          } else {
-            trebleNotes.add(pn);
-          }
-        }
-        return [
-          (clef: Clef.treble, notes: trebleNotes),
-          (clef: Clef.bass, notes: bassNotes),
-        ];
-      }(),
-      LevelClef.treble => [(clef: Clef.treble, notes: placed)],
-    };
-  }
+  List<StaffSystem> _buildSystems(LevelModel level) =>
+      staffSystemsFor(level.clef, [
+        for (final measure in level.measures)
+          for (final note in measure.notes)
+            if (!note.isRest) note,
+      ], _buildPlacedNotes(level));
 
   List<PlacedNote> _buildPlacedNotes(LevelModel level) {
     final notes = <PlacedNote>[];
 
     for (final measure in level.measures) {
       for (final note in measure.notes) {
+        if (note.isRest) continue;
         notes.add((
           midi: note.midiNote,
           startBeat: note.startBeat,
+          durationBeats: note.durationBeats,
+          alter: note.alter,
           state:
               _currentBeat >= note.startBeat &&
                   _currentBeat < note.startBeat + note.durationBeats

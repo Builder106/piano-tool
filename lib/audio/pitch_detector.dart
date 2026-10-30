@@ -69,6 +69,8 @@ class PitchDetector {
   final AudioEngineConfig config;
   final StreamController<PitchEvent> _pitchController =
       StreamController<PitchEvent>.broadcast();
+  final StreamController<double> _levelController =
+      StreamController<double>.broadcast();
   bool _isRunning = false;
   final PcmRecorder Function() _recorderFactory;
   final ElapsedClock _clock;
@@ -78,6 +80,11 @@ class PitchDetector {
   final List<int> _sampleBuffer = <int>[];
 
   Stream<PitchEvent> get pitchStream => _pitchController.stream;
+
+  /// RMS level of every analysed frame, pitched or not. Silence, a weak
+  /// signal, and an unclear pitch all produce no [PitchEvent]; this is what
+  /// tells them apart.
+  Stream<double> get levelStream => _levelController.stream;
   bool get isRunning => _isRunning;
 
   Future<void> _lifecycle = Future<void>.value();
@@ -141,6 +148,9 @@ class PitchDetector {
 
       while (_sampleBuffer.length >= bufferSize) {
         final List<int> chunk = _sampleBuffer.sublist(0, bufferSize);
+        if (_levelController.hasListener) {
+          _levelController.add(rmsOf(chunk));
+        }
         final PitchEvent? event = processBuffer(chunk);
         if (event != null) {
           _pitchController.add(event);
@@ -205,12 +215,7 @@ class PitchDetector {
         .map((final int v) => v / 32768.0)
         .toList();
 
-    final double rms = math.sqrt(
-      samples
-              .map((final double s) => s * s)
-              .reduce((final double a, final double b) => a + b) /
-          samples.length,
-    );
+    final double rms = _rms(samples);
 
     if (rms < config.minVolumeThreshold) {
       return null;
@@ -244,6 +249,19 @@ class PitchDetector {
       volume: rms,
     );
   }
+
+  /// RMS level of 16-bit PCM samples, 0.0 to 1.0.
+  static double rmsOf(final List<int> buffer) =>
+      _rms(buffer.map((final int v) => v / 32768.0).toList());
+
+  static double _rms(final List<double> samples) => samples.isEmpty
+      ? 0
+      : math.sqrt(
+          samples
+                  .map((final double s) => s * s)
+                  .reduce((final double a, final double b) => a + b) /
+              samples.length,
+        );
 
   static double? _yin(final List<double> signal, final int sampleRate) {
     final int bufferSize = signal.length;
@@ -331,5 +349,6 @@ class PitchDetector {
     _disposed = true;
     await stop();
     await _pitchController.close();
+    await _levelController.close();
   }
 }

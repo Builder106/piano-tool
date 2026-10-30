@@ -289,8 +289,14 @@ class _MicStatus extends ConsumerWidget {
     final colors = PianoTheme.colorsOf(context);
     final text = PianoTheme.textThemeOf(context);
     final granted = audioGrantedAsync.whenOrNull(data: (d) => d) == true;
-    final midiOnly =
-        ref.watch(settingsProvider).inputSource == PracticeInputSource.midi;
+    final settings = ref.watch(settingsProvider);
+    final midiOnly = settings.inputSource == PracticeInputSource.midi;
+    // Permission only lets the microphone listen. The input check is what
+    // shows it hears the piano.
+    final heard =
+        settings.verifiedInput == PracticeInputSource.microphone.name ||
+        (settings.verifiedInput?.startsWith(PracticeInputSource.both.name) ??
+            false);
 
     return Row(
       children: [
@@ -303,16 +309,22 @@ class _MicStatus extends ConsumerWidget {
           child: Text(
             midiOnly
                 ? 'Microphone is not needed for digital piano practice.'
-                : granted
-                ? 'On. Piano Tool can hear your piano.'
-                : 'Off. Allow the microphone so Piano Tool can hear you play.',
+                : !granted
+                ? 'Off. Allow the microphone so Piano Tool can hear you play.'
+                : heard
+                ? 'On. Piano Tool has heard your piano.'
+                : 'Allowed. Practice starts with a quick check that Piano '
+                      'Tool can hear your piano.',
             style: text.bodyMedium?.copyWith(
               color: granted ? colors.success : colors.error,
             ),
           ),
         ),
         TextButton(
-          onPressed: () => ref.invalidate(audioGrantedProvider),
+          onPressed: () {
+            ref.invalidate(audioGrantedProvider);
+            ref.read(settingsProvider.notifier).setVerifiedInput(null);
+          },
           child: const Text('Check again'),
         ),
       ],

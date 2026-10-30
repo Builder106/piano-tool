@@ -5,9 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:piano_tool/data/settings_repository.dart';
+import 'package:piano_tool/services/midi_service.dart';
 import 'package:piano_tool/ui/practice/mic_permission_gate.dart';
 import 'package:piano_tool/ui/practice/stage_controller.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
+
+import '../../services/fake_midi_transport.dart';
 
 Widget _harness(Future<bool> Function(Ref) grant) => ProviderScope(
   overrides: [audioGrantedProvider.overrideWith(grant)],
@@ -50,9 +53,87 @@ void main() {
     expect(requested, isFalse);
     await tester.tap(find.text('Use microphone'));
     await tester.pumpAndSettle();
-    expect(find.text('practice'), findsOneWidget);
     expect(requested, isTrue);
     expect((await SettingsRepository().read()).inputConfigured, isTrue);
+    // Permission is not proof of hearing: the unscored check comes next.
+    expect(find.text('Play middle C'), findsOneWidget);
+    expect(find.text('practice'), findsNothing);
+    await tester.tap(find.text('Skip for now'));
+    await tester.pumpAndSettle();
+    expect(find.text('practice'), findsOneWidget);
+  });
+
+  group('input check', () {
+    Widget checked({
+      required PracticeInputSource source,
+      String? verifiedInput,
+      MidiService? midi,
+    }) => ProviderScope(
+      overrides: [
+        settingsProvider.overrideWith(
+          () => SettingsNotifier(
+            initialSettings: AppSettings(
+              inputSource: source,
+              verifiedInput: verifiedInput,
+            ),
+          ),
+        ),
+        audioGrantedProvider.overrideWith((ref) async => true),
+        practiceAudioSessionProvider.overrideWith((ref) async {}),
+        if (midi != null) midiServiceProvider.overrideWith((ref) => midi),
+      ],
+      child: MaterialApp(
+        theme: PianoTheme.light(),
+        home: const Scaffold(
+          body: MicPermissionGate(startAudio: true, child: Text('practice')),
+        ),
+      ),
+    );
+
+    testWidgets('a checked setup goes straight to practice', (tester) async {
+      await tester.pumpWidget(
+        checked(
+          source: PracticeInputSource.microphone,
+          verifiedInput: 'microphone',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('practice'), findsOneWidget);
+    });
+
+    testWidgets('a MIDI note-on for middle C passes the check', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      // The provider owns and disposes the service.
+      final midi = MidiService(transport: FakeMidiTransport(const []));
+      await tester.pumpWidget(
+        checked(source: PracticeInputSource.midi, midi: midi),
+      );
+      await tester.pump();
+      expect(find.text('Play middle C'), findsOneWidget);
+
+      midi.simulateNotePress(64);
+      await tester.pump();
+      expect(find.textContaining('That was E4'), findsOneWidget);
+
+      midi.simulateNotePress(60);
+      await tester.pump();
+      expect(find.text('Middle C, heard'), findsOneWidget);
+      await tester.tap(find.text('Start practising'));
+      await tester.pumpAndSettle();
+      expect(find.text('practice'), findsOneWidget);
+      expect((await SettingsRepository().read()).verifiedInput, 'midi');
+    });
+
+    testWidgets('changing the input source checks again', (tester) async {
+      await tester.pumpWidget(
+        checked(source: PracticeInputSource.both, verifiedInput: 'microphone'),
+      );
+      await tester.pump();
+      expect(find.text('Play middle C'), findsOneWidget);
+      await tester.tap(find.text('Skip for now'));
+      await tester.pumpAndSettle();
+      expect(find.text('practice'), findsOneWidget);
+    });
   });
 
   testWidgets('recording still requires a microphone in MIDI mode', (
@@ -83,9 +164,7 @@ void main() {
     expect(find.text('recording'), findsNothing);
   });
 
-  testWidgets('MIDI-only practice opens without microphone permission', (
-    tester,
-  ) async {
+  testWidgets('MIDI-only practice skips microphone permission', (tester) async {
     var requested = false;
     await tester.pumpWidget(
       ProviderScope(
@@ -110,9 +189,9 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
 
-    expect(find.text('practice'), findsOneWidget);
+    expect(find.text('Play middle C'), findsOneWidget);
     expect(requested, isFalse);
   });
 

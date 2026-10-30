@@ -45,6 +45,17 @@ class StageEngine extends ChangeNotifier {
   final Map<int, NoteHitResult> _noteResults = {};
   int _nextNoteIndex = 0;
 
+  /// The previous microphone frame, to tell a new strike from the same
+  /// sound ringing on.
+  PitchEvent? _lastHeard;
+
+  /// Seconds without a detection that end a sound.
+  static const double _sustainGap = 0.15;
+
+  /// How much louder a frame must be than the one before to count as the
+  /// key struck again while it still rings.
+  static const double _restrikeSwell = 1.6;
+
   StageEngine({required LevelModel level, StageEngineConfig? config})
     : _level = level,
       _config = config ?? const StageEngineConfig() {
@@ -57,12 +68,13 @@ class StageEngine extends ChangeNotifier {
     );
   }
 
-  /// Initialize the flat list of all notes from measures
+  /// Initialize the flat list of all notes from measures. Rests are
+  /// silence and are never scored.
   void _initializeNotes() {
     _allNotes.clear();
     for (final measure in _level.measures) {
       for (final note in measure.notes) {
-        _allNotes.add(note);
+        if (!note.isRest) _allNotes.add(note);
       }
     }
     // Sort by start beat
@@ -93,6 +105,7 @@ class StageEngine extends ChangeNotifier {
 
     _nextNoteIndex = 0;
     _noteResults.clear();
+    _lastHeard = null;
 
     final initialNoteStates = List.filled(_allNotes.length, NoteState.upcoming);
     _state = _state.copyWith(
@@ -142,6 +155,7 @@ class StageEngine extends ChangeNotifier {
     _stopPlaybackTimer();
     _nextNoteIndex = 0;
     _noteResults.clear();
+    _lastHeard = null;
 
     final initialNoteStates = List.filled(_allNotes.length, NoteState.upcoming);
     _state = _state.copyWith(
@@ -158,12 +172,30 @@ class StageEngine extends ChangeNotifier {
     _notifyStateChanged();
   }
 
-  /// Process a pitch event from the audio engine
+  /// Process a pitch event from the audio engine. Only a fresh strike can
+  /// score: a held or decaying pitch must not claim the next repeated note
+  /// when its window opens.
   void processPitchEvent(PitchEvent event) {
     if (_state.engineState != StageEngineStatus.playing) return;
+    if (!_isFreshStrike(event)) return;
 
     final currentBeat = _state.currentBeat;
     _tryMatchNote(event.midiNote, currentBeat);
+  }
+
+  /// A MIDI note-on is always a strike. A microphone frame is one when the
+  /// pitch changed, the sound stopped and started again, or it swelled the
+  /// way a key struck while still ringing does.
+  bool _isFreshStrike(PitchEvent event) {
+    if (event.struck) return true;
+    final last = _lastHeard;
+    _lastHeard = event;
+    if (last == null) return true;
+    final gap = event.timestamp - last.timestamp;
+    return last.midiNote != event.midiNote ||
+        gap > _sustainGap ||
+        gap < 0 ||
+        event.volume >= last.volume * _restrikeSwell;
   }
 
   /// Try to match a detected pitch to an expected note
