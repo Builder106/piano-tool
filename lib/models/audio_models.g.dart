@@ -6,27 +6,28 @@ part of 'audio_models.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PitchEventImpl _$$PitchEventImplFromJson(Map<String, dynamic> json) =>
-    _$PitchEventImpl(
-      frequency: (json['frequency'] as num).toDouble(),
-      confidence: (json['confidence'] as num).toDouble(),
-      midiNote: (json['midiNote'] as num).toInt(),
-      timestamp: (json['timestamp'] as num).toDouble(),
-      volume: (json['volume'] as num).toDouble(),
-    );
+_PitchEvent _$PitchEventFromJson(Map<String, dynamic> json) => _PitchEvent(
+  frequency: (json['frequency'] as num).toDouble(),
+  confidence: (json['confidence'] as num).toDouble(),
+  midiNote: (json['midiNote'] as num).toInt(),
+  timestamp: (json['timestamp'] as num).toDouble(),
+  volume: (json['volume'] as num).toDouble(),
+  struck: json['struck'] as bool? ?? false,
+);
 
-Map<String, dynamic> _$$PitchEventImplToJson(_$PitchEventImpl instance) =>
+Map<String, dynamic> _$PitchEventToJson(_PitchEvent instance) =>
     <String, dynamic>{
       'frequency': instance.frequency,
       'confidence': instance.confidence,
       'midiNote': instance.midiNote,
       'timestamp': instance.timestamp,
       'volume': instance.volume,
+      'struck': instance.struck,
     };
 
-_$AudioEngineConfigImpl _$$AudioEngineConfigImplFromJson(
+_AudioEngineConfig _$AudioEngineConfigFromJson(
   Map<String, dynamic> json,
-) => _$AudioEngineConfigImpl(
+) => _AudioEngineConfig(
   sampleRate: (json['sampleRate'] as num?)?.toInt() ?? 44100,
   bufferSize: (json['bufferSize'] as num?)?.toInt() ?? 2048,
   minVolumeThreshold: (json['minVolumeThreshold'] as num?)?.toDouble() ?? 0.1,
@@ -35,35 +36,32 @@ _$AudioEngineConfigImpl _$$AudioEngineConfigImplFromJson(
   referenceFrequency: (json['referenceFrequency'] as num?)?.toDouble() ?? 440.0,
 );
 
-Map<String, dynamic> _$$AudioEngineConfigImplToJson(
-  _$AudioEngineConfigImpl instance,
-) => <String, dynamic>{
-  'sampleRate': instance.sampleRate,
-  'bufferSize': instance.bufferSize,
-  'minVolumeThreshold': instance.minVolumeThreshold,
-  'minConfidenceThreshold': instance.minConfidenceThreshold,
-  'referenceFrequency': instance.referenceFrequency,
-};
+Map<String, dynamic> _$AudioEngineConfigToJson(_AudioEngineConfig instance) =>
+    <String, dynamic>{
+      'sampleRate': instance.sampleRate,
+      'bufferSize': instance.bufferSize,
+      'minVolumeThreshold': instance.minVolumeThreshold,
+      'minConfidenceThreshold': instance.minConfidenceThreshold,
+      'referenceFrequency': instance.referenceFrequency,
+    };
 
-_$AudioEngineStatusImpl _$$AudioEngineStatusImplFromJson(
-  Map<String, dynamic> json,
-) => _$AudioEngineStatusImpl(
-  state: $enumDecode(_$AudioEngineStateEnumMap, json['state']),
-  errorMessage: json['errorMessage'] as String?,
-  currentVolume: (json['currentVolume'] as num?)?.toDouble() ?? 0.0,
-  currentPitch: (json['currentPitch'] as num?)?.toDouble() ?? 0.0,
-  currentMidiNote: (json['currentMidiNote'] as num?)?.toInt() ?? 0,
-);
+_AudioEngineStatus _$AudioEngineStatusFromJson(Map<String, dynamic> json) =>
+    _AudioEngineStatus(
+      state: $enumDecode(_$AudioEngineStateEnumMap, json['state']),
+      errorMessage: json['errorMessage'] as String?,
+      currentVolume: (json['currentVolume'] as num?)?.toDouble() ?? 0.0,
+      currentPitch: (json['currentPitch'] as num?)?.toDouble() ?? 0.0,
+      currentMidiNote: (json['currentMidiNote'] as num?)?.toInt() ?? 0,
+    );
 
-Map<String, dynamic> _$$AudioEngineStatusImplToJson(
-  _$AudioEngineStatusImpl instance,
-) => <String, dynamic>{
-  'state': _$AudioEngineStateEnumMap[instance.state]!,
-  'errorMessage': instance.errorMessage,
-  'currentVolume': instance.currentVolume,
-  'currentPitch': instance.currentPitch,
-  'currentMidiNote': instance.currentMidiNote,
-};
+Map<String, dynamic> _$AudioEngineStatusToJson(_AudioEngineStatus instance) =>
+    <String, dynamic>{
+      'state': _$AudioEngineStateEnumMap[instance.state]!,
+      'errorMessage': instance.errorMessage,
+      'currentVolume': instance.currentVolume,
+      'currentPitch': instance.currentPitch,
+      'currentMidiNote': instance.currentMidiNote,
+    };
 
 const _$AudioEngineStateEnumMap = {
   AudioEngineState.uninitialized: 'uninitialized',
@@ -75,9 +73,9 @@ const _$AudioEngineStateEnumMap = {
   AudioEngineState.error: 'error',
 };
 
-_$PitchDetectionResultSuccessImpl _$$PitchDetectionResultSuccessImplFromJson(
+_PitchDetectionResultSuccess _$PitchDetectionResultSuccessFromJson(
   Map<String, dynamic> json,
-) => _$PitchDetectionResultSuccessImpl(
+) => _PitchDetectionResultSuccess(
   frequency: (json['frequency'] as num).toDouble(),
   confidence: (json['confidence'] as num).toDouble(),
   midiNote: (json['midiNote'] as num).toInt(),
@@ -85,8 +83,8 @@ _$PitchDetectionResultSuccessImpl _$$PitchDetectionResultSuccessImplFromJson(
   $type: json['runtimeType'] as String?,
 );
 
-Map<String, dynamic> _$$PitchDetectionResultSuccessImplToJson(
-  _$PitchDetectionResultSuccessImpl instance,
+Map<String, dynamic> _$PitchDetectionResultSuccessToJson(
+  _PitchDetectionResultSuccess instance,
 ) => <String, dynamic>{
   'frequency': instance.frequency,
   'confidence': instance.confidence,
@@ -95,16 +93,16 @@ Map<String, dynamic> _$$PitchDetectionResultSuccessImplToJson(
   'runtimeType': instance.$type,
 };
 
-_$PitchDetectionResultFailureImpl _$$PitchDetectionResultFailureImplFromJson(
+_PitchDetectionResultFailure _$PitchDetectionResultFailureFromJson(
   Map<String, dynamic> json,
-) => _$PitchDetectionResultFailureImpl(
+) => _PitchDetectionResultFailure(
   reason: json['reason'] as String,
   volume: (json['volume'] as num?)?.toDouble() ?? 0.0,
   $type: json['runtimeType'] as String?,
 );
 
-Map<String, dynamic> _$$PitchDetectionResultFailureImplToJson(
-  _$PitchDetectionResultFailureImpl instance,
+Map<String, dynamic> _$PitchDetectionResultFailureToJson(
+  _PitchDetectionResultFailure instance,
 ) => <String, dynamic>{
   'reason': instance.reason,
   'volume': instance.volume,

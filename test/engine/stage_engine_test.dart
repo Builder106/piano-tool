@@ -69,7 +69,7 @@ void main() {
     expect(engine.state.hitCount, 1);
   });
 
-  test('a held pitch does not miss the next note before its beat', () {
+  group('repeated notes', () {
     const repeated = LevelModel(
       id: 'repeated',
       title: 'Repeated C',
@@ -101,26 +101,89 @@ void main() {
         ),
       ],
     );
-    final engine = StageEngine(level: repeated);
-    addTearDown(engine.dispose);
-    const event = PitchEvent(
+
+    PitchEvent heard(double at, {double volume = 0.5}) => PitchEvent(
       frequency: 261.63,
       confidence: 1,
       midiNote: 60,
-      timestamp: 0,
-      volume: 1,
+      timestamp: at,
+      volume: volume,
     );
 
-    engine.start();
-    engine.processPitchEvent(event);
-    engine.seekToBeat(0.55);
-    engine.processPitchEvent(event);
-    expect(engine.state.noteStates[1], isNot(NoteState.missed));
+    test('a held pitch does not miss the next note before its beat', () {
+      final engine = StageEngine(level: repeated);
+      addTearDown(engine.dispose);
 
-    engine.seekToBeat(1);
-    engine.processPitchEvent(event);
-    expect(engine.state.hitCount, 2);
-    expect(engine.state.missCount, 0);
+      engine.start();
+      engine.processPitchEvent(heard(0));
+      engine.seekToBeat(0.55);
+      engine.processPitchEvent(heard(0.05));
+      expect(engine.state.noteStates[1], isNot(NoteState.missed));
+    });
+
+    test('a held pitch does not score the repeated note', () {
+      final engine = StageEngine(level: repeated);
+      addTearDown(engine.dispose);
+
+      engine.start();
+      engine.processPitchEvent(heard(0));
+      // The same C keeps ringing, one detector frame after another, into
+      // the second note's window.
+      for (var t = 0.05; t < 0.55; t += 0.05) {
+        engine.processPitchEvent(heard(t, volume: 0.5 - t / 2));
+      }
+      engine.seekToBeat(1);
+      engine.processPitchEvent(heard(0.55, volume: 0.2));
+
+      expect(engine.state.hitCount, 1);
+      expect(engine.state.noteStates[1], isNot(NoteState.hitPerfect));
+    });
+
+    test('a new strike after a silence scores the repeated note', () {
+      final engine = StageEngine(level: repeated);
+      addTearDown(engine.dispose);
+
+      engine.start();
+      engine.processPitchEvent(heard(0));
+      engine.seekToBeat(1);
+      engine.processPitchEvent(heard(0.5));
+
+      expect(engine.state.hitCount, 2);
+      expect(engine.state.missCount, 0);
+    });
+
+    test('a key struck again while ringing scores on its swell', () {
+      final engine = StageEngine(level: repeated);
+      addTearDown(engine.dispose);
+
+      engine.start();
+      engine.processPitchEvent(heard(0, volume: 0.5));
+      engine.processPitchEvent(heard(0.05, volume: 0.2));
+      engine.seekToBeat(1);
+      engine.processPitchEvent(heard(0.1, volume: 0.6));
+
+      expect(engine.state.hitCount, 2);
+    });
+
+    test('every MIDI note-on is a strike', () {
+      final engine = StageEngine(level: repeated);
+      addTearDown(engine.dispose);
+      const noteOn = PitchEvent(
+        frequency: 261.63,
+        confidence: 1,
+        midiNote: 60,
+        timestamp: 0,
+        volume: 1,
+        struck: true,
+      );
+
+      engine.start();
+      engine.processPitchEvent(noteOn);
+      engine.seekToBeat(1);
+      engine.processPitchEvent(noteOn);
+
+      expect(engine.state.hitCount, 2);
+    });
   });
 
   test('rest entries are never scored', () {
@@ -300,7 +363,8 @@ void main() {
       expect(engine.state.accuracy, 0);
 
       engine.seekToBeat(1);
-      engine.processPitchEvent(event);
+      // Struck again, half a second later.
+      engine.processPitchEvent(event.copyWith(timestamp: 0.5));
       expect(engine.state.hitCount, 1);
       expect(engine.state.missCount, 0);
     });

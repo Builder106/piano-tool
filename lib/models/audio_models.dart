@@ -12,6 +12,10 @@ sealed class PitchEvent with _$PitchEvent {
     required int midiNote, // MIDI note number (60 = middle C)
     required double timestamp, // seconds since engine start
     required double volume, // RMS volume 0.0 - 1.0
+    /// True for a key strike reported by the instrument itself (a MIDI
+    /// note-on). Microphone events are frames of a sound, so the engine
+    /// works out where a new strike begins.
+    @Default(false) bool struck,
   }) = _PitchEvent;
 
   factory PitchEvent.fromJson(Map<String, dynamic> json) =>
