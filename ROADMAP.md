@@ -53,7 +53,7 @@ reliability so the interaction is both expressive and accurate.
   vocabulary. MIDI pitch alone does not encode enharmonic spelling.
   `LevelNote.alter` carries an authored spelling; black keys default to
   sharps. Key signatures remain.
-- [ ] **Fresh strikes for repeated notes:** Preserve MIDI note-on identity
+- [x] **Fresh strikes for repeated notes:** Preserve MIDI note-on identity
   and evaluate microphone onset detection. A held or decaying pitch must not
   score the next repeated note solely because its timing window opens.
   Implemented: MIDI note-ons are strikes, and microphone frames start a
