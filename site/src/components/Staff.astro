@@ -1,10 +1,10 @@
 ---
-import { units } from '../data/site';
-import { annotations, fingering } from '../data/annotations';
+import { units } from '@/data/site';
+import { annotations, fingering } from '@/data/annotations';
 import {
   VIEW, SPACE, TOP, BOTTOM, G_LINE, LINES, HEAD, RING_R, STEM, STROKE, STRIKE, BARLINES, NOTE_START,
   LETTER_Y, WORD_Y, staffNotes,
-} from '../data/staff';
+} from '@/data/staff';
 
 const dx = STRIKE.r * Math.cos(STRIKE.angle);
 const dy = STRIKE.r * Math.sin(STRIKE.angle);

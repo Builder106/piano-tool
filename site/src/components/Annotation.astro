@@ -2,9 +2,9 @@
 // The pencil note for one note of the scale. It hangs from its note: the block starts under the
 // note's x (the sheet's arrow lands on it) and shifts left only as far as it must to stay on the
 // paper. C4 draws only on the staff (Sheet.astro); G4 and C5 also mark the sheet itself.
-import { annotationByMidi } from '../data/annotations';
-import { site, unitByMidi } from '../data/site';
-import { VIEW, staffNotes } from '../data/staff';
+import { annotationByMidi } from '@/data/annotations';
+import { site, unitByMidi } from '@/data/site';
+import { VIEW, staffNotes } from '@/data/staff';
 import Listens from './drawings/Listens.astro';
 import Marks from './drawings/Marks.astro';
 import Timing from './drawings/Timing.astro';

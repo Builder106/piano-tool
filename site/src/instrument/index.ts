@@ -3,9 +3,9 @@
 // Everything animates on the GSAP ticker; nothing here owns a requestAnimationFrame loop.
 import { gsap } from 'gsap';
 import { navigate } from 'astro:transitions/client';
-import { prefersReducedMotion } from '../engine';
-import { units, unitByMidi, noteName } from '../data/site';
-import { staffNotes } from '../data/staff';
+import { prefersReducedMotion } from '@/engine';
+import { units, unitByMidi, noteName } from '@/data/site';
+import { staffNotes } from '@/data/staff';
 import { tone, audioContext } from './synth';
 import { detect, type Detection } from './yin';
 

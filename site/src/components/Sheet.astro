@@ -1,11 +1,11 @@
 ---
 import { getImage } from 'astro:assets';
-import paper from '../assets/desk/paper.png';
-import { site, units, nextUnit, prevUnit } from '../data/site';
-import { missing, scorePage, annotations } from '../data/annotations';
-import { VIEW, TOP, BOTTOM, BARLINES, ARROW_Y, staffNotes } from '../data/staff';
+import paper from '@/assets/desk/paper.png';
+import { site, units, nextUnit, prevUnit } from '@/data/site';
+import { missing, scorePage, annotations } from '@/data/annotations';
+import { VIEW, TOP, BOTTOM, BARLINES, ARROW_Y, staffNotes } from '@/data/staff';
 import Staff from './Staff.astro';
-import Mark from '../assets/brand/mark.svg';
+import Mark from '@/assets/brand/mark.svg';
 
 interface Props { note?: number; page?: 'score' | 'missing' }
 const { note, page } = Astro.props;

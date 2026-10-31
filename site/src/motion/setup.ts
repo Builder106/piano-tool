@@ -1,9 +1,9 @@
 import { gsap } from 'gsap';
 import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
 import { Flip } from 'gsap/Flip';
-import { onPage, prefersReducedMotion, setTransition } from '../engine';
-import { startInstrument } from '../instrument';
-import { startFigures } from '../instrument/figures';
+import { onPage, prefersReducedMotion, setTransition } from '@/engine';
+import { startInstrument } from '@/instrument';
+import { startFigures } from '@/instrument/figures';
 import { motion } from './params';
 
 gsap.registerPlugin(DrawSVGPlugin, Flip);

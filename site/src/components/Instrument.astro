@@ -7,9 +7,9 @@
 // The eight stage keys carry paper stickers with their letter names, as a beginner's keys do,
 // matching the letters pencilled under the staff; the next key's sticker turns blue.
 import { getImage } from 'astro:assets';
-import rest from '../assets/keyboard/rest.png';
-import geom from '../assets/keyboard/geometry.json';
-import { units, blackKeys } from '../data/site';
+import rest from '@/assets/keyboard/rest.png';
+import geom from '@/assets/keyboard/geometry.json';
+import { units, blackKeys } from '@/data/site';
 
 const pressedFiles = import.meta.glob<{ default: ImageMetadata }>('../assets/keyboard/pressed-*.png', { eager: true });
 const restImg = await getImage({ src: rest, widths: [1440, 2160, 2880, 4320], format: 'webp', quality: 80 });

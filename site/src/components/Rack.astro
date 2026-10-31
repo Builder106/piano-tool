@@ -3,9 +3,9 @@
 // stretchable frame, so the moulding and the ledge keep their shape at any size. Two page clips
 // hold the top of the sheet, and the pencil that wrote the marks lies on the ledge.
 import { getImage } from 'astro:assets';
-import rack from '../assets/desk/rack.png';
-import clip from '../assets/desk/clip.png';
-import pencil from '../assets/desk/pencil.png';
+import rack from '@/assets/desk/rack.png';
+import clip from '@/assets/desk/clip.png';
+import pencil from '@/assets/desk/pencil.png';
 
 const rackImg = await getImage({ src: rack, width: 1600, format: 'webp', quality: 82 });
 const clipImg = await getImage({ src: clip, width: 140, format: 'webp', quality: 85 });

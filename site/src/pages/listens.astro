@@ -1,6 +1,6 @@
 ---
-import Base from '../layouts/Base.astro';
-import Annotation from '../components/Annotation.astro';
-import { units } from '../data/site';
+import Base from '@/layouts/Base.astro';
+import Annotation from '@/components/Annotation.astro';
+import { units } from '@/data/site';
 ---
 <Base note={62} title={units[1]?.title} description={units[1]?.description}><Annotation midi={62} /></Base>

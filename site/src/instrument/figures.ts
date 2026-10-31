@@ -1,7 +1,7 @@
 // Live pencil figures share the instrument's microphone and MIDI listeners.
 import { gsap } from 'gsap';
-import { onPage, prefersReducedMotion } from '../engine';
-import { noteName } from '../data/site';
+import { onPage, prefersReducedMotion } from '@/engine';
+import { noteName } from '@/data/site';
 import { onHear, onMidiMessage, soundOn } from './index';
 import { click } from './synth';
 
