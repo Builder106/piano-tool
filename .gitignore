@@ -56,3 +56,5 @@ app.*.map.json
 .superpowers/
 .vercel
 .env*
+
+notes/
