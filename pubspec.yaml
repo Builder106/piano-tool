@@ -14,7 +14,7 @@ dependencies:
   # Audio & Pitch Detection
   flutter_sound: ^9.2.13
   fft: ^0.5.1
-  web: ^1.1.1
+  web: ^1.1.2
 
   # MIDI input
   flutter_midi_command: ^1.4.0
