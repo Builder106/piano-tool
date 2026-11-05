@@ -87,6 +87,7 @@ jobs:
 
   ios:
     name: iOS build
+    needs: [flutter]
     runs-on: macos-15
     timeout-minutes: 20
     steps:
