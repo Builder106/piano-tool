@@ -4,15 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import '../../audio/audio_engine.dart';
-import '../../data/level_repository.dart';
-import '../../data/progress_repository.dart';
-import '../../data/settings_repository.dart';
-import '../../engine/stage_engine.dart';
-import '../../models/audio_models.dart';
-import '../../models/engine_models.dart';
-import '../../models/level_models.dart';
-import '../../services/midi_service.dart';
+import '../audio/audio_engine.dart';
+import '../data/level_repository.dart';
+import '../data/progress_repository.dart';
+import '../data/settings_repository.dart';
+import '../engine/stage_engine.dart';
+import '../models/audio_models.dart';
+import '../models/engine_models.dart';
+import '../models/level_models.dart';
+import '../services/midi_service.dart';
 
 /// One engine for the whole app. Permission and the pitch stream both hang off
 /// it, so a single microphone is opened rather than one per provider.

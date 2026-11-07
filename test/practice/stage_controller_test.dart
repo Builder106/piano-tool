@@ -10,9 +10,9 @@ import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/audio_models.dart';
 import 'package:piano_tool/models/engine_models.dart';
 import 'package:piano_tool/services/midi_service.dart';
-import 'package:piano_tool/ui/practice/stage_controller.dart';
+import 'package:piano_tool/practice/stage_controller.dart';
 
-import '../../services/fake_midi_transport.dart';
+import '../services/fake_midi_transport.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

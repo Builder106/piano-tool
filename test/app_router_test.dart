@@ -15,7 +15,7 @@ import 'package:piano_tool/ui/import/import_screen.dart';
 import 'package:piano_tool/ui/import/review_screen.dart';
 import 'package:piano_tool/ui/levels/level_list_screen.dart';
 import 'package:piano_tool/ui/practice/practice_screen.dart';
-import 'package:piano_tool/ui/practice/stage_controller.dart';
+import 'package:piano_tool/practice/stage_controller.dart';
 import 'package:piano_tool/ui/results/results_screen.dart';
 import 'package:piano_tool/ui/settings/settings_screen.dart';
 

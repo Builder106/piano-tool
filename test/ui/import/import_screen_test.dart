@@ -8,7 +8,7 @@ import 'package:mockito/mockito.dart';
 import 'package:piano_tool/data/ingestion_repository.dart';
 import 'package:piano_tool/models/level_models.dart';
 import 'package:piano_tool/ui/import/import_screen.dart';
-import 'package:piano_tool/ui/practice/stage_controller.dart';
+import 'package:piano_tool/practice/stage_controller.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
 @GenerateMocks([IngestionRepository])

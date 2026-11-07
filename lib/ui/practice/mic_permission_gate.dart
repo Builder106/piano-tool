@@ -9,7 +9,7 @@ import '../../services/midi_service.dart';
 import '../desk/desk.dart';
 import '../theme/tokens.dart';
 import 'input_check.dart';
-import 'stage_controller.dart';
+import '../../practice/stage_controller.dart';
 
 /// Set when the learner skips the input check. A skip lasts for this
 /// session and is never saved.

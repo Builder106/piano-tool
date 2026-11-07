@@ -7,7 +7,7 @@ import '../../services/midi_service.dart';
 import '../desk/desk.dart';
 import '../desk/pencil_choices.dart';
 import '../desk/pencil_mark.dart';
-import '../practice/stage_controller.dart';
+import '../../practice/stage_controller.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 

@@ -12,7 +12,7 @@ import 'package:piano_tool/ui/keyboard/keyboard_geometry.dart';
 import 'package:piano_tool/ui/keyboard/piano_keyboard_view.dart';
 import 'package:piano_tool/ui/practice/practice_hud.dart';
 import 'package:piano_tool/ui/practice/practice_screen.dart';
-import 'package:piano_tool/ui/practice/stage_controller.dart';
+import 'package:piano_tool/practice/stage_controller.dart';
 import 'package:piano_tool/ui/practice/transport_column.dart';
 import 'package:piano_tool/ui/results/results_screen.dart';
 import 'package:piano_tool/ui/staff/staff_view.dart';

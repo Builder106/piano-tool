@@ -16,7 +16,7 @@ import '../staff/staff_view.dart';
 import '../results/results_screen.dart';
 import 'mic_permission_gate.dart';
 import 'practice_hud.dart';
-import 'stage_controller.dart';
+import '../../practice/stage_controller.dart';
 import 'transport_column.dart';
 
 /// The keyboard shows the piece's own octaves until the learner asks for

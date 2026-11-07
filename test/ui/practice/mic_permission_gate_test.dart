@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:piano_tool/data/settings_repository.dart';
 import 'package:piano_tool/services/midi_service.dart';
 import 'package:piano_tool/ui/practice/mic_permission_gate.dart';
-import 'package:piano_tool/ui/practice/stage_controller.dart';
+import 'package:piano_tool/practice/stage_controller.dart';
 import 'package:piano_tool/ui/theme/app_theme.dart';
 
 import '../../services/fake_midi_transport.dart';

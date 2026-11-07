@@ -8,7 +8,7 @@ import 'ui/import/import_screen.dart';
 import 'ui/import/review_screen.dart';
 import 'ui/levels/level_list_screen.dart';
 import 'ui/practice/practice_screen.dart';
-import 'ui/practice/stage_controller.dart';
+import 'practice/stage_controller.dart';
 import 'ui/results/results_screen.dart';
 import 'ui/settings/settings_screen.dart';
 import 'ui/theme/app_theme.dart';
