@@ -8,7 +8,10 @@ import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/home/strung_geometry.dart';
 import 'package:piano_tool/practice/practice_screen.dart';
 import 'package:piano_tool/practice/stage_controller.dart';
+import 'package:piano_tool/services/midi_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../services/fake_midi_transport.dart';
 
 void main() {
   testWidgets('practice shows the board controls and speed cycles', (
@@ -26,6 +29,9 @@ void main() {
       overrides: [
         strungGeometryProvider.overrideWith((ref) async => geometry),
         levelRepositoryProvider.overrideWith((ref) async => LevelRepository()),
+        midiServiceProvider.overrideWith(
+          (ref) => MidiService(transport: FakeMidiTransport([])),
+        ),
       ],
     );
     addTearDown(container.dispose);

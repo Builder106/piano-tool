@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,9 @@ import '../data/settings_repository.dart';
 import '../home/paper_slip.dart';
 import '../home/strung_geometry.dart';
 import '../models/engine_models.dart';
+import '../services/midi_service.dart';
+import 'input_check.dart';
+import 'metronome.dart';
 import 'notation.dart';
 import 'stage_controller.dart';
 import 'strung_staff.dart';
@@ -52,14 +56,33 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
   final _clock = ValueNotifier(Duration.zero);
   var _rings = <Ring>[];
   late final StageController _controller;
+  late final List<Clef> _clefs;
+  late final List<Engraved> _engraved;
+  late final Map<int, int> _staffOf;
   bool _listening = false;
   bool _cantHear = false;
+
+  // The input check: the first Start on a new setup asks for a C first.
+  InputCheck? _check;
+  final _checkClock = Stopwatch();
+  final _checkSubs = <Object>[];
+  Timer? _checkTimer;
+  bool _checkSkipped = false;
+  bool _heard = false;
+
   static const _speeds = [1.0, 0.75, 0.5];
 
   @override
   void initState() {
     super.initState();
     _controller = ref.read(stageControllerProvider(widget.stageId).notifier);
+    final ui = ref.read(stageControllerProvider(widget.stageId));
+    _clefs = stavesFor(ui.level);
+    _engraved = engrave(ui.level, ui.notes);
+    _staffOf = {
+      for (final e in _engraved.reversed)
+        if (e.noteIndex != null) e.noteIndex!: e.staff,
+    };
     _ticker = createTicker((elapsed) {
       _clock.value = elapsed;
       if (_rings.any((r) => r.envelope(elapsed) < 0.01)) {
@@ -73,12 +96,15 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
 
   @override
   void dispose() {
+    _endCheck();
     _ticker.dispose();
     _clock.dispose();
     // The controller outlives the route; leave it halted, not playing on.
     _controller.stop(syncEvents: false, notifyState: false);
     super.dispose();
   }
+
+  int _staff(int noteIndex) => _staffOf[noteIndex] ?? 0;
 
   void _onNoteStates(List<NoteState>? before, List<NoteState> after) {
     final ui = ref.read(stageControllerProvider(widget.stageId));
@@ -88,7 +114,10 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
       final was = before != null && i < before.length ? before[i] : null;
       if (was == after[i]) continue;
       final note = ui.notes[i];
-      final lines = ringingLines(trebleStep(note.midiNote, alter: note.alter));
+      final staff = _staff(i);
+      final lines = ringingLines(
+        staffStep(note.midiNote, _clefs[staff], alter: note.alter),
+      );
       final seconds = note.durationBeats * 60 / (ui.level.tempo * ui.speed);
       final ring = switch (after[i]) {
         NoteState.hitPerfect => (0.24, 1.0),
@@ -100,6 +129,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
         added.add(
           Ring(
             measure: note.measureIndex,
+            staff: staff,
             lines: lines,
             amplitude: ring.$1,
             decay: (seconds * 0.8).clamp(0.35, 2.5),
@@ -113,6 +143,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
         added.add(
           Ring(
             measure: note.measureIndex,
+            staff: staff,
             lines: lines,
             amplitude: 0.08,
             decay: 0.08,
@@ -126,7 +157,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
   }
 
   /// At the end every bar that was played rings at once, as loud as it was
-  /// played well; the quiet bars are the ones to practise.
+  /// played well; the still bars are the ones to practise.
   void _onFinished() {
     final ui = ref.read(stageControllerProvider(widget.stageId));
     final now = _clock.value;
@@ -143,22 +174,33 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
       _rings = [
         for (final MapEntry(key: m, value: (hit, all)) in played.entries)
           if (hit > 0)
-            Ring(
-              measure: m,
-              lines: const [0, 1, 2, 3, 4],
-              amplitude: 0.2 * hit / all,
-              decay: 3.2,
-              frequency: 5,
-              start: now,
-              glow: hit / all,
-            ),
+            for (var staff = 0; staff < _clefs.length; staff++)
+              Ring(
+                measure: m,
+                staff: staff,
+                lines: const [0, 1, 2, 3, 4],
+                amplitude: 0.2 * hit / all,
+                decay: 3.2,
+                frequency: 5,
+                start: now,
+                glow: hit / all,
+              ),
       ];
     });
   }
 
   Future<void> _start() async {
     final settings = ref.read(settingsProvider);
-    if (settings.inputSource != PracticeInputSource.midi && !_listening) {
+    final source = settings.inputSource;
+    final midi = ref.read(midiServiceProvider);
+    if (source != PracticeInputSource.microphone) {
+      try {
+        await midi.connectSoleWiredDevice();
+      } on Object {
+        // No MIDI on this platform; the microphone may still do.
+      }
+    }
+    if (source != PracticeInputSource.midi && !_listening) {
       bool granted;
       try {
         granted = await ref.read(audioGrantedProvider.future);
@@ -168,16 +210,116 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
       if (!mounted) return;
       setState(() {
         _listening = granted;
-        _cantHear =
-            !granted && settings.inputSource == PracticeInputSource.microphone;
+        _cantHear = !granted && source == PracticeInputSource.microphone;
       });
       if (_cantHear) return;
+    }
+    if (!mounted) return;
+    final key = inputCheckKey(source, midi.selectedDevice?.id);
+    if (settings.verifiedInput != key && !_checkSkipped) {
+      _beginCheck(key, source);
+      return;
     }
     await _controller.start();
   }
 
-  void _transport(StageEngineStatus status) {
-    switch (status) {
+  /// Before the first piece on a new setup, ask for a C and say what is
+  /// heard instead, so a silent microphone is found before a piece is
+  /// marked wrong.
+  void _beginCheck(String key, PracticeInputSource source) {
+    final check = InputCheck(
+      loud: ref.read(settingsProvider).minVolumeThreshold,
+    );
+    _checkClock
+      ..reset()
+      ..start();
+    double now() => _checkClock.elapsedMicroseconds / 1e6;
+    if (source != PracticeInputSource.midi) {
+      _checkSubs.add(
+        ref.listenManual(audioPitchStreamProvider, (_, next) {
+          if (next.value case final e?) check.pitch(e, now());
+        }),
+      );
+      _checkSubs.add(
+        ref
+            .read(audioEngineProvider)
+            .levelStream
+            .listen((l) => check.level(l, now())),
+      );
+    }
+    if (source != PracticeInputSource.microphone) {
+      _checkSubs.add(
+        ref.listenManual(midiPitchStreamProvider, (_, next) {
+          if (next.value case final e?) check.pitch(e, now());
+        }),
+      );
+    }
+    _checkTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      check.tick(now());
+      if (!mounted) return;
+      if (check.hearing == Hearing.heard && !_heard) {
+        _passCheck(key);
+      } else {
+        setState(() {});
+      }
+    });
+    setState(() {
+      _check = check;
+      _heard = false;
+    });
+  }
+
+  Future<void> _passCheck(String key) async {
+    setState(() => _heard = true);
+    _endCheck();
+    final now = _clock.value;
+    setState(() {
+      _rings = [
+        for (var staff = 0; staff < _clefs.length; staff++)
+          for (final m in [0, 1])
+            Ring(
+              measure: m,
+              staff: staff,
+              lines: const [0, 1, 2, 3, 4],
+              amplitude: 0.15,
+              decay: 0.9,
+              frequency: 6,
+              start: now,
+              glow: 0.8,
+            ),
+      ];
+    });
+    await ref.read(settingsProvider.notifier).setVerifiedInput(key);
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    if (!mounted) return;
+    setState(() => _check = null);
+    await _controller.start();
+  }
+
+  void _skipCheck() {
+    _checkSkipped = true;
+    _endCheck();
+    setState(() => _check = null);
+    _controller.start();
+  }
+
+  void _endCheck() {
+    _checkTimer?.cancel();
+    _checkTimer = null;
+    for (final sub in _checkSubs) {
+      switch (sub) {
+        case ProviderSubscription<Object?>():
+          sub.close();
+        case StreamSubscription<Object?>():
+          sub.cancel();
+      }
+    }
+    _checkSubs.clear();
+    _checkClock.stop();
+  }
+
+  void _transport(StageUiState ui) {
+    switch (ui.status) {
       case StageEngineStatus.playing:
         _controller.pause();
       case StageEngineStatus.paused:
@@ -185,7 +327,6 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
       case StageEngineStatus.completed:
         setState(() => _rings = []);
         _controller.replay();
-        _start();
       case StageEngineStatus.idle || StageEngineStatus.stopped:
         _start();
     }
@@ -194,6 +335,19 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
   void _cycleSpeed(double speed) {
     final i = _speeds.indexWhere((s) => (s - speed).abs() < 0.01);
     _controller.setSpeed(_speeds[(i + 1) % _speeds.length]);
+  }
+
+  /// On the results, tapping a bar plays it over and over.
+  void _tapBar(StageUiState ui, StaffLayout layout, Offset at) {
+    if (ui.status != StageEngineStatus.completed) return;
+    final beat = layout.xBeat(at.dx, ui.currentBeat);
+    for (final m in ui.level.measures) {
+      if (beat >= m.startBeat && beat < m.startBeat + m.beatsPerMeasure) {
+        setState(() => _rings = []);
+        _controller.loopBar(m.index);
+        return;
+      }
+    }
   }
 
   @override
@@ -209,6 +363,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
     if (_listening) ref.watch(practiceAudioSessionProvider);
     final ui = ref.watch(stageControllerProvider(id));
     final geometry = ref.watch(strungGeometryProvider).value;
+    final metronome = ref.watch(metronomeGeometryProvider).value;
     final animation =
         ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation;
     if (geometry == null) return const ColoredBox(color: Palette.lacquer);
@@ -223,6 +378,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
             Curves.easeInOutCubic.transform(animation.value),
             ui,
             geometry,
+            metronome,
           ),
         ),
       ),
@@ -235,6 +391,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
     double t,
     StageUiState ui,
     StrungGeometry geometry,
+    MetronomeGeometry? metronome,
   ) {
     final home = CoverFit(geometry.imageSize, box);
     final settled = CoverFit.bottomRow(geometry.imageSize, box, rowY: _keysCut);
@@ -244,6 +401,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
     final layout = StaffLayout.fit(
       staffArea,
       leftInset: MediaQuery.paddingOf(context).left,
+      staves: _clefs.length,
     );
     final note = geometry.notes[widget.midi];
     final stringX = home.x(note == null ? 0.5 : _mean(note.strings));
@@ -254,6 +412,29 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
     final late = ((t - 0.6) / 0.4).clamp(0.0, 1.0);
     final board = ((t - 0.3) / 0.7).clamp(0.0, 1.0);
     final finished = ui.status == StageEngineStatus.completed;
+    final checking = _check != null;
+    final slip = switch (true) {
+      _ when checking => (
+        _heard ? 'Heard it' : 'Play middle C',
+        _heard
+            ? 'Starting the piece'
+            : _check!.message(
+                midi:
+                    ref.read(settingsProvider).inputSource ==
+                    PracticeInputSource.midi,
+              ),
+      ),
+      _ when _cantHear => (
+        "The piano can't hear you yet",
+        'Allow the microphone, or plug in a digital piano',
+      ),
+      _ when finished => (
+        '${(ui.accuracy * 100).round()}% of the notes',
+        'Tap a still bar to play it on repeat',
+      ),
+      _ => null,
+    };
+    final metroHeight = (staffArea.height * 0.34).clamp(80.0, 230.0);
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -267,7 +448,6 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
             excludeFromSemantics: true,
           ),
         ),
-        // The soundboard the staff is strung over.
         Positioned(
           left: 0,
           right: 0,
@@ -275,44 +455,82 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
           height: fit.y(_boardTop),
           child: Opacity(opacity: board, child: const _Soundboard()),
         ),
-        CustomPaint(
-          painter: StrungStaffPainter(
-            level: ui.level,
-            notes: ui.notes,
-            noteStates: ui.noteStates,
-            currentBeat: ui.currentBeat,
-            layout: layout,
-            rings: _rings,
-            clock: _clock,
-            intro: t,
-            introString: introString,
-            reducedMotion: MediaQuery.disableAnimationsOf(context),
+        Positioned.fromRect(
+          rect: staffArea,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapUp: (d) => _tapBar(ui, layout, d.localPosition),
+            child: CustomPaint(
+              painter: StrungStaffPainter(
+                level: ui.level,
+                clefs: _clefs,
+                engraved: _engraved,
+                noteStates: ui.noteStates,
+                currentBeat: ui.currentBeat,
+                layout: layout,
+                rings: _rings,
+                clock: _clock,
+                intro: t,
+                introString: introString,
+                reducedMotion: MediaQuery.disableAnimationsOf(context),
+                loopMeasure: ui.loopMeasure,
+              ),
+            ),
           ),
         ),
         if (late > 0) ..._keyCues(fit, box, ui, geometry, late),
+        if (late > 0 && metronome != null)
+          Positioned(
+            right: math.max(24 * u, MediaQuery.paddingOf(context).right + 16),
+            top: staffArea.bottom - metroHeight + metroHeight * 0.03,
+            child: Opacity(
+              opacity: late,
+              child: Metronome(
+                geometry: metronome,
+                height: metroHeight,
+                speed: ui.speed,
+                beat: ui.currentBeat,
+                swinging: ui.status == StageEngineStatus.playing,
+                onSpeed: _controller.setSpeed,
+              ),
+            ),
+          ),
         if (late > 0)
           _BoardControls(
             fit: fit,
             geometry: geometry,
             u: u,
             opacity: late,
-            status: ui.status,
-            speed: ui.speed,
-            onBack: () => Navigator.of(context).maybePop(),
-            onTransport: () => _transport(ui.status),
-            onSpeed: () => _cycleSpeed(ui.speed),
+            controls: [
+              ('Back', () => Navigator.of(context).maybePop()),
+              if (checking && !_heard)
+                ('Skip the check', _skipCheck)
+              else if (!checking)
+                (
+                  switch (ui.status) {
+                    StageEngineStatus.playing => 'Pause',
+                    StageEngineStatus.paused => 'Resume',
+                    StageEngineStatus.completed => 'Again',
+                    _ => 'Start',
+                  },
+                  () => _transport(ui),
+                ),
+              if (ui.loopMeasure != null)
+                (
+                  'Whole piece',
+                  () {
+                    setState(() => _rings = []);
+                    _controller.stopLoop();
+                  },
+                ),
+              (
+                'Speed ${(ui.speed * 100).round()}%',
+                () => _cycleSpeed(ui.speed),
+              ),
+            ],
           ),
-        if (late > 0 && (finished || _cantHear))
-          _CentredSlip(
-            area: staffArea,
-            u: u,
-            title: finished
-                ? '${(ui.accuracy * 100).round()}% of the notes'
-                : "The piano can't hear you yet",
-            status: finished
-                ? 'The still bars are the ones to practise'
-                : 'Allow the microphone, or plug in a digital piano',
-          ),
+        if (late > 0 && slip != null)
+          _CentredSlip(area: staffArea, u: u, title: slip.$1, status: slip.$2),
       ],
     );
   }
@@ -320,7 +538,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
   static double _mean(List<double> xs) =>
       xs.reduce((a, b) => a + b) / xs.length;
 
-  /// The next note's key circled in pencil, and the keys being played lit.
+  /// The key to play next circled in pencil (middle C during the check),
+  /// and the keys being heard lit.
   List<Widget> _keyCues(
     CoverFit fit,
     Size box,
@@ -328,8 +547,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen>
     StrungGeometry geometry,
     double opacity,
   ) {
-    final next = _nextNote(ui);
-    final key = next == null ? null : geometry.notes[next]?.key;
+    final target = _check != null ? 60 : _nextNote(ui);
+    final key = target == null ? null : geometry.notes[target]?.key;
     return [
       for (final midi in ui.sounding)
         if (geometry.notes[midi]?.key case final k?)
@@ -411,41 +630,27 @@ class _Soundboard extends StatelessWidget {
   }
 }
 
-/// Back, Start and Speed, in nickel on the name board left of the mark.
+/// The practice controls in nickel on the name board, left of the mark.
 class _BoardControls extends StatelessWidget {
   const _BoardControls({
     required this.fit,
     required this.geometry,
     required this.u,
     required this.opacity,
-    required this.status,
-    required this.speed,
-    required this.onBack,
-    required this.onTransport,
-    required this.onSpeed,
+    required this.controls,
   });
 
   final CoverFit fit;
   final StrungGeometry geometry;
   final double u;
   final double opacity;
-  final StageEngineStatus status;
-  final double speed;
-  final VoidCallback onBack;
-  final VoidCallback onTransport;
-  final VoidCallback onSpeed;
+  final List<(String, VoidCallback)> controls;
 
   @override
   Widget build(BuildContext context) {
     final logo = geometry.logo;
     final y = fit.y(logo == null ? 0.615 : logo.center.dy);
-    final size = math.max(18.0, 23 * u);
-    final transport = switch (status) {
-      StageEngineStatus.playing => 'Pause',
-      StageEngineStatus.paused => 'Resume',
-      StageEngineStatus.completed => 'Again',
-      _ => 'Start',
-    };
+    final size = math.max(17.0, 22 * u);
     return Positioned(
       left: math.max(fit.x(0.03), MediaQuery.paddingOf(context).left + 12 * u),
       top: y - size * 1.25,
@@ -454,15 +659,10 @@ class _BoardControls extends StatelessWidget {
         opacity: opacity,
         child: Row(
           children: [
-            NickelInlay(label: 'Back', size: size, onPressed: onBack),
-            SizedBox(width: 6 * u),
-            NickelInlay(label: transport, size: size, onPressed: onTransport),
-            SizedBox(width: 6 * u),
-            NickelInlay(
-              label: 'Speed ${(speed * 100).round()}%',
-              size: size,
-              onPressed: onSpeed,
-            ),
+            for (final (i, (label, onPressed)) in controls.indexed) ...[
+              if (i > 0) SizedBox(width: 4 * u),
+              NickelInlay(label: label, size: size, onPressed: onPressed),
+            ],
           ],
         ),
       ),
@@ -485,17 +685,19 @@ class _CentredSlip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = math.min(area.width - 32, 380 * u);
+    final width = math.min(area.width - 32, 400 * u);
     final k = width / slipPaperRect.width;
     return Positioned(
       left: area.center.dx - slipImageSize.width * k / 2,
-      top: area.top + area.height * 0.08,
-      child: PaperSlip(
-        width: width,
-        u: u,
-        title: title,
-        status: status,
-        button: false,
+      top: area.top + area.height * 0.06,
+      child: IgnorePointer(
+        child: PaperSlip(
+          width: width,
+          u: u,
+          title: title,
+          status: status,
+          button: false,
+        ),
       ),
     );
   }
