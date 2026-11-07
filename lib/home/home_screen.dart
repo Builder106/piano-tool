@@ -3,10 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../brand/nickel_inlay.dart';
 import '../brand/palette.dart';
+import '../brand/pencil_loop.dart';
 import '../data/level_repository.dart';
 import '../data/progress_repository.dart';
 import '../models/level_models.dart';
+import 'paper_slip.dart';
 import 'strung_geometry.dart';
 
 /// Where a piece stands for this learner.
@@ -100,7 +103,8 @@ class HomeScreen extends ConsumerWidget {
     this.onOpenSettings,
   });
 
-  final void Function(StageModel stage)? onOpenPiece;
+  /// Opens a piece; [midi] is the note whose string it lives on.
+  final void Function(StageModel stage, int midi)? onOpenPiece;
   final VoidCallback? onAddPiece;
   final VoidCallback? onOpenPieces;
   final VoidCallback? onOpenSettings;
@@ -128,15 +132,6 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
-
-/// The paper slip asset: its pixel size, and where the paper itself sits in
-/// it (the rest is the slip's shadow). Measured from `slip.png`.
-const _slipImage = Size(960, 320);
-const _slipPaper = Rect.fromLTRB(33, 37, 927, 284);
-
-/// Lettering on a slip lies flat on the strings, so it is foreshortened like
-/// the slip; not fully (cos 40°), which would cost legibility.
-const _flatten = 0.86;
 
 class _Piano extends StatelessWidget {
   const _Piano({
@@ -209,7 +204,9 @@ class _Piano extends StatelessWidget {
             if (next != null)
               if (geometry.notes[next.midi] case final note?)
                 CustomPaint(
-                  painter: _PencilLoop(fit: fit, key: note.key),
+                  painter: PencilLoopPainter(
+                    target: pencilLoopOnKey(fit.rect(note.key), box.height),
+                  ),
                 ),
             for (final (i, piece) in pieces.indexed)
               if (geometry.notes[piece.midi] case final note?)
@@ -220,12 +217,15 @@ class _Piano extends StatelessWidget {
                   width: slipWidth,
                   u: u,
                   high: i.isOdd,
-                  child: _Slip(
+                  child: PaperSlip(
                     width: slipWidth,
                     u: u,
                     title: piece.stage.title,
                     status: piece.status,
-                    state: piece.state,
+                    statusColor: piece.state == PieceState.next
+                        ? Palette.pencilBlue
+                        : Palette.graphite,
+                    button: piece.state != PieceState.locked,
                     underStrings: piece.state == PieceState.locked
                         ? _stringsAcross(fit, note, slipWidth)
                         : null,
@@ -233,7 +233,7 @@ class _Piano extends StatelessWidget {
                         piece.state == PieceState.locked ||
                             screen.onOpenPiece == null
                         ? null
-                        : () => screen.onOpenPiece!(piece.stage),
+                        : () => screen.onOpenPiece!(piece.stage, piece.midi),
                   ),
                 ),
             if (geometry.notes[addKey] case final note?)
@@ -244,12 +244,12 @@ class _Piano extends StatelessWidget {
                 width: slipWidth,
                 u: u,
                 high: pieces.length.isOdd,
-                child: _Slip(
+                child: PaperSlip(
                   width: slipWidth,
                   u: u,
                   title: 'Add a piece',
                   status: 'Record or upload',
-                  state: null,
+                  titleColor: Palette.pencilBlue,
                   onTap: screen.onAddPiece,
                 ),
               ),
@@ -277,15 +277,15 @@ class _Piano extends StatelessWidget {
   /// The image-space x of every string that crosses a slip centred on [note],
   /// relative to the slip image's left edge, in logical pixels.
   List<double> _stringsAcross(CoverFit fit, NoteGeometry note, double width) {
-    final k = width / _slipPaper.width;
+    final k = width / slipPaperRect.width;
     final centre = fit.x(_centre(note));
-    final left = centre - (_slipPaper.left + _slipPaper.width / 2) * k;
-    final right = left + _slipImage.width * k;
+    final left = centre - (slipPaperRect.left + slipPaperRect.width / 2) * k;
+    final right = left + slipImageSize.width * k;
     return [
       for (final n in geometry.notes.values)
         for (final x in n.strings)
-          if (fit.x(x) > left + _slipPaper.left * k &&
-              fit.x(x) < left + _slipPaper.right * k)
+          if (fit.x(x) > left + slipPaperRect.left * k &&
+              fit.x(x) < left + slipPaperRect.right * k)
             fit.x(x) - left,
     ]..removeWhere((x) => x < 0 || x > right - left);
   }
@@ -305,18 +305,19 @@ class _Piano extends StatelessWidget {
     required bool high,
     required Widget child,
   }) {
-    final k = width / _slipPaper.width;
-    final paperHeight = _slipPaper.height * k;
+    final k = width / slipPaperRect.width;
+    final paperHeight = slipPaperRect.height * k;
     final damperTop = fit.y(note.damper?.top ?? 0.41);
     final lift = high ? 22 * u + paperHeight + 12 * u : 22 * u;
     final paperBottom = damperTop - lift;
-    final imageTop = paperBottom - _slipPaper.bottom * k;
+    final imageTop = paperBottom - slipPaperRect.bottom * k;
     final margin = 10 * u;
     var imageLeft =
-        fit.x(_centre(note)) - (_slipPaper.left + _slipPaper.width / 2) * k;
+        fit.x(_centre(note)) -
+        (slipPaperRect.left + slipPaperRect.width / 2) * k;
     imageLeft = imageLeft.clamp(
-      margin - _slipPaper.left * k,
-      box.width - margin - _slipPaper.right * k,
+      margin - slipPaperRect.left * k,
+      box.width - margin - slipPaperRect.right * k,
     );
     return Positioned(left: imageLeft, top: imageTop, child: child);
   }
@@ -365,47 +366,6 @@ class _LitStrings extends CustomPainter {
       old.fit.drawn != fit.drawn || old.pieces != pieces;
 }
 
-/// The brand's pencil loop, drawn round the key that opens the next piece.
-class _PencilLoop extends CustomPainter {
-  _PencilLoop({required this.fit, required this.key});
-
-  final CoverFit fit;
-  final Rect key;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final r = fit.rect(key);
-    final bottom = math.min(r.bottom, size.height);
-    final centre = Offset(r.center.dx, r.top + (bottom - r.top) * 0.64);
-    final rx = r.width * 0.78;
-    final ry = (bottom - r.top) * 0.30;
-    final path = Path();
-    const turns = 1.12;
-    const steps = 90;
-    for (var i = 0; i <= steps; i++) {
-      final t = -math.pi * 0.62 + 2 * math.pi * turns * i / steps;
-      // A loose hand: the radius drifts and the end overshoots the start.
-      final wobble = 1 + 0.035 * math.sin(3 * t) - 0.05 * i / steps;
-      final p =
-          centre + Offset(rx * wobble * math.cos(t), ry * wobble * math.sin(t));
-      i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = Palette.pencilBlue
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.6
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_PencilLoop old) =>
-      old.key != key || old.fit.drawn != fit.drawn;
-}
-
 /// The note name, printed small on the front of each key that holds a piece.
 class _KeyLetter extends StatelessWidget {
   const _KeyLetter({
@@ -444,151 +404,6 @@ class _KeyLetter extends StatelessWidget {
   }
 }
 
-/// A paper slip lying on the strings with a piece's name on it. A locked
-/// piece's slip lies under the strings instead, in their shade, with the
-/// strings drawn across it.
-class _Slip extends StatelessWidget {
-  const _Slip({
-    required this.width,
-    required this.u,
-    required this.title,
-    required this.status,
-    required this.state,
-    this.underStrings,
-    this.onTap,
-  });
-
-  final double width;
-  final double u;
-  final String title;
-  final String status;
-
-  /// Null for the blank slip that adds a piece.
-  final PieceState? state;
-
-  /// The x of each string crossing the slip, when it lies under them.
-  final List<double>? underStrings;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final k = width / _slipPaper.width;
-    final paper = Rect.fromLTRB(
-      _slipPaper.left * k,
-      _slipPaper.top * k,
-      _slipPaper.right * k,
-      _slipPaper.bottom * k,
-    );
-    final blank = state == null;
-    final titleColor = blank ? Palette.pencilBlue : Palette.ink;
-    final statusColor = state == PieceState.next
-        ? Palette.pencilBlue
-        : Palette.graphite;
-    final under = underStrings;
-    return Semantics(
-      button: state != PieceState.locked,
-      label: '$title. $status',
-      excludeSemantics: true,
-      child: GestureDetector(
-        onTap: onTap,
-        child: SizedBox(
-          width: _slipImage.width * k,
-          height: _slipImage.height * k,
-          child: Stack(
-            children: [
-              Positioned.fill(child: Image.asset(slipAsset, fit: BoxFit.fill)),
-              Positioned.fromRect(
-                rect: paper.deflate(1),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12 * u),
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.diagonal3Values(1, _flatten, 1),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: Fonts.display,
-                            fontSize: math.max(18, 23 * u),
-                            height: 1.05,
-                            letterSpacing: -0.2,
-                            fontVariations: const [FontVariation('wght', 600)],
-                            color: titleColor,
-                          ),
-                        ),
-                        SizedBox(height: 2 * u),
-                        Text(
-                          status,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: Fonts.text,
-                            fontSize: math.max(13, 13.5 * u),
-                            height: 1.2,
-                            color: statusColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              if (under != null)
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _StringsOverSlip(xs: under, paper: paper),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The shade and the strings over a slip that lies beneath them.
-class _StringsOverSlip extends CustomPainter {
-  _StringsOverSlip({required this.xs, required this.paper});
-
-  final List<double> xs;
-  final Rect paper;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(paper, Paint()..color = const Color(0x2E000000));
-    final shadow = Paint()
-      ..color = const Color(0x33000000)
-      ..strokeWidth = 1.6
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
-    // Thin and slightly see-through, so the name under them stays readable.
-    final steel = Paint()
-      ..color = const Color(0xB8B4B9C1)
-      ..strokeWidth = 1.0;
-    final glint = Paint()
-      ..color = const Color(0x99F4F6F8)
-      ..strokeWidth = 0.4;
-    for (final x in xs) {
-      canvas.drawLine(
-        Offset(x + 2.5, paper.top),
-        Offset(x + 2.5, paper.bottom),
-        shadow,
-      );
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), steel);
-      canvas.drawLine(Offset(x - 0.3, 0), Offset(x - 0.3, size.height), glint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_StringsOverSlip old) =>
-      old.xs != xs || old.paper != paper;
-}
-
 /// Pieces and Settings, inlaid in nickel on the name board like the maker's
 /// mark beside them.
 class _NameBoardControls extends StatelessWidget {
@@ -621,68 +436,9 @@ class _NameBoardControls extends StatelessWidget {
       height: size * 2.5,
       child: Row(
         children: [
-          _Inlay(label: 'All pieces', size: size, onPressed: onOpenPieces),
+          NickelInlay(label: 'All pieces', size: size, onPressed: onOpenPieces),
           SizedBox(width: 14 * u),
-          _Inlay(label: 'Settings', size: size, onPressed: onOpenSettings),
-        ],
-      ),
-    );
-  }
-}
-
-class _Inlay extends StatelessWidget {
-  const _Inlay({required this.label, required this.size, this.onPressed});
-
-  final String label;
-  final double size;
-  final VoidCallback? onPressed;
-
-  static const _nickel = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Color(0xFFF1F3F5), Color(0xFF9DA2AA), Color(0xFFD6D9DE)],
-    stops: [0.0, 0.55, 1.0],
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final style = TextStyle(
-      fontFamily: Fonts.display,
-      fontSize: size,
-      height: 1,
-      letterSpacing: 0.4,
-      fontVariations: const [FontVariation('wght', 560)],
-    );
-    return TextButton(
-      onPressed: onPressed,
-      style: ButtonStyle(
-        padding: WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: size * 0.5, vertical: size * 0.4),
-        ),
-        overlayColor: WidgetStatePropertyAll(
-          Palette.paper.withValues(alpha: 0.06),
-        ),
-        shape: WidgetStateProperty.resolveWith(
-          (states) => RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-            side: states.contains(WidgetState.focused)
-                ? const BorderSide(color: Color(0xFFC9CDD3), width: 1.5)
-                : BorderSide.none,
-          ),
-        ),
-      ),
-      child: Stack(
-        children: [
-          // The inlay's lower lip: a dark line just under the metal.
-          Transform.translate(
-            offset: const Offset(0, 1.2),
-            child: Text(label, style: style.copyWith(color: Colors.black)),
-          ),
-          ShaderMask(
-            blendMode: BlendMode.srcIn,
-            shaderCallback: _nickel.createShader,
-            child: Text(label, style: style.copyWith(color: Colors.white)),
-          ),
+          NickelInlay(label: 'Settings', size: size, onPressed: onOpenSettings),
         ],
       ),
     );
