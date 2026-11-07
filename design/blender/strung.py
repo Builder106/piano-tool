@@ -361,6 +361,121 @@ def soundboard():
     render(os.path.join(OUT, 'strung-soundboard.jpg'))
 
 
+METRO_IMAGE = (600, 800)
+METRO_PIVOT_Z = 0.045     # rod pivot above the base, metres
+METRO_ROD = 0.19          # rod length above the pivot
+METRO_WEIGHT_AT = 0.10    # where the weight sits in its render
+
+
+def metronome():
+    """Render a metronome as three sprites from one camera: the body with its
+    tempo scale, the rod, and the sliding weight. The app swings the rod
+    about its pivot and slides the weight along it, so the pivot, the rod's
+    top and the weight's centre are exported with the renders."""
+    import json
+    scene = bpy.context.scene
+    for o in bpy.data.objects:
+        if o.type in {'MESH', 'CURVE', 'FONT', 'LIGHT'}:
+            o.hide_render = True
+    ox = 3.0   # well away from the piano
+    lacquer = material('metro_lacquer', (0.012, 0.012, 0.014), 0.22, **{'Coat Weight': 0.8, 'Coat Roughness': 0.08})
+    nickel = material('metro_nickel', (0.72, 0.74, 0.77), 0.25, **{'Metallic': 1.0})
+    steel = material('metro_steel', (0.82, 0.84, 0.88), 0.18, **{'Metallic': 1.0})
+    scale_plate = material('metro_scale', (0.62, 0.63, 0.66), 0.35, **{'Metallic': 0.6})
+
+    def frustum(name, w0, d0, w1, d1, z0, z1, mat):
+        me = bpy.data.meshes.new(name)
+        bm = bmesh.new()
+        lo = [bm.verts.new((ox + x * w0 / 2, y * d0 / 2, z0)) for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+        hi = [bm.verts.new((ox + x * w1 / 2, y * d1 / 2, z1)) for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+        bm.faces.new(lo[::-1])
+        bm.faces.new(hi)
+        for i in range(4):
+            bm.faces.new((lo[i], lo[(i + 1) % 4], hi[(i + 1) % 4], hi[i]))
+        bm.to_mesh(me)
+        bm.free()
+        ob = bpy.data.objects.new(name, me)
+        bpy.context.scene.collection.objects.link(ob)
+        ob.data.materials.append(mat)
+        mod = ob.modifiers.new('bevel', 'BEVEL')
+        mod.width = 0.0015
+        mod.segments = 3
+        return ob
+
+    body = [
+        box('metro_plinth', ox - 0.068, ox + 0.068, -0.048, 0.048, 0.0, 0.016, lacquer, bevel=0.003),
+        frustum('metro_body', 0.112, 0.074, 0.036, 0.030, 0.016, 0.235, lacquer),
+        box('metro_scale', ox - 0.012, ox + 0.012, -0.0262, -0.0255, 0.06, 0.205, scale_plate, bevel=0.0004),
+    ]
+    # Tick marks on the scale, nickel on the plate.
+    for i in range(14):
+        z = 0.068 + i * 0.0098
+        w = 0.008 if i % 2 == 0 else 0.005
+        body.append(box(f'metro_tick_{i}', ox - w, ox + w, -0.0270, -0.0262, z, z + 0.0009, nickel))
+    pivot = (ox, -0.034, METRO_PIVOT_Z)
+    rod_data = bpy.data.curves.new('metro_rod', 'CURVE')
+    rod_data.dimensions = '3D'
+    rod_data.bevel_depth = 0.0011
+    rod_data.bevel_resolution = 6
+    sp = rod_data.splines.new('POLY')
+    sp.points.add(1)
+    sp.points[0].co = (*pivot, 1)
+    sp.points[1].co = (pivot[0], pivot[1], pivot[2] + METRO_ROD, 1)
+    rod = bpy.data.objects.new('metro_rod', rod_data)
+    scene.collection.objects.link(rod)
+    rod.data.materials.append(steel)
+    wz = pivot[2] + METRO_WEIGHT_AT
+    weight = frustum('metro_weight', 0.020, 0.010, 0.013, 0.008, wz - 0.009, wz + 0.009, nickel)
+    weight.location.y = pivot[1]
+
+    def area(name, loc, size, energy, color=(1, 1, 1)):
+        data = bpy.data.lights.new(name, 'AREA')
+        data.size = size
+        data.energy = energy
+        data.color = color
+        ob = bpy.data.objects.new(name, data)
+        scene.collection.objects.link(ob)
+        ob.location = loc
+        target = mathutils.Vector((ox, 0, 0.12))
+        ob.rotation_euler = (target - ob.location).to_track_quat('-Z', 'Y').to_euler()
+        return ob
+
+    area('metro_key', (ox - 0.35, -0.55, 0.55), 0.6, 9, (1.0, 0.92, 0.84))
+    area('metro_rim', (ox + 0.4, 0.4, 0.45), 0.5, 6, (0.85, 0.9, 1.0))
+    area('metro_fill', (ox + 0.3, -0.6, 0.1), 0.6, 2.5)
+
+    cam = scene.camera
+    tilt = math.radians(12)
+    target = mathutils.Vector((ox, 0, 0.125))
+    d = 2.0
+    cam.location = target + mathutils.Vector((0, -d * math.cos(tilt), d * math.sin(tilt)))
+    cam.rotation_euler = (math.radians(90) - tilt, 0, 0)
+    cam.data.ortho_scale = 0.27
+    r = scene.render
+    r.resolution_x, r.resolution_y = METRO_IMAGE
+    r.film_transparent = True
+    r.image_settings.file_format = 'PNG'
+    r.image_settings.color_mode = 'RGBA'
+    bpy.context.view_layer.update()
+
+    parts = {'body': body, 'rod': [rod], 'weight': [weight]}
+    for name, shown in parts.items():
+        for group in parts.values():
+            for o in group:
+                o.hide_render = o not in shown
+        render(os.path.join(OUT, f'strung-metronome-{name}.png'))
+
+    out = {
+        'width': METRO_IMAGE[0], 'height': METRO_IMAGE[1],
+        'pivot': to_image(pivot),
+        'rodTop': to_image((pivot[0], pivot[1], pivot[2] + METRO_ROD)),
+        'weight': to_image((pivot[0], pivot[1], wz)),
+        'base': to_image((ox, -0.048, 0.0)),
+    }
+    with open(os.path.join(OUT, 'strung-metronome.json'), 'w') as f:
+        json.dump(out, f, indent=1)
+
+
 def geometry():
     """Where each note's strings, damper and key land in the image, so the app
     can draw lit strings and labels exactly over the render."""
@@ -401,6 +516,9 @@ if os.environ.get('STRUNG_SLIP'):
     raise SystemExit
 if os.environ.get('STRUNG_SOUNDBOARD'):
     soundboard()
+    raise SystemExit
+if os.environ.get('STRUNG_METRONOME'):
+    metronome()
     raise SystemExit
 render(os.path.join(OUT, 'strung-lookdev.png'))
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, 'strung-lookdev.blend'))
