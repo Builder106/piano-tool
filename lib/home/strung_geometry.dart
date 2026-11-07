@@ -111,10 +111,23 @@ class CoverFit {
       box.width - drawn.width,
       0.0,
     );
-    return CoverFit._(drawn, Offset(dx, dy));
+    return CoverFit.placed(drawn, Offset(dx, dy));
   }
 
-  const CoverFit._(this.drawn, this.origin);
+  const CoverFit.placed(this.drawn, this.origin);
+
+  /// The image scaled to the box's width, with image row [rowY] at the
+  /// box's bottom edge: the practice screen's framing, which keeps only the
+  /// name board and the backs of the keys.
+  factory CoverFit.bottomRow(Size image, Size box, {required double rowY}) {
+    final drawn = image * (box.width / image.width);
+    return CoverFit.placed(drawn, Offset(0, box.height - rowY * drawn.height));
+  }
+
+  static CoverFit lerp(CoverFit a, CoverFit b, double t) => CoverFit.placed(
+    Size.lerp(a.drawn, b.drawn, t)!,
+    Offset.lerp(a.origin, b.origin, t)!,
+  );
 
   final Size drawn;
   final Offset origin;

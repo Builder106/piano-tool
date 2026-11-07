@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'brand/palette.dart';
 import 'data/settings_repository.dart';
 import 'home/home_screen.dart';
+import 'practice/practice_screen.dart';
 
 /// Entry point. The interface is being rebuilt around the "Strung" design in
 /// DESIGN.md; the home screen is the first piece of it.
@@ -34,7 +35,15 @@ class PianoToolApp extends StatelessWidget {
         fontFamily: Fonts.text,
         scaffoldBackgroundColor: Palette.lacquer,
       ),
-      home: const Scaffold(body: HomeScreen()),
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: HomeScreen(
+            onOpenPiece: (stage, midi) => Navigator.of(
+              context,
+            ).push(practiceRoute(stageId: stage.id, midi: midi)),
+          ),
+        ),
+      ),
     );
   }
 }
