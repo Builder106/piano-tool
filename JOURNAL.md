@@ -1,5 +1,27 @@
 # Journal
 
+## 2026-11-06: frontend removed for a redesign #ui #decision
+
+The interface felt unintuitive and lifeless, and patching it screen by
+screen had not fixed that. On `redesign/app-ui` the whole frontend is
+gone: `lib/ui`, the router, the theme and tokens, the UI and router
+tests, every golden, `test/flutter_test_config.dart`, the bundled art
+and fonts under `assets/`, and the app art sources under `design/`.
+`go_router`, `file_picker` and `record` went with them.
+
+Kept: audio, MIDI, the stage engine, levels, imports, progress,
+settings, and the stage controller, which moved to
+`lib/practice/stage_controller.dart` because it holds no widgets.
+`main.dart` loads settings and shows an empty `Scaffold`, so the app
+still builds for web, Android and iOS. The landscape lock went too;
+orientation is a design decision for the new interface.
+
+Not touched: `site/`, and `brand/` (the logo and palette).
+`brand/icons.py` still writes `assets/art/mark.png`, a folder that no
+longer exists, so recreate it or repoint the script when the new
+interface picks its assets. Old docs under `docs/` refer to the deleted
+paths as history.
+
 ## 2026-10-30: v1.1 notation, input check and practice journey #ui #engine #decision
 
 Implemented most of the v1.1 roadmap on `feat/practice-journey`.
