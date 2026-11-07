@@ -17,4 +17,5 @@ abstract final class Palette {
 abstract final class Fonts {
   static const display = 'CormorantGaramond';
   static const text = 'IBMPlexSans';
+  static const music = 'Bravura';
 }

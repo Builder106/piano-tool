@@ -63,3 +63,6 @@ flutter:
     - family: IBMPlexSans
       fonts:
         - asset: assets/fonts/IBMPlexSans.ttf
+    - family: Bravura
+      fonts:
+        - asset: assets/fonts/Bravura.otf
