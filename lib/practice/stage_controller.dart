@@ -65,6 +65,7 @@ class StageUiState {
     required this.status,
     required this.speed,
     this.sounding = const {},
+    this.loopMeasure,
   });
 
   final LevelModel level;
@@ -79,6 +80,9 @@ class StageUiState {
   /// MIDI notes the microphone is hearing right now.
   final Set<int> sounding;
 
+  /// The bar being played over and over, or null.
+  final int? loopMeasure;
+
   double get progress {
     final total = level.totalMeasures * level.beatsPerMeasure;
     return total > 0 ? (currentBeat / total).clamp(0.0, 1.0) : 0.0;
@@ -92,6 +96,8 @@ class StageUiState {
     StageEngineStatus? status,
     double? speed,
     Set<int>? sounding,
+    int? loopMeasure,
+    bool clearLoop = false,
   }) => StageUiState(
     level: level,
     notes: notes,
@@ -102,6 +108,7 @@ class StageUiState {
     status: status ?? this.status,
     speed: speed ?? this.speed,
     sounding: sounding ?? this.sounding,
+    loopMeasure: clearLoop ? null : (loopMeasure ?? this.loopMeasure),
   );
 }
 
@@ -236,6 +243,24 @@ class StageController extends StateNotifier<StageUiState> {
     _engine.reset();
     _engine.start();
     _sync();
+  }
+
+  /// Plays bar [measure] over and over, every pass judged afresh. Looping
+  /// never completes the piece, so it never writes progress.
+  void loopBar(int measure) {
+    final m = state.level.measures[measure];
+    _syncEngineEvents = true;
+    _engine.playLoop(m.startBeat, m.startBeat + m.beatsPerMeasure);
+    _sync();
+    state = state.copyWith(loopMeasure: measure);
+  }
+
+  /// Stops looping and returns to the start of the piece.
+  void stopLoop() {
+    _engine.reset();
+    _clearSounding(notify: false);
+    _sync();
+    state = state.copyWith(clearLoop: true);
   }
 
   void seekTo(double beat) {
