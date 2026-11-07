@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'brand/palette.dart';
 import 'data/settings_repository.dart';
+import 'home/home_screen.dart';
 
-/// Entry point with no interface. The previous frontend was removed so the
-/// app can be redesigned from scratch; audio, MIDI, the stage engine, saved
-/// progress and the stage controller remain and are covered by tests.
+/// Entry point. The interface is being rebuilt around the "Strung" design in
+/// DESIGN.md; the home screen is the first piece of it.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = await SettingsRepository().read();
@@ -25,10 +26,15 @@ class PianoToolApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Piano Tool',
       debugShowCheckedModeBanner: false,
-      home: Scaffold(),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        fontFamily: Fonts.text,
+        scaffoldBackgroundColor: Palette.lacquer,
+      ),
+      home: const Scaffold(body: HomeScreen()),
     );
   }
 }
