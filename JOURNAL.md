@@ -1,5 +1,27 @@
 # Journal
 
+## 2026-11-07: Strung concept and the first home screen #ui #decision
+
+The redesign concept is "Strung": the app is the inside of an open grand.
+A piece is a string, and a note played right will ring its bar of the
+staff. Full reasoning, structure and asset plan are in `DESIGN.md`.
+
+Look development took eight Blender passes. The first three looked
+straight down at tuning pins and dampers, and nobody could tell it was a
+piano; the rule since then is that the keyboard stays in frame, seen from
+the player's seat. Copper bass strings were allowed even though the brand
+has one accent: they are material, and the strings looked like stripes
+without them.
+
+Home placement: pieces sit on every other white key from middle C (C, E,
+G for the built-in three), because two of them start on middle C. Pieces
+are paper slips on the strings; a locked piece's slip lies under them.
+Pieces and Settings are nickel lettering on the name board.
+
+The backdrop is one render plus a geometry file exported by the same
+script, so the app can draw over strings, dampers and keys exactly. Any
+change to the camera or scene means re-exporting both.
+
 ## 2026-11-06: frontend removed for a redesign #ui #decision
 
 The interface felt unintuitive and lifeless, and patching it screen by
