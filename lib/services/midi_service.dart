@@ -147,6 +147,22 @@ class MidiService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Connects the keyboard plugged in by cable when it is the only one, so
+  /// a single digital piano works without a trip to settings. Lists devices
+  /// without a Bluetooth scan, which would ask the player for permission;
+  /// several keyboards, or one already connected, are left alone.
+  Future<void> connectSoleWiredDevice() async {
+    if (isConnected) return;
+    await _refresh();
+    _scanned = true;
+    final wired = [
+      for (final d in _devices)
+        if (d.type != MidiDeviceType.bluetooth) d,
+    ];
+    if (wired.length == 1) await connectDevice(wired.single.id);
+    notifyListeners();
+  }
+
   Future<void> _refresh() async {
     try {
       final found = await _transport.listDevices();

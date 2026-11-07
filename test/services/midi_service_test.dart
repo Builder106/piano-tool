@@ -30,6 +30,30 @@ void main() {
       service.dispose();
     });
 
+    test('connects the only wired keyboard without a Bluetooth scan', () async {
+      transport.inputs = [_usbPiano];
+      await service.connectSoleWiredDevice();
+      expect(service.selectedDevice?.id, 'usb-1');
+      expect(transport.calls, isNot(contains('scan')));
+    });
+
+    test('leaves the choice to the player when several are wired', () async {
+      const second = MidiDevice(
+        id: 'usb-2',
+        name: 'Other',
+        type: MidiDeviceType.usb,
+      );
+      transport.inputs = [_usbPiano, second];
+      await service.connectSoleWiredDevice();
+      expect(service.isConnected, isFalse);
+    });
+
+    test('ignores Bluetooth keyboards when choosing on its own', () async {
+      transport.inputs = [_blePiano];
+      await service.connectSoleWiredDevice();
+      expect(service.isConnected, isFalse);
+    });
+
     test('lists no devices and opens nothing before a scan', () {
       expect(service.devices, isEmpty);
       expect(service.selectedDevice, isNull);
