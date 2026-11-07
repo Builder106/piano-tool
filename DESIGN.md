@@ -212,6 +212,43 @@ Soundboard ground: `assets/art/strung/soundboard.jpg` (`STRUNG_SOUNDBOARD=1`).
   lettering on the name board.
 - Microphone: asked for on Start; if it is refused and the input is
   microphone only, a slip says so instead of starting.
-- Not built yet: rests, beams, ties, bass and grand staff, the metronome
-  weight for speed, looping a bar from the results, the input check,
-  pressing a key on home to open its piece.
+
+## Notation, speed, loops, input check, keys (second build)
+
+- Notation: `engrave()` in `lib/practice/notation.dart` turns a level into
+  written symbols. Notes over a barline are split and tied; lengths with
+  no single value are split into tied values; every gap on every staff is
+  a rest, and an empty bar gets one whole-bar rest. Eighths and sixteenths
+  in the same quarter-note beat share a beam. Bass clef counts from G2. A
+  grand staff follows the level's voices when it has them (voice 1 and up
+  is the left hand), otherwise notes below middle C go down. The painter
+  draws chords on one stem, beams on a gently sloped line at least two and
+  a half spaces from every head, ties away from the stems, and a brace;
+  bridges span both staves. Glyphs are hex code points, never literal
+  characters.
+- Speed is a metronome standing on the name board at the right
+  (`STRUNG_METRONOME=1`: body, rod and weight sprites plus their pivot
+  geometry). Drag the weight up the rod to slow down, from 100 to 50% in
+  steps of five; the rod swings to the end of its travel on every beat
+  while playing. It is a slider to assistive technology and answers the
+  arrow keys. The Speed lettering on the board stays as the plain way to
+  change it.
+- Looping: on the results, tapping a bar plays it on repeat, every pass
+  judged afresh; its bridges glow blue and the board gains Whole piece. A
+  loop never completes the piece, so it never writes progress (the engine
+  jumps back at the bar's end before the completion check).
+- Input check: the first Start on a new setup (the saved key is the same
+  format earlier versions used) asks for middle C, circles it, and says in
+  plain words what it hears instead: nothing, something faint, a sound
+  with no clear note, a wandering pitch, or the wrong note by name. Any C
+  passes: a struck MIDI key at once, the microphone after the same C
+  twice. The staff rings and the piece starts; Skip the check skips it for
+  this visit.
+- Keys on home: a single wired digital piano connects by itself when home
+  opens (not on the web, where asking for MIDI shows a browser prompt;
+  there it connects on Start). Pressing a piece's key, or a key of the
+  same name, opens it while home is the visible screen; the next slip
+  then says which key.
+- Still not built: dynamics and articulation marks, key signatures, two
+  voices on one staff, beaming across beats in compound time, portrait
+  phones, the list and settings screens.

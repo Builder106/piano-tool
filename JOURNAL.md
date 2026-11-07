@@ -1,5 +1,18 @@
 # Journal
 
+## 2026-11-07: notation, metronome, loops, input check, keys #ui #engine #decision
+
+Rests, ties, beams and bass and grand staves are engraved from the level
+in one pure function with tests, so the painter only draws. The engine
+gained a bar loop that restarts before the completion check, so practising
+one bar never writes progress. The input check keeps the old saved-key
+format so an earlier pass still counts. MIDI auto-connects only a single
+wired keyboard and never runs a Bluetooth scan by itself, which would ask
+for permission at launch; on the web it waits for Start because the
+browser prompts for MIDI. Metronome speed is limited to 50 to 100%.
+Everything was checked with injected states and previews; the live mic
+and MIDI path still needs a real piano.
+
 ## 2026-11-07: opening a piece and the strung staff #ui #decision
 
 Practice keeps the home render and slides it down to the name board and
