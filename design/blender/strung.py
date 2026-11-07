@@ -341,6 +341,26 @@ def slip():
     render(os.path.join(OUT, 'strung-slip.png'))
 
 
+def soundboard():
+    """Render the bare soundboard from above, grain running across the frame,
+    as the ground the practice staff is strung over."""
+    scene = bpy.context.scene
+    for o in bpy.data.objects:
+        if o.type in {'MESH', 'CURVE', 'FONT'} and o.name != 'soundboard':
+            o.hide_render = True
+    cam = scene.camera
+    back = WHITE_L + 0.026
+    cam.rotation_euler = (0, 0, math.radians(90))
+    cam.location = (MIDDLE_C_X, back + 0.30, 0.6)
+    cam.data.ortho_scale = 0.40
+    r = scene.render
+    r.resolution_x, r.resolution_y = 1920, 1080
+    r.film_transparent = False
+    r.image_settings.file_format = 'JPEG'
+    r.image_settings.quality = 88
+    render(os.path.join(OUT, 'strung-soundboard.jpg'))
+
+
 def geometry():
     """Where each note's strings, damper and key land in the image, so the app
     can draw lit strings and labels exactly over the render."""
@@ -378,6 +398,9 @@ if os.environ.get('STRUNG_GEOMETRY_ONLY'):
     raise SystemExit
 if os.environ.get('STRUNG_SLIP'):
     slip()
+    raise SystemExit
+if os.environ.get('STRUNG_SOUNDBOARD'):
+    soundboard()
     raise SystemExit
 render(os.path.join(OUT, 'strung-lookdev.png'))
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, 'strung-lookdev.blend'))
