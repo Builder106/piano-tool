@@ -181,3 +181,37 @@ it (each note's string x positions, damper box and key box).
 - Not built yet: idle ring of learned strings, opening a piece (damper
   lift and fan into the staff), playing a key to open its piece, portrait
   phones, the list and settings views.
+
+## Opening a piece and practice (first build)
+
+Code: `lib/practice/practice_screen.dart` (route, scene, controls),
+`strung_staff.dart` (painter), `notation.dart` (pure staff maths, tested).
+Soundboard ground: `assets/art/strung/soundboard.jpg` (`STRUNG_SOUNDBOARD=1`).
+
+- Opening: the route draws the whole scene from the home framing. Over
+  0.9 s the render slides down until only the lower name board and the
+  backs of the keys remain, the piece's string swings down and splits
+  into the five staff lines, and the soundboard, notes and controls fade
+  in. Back reverses it. Wood sits behind everything so the slide never
+  shows a gap.
+- The staff is five steel strings over dark soundboard. Barlines are short
+  maple bridges with a pin on each string; pins beside a barline in the
+  spaces read as repeat dots, so they sit on the lines. The strike line
+  (where notes are due) is a soft vertical glow.
+- A correct note rings its bar: the line it sits on, or both lines round
+  its space, vibrate between the two bridges and die away over the note's
+  written length (perfect rings strongest, okay least). A miss is a short
+  dead thud. Blue pencil marks under each note give the grade by shape:
+  tick, ring, line; a miss is struck through. Reduced motion swaps the
+  vibration for a brief glow.
+- At the end every bar that was played rings at once, as loud as it was
+  played well; a slip says the still bars are the ones to practise.
+- Keys: the next note's key is circled in pencil; keys being heard are lit
+  on their visible front.
+- Back, Start (Pause, Resume, Again) and Speed (100, 75, 50%) are nickel
+  lettering on the name board.
+- Microphone: asked for on Start; if it is refused and the input is
+  microphone only, a slip says so instead of starting.
+- Not built yet: rests, beams, ties, bass and grand staff, the metronome
+  weight for speed, looping a bar from the results, the input check,
+  pressing a key on home to open its piece.

@@ -1,5 +1,15 @@
 # Journal
 
+## 2026-11-07: opening a piece and the strung staff #ui #decision
+
+Practice keeps the home render and slides it down to the name board and
+keys; the piece's string swings into the five staff lines. Barlines are
+short maple bridges with pins on the lines: pins in the spaces beside a
+barline read as repeat dots. Bravura glyphs are written as escapes in the
+source; a tool once turned them into literal characters and every glyph
+became the same one, so keep them as escapes. The live mic and MIDI path
+into ringing bars has only been checked with injected note states.
+
 ## 2026-11-07: Strung concept and the first home screen #ui #decision
 
 The redesign concept is "Strung": the app is the inside of an open grand.
