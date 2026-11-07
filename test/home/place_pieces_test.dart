@@ -35,4 +35,14 @@ void main() {
     expect(pieces[1].state, PieceState.next);
     expect(pieces[2].status, 'After Ode to Joy');
   });
+
+  test('a struck key opens the piece on it, or one on a key of that name', () {
+    final (pieces, _) = placePieces(stages, const {
+      'stage_1': StageProgress(stageId: 'stage_1', completed: true),
+    });
+    expect(pieceForKey(pieces, 60)?.stage.id, 'stage_1');
+    expect(pieceForKey(pieces, 76)?.stage.id, 'stage_2');
+    expect(pieceForKey(pieces, 67), isNull, reason: 'Mixed Rhythms is locked');
+    expect(pieceForKey(pieces, 62), isNull);
+  });
 }

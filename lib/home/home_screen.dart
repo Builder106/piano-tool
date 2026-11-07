@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,7 +9,9 @@ import '../brand/palette.dart';
 import '../brand/pencil_loop.dart';
 import '../data/level_repository.dart';
 import '../data/progress_repository.dart';
+import '../data/settings_repository.dart';
 import '../models/level_models.dart';
+import '../services/midi_service.dart';
 import 'paper_slip.dart';
 import 'strung_geometry.dart';
 
@@ -94,6 +97,34 @@ Iterable<int> _whiteKeysFromMiddleC() sync* {
   return (pieces, keys[ordered.length * 2]);
 }
 
+/// Connects a single wired digital piano when home opens, so a learner can
+/// press a piece's key to open it. Not on the web, where asking for MIDI
+/// shows a browser prompt; there it waits for Start in practice.
+final midiAutoConnectProvider = FutureProvider<void>((ref) async {
+  if (kIsWeb) return;
+  if (ref.read(settingsProvider).inputSource ==
+      PracticeInputSource.microphone) {
+    return;
+  }
+  await ref.read(midiServiceProvider).connectSoleWiredDevice();
+});
+
+/// The piece a struck key opens: the piece on that very key, or else the
+/// first open piece on a key with the same name, in any octave.
+PieceOnString? pieceForKey(List<PieceOnString> pieces, int midi) {
+  final open = [
+    for (final p in pieces)
+      if (p.state != PieceState.locked) p,
+  ];
+  for (final p in open) {
+    if (p.midi == midi) return p;
+  }
+  for (final p in open) {
+    if (p.midi % 12 == midi % 12) return p;
+  }
+  return null;
+}
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({
     super.key,
@@ -114,6 +145,21 @@ class HomeScreen extends ConsumerWidget {
     final geometry = ref.watch(strungGeometryProvider);
     final repository = ref.watch(levelRepositoryProvider);
     final progress = ref.watch(stageProgressProvider);
+    ref.watch(midiAutoConnectProvider);
+    final keyboard = ref.watch(
+      midiServiceProvider.select((s) => s.isConnected),
+    );
+    ref.listen(midiPitchStreamProvider, (_, next) {
+      final event = next.value;
+      final open = onOpenPiece;
+      if (event == null || !event.struck || open == null) return;
+      if (ModalRoute.of(context)?.isCurrent == false) return;
+      final (r, p) = (repository.value, progress.value);
+      if (r == null || p == null) return;
+      final (pieces, _) = placePieces(r.getAllStages(), p);
+      final piece = pieceForKey(pieces, event.midiNote);
+      if (piece != null) open(piece.stage, piece.midi);
+    });
     return ColoredBox(
       color: Palette.lacquer,
       child: switch ((geometry, repository, progress)) {
@@ -126,6 +172,7 @@ class HomeScreen extends ConsumerWidget {
             geometry: g,
             placed: placePieces(r.getAllStages(), p),
             screen: this,
+            keyboard: keyboard,
           ),
         _ => const SizedBox.expand(),
       },
@@ -138,11 +185,15 @@ class _Piano extends StatelessWidget {
     required this.geometry,
     required this.placed,
     required this.screen,
+    required this.keyboard,
   });
 
   final StrungGeometry geometry;
   final (List<PieceOnString>, int) placed;
   final HomeScreen screen;
+
+  /// Whether a digital piano is connected, so a piece opens from its key.
+  final bool keyboard;
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +272,9 @@ class _Piano extends StatelessWidget {
                     width: slipWidth,
                     u: u,
                     title: piece.stage.title,
-                    status: piece.status,
+                    status: keyboard && piece.state == PieceState.next
+                        ? 'Up next. Press ${_noteNames[piece.midi % 12]}'
+                        : piece.status,
                     statusColor: piece.state == PieceState.next
                         ? Palette.pencilBlue
                         : Palette.graphite,
