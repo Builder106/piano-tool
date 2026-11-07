@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'app_router.dart';
 import 'data/settings_repository.dart';
-import 'ui/theme/app_theme.dart';
 
+/// Entry point with no interface. The previous frontend was removed so the
+/// app can be redesigned from scratch; audio, MIDI, the stage engine, saved
+/// progress and the stage controller remain and are covered by tests.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // The whole app is landscape. Locking a single screen would rotate the
-  // user in and out as they navigate.
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
   final settings = await SettingsRepository().read();
   runApp(
     ProviderScope(
@@ -26,44 +20,15 @@ Future<void> main() async {
   );
 }
 
-class PianoToolApp extends ConsumerWidget {
+class PianoToolApp extends StatelessWidget {
   const PianoToolApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final routerAsync = ref.watch(appRouterProvider);
-    final themeMode = ref.watch(themeModeProvider);
-    return routerAsync.when(
-      data: (router) => MaterialApp.router(
-        title: 'Piano Tool',
-        debugShowCheckedModeBanner: false,
-        theme: PianoTheme.light(),
-        darkTheme: PianoTheme.dark(),
-        themeMode: themeMode,
-        routerConfig: router,
-      ),
-      loading: () => MaterialApp(
-        title: 'Piano Tool',
-        debugShowCheckedModeBanner: false,
-        theme: PianoTheme.light(),
-        darkTheme: PianoTheme.dark(),
-        themeMode: themeMode,
-        home: Scaffold(
-          backgroundColor: PianoTheme.light().colorScheme.surface,
-          body: const Center(child: CircularProgressIndicator()),
-        ),
-      ),
-      error: (error, stack) => MaterialApp(
-        title: 'Piano Tool',
-        debugShowCheckedModeBanner: false,
-        theme: PianoTheme.light(),
-        darkTheme: PianoTheme.dark(),
-        themeMode: themeMode,
-        home: Scaffold(
-          backgroundColor: PianoTheme.light().colorScheme.surface,
-          body: Center(child: Text('Error initializing app: $error')),
-        ),
-      ),
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: 'Piano Tool',
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(),
     );
   }
 }

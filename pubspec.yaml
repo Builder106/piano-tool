@@ -56,16 +56,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  # Blender renders (keyboard, book covers, paper grain) from design/blender/.
-  assets:
-    - assets/art/
-  fonts:
-    - family: CormorantGaramond
-      fonts:
-        - asset: assets/fonts/CormorantGaramond.ttf
-    - family: IBMPlexSans
-      fonts:
-        - asset: assets/fonts/IBMPlexSans.ttf
-    - family: Bravura
-      fonts:
-        - asset: assets/fonts/Bravura.otf
