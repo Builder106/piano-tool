@@ -53,3 +53,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Renders and image-space geometry from design/blender/strung.py.
+  assets:
+    - assets/art/strung/
+  fonts:
+    - family: CormorantGaramond
+      fonts:
+        - asset: assets/fonts/CormorantGaramond.ttf
+    - family: IBMPlexSans
+      fonts:
+        - asset: assets/fonts/IBMPlexSans.ttf
