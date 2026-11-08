@@ -44,11 +44,10 @@ The app's full token set lives in `lib/ui/theme/tokens.dart`; the site's in
 
 | Face | Use |
 |---|---|
-| Cormorant Garamond 500 | the wordmark "Piano Tool", titles |
-| IBM Plex Sans | body, labels, numbers |
+| Atkinson Hyperlegible Next | everything: wordmark, titles, body, labels, numbers; heavy upright weights for titles, italic only for pencil notes |
 | Bravura | music glyphs |
 
-The wordmark is the name set in Cormorant Garamond 500 with -0.01em tracking,
+The wordmark is the name set in Atkinson Hyperlegible Next 700 with -0.01em tracking,
 mark first. It is live text, not an outline.
 
 ## Rebuilding the files

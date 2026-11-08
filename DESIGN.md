@@ -110,8 +110,9 @@ second model.
 
 Kept: middle C circled in pencil, and the palette and type in
 `brand/README.md` (lacquer, paper, ink, graphite, one Pencil Blue accent,
-neutrals on hue 262; Cormorant Garamond for the wordmark and titles, IBM
-Plex Sans for text, Bravura for music). The mark fits the new world:
+neutrals on hue 262; Atkinson Hyperlegible Next for the wordmark, titles and text, Bravura for
+music; Cormorant Garamond and IBM Plex Sans were dropped 2026-11-08 as an
+overused default). The mark fits the new world:
 practice opens by playing middle C, and the input check at the tuning
 pins starts there.
 
