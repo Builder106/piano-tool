@@ -4,7 +4,7 @@
 # dampers, the strings and the soundboard behind them.
 #
 # Run headless on a Mac with a GPU:
-#   PIANO_FONT=<CormorantGaramond.ttf> Blender -b --factory-startup \
+#   PIANO_FONT=<AtkinsonWordmark.ttf> Blender -b --factory-startup \
 #     -P design/blender/strung.py -- <output dir>
 #
 # Units are metres. x runs across the keyboard, y away from the player.
@@ -25,7 +25,7 @@ src = src.replace(
     "HERE = os.path.dirname(os.path.abspath(__file__)) if '__file__' in dir() else ''",
     f"HERE = {os.path.dirname(os.path.abspath(KEYBOARD))!r}")
 src = src.replace(
-    "font_path = os.path.join(HERE, '..', '..', '..', 'assets', 'fonts', 'CormorantGaramond.ttf')",
+    "font_path = os.path.join(HERE, '..', '..', '..', 'assets', 'fonts', 'AtkinsonWordmark.ttf')",
     "font_path = os.environ['PIANO_FONT']")
 exec(compile(src, KEYBOARD, 'exec'))  # defines build(), material(), box(), LOWEST, SPAN, ...
 
