@@ -446,7 +446,7 @@ class _KeyLetter extends StatelessWidget {
           _noteNames[note.midi % 12],
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontFamily: Fonts.text,
+            fontFamily: Fonts.ui,
             fontSize: 14 * u,
             fontVariations: const [FontVariation('wght', 560)],
             color: Palette.ink,

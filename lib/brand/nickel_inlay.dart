@@ -26,11 +26,11 @@ class NickelInlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = TextStyle(
-      fontFamily: Fonts.display,
+      fontFamily: Fonts.ui,
       fontSize: size,
       height: 1,
       letterSpacing: 0.4,
-      fontVariations: const [FontVariation('wght', 560)],
+      fontVariations: const [FontVariation('wght', 700)],
     );
     return TextButton(
       onPressed: onPressed,

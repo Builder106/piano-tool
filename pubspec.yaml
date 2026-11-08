@@ -57,12 +57,11 @@ flutter:
   assets:
     - assets/art/strung/
   fonts:
-    - family: CormorantGaramond
+    - family: AtkinsonHyperlegibleNext
       fonts:
-        - asset: assets/fonts/CormorantGaramond.ttf
-    - family: IBMPlexSans
-      fonts:
-        - asset: assets/fonts/IBMPlexSans.ttf
+        - asset: assets/fonts/AtkinsonHyperlegibleNext.ttf
+        - asset: assets/fonts/AtkinsonHyperlegibleNext-Italic.ttf
+          style: italic
     - family: Bravura
       fonts:
         - asset: assets/fonts/Bravura.otf

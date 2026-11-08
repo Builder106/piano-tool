@@ -84,11 +84,11 @@ class PaperSlip extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontFamily: Fonts.display,
+                            fontFamily: Fonts.ui,
                             fontSize: math.max(18, 23 * u),
                             height: 1.05,
                             letterSpacing: -0.2,
-                            fontVariations: const [FontVariation('wght', 600)],
+                            fontVariations: const [FontVariation('wght', 700)],
                             color: titleColor,
                           ),
                         ),
@@ -98,7 +98,7 @@ class PaperSlip extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontFamily: Fonts.text,
+                            fontFamily: Fonts.ui,
                             fontSize: math.max(13, 13.5 * u),
                             height: 1.2,
                             color: statusColor,

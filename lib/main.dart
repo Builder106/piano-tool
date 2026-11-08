@@ -32,7 +32,7 @@ class PianoToolApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        fontFamily: Fonts.text,
+        fontFamily: Fonts.ui,
         scaffoldBackgroundColor: Palette.lacquer,
       ),
       home: Builder(
