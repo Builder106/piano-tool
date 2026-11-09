@@ -66,7 +66,9 @@ class PaperKeyboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: next == null ? 'Keyboard' : 'Keyboard. Next note ${noteName(next!)}',
+      label: next == null
+          ? 'Keyboard'
+          : 'Keyboard. Next note ${noteName(next!)}',
       child: ExcludeSemantics(
         child: CustomPaint(
           painter: _KeysPainter(

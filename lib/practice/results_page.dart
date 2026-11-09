@@ -136,7 +136,10 @@ class ResultsPage extends StatelessWidget {
                                 label: 'Practise bar ${bar + 1}',
                                 onPressed: () => onPractise(bar),
                               ),
-                            QuietButton(label: 'Play again', onPressed: onAgain),
+                            QuietButton(
+                              label: 'Play again',
+                              onPressed: onAgain,
+                            ),
                             QuietButton(
                               label: 'Back to pieces',
                               onPressed: onDone,

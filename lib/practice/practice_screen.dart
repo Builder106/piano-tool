@@ -23,10 +23,11 @@ Route<void> practiceRoute({required String stageId}) {
     reverseTransitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondary) =>
         PracticeScreen(stageId: stageId),
-    transitionsBuilder: (context, animation, secondary, child) => FadeTransition(
-      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-      child: child,
-    ),
+    transitionsBuilder: (context, animation, secondary, child) =>
+        FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        ),
   );
 }
 
@@ -187,7 +188,6 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     _checkClock.stop();
   }
 
-
   void _transport(StageUiState ui) {
     switch (ui.status) {
       case StageEngineStatus.playing:
@@ -216,9 +216,10 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     final checking = _check != null;
     final title = ui.level.title;
     final message = switch (true) {
-      _ when checking => _heard
-          ? 'Heard it. Starting the piece.'
-          : 'Play middle C. ${_check!.message(midi: ref.read(settingsProvider).inputSource == PracticeInputSource.midi)}',
+      _ when checking =>
+        _heard
+            ? 'Heard it. Starting the piece.'
+            : 'Play middle C. ${_check!.message(midi: ref.read(settingsProvider).inputSource == PracticeInputSource.midi)}',
       _ when _cantHear =>
         "The piano can't hear you yet. Allow the microphone, or plug in a digital piano.",
       _ => null,
@@ -303,10 +304,9 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                     clipBehavior: Clip.antiAlias,
                     child: finished && ui.loopMeasure == null
                         ? ResultsPage(
-                            summary: RunSummary.of(
-                              ui.noteStates,
-                              [for (final n in ui.notes) n.measureIndex],
-                            ),
+                            summary: RunSummary.of(ui.noteStates, [
+                              for (final n in ui.notes) n.measureIndex,
+                            ]),
                             staff: StaticStaff(
                               level: ui.level,
                               notes: ui.notes,

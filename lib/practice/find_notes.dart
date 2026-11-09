@@ -175,8 +175,7 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
         ..add(event.midiNote);
       if (found != null) {
         _wrong = null;
-      } else if (event.struck &&
-          !_finder.targets.contains(event.midiNote)) {
+      } else if (event.struck && !_finder.targets.contains(event.midiNote)) {
         _wrong = noteName(event.midiNote);
       }
     });
@@ -354,11 +353,7 @@ class _Page extends StatelessWidget {
         for (final t in targets)
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 14 * u),
-            child: _Letter(
-              name: noteName(t),
-              found: found.contains(t),
-              u: u,
-            ),
+            child: _Letter(name: noteName(t), found: found.contains(t), u: u),
           ),
       ],
     );
@@ -368,7 +363,11 @@ class _Page extends StatelessWidget {
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [text, SizedBox(height: 24 * u), letters],
+              children: [
+                text,
+                SizedBox(height: 24 * u),
+                letters,
+              ],
             ),
           );
         }

@@ -577,7 +577,13 @@ class PaperStaffPainter extends CustomPainter {
           pencil,
         );
       case NoteState.missed:
-        _loop(canvas, Offset(u.x + w / 2, y), s * 1.15, s * 0.95, Palette.pencilRed);
+        _loop(
+          canvas,
+          Offset(u.x + w / 2, y),
+          s * 1.15,
+          s * 0.95,
+          Palette.pencilRed,
+        );
       case NoteState.upcoming || NoteState.active:
         break;
     }
