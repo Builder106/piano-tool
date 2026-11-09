@@ -36,6 +36,7 @@ and ticked, and that is already what the brand mark is: middle C, circled.
 | Screen | What it is |
 |---|---|
 | Home | the book's contents on the field, one row per piece, the chosen piece circled in white pencil; the opened page beside it with the piece's first bars engraved and a Start button |
+| Find the notes | before a new piece: the first few notes it asks for are circled on the keyboard and named as large letters, each ticked in blue as it is played, in any order; a digital piano's key strike counts at once and the microphone needs the same note twice; Start listening asks for the microphone only when pressed, and Skip goes straight to practice |
 | Practice | a page with the music scrolling right to left through a blue pencil strike line, and a keyboard below with the key to play next circled; Back, Speed and Start sit on the field above |
 | Results | the page handed back marked: the whole piece with a tick under each note played well and a red loop round each miss, the grade circled in red, one sentence about what to repeat, and Practise bar N |
 
@@ -43,9 +44,6 @@ The input check (play middle C) is a line of words on the practice page.
 
 ## Not built yet
 
-- A "find the notes" step before a new piece: the keys to find circled on
-  the keyboard, each ticked as it is heard. The study is in
-  `design/screens/pencil.html`.
 - Settings, Add a piece (record or upload) and a pieces list screen.
 - Hear it (playing the piece back) and on-screen keys that make sound.
 
