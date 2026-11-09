@@ -59,3 +59,34 @@ Rect pencilLoopOnKey(Rect key, double visibleBottom) {
     height: (bottom - key.top) * 0.60,
   );
 }
+
+/// A pencil loop drawn round whatever the widget wraps, a little larger than
+/// its box: use it as a `CustomPaint.foregroundPainter`.
+class LoopAround extends CustomPainter {
+  const LoopAround({
+    this.color = Palette.pencilBlue,
+    this.width = 3.6,
+    this.grow = const Size(32, 14),
+  });
+
+  final Color color;
+  final double width;
+  final Size grow;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    PencilLoopPainter(
+      target: Rect.fromCenter(
+        center: size.center(Offset.zero),
+        width: size.width + grow.width,
+        height: size.height + grow.height,
+      ),
+      color: color,
+      width: width,
+    ).paint(canvas, size);
+  }
+
+  @override
+  bool shouldRepaint(LoopAround old) =>
+      old.color != color || old.width != width || old.grow != grow;
+}
