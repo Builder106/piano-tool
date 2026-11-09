@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'brand/palette.dart';
 import 'data/settings_repository.dart';
 import 'home/home_screen.dart';
+import 'practice/find_notes.dart';
 import 'practice/practice_screen.dart';
 
 /// Entry point. The interface is a method book: see DESIGN.md.
@@ -38,9 +39,11 @@ class PianoToolApp extends StatelessWidget {
       home: Builder(
         builder: (context) => Scaffold(
           body: HomeScreen(
-            onOpenPiece: (stage) => Navigator.of(
-              context,
-            ).push(practiceRoute(stageId: stage.id)),
+            onOpenPiece: (piece) => Navigator.of(context).push(
+              piece.state == PieceState.learned
+                  ? practiceRoute(stageId: piece.stage.id)
+                  : findNotesRoute(stageId: piece.stage.id),
+            ),
           ),
         ),
       ),

@@ -84,7 +84,7 @@ class HomeScreen extends ConsumerStatefulWidget {
     this.onOpenSettings,
   });
 
-  final void Function(StageModel stage)? onOpenPiece;
+  final void Function(Piece piece)? onOpenPiece;
   final VoidCallback? onAddPiece;
   final VoidCallback? onOpenSettings;
 
@@ -130,7 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             u: u,
             onStart: widget.onOpenPiece == null
                 ? null
-                : () => widget.onOpenPiece!(chosen.stage),
+                : () => widget.onOpenPiece!(chosen),
           );
     return LayoutBuilder(
       builder: (context, box) {
