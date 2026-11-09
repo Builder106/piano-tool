@@ -757,3 +757,19 @@ Also carried forward: the brace on the grand staff, which is unreachable until
 the level format carries a second staff; time-signature digits drawn in Cormorant
 rather than Bravura's own glyphs; and `lib/ui/game/game_screen.dart`, which is
 still the pre-revamp screen and is replaced wholesale in phase 2.
+
+## 2026-11-09: settings, all pieces and add a piece #ui #decision
+
+All three reuse the method-book page: a `BookPage` on the field, `Choices`
+for a few words with the chosen one circled in blue pencil. Settings
+exposes only what changes how a lesson feels (listening source, starting
+speed, marking tolerance, re-run the input check); the theme, tuning pitch
+and API URL stay out because the app is light-only and the rest is
+developer plumbing. Add a piece brings back `file_picker` and `record` for
+the file and recording sources and reuses the ingestion service; the web
+build has no token, so `importAvailableProvider` hides the door there. The
+note-level review inspector is not rebuilt: the learner sees the engraved
+result, names it, and keeps or discards it. File picking and recording were
+checked only through a fake `ImportInputs`; neither has run on a device.
+macOS entitlements gained network client and user-selected file read, which
+import needs in the sandbox.

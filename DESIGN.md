@@ -39,12 +39,15 @@ and ticked, and that is already what the brand mark is: middle C, circled.
 | Find the notes | before a new piece: the first few notes it asks for are circled on the keyboard and named as large letters, each ticked in blue as it is played, in any order; a digital piano's key strike counts at once and the microphone needs the same note twice; Start listening asks for the microphone only when pressed, and Skip goes straight to practice |
 | Practice | a page with the music scrolling right to left through a blue pencil strike line, and a keyboard below with the key to play next circled; Back, Speed and Start sit on the field above |
 | Results | the page handed back marked: the whole piece with a tick under each note played well and a red loop round each miss, the grade circled in red, one sentence about what to repeat, and Practise bar N |
+| All pieces | one white page listing every piece with where it stands; a piece you added has Remove (asked in place, no dialog); Add your own piece sits at the foot |
+| Settings | four questions, each a few words with the chosen one circled in blue pencil: how it listens, how fast a piece starts, how exact marking is, and whether to check the input again |
+| Add a piece | show it by recording, an audio file or a YouTube link; the service writes the notes down, the learner sees them engraved, names the piece and keeps it or throws it away. Native builds only: the web build has no import service, so the door is not shown |
 
 The input check (play middle C) is a line of words on the practice page.
 
 ## Not built yet
 
-- Settings, Add a piece (record or upload) and a pieces list screen.
+- Correcting single notes of an added piece before keeping it.
 - Hear it (playing the piece back) and on-screen keys that make sound.
 
 ## Type
