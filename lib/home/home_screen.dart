@@ -81,11 +81,15 @@ class HomeScreen extends ConsumerStatefulWidget {
     super.key,
     this.onOpenPiece,
     this.onAddPiece,
+    this.onOpenPieces,
     this.onOpenSettings,
   });
 
   final void Function(Piece piece)? onOpenPiece;
-  final VoidCallback? onAddPiece;
+
+  /// Adds a piece and returns its stage id when one was kept.
+  final Future<String?> Function()? onAddPiece;
+  final VoidCallback? onOpenPieces;
   final VoidCallback? onOpenSettings;
 
   @override
@@ -106,7 +110,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       _ => const SizedBox.expand(),
     };
-    return ColoredBox(color: Palette.field, child: SafeArea(child: body));
+    return ColoredBox(
+      color: Palette.field,
+      child: SafeArea(child: body),
+    );
   }
 
   Widget _book(BuildContext context, List<Piece> pieces) {
@@ -121,7 +128,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       chosen: chosen,
       u: u,
       onChoose: (p) => setState(() => _chosen = p.stage.id),
-      onAdd: widget.onAddPiece,
+      onAdd: widget.onAddPiece == null
+          ? null
+          : () async {
+              final id = await widget.onAddPiece!();
+              if (id != null && mounted) setState(() => _chosen = id);
+            },
     );
     final page = chosen == null
         ? const SizedBox.shrink()
@@ -143,6 +155,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   const _Brand(),
                   const Spacer(),
+                  if (widget.onOpenPieces != null)
+                    FieldAction(
+                      label: 'All pieces',
+                      onPressed: widget.onOpenPieces,
+                    ),
                   if (widget.onOpenSettings != null)
                     FieldAction(
                       label: 'Settings',
@@ -312,7 +329,9 @@ class _Row extends StatelessWidget {
                               fontFamily: Fonts.ui,
                               fontSize: 17 * u,
                               color: color,
-                              fontVariations: const [FontVariation('wght', 600)],
+                              fontVariations: const [
+                                FontVariation('wght', 600),
+                              ],
                             ),
                           ),
                       ],
