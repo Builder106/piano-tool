@@ -46,6 +46,8 @@ class PaperKeyboard extends StatelessWidget {
     required this.high,
     this.sounding = const {},
     this.next,
+    this.circled = const {},
+    this.found = const {},
   });
 
   final int low;
@@ -54,6 +56,12 @@ class PaperKeyboard extends StatelessWidget {
 
   /// The note to play next, or null.
   final int? next;
+
+  /// Keys circled together, as when a few notes are to be found.
+  final Set<int> circled;
+
+  /// Keys already found, filled in blue.
+  final Set<int> found;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +74,8 @@ class PaperKeyboard extends StatelessWidget {
             high: high,
             sounding: sounding,
             next: next,
+            circled: circled,
+            found: found,
           ),
           child: const SizedBox.expand(),
         ),
@@ -80,12 +90,16 @@ class _KeysPainter extends CustomPainter {
     required this.high,
     required this.sounding,
     required this.next,
+    required this.circled,
+    required this.found,
   });
 
   final int low;
   final int high;
   final Set<int> sounding;
   final int? next;
+  final Set<int> circled;
+  final Set<int> found;
 
   static final _labels = <(String, double, int), TextPainter>{};
 
@@ -109,9 +123,15 @@ class _KeysPainter extends CustomPainter {
         bottomRight: Radius.circular(w * 0.12),
       );
       final pressed = sounding.contains(m);
+      final isFound = found.contains(m);
       canvas.drawRRect(
         r,
-        Paint()..color = pressed ? const Color(0xFFD7E1FF) : Palette.page,
+        Paint()
+          ..color = isFound
+              ? Palette.pencilBlue
+              : pressed
+              ? const Color(0xFFD7E1FF)
+              : Palette.page,
       );
       if (pressed) {
         canvas.drawRRect(
@@ -122,14 +142,18 @@ class _KeysPainter extends CustomPainter {
             ..strokeWidth = 3,
         );
       }
-      final isNext = m == next;
+      final isNext = m == next || circled.contains(m);
       _label(
         canvas,
         _noteLetters[_whiteOffsets.indexOf(m % 12)],
         Offset(x + w / 2, size.height - w * 0.34),
         w * 0.3,
-        isNext ? Palette.pencilBlue : Palette.graphite,
-        isNext ? 800 : 600,
+        isFound
+            ? Colors.white
+            : isNext
+            ? Palette.pencilBlue
+            : Palette.graphite,
+        isNext || isFound ? 800 : 600,
       );
     }
 
@@ -150,27 +174,24 @@ class _KeysPainter extends CustomPainter {
       canvas.drawRRect(
         r,
         Paint()
-          ..color = sounding.contains(m) ? Palette.pencilBlue : Palette.ink,
+          ..color = sounding.contains(m) || found.contains(m)
+              ? Palette.pencilBlue
+              : Palette.ink,
       );
     }
 
-    // The next key, circled in pencil.
-    final target = next;
-    if (target != null && target >= low && target <= high) {
-      final double cx;
-      if (isBlackKey(target)) {
-        cx = whiteX[target - 1]! + w;
-      } else {
-        cx = whiteX[target]! + w / 2;
-      }
-      final top = isBlackKey(target) ? 0.0 : blackH;
-      final bottom = isBlackKey(target) ? blackH : size.height;
-      final centre = Offset(cx, top + (bottom - top) * (isBlackKey(target) ? 0.72 : 0.5));
+    // The next key, and any keys to find, circled in pencil.
+    for (final target in {?next, ...circled}) {
+      if (target < low || target > high || found.contains(target)) continue;
+      final black = isBlackKey(target);
+      final cx = black ? whiteX[target - 1]! + w : whiteX[target]! + w / 2;
+      // A white key is circled round its letter; a black key near its foot.
+      final centre = Offset(cx, black ? blackH * 0.72 : size.height - w * 0.34);
       PencilLoopPainter(
         target: Rect.fromCenter(
           center: centre,
-          width: w * 0.95,
-          height: math.min((bottom - top) * 0.62, w * 1.5),
+          width: w * (black ? 0.7 : 0.92),
+          height: w * (black ? 0.8 : 0.84),
         ),
       ).paint(canvas, size);
     }
@@ -207,7 +228,9 @@ class _KeysPainter extends CustomPainter {
       old.low != low ||
       old.high != high ||
       old.next != next ||
-      !_sameSet(old.sounding, sounding);
+      !_sameSet(old.sounding, sounding) ||
+      !_sameSet(old.circled, circled) ||
+      !_sameSet(old.found, found);
 
   static bool _sameSet(Set<int> a, Set<int> b) =>
       a.length == b.length && a.containsAll(b);
