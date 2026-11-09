@@ -23,21 +23,21 @@ loop on a busy photo.
 
 ## Colour
 
-One accent. Everything else is the black and white of a piano and a page.
+A blue field, white pages, ink, and a teacher's two pencils.
 
-| Name | Light | Dark | Use |
-|---|---|---|---|
-| Lacquer | `#0A0A0B` | | page ground, app icon tile |
-| Paper | `#ECEEF1` | | the sheet, light surfaces |
-| Ink | `#141519` | `#ECEEF1` | type, notes, the mark |
-| Graphite | `#4E535C` | | pencil notes, secondary text |
-| Pencil Blue | `#2456C8` | `#6591E1` | the loop, the due note, links |
+| Name | Value | Use |
+|---|---|---|
+| Field | `#1F4FE0` | the ground the pages lie on; text on it is white |
+| Page | `#FFFFFF` | pages, keys |
+| Ink | `#111327` | type, engraving, outlines |
+| Graphite | `#5B6075` | secondary text on a page |
+| Pencil Blue | `#1F4FE0` | the loop, the next note, ticks, what was right |
+| Pencil Red | `#F0402A` | corrections and the grade; filled buttons with white type at 18 px and up only |
 
-Every neutral sits on the blue's hue (OKLCH 262), so the greys are cool and
-match the blue. No cream or warm off-white. Green, amber and red are
-note states in the app and are never brand colours.
+Colour never carries a meaning alone: loop, tick, ring and line carry it too.
+No gradients, glass, glows or cream and warm off-white.
 
-The app's full token set lives in `lib/ui/theme/tokens.dart`; the site's in
+The app's tokens are in `lib/brand/palette.dart`; the site's in
 `site/src/styles/tokens.css`.
 
 ## Type
