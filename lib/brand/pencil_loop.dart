@@ -7,10 +7,15 @@ import 'palette.dart';
 /// The brand's pencil loop, drawn round [target]: a loose hand whose radius
 /// drifts and whose end overshoots the start.
 class PencilLoopPainter extends CustomPainter {
-  PencilLoopPainter({required this.target, this.color = Palette.pencilBlue});
+  PencilLoopPainter({
+    required this.target,
+    this.color = Palette.pencilBlue,
+    this.width = 2.6,
+  });
 
   final Rect target;
   final Color color;
+  final double width;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -32,7 +37,7 @@ class PencilLoopPainter extends CustomPainter {
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.6
+        ..strokeWidth = width
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );
@@ -40,7 +45,7 @@ class PencilLoopPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PencilLoopPainter old) =>
-      old.target != target || old.color != color;
+      old.target != target || old.color != color || old.width != width;
 }
 
 /// The loop's place on a key seen from the player's seat: round the lower

@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 
 import '../brand/palette.dart';
+import '../brand/pencil_loop.dart';
 import '../models/engine_models.dart';
 import '../models/level_models.dart';
 import 'notation.dart';
@@ -91,41 +91,6 @@ class StaffLayout {
       currentBeat + (x - strikeX) / pxPerBeat;
 }
 
-/// A bar of the staff ringing: some of its strings vibrate between the bar's
-/// bridges and die away. Amplitude is in staff spaces.
-class Ring {
-  const Ring({
-    required this.measure,
-    required this.staff,
-    required this.lines,
-    required this.amplitude,
-    required this.decay,
-    required this.frequency,
-    required this.start,
-    this.glow = 0,
-  });
-
-  final int measure;
-  final int staff;
-  final List<int> lines;
-  final double amplitude;
-
-  /// Seconds for the ring to fall to about a third.
-  final double decay;
-  final double frequency;
-  final Duration start;
-
-  /// How brightly the ringing strings glow, 0 to 1.
-  final double glow;
-
-  double envelope(Duration now) {
-    final t = (now - start).inMicroseconds / 1e6;
-    return t < 0 ? 0 : math.exp(-t / decay);
-  }
-
-  double phase(Duration now) => (now - start).inMicroseconds / 1e6;
-}
-
 /// A chord or single note at one beat on one staff: one stem for all heads.
 class _Unit {
   _Unit(this.staff, this.beat, this.x);
@@ -141,24 +106,20 @@ class _Unit {
   int? get beam => pieces.first.beam;
 }
 
-/// The staves as strings across the soundboard, with the piece written on
-/// them. While [intro] is below 1 the strings are still swinging down from
-/// the single string the piece opened from.
-class StrungStaffPainter extends CustomPainter {
-  StrungStaffPainter({
+/// The staves as ink on a page, with the piece written on them. Music scrolls
+/// right to left through a blue pencil line, the strike line, where each note
+/// is due.
+class PaperStaffPainter extends CustomPainter {
+  PaperStaffPainter({
     required this.level,
     required this.clefs,
     required this.engraved,
     required this.noteStates,
     required this.currentBeat,
     required this.layout,
-    required this.rings,
-    required this.clock,
-    required this.intro,
-    required this.introString,
-    required this.reducedMotion,
     this.loopMeasure,
-  }) : super(repaint: clock);
+    this.showStrike = true,
+  });
 
   final LevelModel level;
   final List<Clef> clefs;
@@ -166,37 +127,23 @@ class StrungStaffPainter extends CustomPainter {
   final List<NoteState> noteStates;
   final double currentBeat;
   final StaffLayout layout;
-  final List<Ring> rings;
-  final ValueListenable<Duration> clock;
-  final double intro;
 
-  /// The piece's string on the home screen, top and bottom: where the
-  /// staff lines start from.
-  final (Offset, Offset) introString;
-  final bool reducedMotion;
-
-  /// The bar playing on repeat, whose bridges glow.
+  /// The bar playing on repeat, drawn with a blue band.
   final int? loopMeasure;
 
-  static const _steel = Color(0xFFC9CDD3);
-  static const _glint = Color(0xFFF4F6F8);
-  static const _shade = Color(0x66000000);
+  /// Whether to draw the strike line; a still preview has none.
+  final bool showStrike;
 
   double get _s => layout.space;
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (intro < 1) {
-      _paintSwing(canvas, size);
-      if (intro < 0.7) return;
-    }
-    final fade = ((intro - 0.7) / 0.3).clamp(0.0, 1.0);
-    final now = clock.value;
-    _paintBridges(canvas, size, fade);
-    _paintStrings(canvas, size, now);
-    _paintStrike(canvas, fade);
-    _paintMusic(canvas, size, fade);
-    // Music passing the clefs slides under the shade at the left edge.
+    _paintLoopBand(canvas);
+    _paintLines(canvas, size);
+    _paintBars(canvas, size);
+    if (showStrike) _paintStrike(canvas);
+    _paintMusic(canvas, size);
+    // Music passing the clefs slides under the page at the left edge.
     final zone = Rect.fromLTWH(
       0,
       0,
@@ -207,71 +154,15 @@ class StrungStaffPainter extends CustomPainter {
       zone,
       Paint()
         ..shader = const LinearGradient(
-          colors: [Color(0xF0120E0B), Color(0xE6120E0B), Color(0x00120E0B)],
+          colors: [Palette.page, Palette.page, Color(0x00FFFFFF)],
           stops: [0, 0.75, 1],
         ).createShader(zone),
     );
     canvas.save();
     canvas.clipRect(zone);
-    _paintStrings(canvas, size, now);
+    _paintLines(canvas, size);
     canvas.restore();
-    _paintClefs(canvas, fade);
-  }
-
-  void _paintSwing(Canvas canvas, Size size) {
-    final (top, bottom) = introString;
-    final count = 5 * layout.staves;
-    var k = 0;
-    for (var staff = 0; staff < layout.staves; staff++) {
-      for (var line = 0; line < 5; line++, k++) {
-        final spread = Offset((k - (count - 1) / 2) * 3.0, 0);
-        final y = layout.lineY(staff, line);
-        final a = Offset.lerp(top + spread, Offset(0, y), intro)!;
-        final b = Offset.lerp(bottom + spread, Offset(size.width, y), intro)!;
-        _string(
-          canvas,
-          Path()
-            ..moveTo(a.dx, a.dy)
-            ..lineTo(b.dx, b.dy),
-          1.0 - intro * 0.4,
-        );
-      }
-    }
-  }
-
-  void _string(Canvas canvas, Path path, double glow) {
-    canvas.drawPath(
-      path.shift(const Offset(2.5, 3)),
-      Paint()
-        ..color = _shade
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
-    );
-    if (glow > 0) {
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = Palette.paper.withValues(alpha: 0.5 * glow)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-      );
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = _steel
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.7,
-    );
-    canvas.drawPath(
-      path.shift(const Offset(0, -0.4)),
-      Paint()
-        ..color = _glint.withValues(alpha: 0.7)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.6,
-    );
+    _paintClefs(canvas);
   }
 
   (double, double) _measureSpan(int index) {
@@ -285,74 +176,35 @@ class StrungStaffPainter extends CustomPainter {
     );
   }
 
-  void _paintStrings(Canvas canvas, Size size, Duration now) {
-    final live = [
-      for (final r in rings)
-        if (r.envelope(now) > 0.01) r,
-    ];
+  void _paintLines(Canvas canvas, Size size) {
+    final ink = Paint()
+      ..color = Palette.ink.withValues(alpha: 0.85)
+      ..strokeWidth = math.max(1.2, _s * 0.07)
+      ..strokeCap = StrokeCap.round;
     for (var staff = 0; staff < layout.staves; staff++) {
       for (var line = 0; line < 5; line++) {
         final y = layout.lineY(staff, line);
-        final mine = [
-          for (final r in live)
-            if (r.staff == staff && r.lines.contains(line)) r,
-        ];
-        if (mine.isEmpty || reducedMotion) {
-          final glow = reducedMotion
-              ? mine.fold(0.0, (g, r) => math.max(g, r.glow * r.envelope(now)))
-              : 0.0;
-          _string(
-            canvas,
-            Path()
-              ..moveTo(0, y)
-              ..lineTo(size.width, y),
-            glow,
-          );
-          continue;
-        }
-        final path = Path()..moveTo(0, y);
-        var glow = 0.0;
-        const step = 4.0;
-        for (var x = step; x <= size.width + step; x += step) {
-          var dy = 0.0;
-          for (final r in mine) {
-            final (x0, x1) = _measureSpan(r.measure);
-            if (x <= x0 || x >= x1) continue;
-            final u = (x - x0) / (x1 - x0);
-            final env = r.envelope(now);
-            final t = r.phase(now);
-            final a = r.amplitude * _s * env;
-            dy +=
-                a *
-                math.sin(math.pi * u) *
-                math.cos(2 * math.pi * r.frequency * t);
-            dy +=
-                0.35 *
-                a *
-                math.sin(2 * math.pi * u) *
-                math.cos(2 * math.pi * r.frequency * 2.1 * t + 0.6);
-            glow = math.max(glow, r.glow * env);
-          }
-          path.lineTo(x, y + dy);
-        }
-        _string(canvas, path, glow);
+        canvas.drawLine(Offset(0, y), Offset(size.width, y), ink);
       }
     }
   }
 
-  /// Each barline is a short length of bridge: a strip of maple under the
-  /// strings with a pin pressed in beside each one, so a bar is the stretch
-  /// of string that rings between two bridges.
-  void _paintBridges(Canvas canvas, Size size, double fade) {
-    final s = _s;
-    final pin = Paint()..color = _steel.withValues(alpha: fade);
-    final pinGlint = Paint()..color = _glint.withValues(alpha: 0.8 * fade);
-    final maple = Paint()
-      ..color = const Color(0xFF5A3A22).withValues(alpha: fade);
-    final edge = Paint()
-      ..color = const Color(0xFF8A5E3B).withValues(alpha: fade)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+  /// A bar repeated on purpose is shaded blue between its barlines.
+  void _paintLoopBand(Canvas canvas) {
+    if (loopMeasure == null) return;
+    final (x0, x1) = _measureSpan(loopMeasure!);
+    canvas.drawRect(
+      Rect.fromLTRB(
+        x0,
+        layout.systemTop - _s * 1.5,
+        x1,
+        layout.systemBottom + _s * 1.5,
+      ),
+      Paint()..color = Palette.pencilBlue.withValues(alpha: 0.08),
+    );
+  }
+
+  void _paintBars(Canvas canvas, Size size) {
     final looped = loopMeasure == null ? null : _measureSpan(loopMeasure!);
     final bars = <double>{
       for (final m in level.measures) m.startBeat,
@@ -360,72 +212,50 @@ class StrungStaffPainter extends CustomPainter {
     };
     for (final beat in bars) {
       final x = layout.beatX(beat, currentBeat);
-      if (x < layout.clefRight || x > size.width + s) continue;
-      final strip = RRect.fromRectAndRadius(
-        Rect.fromLTRB(
-          x - s * 0.22,
-          layout.systemTop - s * 0.35,
-          x + s * 0.22,
-          layout.systemBottom + s * 0.35,
-        ),
-        Radius.circular(s * 0.12),
+      if (x < layout.clefRight || x > size.width + _s) continue;
+      final edge =
+          looped != null &&
+          ((x - looped.$1).abs() < 1 || (x - looped.$2).abs() < 1);
+      canvas.drawLine(
+        Offset(x, layout.systemTop),
+        Offset(x, layout.systemBottom),
+        Paint()
+          ..color = edge ? Palette.pencilBlue : Palette.ink
+          ..strokeWidth = math.max(1.4, _s * (edge ? 0.2 : 0.1)),
       );
-      if (looped != null &&
-          ((x - looped.$1).abs() < 1 || (x - looped.$2).abs() < 1)) {
-        canvas.drawRRect(
-          strip.inflate(s * 0.25),
-          Paint()
-            ..color = Palette.pencilBlueOnDark.withValues(alpha: 0.75 * fade)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-        );
-      }
-      canvas.drawRRect(
-        strip.shift(const Offset(2, 3)),
-        Paint()..color = _shade.withValues(alpha: 0.5 * fade),
-      );
-      canvas.drawRRect(strip, maple);
-      canvas.drawRRect(strip, edge);
-      for (var staff = 0; staff < layout.staves; staff++) {
-        for (var line = 0; line < 5; line++) {
-          final c = Offset(x + s * 0.09, layout.lineY(staff, line) - s * 0.08);
-          canvas.drawCircle(c, s * 0.09, pin);
-          canvas.drawCircle(
-            c + Offset(-s * 0.03, -s * 0.03),
-            s * 0.035,
-            pinGlint,
-          );
-        }
-      }
     }
   }
 
-  void _paintStrike(Canvas canvas, double fade) {
+  void _paintStrike(Canvas canvas) {
     final x = layout.strikeX;
     canvas.drawLine(
       Offset(x, layout.systemTop - _s * 2.5),
       Offset(x, layout.systemBottom + _s * 2.5),
       Paint()
-        ..color = Palette.paper.withValues(alpha: 0.22 * fade)
-        ..strokeWidth = 4
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        ..color = Palette.pencilBlue
+        ..strokeWidth = math.max(2.4, _s * 0.18)
+        ..strokeCap = StrokeCap.round,
     );
   }
 
-  Color _noteColor(int noteIndex, double fade) {
+  Color _noteColor(int noteIndex) {
     final state = noteIndex < noteStates.length
         ? noteStates[noteIndex]
         : NoteState.upcoming;
     return switch (state) {
-      NoteState.active => Palette.pencilBlueOnDark,
-      NoteState.missed => Palette.paper.withValues(alpha: 0.45),
-      _ => Palette.paper.withValues(alpha: 0.94),
-    }.withValues(alpha: fade);
+      NoteState.active => Palette.pencilBlue,
+      NoteState.missed => Palette.pencilRed,
+      NoteState.hitPerfect ||
+      NoteState.hitGood ||
+      NoteState.hitOkay => Palette.pencilBlue,
+      NoteState.upcoming => Palette.ink,
+    };
   }
 
   double _headWidth(NoteValue v) =>
       v == NoteValue.whole ? _s * 1.68 : _s * 1.18;
 
-  void _paintMusic(Canvas canvas, Size size, double fade) {
+  void _paintMusic(Canvas canvas, Size size) {
     final s = _s;
     final left = layout.clefRight - s * 2;
     final right = size.width + s * 3;
@@ -435,7 +265,7 @@ class StrungStaffPainter extends CustomPainter {
       final x = layout.beatX(e.beat, currentBeat);
       xs[e] = x;
       if (e.isRest) {
-        if (x > left && x < right) _paintRest(canvas, e, x, fade);
+        if (x > left && x < right) _paintRest(canvas, e, x);
         continue;
       }
       final unit = units.putIfAbsent((
@@ -465,11 +295,11 @@ class StrungStaffPainter extends CustomPainter {
 
     for (final u in units.values) {
       if (u.x < left || u.x > right) continue;
-      _paintUnit(canvas, u, fade);
+      _paintUnit(canvas, u);
     }
     for (final g in groups.values) {
       if (g.last.x < left || g.first.x > right) continue;
-      _paintBeams(canvas, g, fade);
+      _paintBeams(canvas, g);
     }
 
     // Ties, from each tied piece to the next piece of the same note.
@@ -493,7 +323,7 @@ class StrungStaffPainter extends CustomPainter {
           xb - s * 0.12,
           layout.stepY(a.staff, step),
           below: unit.up,
-          color: _noteColor(a.noteIndex!, fade),
+          color: _noteColor(a.noteIndex!),
         );
       }
     }
@@ -533,9 +363,9 @@ class StrungStaffPainter extends CustomPainter {
     }
   }
 
-  void _paintBeams(Canvas canvas, List<_Unit> g, double fade) {
+  void _paintBeams(Canvas canvas, List<_Unit> g) {
     final s = _s;
-    final color = _noteColor(g.first.pieces.first.noteIndex!, fade);
+    final color = _noteColor(g.first.pieces.first.noteIndex!);
     final ink = Paint()..color = color;
     double stemX(_Unit u) =>
         u.up ? u.x + _headWidth(u.written.value) - s * 0.06 : u.x + s * 0.06;
@@ -566,7 +396,7 @@ class StrungStaffPainter extends CustomPainter {
     }
   }
 
-  void _paintUnit(Canvas canvas, _Unit u, double fade) {
+  void _paintUnit(Canvas canvas, _Unit u) {
     final s = _s;
     final written = u.written;
     final headW = _headWidth(written.value);
@@ -580,13 +410,13 @@ class StrungStaffPainter extends CustomPainter {
       final step = u.steps[k];
       final y = layout.stepY(u.staff, step);
       ys.add(y);
-      final color = _noteColor(piece.noteIndex!, fade);
+      final color = _noteColor(piece.noteIndex!);
       for (final l in ledgerSteps(step)) {
         canvas.drawLine(
           Offset(u.x - s * 0.4, layout.stepY(u.staff, l)),
           Offset(u.x + headW + s * 0.4, layout.stepY(u.staff, l)),
           Paint()
-            ..color = _steel.withValues(alpha: 0.85 * fade)
+            ..color = Palette.ink.withValues(alpha: 0.85)
             ..strokeWidth = math.max(1, s * 0.11),
         );
       }
@@ -601,6 +431,16 @@ class StrungStaffPainter extends CustomPainter {
         }
       }
       _glyph(canvas, head, Offset(u.x, y), color);
+      if (piece.noteIndex! < noteStates.length &&
+          noteStates[piece.noteIndex!] == NoteState.active) {
+        _loop(
+          canvas,
+          Offset(u.x + headW / 2, y),
+          s * 1.25,
+          s * 1.0,
+          Palette.pencilBlue,
+        );
+      }
       if (written.dotted) {
         _glyph(
           canvas,
@@ -613,11 +453,11 @@ class StrungStaffPainter extends CustomPainter {
         final state = piece.noteIndex! < noteStates.length
             ? noteStates[piece.noteIndex!]
             : NoteState.upcoming;
-        _paintMark(canvas, state, u, k, y, headW, fade);
+        _paintMark(canvas, state, u, k, y, headW);
       }
     }
     if (written.value == NoteValue.whole) return;
-    final color = _noteColor(u.pieces.first.noteIndex!, fade);
+    final color = _noteColor(u.pieces.first.noteIndex!);
     final sx = u.up ? u.x + headW - s * 0.06 : u.x + s * 0.06;
     final from = u.up
         ? ys.reduce(math.max) - s * 0.15
@@ -666,9 +506,9 @@ class StrungStaffPainter extends CustomPainter {
     );
   }
 
-  void _paintRest(Canvas canvas, Engraved e, double x, double fade) {
+  void _paintRest(Canvas canvas, Engraved e, double x) {
     final s = _s;
-    final color = Palette.paper.withValues(alpha: 0.8 * fade);
+    const color = Palette.ink;
     final glyph = switch (e.written.value) {
       NoteValue.whole => _G.restWhole,
       NoteValue.half => _G.restHalf,
@@ -705,11 +545,10 @@ class StrungStaffPainter extends CustomPainter {
     int k,
     double y,
     double w,
-    double fade,
   ) {
     final s = _s;
     final pencil = Paint()
-      ..color = Palette.pencilBlueOnDark.withValues(alpha: fade)
+      ..color = Palette.pencilBlue
       ..style = PaintingStyle.stroke
       ..strokeWidth = math.max(1.6, s * 0.14)
       ..strokeCap = StrokeCap.round
@@ -738,19 +577,23 @@ class StrungStaffPainter extends CustomPainter {
           pencil,
         );
       case NoteState.missed:
-        canvas.drawLine(
-          Offset(u.x - s * 0.25, y + s * 0.75),
-          Offset(u.x + w + s * 0.25, y - s * 0.75),
-          pencil..color = Palette.quietOnDark.withValues(alpha: fade),
-        );
+        _loop(canvas, Offset(u.x + w / 2, y), s * 1.15, s * 0.95, Palette.pencilRed);
       case NoteState.upcoming || NoteState.active:
         break;
     }
   }
 
-  void _paintClefs(Canvas canvas, double fade) {
+  /// A pencil loop round a head, as the brand mark is drawn.
+  void _loop(Canvas canvas, Offset centre, double rx, double ry, Color color) {
+    PencilLoopPainter(
+      target: Rect.fromCenter(center: centre, width: rx * 2, height: ry * 2),
+      color: color,
+    ).paint(canvas, Size.zero);
+  }
+
+  void _paintClefs(Canvas canvas) {
     final s = _s;
-    final color = Palette.paper.withValues(alpha: 0.94 * fade);
+    const color = Palette.ink;
     final grand = layout.staves > 1;
     final left =
         layout.clefRight - s * (grand ? 7.6 : 6.4) + (grand ? s * 1.2 : 0);
@@ -766,7 +609,7 @@ class StrungStaffPainter extends CustomPainter {
         Offset(left - s * 0.1, layout.systemTop),
         Offset(left - s * 0.1, layout.systemBottom),
         Paint()
-          ..color = _steel.withValues(alpha: 0.8 * fade)
+          ..color = Palette.ink
           ..strokeWidth = math.max(1, s * 0.1),
       );
     }
@@ -820,11 +663,77 @@ class StrungStaffPainter extends CustomPainter {
   static final _glyphs = <(int, double, int), TextPainter>{};
 
   @override
-  bool shouldRepaint(StrungStaffPainter old) =>
+  bool shouldRepaint(PaperStaffPainter old) =>
       old.currentBeat != currentBeat ||
       old.noteStates != noteStates ||
-      old.intro != intro ||
-      old.rings != rings ||
       old.loopMeasure != loopMeasure ||
       old.layout.space != layout.space;
+}
+
+/// The playable notes of a level, in the order the engine plays them.
+List<LevelNote> notesOf(LevelModel level) => [
+  for (final m in level.measures)
+    for (final n in m.notes)
+      if (!n.isRest) n,
+]..sort((a, b) => a.startBeat.compareTo(b.startBeat));
+
+/// The piece written out and still: for the home page, and for the marked
+/// page after a run. [noteStates] colour and mark each note; with [fitWhole]
+/// the whole piece is squeezed to the width, as far as it stays legible.
+class StaticStaff extends StatelessWidget {
+  const StaticStaff({
+    super.key,
+    required this.level,
+    required this.notes,
+    required this.noteStates,
+    this.fitWhole = false,
+  });
+
+  final LevelModel level;
+  final List<LevelNote> notes;
+  final List<NoteState> noteStates;
+  final bool fitWhole;
+
+  @override
+  Widget build(BuildContext context) {
+    final clefs = stavesFor(level);
+    final engraved = engrave(level, notes);
+    return LayoutBuilder(
+      builder: (context, box) {
+        final base = StaffLayout.fit(
+          Offset.zero & box.biggest,
+          staves: clefs.length,
+        );
+        var pxPerBeat = base.pxPerBeat;
+        if (fitWhole) {
+          final beats = level.totalMeasures * level.beatsPerMeasure;
+          final room = box.maxWidth - base.clefRight - base.space * 3;
+          if (beats > 0) pxPerBeat = math.min(pxPerBeat, room / beats);
+        }
+        final layout = StaffLayout(
+          space: base.space,
+          firstBottomLineY: base.firstBottomLineY,
+          staves: base.staves,
+          strikeX: base.strikeX,
+          clefRight: base.clefRight,
+          pxPerBeat: pxPerBeat,
+          areaBottom: base.areaBottom,
+        );
+        // Beat zero sits a little right of the clef.
+        final firstBeatX = layout.clefRight + layout.space * 2.5;
+        return CustomPaint(
+          size: box.biggest,
+          painter: PaperStaffPainter(
+            level: level,
+            clefs: clefs,
+            engraved: engraved,
+            noteStates: noteStates,
+            currentBeat: (layout.strikeX - firstBeatX) / pxPerBeat,
+            layout: layout,
+            showStrike: false,
+          ),
+        );
+      },
+    );
+  }
 }

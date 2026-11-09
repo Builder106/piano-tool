@@ -1,36 +1,28 @@
-import 'dart:math' as math;
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../brand/nickel_inlay.dart';
+import '../brand/buttons.dart';
 import '../brand/palette.dart';
 import '../brand/pencil_loop.dart';
 import '../data/level_repository.dart';
 import '../data/progress_repository.dart';
-import '../data/settings_repository.dart';
+import '../models/engine_models.dart';
 import '../models/level_models.dart';
-import '../services/midi_service.dart';
-import 'paper_slip.dart';
-import 'strung_geometry.dart';
+import '../practice/paper_staff.dart';
 
 /// Where a piece stands for this learner.
 enum PieceState { learned, next, ready, locked }
 
-/// A piece placed on the piano: its string, its state and the line under its
-/// name.
-class PieceOnString {
-  const PieceOnString({
+/// A piece in the book's contents: its state and the line under its name.
+class Piece {
+  const Piece({
     required this.stage,
-    required this.midi,
     required this.state,
     this.progress,
     this.opensAfter,
   });
 
   final StageModel stage;
-  final int midi;
   final PieceState state;
   final StageProgress? progress;
   final String? opensAfter;
@@ -44,31 +36,17 @@ class PieceOnString {
   };
 }
 
-const _whiteOffsets = {0, 2, 4, 5, 7, 9, 11};
-const _noteNames = [
-  'C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B', //
-];
-
-/// White keys from middle C upward.
-Iterable<int> _whiteKeysFromMiddleC() sync* {
-  for (var m = 60; m < 128; m++) {
-    if (_whiteOffsets.contains(m % 12)) yield m;
-  }
-}
-
-/// Pieces sit in learning order on every other white key from middle C, so
-/// the first three spell a C major chord: C, E, G. Returns the pieces and the
-/// key the next added piece would take.
-(List<PieceOnString>, int) placePieces(
+/// The pieces in learning order. The first open piece the learner has not
+/// cleared is up next; a piece whose prerequisites are not cleared is locked.
+List<Piece> placePieces(
   List<StageModel> stages,
   Map<String, StageProgress> progress,
 ) {
   final ordered = [...stages]..sort((a, b) => a.order.compareTo(b.order));
   final titles = {for (final s in ordered) s.id: s.title};
-  final keys = _whiteKeysFromMiddleC().toList();
   var nextTaken = false;
-  final pieces = <PieceOnString>[];
-  for (final (i, stage) in ordered.indexed) {
+  final pieces = <Piece>[];
+  for (final stage in ordered) {
     final p = progress[stage.id];
     final unmet = stage.prerequisites
         .where((id) => progress[id]?.completed != true)
@@ -85,371 +63,264 @@ Iterable<int> _whiteKeysFromMiddleC() sync* {
       state = PieceState.ready;
     }
     pieces.add(
-      PieceOnString(
+      Piece(
         stage: stage,
-        midi: keys[i * 2],
         state: state,
         progress: p,
         opensAfter: unmet.isEmpty ? null : titles[unmet.first],
       ),
     );
   }
-  return (pieces, keys[ordered.length * 2]);
+  return pieces;
 }
 
-/// Connects a single wired digital piano when home opens, so a learner can
-/// press a piece's key to open it. Not on the web, where asking for MIDI
-/// shows a browser prompt; there it waits for Start in practice.
-final midiAutoConnectProvider = FutureProvider<void>((ref) async {
-  if (kIsWeb) return;
-  if (ref.read(settingsProvider).inputSource ==
-      PracticeInputSource.microphone) {
-    return;
-  }
-  await ref.read(midiServiceProvider).connectSoleWiredDevice();
-});
-
-/// The piece a struck key opens: the piece on that very key, or else the
-/// first open piece on a key with the same name, in any octave.
-PieceOnString? pieceForKey(List<PieceOnString> pieces, int midi) {
-  final open = [
-    for (final p in pieces)
-      if (p.state != PieceState.locked) p,
-  ];
-  for (final p in open) {
-    if (p.midi == midi) return p;
-  }
-  for (final p in open) {
-    if (p.midi % 12 == midi % 12) return p;
-  }
-  return null;
-}
-
-class HomeScreen extends ConsumerWidget {
+/// The home screen is the method book's contents on the blue field, and the
+/// chosen piece open on the white page beside it.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({
     super.key,
     this.onOpenPiece,
     this.onAddPiece,
-    this.onOpenPieces,
     this.onOpenSettings,
   });
 
-  /// Opens a piece; [midi] is the note whose string it lives on.
-  final void Function(StageModel stage, int midi)? onOpenPiece;
+  final void Function(StageModel stage)? onOpenPiece;
   final VoidCallback? onAddPiece;
-  final VoidCallback? onOpenPieces;
   final VoidCallback? onOpenSettings;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final geometry = ref.watch(strungGeometryProvider);
-    final repository = ref.watch(levelRepositoryProvider);
-    final progress = ref.watch(stageProgressProvider);
-    ref.watch(midiAutoConnectProvider);
-    final keyboard = ref.watch(
-      midiServiceProvider.select((s) => s.isConnected),
-    );
-    ref.listen(midiPitchStreamProvider, (_, next) {
-      final event = next.value;
-      final open = onOpenPiece;
-      if (event == null || !event.struck || open == null) return;
-      if (ModalRoute.of(context)?.isCurrent == false) return;
-      final (r, p) = (repository.value, progress.value);
-      if (r == null || p == null) return;
-      final (pieces, _) = placePieces(r.getAllStages(), p);
-      final piece = pieceForKey(pieces, event.midiNote);
-      if (piece != null) open(piece.stage, piece.midi);
-    });
-    return ColoredBox(
-      color: Palette.lacquer,
-      child: switch ((geometry, repository, progress)) {
-        (
-          AsyncData(value: final g),
-          AsyncData(value: final r),
-          AsyncData(value: final p),
-        ) =>
-          _Piano(
-            geometry: g,
-            placed: placePieces(r.getAllStages(), p),
-            screen: this,
-            keyboard: keyboard,
-          ),
-        _ => const SizedBox.expand(),
-      },
-    );
-  }
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _Piano extends StatelessWidget {
-  const _Piano({
-    required this.geometry,
-    required this.placed,
-    required this.screen,
-    required this.keyboard,
-  });
-
-  final StrungGeometry geometry;
-  final (List<PieceOnString>, int) placed;
-  final HomeScreen screen;
-
-  /// Whether a digital piano is connected, so a piece opens from its key.
-  final bool keyboard;
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  String? _chosen;
 
   @override
   Widget build(BuildContext context) {
-    final (pieces, addKey) = placed;
+    final repository = ref.watch(levelRepositoryProvider);
+    final progress = ref.watch(stageProgressProvider);
+    final body = switch ((repository, progress)) {
+      (AsyncData(value: final r), AsyncData(value: final p)) => _book(
+        context,
+        placePieces(r.getAllStages(), p),
+      ),
+      _ => const SizedBox.expand(),
+    };
+    return ColoredBox(color: Palette.field, child: SafeArea(child: body));
+  }
+
+  Widget _book(BuildContext context, List<Piece> pieces) {
+    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final open = pieces.where((p) => p.state != PieceState.locked);
+    final chosen =
+        pieces.where((p) => p.stage.id == _chosen).firstOrNull ??
+        open.firstOrNull ??
+        pieces.firstOrNull;
+    final list = _Contents(
+      pieces: pieces,
+      chosen: chosen,
+      u: u,
+      onChoose: (p) => setState(() => _chosen = p.stage.id),
+      onAdd: widget.onAddPiece,
+    );
+    final page = chosen == null
+        ? const SizedBox.shrink()
+        : _Page(
+            piece: chosen,
+            u: u,
+            onStart: widget.onOpenPiece == null
+                ? null
+                : () => widget.onOpenPiece!(chosen.stage),
+          );
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final box = constraints.biggest;
-        final fit = CoverFit(geometry.imageSize, box);
-        // Type scales with the height of the screen, within limits.
-        final u = (box.height / 720).clamp(0.7, 1.25);
-        // Slips two pieces apart share a height, so a slip may be no wider
-        // than the gap between them (four white keys).
-        final slipWidth = math.min(
-          236 * u,
-          fit.drawn.width * _fourWhiteKeys(geometry) - 10,
-        );
-        final next = pieces
-            .where((p) => p.state == PieceState.next)
-            .firstOrNull;
-        return Stack(
-          fit: StackFit.expand,
+      builder: (context, box) {
+        final wide = box.maxWidth >= 720;
+        return Column(
           children: [
-            Positioned.fromRect(
-              rect: fit.origin & fit.drawn,
-              child: Image.asset(
-                homeBackdropAsset,
-                fit: BoxFit.fill,
-                excludeFromSemantics: true,
-              ),
-            ),
-            // Dim the strings a little so the lit ones read as lit.
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              height: fit.y(0.415),
-              child: const IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0x99000000), Color(0x52000000)],
+            Padding(
+              padding: EdgeInsets.fromLTRB(36 * u, 18 * u, 24 * u, 0),
+              child: Row(
+                children: [
+                  const _Brand(),
+                  const Spacer(),
+                  if (widget.onOpenSettings != null)
+                    FieldAction(
+                      label: 'Settings',
+                      onPressed: widget.onOpenSettings,
                     ),
-                  ),
-                ),
+                ],
               ),
             ),
-            CustomPaint(
-              painter: _LitStrings(
-                fit: fit,
-                geometry: geometry,
-                pieces: pieces,
-              ),
+            Expanded(
+              child: wide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(flex: 11, child: list),
+                        Expanded(flex: 9, child: page),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        Expanded(flex: 5, child: list),
+                        Expanded(flex: 6, child: page),
+                      ],
+                    ),
             ),
-            for (final piece in pieces)
-              if (geometry.notes[piece.midi] case final note?)
-                _KeyLetter(fit: fit, note: note, box: box, u: u),
-            if (next != null)
-              if (geometry.notes[next.midi] case final note?)
-                CustomPaint(
-                  painter: PencilLoopPainter(
-                    target: pencilLoopOnKey(fit.rect(note.key), box.height),
-                  ),
-                ),
-            for (final (i, piece) in pieces.indexed)
-              if (geometry.notes[piece.midi] case final note?)
-                _slipOnString(
-                  box: box,
-                  fit: fit,
-                  note: note,
-                  width: slipWidth,
-                  u: u,
-                  high: i.isOdd,
-                  child: PaperSlip(
-                    width: slipWidth,
-                    u: u,
-                    title: piece.stage.title,
-                    status: keyboard && piece.state == PieceState.next
-                        ? 'Up next. Press ${_noteNames[piece.midi % 12]}'
-                        : piece.status,
-                    statusColor: piece.state == PieceState.next
-                        ? Palette.pencilBlue
-                        : Palette.graphite,
-                    button: piece.state != PieceState.locked,
-                    underStrings: piece.state == PieceState.locked
-                        ? _stringsAcross(fit, note, slipWidth)
-                        : null,
-                    onTap:
-                        piece.state == PieceState.locked ||
-                            screen.onOpenPiece == null
-                        ? null
-                        : () => screen.onOpenPiece!(piece.stage, piece.midi),
-                  ),
-                ),
-            if (geometry.notes[addKey] case final note?)
-              _slipOnString(
-                box: box,
-                fit: fit,
-                note: note,
-                width: slipWidth,
-                u: u,
-                high: pieces.length.isOdd,
-                child: PaperSlip(
-                  width: slipWidth,
-                  u: u,
-                  title: 'Add a piece',
-                  status: 'Record or upload',
-                  titleColor: Palette.pencilBlue,
-                  onTap: screen.onAddPiece,
-                ),
-              ),
-            if (geometry.nameBoard != null)
-              _NameBoardControls(
-                fit: fit,
-                geometry: geometry,
-                u: u,
-                onOpenPieces: screen.onOpenPieces,
-                onOpenSettings: screen.onOpenSettings,
-              ),
           ],
         );
       },
     );
   }
-
-  /// The image width between a note and the note four white keys above it.
-  static double _fourWhiteKeys(StrungGeometry g) {
-    final c = g.notes[60]?.strings[1];
-    final g4 = g.notes[67]?.strings[1];
-    return c == null || g4 == null ? 0.19 : (g4 - c);
-  }
-
-  /// The image-space x of every string that crosses a slip centred on [note],
-  /// relative to the slip image's left edge, in logical pixels.
-  List<double> _stringsAcross(CoverFit fit, NoteGeometry note, double width) {
-    final k = width / slipPaperRect.width;
-    final centre = fit.x(_centre(note));
-    final left = centre - (slipPaperRect.left + slipPaperRect.width / 2) * k;
-    final right = left + slipImageSize.width * k;
-    return [
-      for (final n in geometry.notes.values)
-        for (final x in n.strings)
-          if (fit.x(x) > left + slipPaperRect.left * k &&
-              fit.x(x) < left + slipPaperRect.right * k)
-            fit.x(x) - left,
-    ]..removeWhere((x) => x < 0 || x > right - left);
-  }
-
-  static double _centre(NoteGeometry n) =>
-      n.strings.reduce((a, b) => a + b) / n.strings.length;
-
-  /// Lays a slip across a note's strings, above its damper. Slips alternate
-  /// between two heights so neighbours never overlap; near the right edge of
-  /// the screen a slip slides in to the margin, still over its strings.
-  Widget _slipOnString({
-    required Size box,
-    required CoverFit fit,
-    required NoteGeometry note,
-    required double width,
-    required double u,
-    required bool high,
-    required Widget child,
-  }) {
-    final k = width / slipPaperRect.width;
-    final paperHeight = slipPaperRect.height * k;
-    final damperTop = fit.y(note.damper?.top ?? 0.41);
-    final lift = high ? 22 * u + paperHeight + 12 * u : 22 * u;
-    final paperBottom = damperTop - lift;
-    final imageTop = paperBottom - slipPaperRect.bottom * k;
-    final margin = 10 * u;
-    var imageLeft =
-        fit.x(_centre(note)) -
-        (slipPaperRect.left + slipPaperRect.width / 2) * k;
-    imageLeft = imageLeft.clamp(
-      margin - slipPaperRect.left * k,
-      box.width - margin - slipPaperRect.right * k,
-    );
-    return Positioned(left: imageLeft, top: imageTop, child: child);
-  }
 }
 
-class _LitStrings extends CustomPainter {
-  _LitStrings({
-    required this.fit,
-    required this.geometry,
-    required this.pieces,
-  });
-
-  final CoverFit fit;
-  final StrungGeometry geometry;
-  final List<PieceOnString> pieces;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final piece in pieces) {
-      final note = geometry.notes[piece.midi];
-      if (note == null || piece.state == PieceState.locked) continue;
-      final (color, strength) = switch (piece.state) {
-        PieceState.next => (Palette.pencilBlueOnDark, 1.0),
-        PieceState.learned => (Palette.paper, 0.95),
-        _ => (Palette.paper, 0.6),
-      };
-      final bottom = fit.y(note.damper?.top ?? 0.41);
-      final glow = Paint()
-        ..color = color.withValues(alpha: 0.6 * strength)
-        ..strokeWidth = 7
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-      final core = Paint()
-        ..color = color.withValues(alpha: strength)
-        ..strokeWidth = 1.8
-        ..strokeCap = StrokeCap.round;
-      for (final x in note.strings) {
-        final sx = fit.x(x);
-        canvas.drawLine(Offset(sx, 0), Offset(sx, bottom), glow);
-        canvas.drawLine(Offset(sx, 0), Offset(sx, bottom), core);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_LitStrings old) =>
-      old.fit.drawn != fit.drawn || old.pieces != pieces;
-}
-
-/// The note name, printed small on the front of each key that holds a piece.
-class _KeyLetter extends StatelessWidget {
-  const _KeyLetter({
-    required this.fit,
-    required this.note,
-    required this.box,
-    required this.u,
-  });
-
-  final CoverFit fit;
-  final NoteGeometry note;
-  final Size box;
-  final double u;
+class _Brand extends StatelessWidget {
+  const _Brand();
 
   @override
   Widget build(BuildContext context) {
-    final r = fit.rect(note.key);
-    final bottom = math.min(r.bottom, box.height);
-    return Positioned(
-      left: r.left,
-      width: r.width,
-      top: r.top + (bottom - r.top) * 0.64 - 9 * u,
+    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    return Text(
+      'Piano Tool',
+      style: TextStyle(
+        fontFamily: Fonts.ui,
+        fontSize: 24 * u,
+        color: Colors.white,
+        fontVariations: const [FontVariation('wght', 800)],
+      ),
+    );
+  }
+}
+
+class _Contents extends StatelessWidget {
+  const _Contents({
+    required this.pieces,
+    required this.chosen,
+    required this.u,
+    required this.onChoose,
+    required this.onAdd,
+  });
+
+  final List<Piece> pieces;
+  final Piece? chosen;
+  final double u;
+  final void Function(Piece) onChoose;
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: EdgeInsets.fromLTRB(36 * u, 28 * u, 24 * u, 24 * u),
+      children: [
+        for (final (i, piece) in pieces.indexed)
+          _Row(
+            number: '${i + 1}',
+            title: piece.stage.title,
+            note: piece.state == PieceState.locked ? piece.status : null,
+            circled: piece == chosen,
+            dim: piece.state == PieceState.locked,
+            u: u,
+            onTap: piece.state == PieceState.locked
+                ? null
+                : () => onChoose(piece),
+          ),
+        if (onAdd != null)
+          _Row(
+            number: '+',
+            title: 'Add your own piece',
+            small: true,
+            u: u,
+            onTap: onAdd,
+          ),
+      ],
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({
+    required this.number,
+    required this.title,
+    required this.u,
+    this.note,
+    this.circled = false,
+    this.dim = false,
+    this.small = false,
+    this.onTap,
+  });
+
+  final String number;
+  final String title;
+  final String? note;
+  final bool circled;
+  final bool dim;
+  final bool small;
+  final double u;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = dim ? Colors.white.withValues(alpha: 0.6) : Colors.white;
+    return Semantics(
+      button: onTap != null,
+      selected: circled,
+      enabled: onTap != null,
+      label: note == null ? title : '$title. $note',
       child: ExcludeSemantics(
-        child: Text(
-          _noteNames[note.midi % 12],
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: Fonts.ui,
-            fontSize: 14 * u,
-            fontVariations: const [FontVariation('wght', 560)],
-            color: Palette.ink,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: (small ? 12 : 16) * u),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                SizedBox(
+                  width: 52 * u,
+                  child: Text(
+                    number,
+                    style: TextStyle(
+                      fontFamily: Fonts.ui,
+                      fontSize: 24 * u,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontVariations: const [FontVariation('wght', 700)],
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: CustomPaint(
+                    foregroundPainter: circled ? const _WhiteLoop() : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontFamily: Fonts.ui,
+                            fontSize: (small ? 28 : 46) * u,
+                            height: 1.05,
+                            letterSpacing: -1 * u,
+                            color: color,
+                            fontVariations: const [FontVariation('wght', 800)],
+                          ),
+                        ),
+                        if (note != null)
+                          Text(
+                            note!,
+                            style: TextStyle(
+                              fontFamily: Fonts.ui,
+                              fontSize: 17 * u,
+                              color: color,
+                              fontVariations: const [FontVariation('wght', 600)],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -457,42 +328,97 @@ class _KeyLetter extends StatelessWidget {
   }
 }
 
-/// Pieces and Settings, inlaid in nickel on the name board like the maker's
-/// mark beside them.
-class _NameBoardControls extends StatelessWidget {
-  const _NameBoardControls({
-    required this.fit,
-    required this.geometry,
-    required this.u,
-    this.onOpenPieces,
-    this.onOpenSettings,
-  });
+/// The chosen piece, circled in white pencil on the blue field.
+class _WhiteLoop extends CustomPainter {
+  const _WhiteLoop();
 
-  final CoverFit fit;
-  final StrungGeometry geometry;
+  @override
+  void paint(Canvas canvas, Size size) {
+    PencilLoopPainter(
+      target: Rect.fromCenter(
+        center: size.center(Offset.zero),
+        width: size.width + 64,
+        height: size.height + 30,
+      ),
+      color: Colors.white,
+      width: 3.6,
+    ).paint(canvas, size);
+  }
+
+  @override
+  bool shouldRepaint(_WhiteLoop old) => false;
+}
+
+class _Page extends StatelessWidget {
+  const _Page({required this.piece, required this.u, required this.onStart});
+
+  final Piece piece;
   final double u;
-  final VoidCallback? onOpenPieces;
-  final VoidCallback? onOpenSettings;
+  final VoidCallback? onStart;
 
   @override
   Widget build(BuildContext context) {
-    final logo = geometry.logo;
-    final y = fit.y(logo == null ? 0.615 : logo.center.dy);
-    final left = math.max(
-      fit.x(0.06),
-      MediaQuery.paddingOf(context).left + 16 * u,
-    );
-    final size = math.max(19.0, 25 * u);
-    return Positioned(
-      left: left,
-      top: y - size * 1.25,
-      height: size * 2.5,
-      child: Row(
-        children: [
-          NickelInlay(label: 'All pieces', size: size, onPressed: onOpenPieces),
-          SizedBox(width: 14 * u),
-          NickelInlay(label: 'Settings', size: size, onPressed: onOpenSettings),
-        ],
+    final stage = piece.stage;
+    return Container(
+      margin: EdgeInsets.only(top: 8 * u),
+      padding: EdgeInsets.fromLTRB(48 * u, 40 * u, 40 * u, 32 * u),
+      decoration: const BoxDecoration(
+        color: Palette.page,
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(28)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              stage.title,
+              style: TextStyle(
+                fontFamily: Fonts.ui,
+                fontSize: 54 * u,
+                height: 1,
+                letterSpacing: -1.5 * u,
+                color: Palette.ink,
+                fontVariations: const [FontVariation('wght', 800)],
+              ),
+            ),
+            SizedBox(height: 12 * u),
+            Text(
+              stage.description,
+              style: TextStyle(
+                fontFamily: Fonts.ui,
+                fontSize: 21 * u,
+                height: 1.35,
+                color: Palette.graphite,
+              ),
+            ),
+            SizedBox(height: 8 * u),
+            Text(
+              piece.status,
+              style: TextStyle(
+                fontFamily: Fonts.ui,
+                fontSize: 19 * u,
+                color: piece.state == PieceState.next
+                    ? Palette.pencilBlue
+                    : Palette.graphite,
+                fontVariations: const [FontVariation('wght', 700)],
+              ),
+            ),
+            SizedBox(height: 24 * u),
+            SizedBox(
+              height: 210 * u,
+              child: StaticStaff(
+                level: stage.level,
+                notes: notesOf(stage.level),
+                noteStates: [
+                  for (var i = 0; i < notesOf(stage.level).length; i++)
+                    i == 0 ? NoteState.active : NoteState.upcoming,
+                ],
+              ),
+            ),
+            SizedBox(height: 20 * u),
+            StartButton(label: 'Start', onPressed: onStart),
+          ],
+        ),
       ),
     );
   }

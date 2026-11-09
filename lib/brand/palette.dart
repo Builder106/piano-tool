@@ -1,17 +1,26 @@
 import 'package:flutter/painting.dart';
 
-/// Brand colours from `brand/README.md`. One accent; every neutral sits on the
-/// accent's hue so the greys stay cool.
+/// Brand colours. The app is a method book: a blue field, white pages, ink
+/// engraving, and a teacher's two pencils, blue for what to play and red for
+/// what to fix.
 abstract final class Palette {
-  static const lacquer = Color(0xFF0A0A0B);
-  static const paper = Color(0xFFECEEF1);
-  static const ink = Color(0xFF141519);
-  static const graphite = Color(0xFF4E535C);
-  static const pencilBlue = Color(0xFF2456C8);
-  static const pencilBlueOnDark = Color(0xFF6591E1);
+  /// The field the pages lie on.
+  static const field = Color(0xFF1F4FE0);
 
-  /// Secondary text on lacquer. About 8:1 against [lacquer].
-  static const quietOnDark = Color(0xFFA7ACB5);
+  /// A page of the book.
+  static const page = Color(0xFFFFFFFF);
+  static const ink = Color(0xFF111327);
+
+  /// Secondary text on a page. About 6:1 against [page].
+  static const graphite = Color(0xFF5B6075);
+
+  /// Rules and resting detail on a page.
+  static const rule = Color(0xFFD9DDEA);
+  static const pencilBlue = Color(0xFF1F4FE0);
+  static const pencilRed = Color(0xFFF0402A);
+
+  /// Secondary text on the field. About 5:1 against [field].
+  static const quietOnField = Color(0xFFDCE4FF);
 }
 
 abstract final class Fonts {
