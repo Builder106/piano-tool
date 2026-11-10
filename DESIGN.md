@@ -13,7 +13,9 @@ Blender renders made the app look antiquated.
 - **Platforms:** iOS, Android, web, macOS, Windows, Linux, from one Flutter
   codebase.
 - **Constraint:** the app makes no sound while the microphone is listening,
-  because the detector would hear it. Feedback during play is visual.
+  because the detector would hear it. Feedback during play is visual. The
+  one exception is the on-screen keys mode, where the microphone is off and
+  each tapped key plays its note.
 
 ## Concept
 
@@ -36,19 +38,31 @@ and ticked, and that is already what the brand mark is: middle C, circled.
 | Screen | What it is |
 |---|---|
 | Home | the book's contents on the field, one row per piece, the chosen piece circled in white pencil; the opened page beside it with the piece's first bars engraved and a Start button |
-| Find the notes | before a new piece: the first few notes it asks for are circled on the keyboard and named as large letters, each ticked in blue as it is played, in any order; a digital piano's key strike counts at once and the microphone needs the same note twice; Start listening asks for the microphone only when pressed, and Skip goes straight to practice |
+| Find the notes | before a new piece (with on-screen keys it listens at once and the circled keys are tapped): the first few notes it asks for are circled on the keyboard and named as large letters, each ticked in blue as it is played, in any order; a digital piano's key strike counts at once and the microphone needs the same note twice; Start listening asks for the microphone only when pressed, and Skip goes straight to practice |
 | Practice | a page with the music scrolling right to left through a blue pencil strike line, and a keyboard below with the key to play next circled; Back, Speed and Start sit on the field above |
 | Results | the page handed back marked: the whole piece with a tick under each note played well and a red loop round each miss, the grade circled in red, one sentence about what to repeat, and Practise bar N |
 | All pieces | one white page listing every piece with where it stands; a piece you added has Remove (asked in place, no dialog); Add your own piece sits at the foot |
-| Settings | four questions, each a few words with the chosen one circled in blue pencil: how it listens, how fast a piece starts, how exact marking is, and whether to check the input again |
+| Settings | four questions, each a few words with the chosen one circled in blue pencil: how you play (microphone, digital piano, both, or on-screen keys), how fast a piece starts, how exact marking is, and whether to check the input again |
 | Add a piece | show it by recording, an audio file or a YouTube link; the service writes the notes down, the learner sees them engraved, names the piece and keeps it or throws it away. Native builds only: the web build has no import service, so the door is not shown |
 
-The input check (play middle C) is a line of words on the practice page.
+The input check (play middle C) is a line of words on the practice page. It
+is skipped with on-screen keys, since a tap is certain. If the microphone is
+refused, Practice and Find the notes offer Use screen keys on the spot.
+
+### On-screen keys
+
+For someone with no piano, as Simply Piano's touch course is. The keyboard
+at the foot of Practice and Find the notes can be tapped. A press plays the
+note and is reported as a key strike, exactly like a digital piano's, so the
+engine needs no special case. It is one of the four choices in Settings,
+and `PaperKeyboard` stays a drawing when no press handler is given.
 
 ## Not built yet
 
 - Correcting single notes of an added piece before keeping it.
-- Hear it (playing the piece back) and on-screen keys that make sound.
+- Hear it (playing the piece back).
+- Holding a tapped key, and more than one tapped note sounding at once: the
+  tone player plays one note at a time.
 
 ## Type
 

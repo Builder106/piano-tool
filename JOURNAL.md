@@ -773,3 +773,18 @@ result, names it, and keeps or discards it. File picking and recording were
 checked only through a fake `ImportInputs`; neither has run on a device.
 macOS entitlements gained network client and user-selected file read, which
 import needs in the sandbox.
+
+## 2026-11-09: on-screen keys #ui #decision
+
+Simply Piano's package has a touch course (`TouchCourse1`, `isTouchPiano`)
+for people with no instrument, so Piano Tool got the same as a fourth input
+source rather than a separate screen. A tap is a `PitchEvent` with
+`struck: true`, the same as a MIDI note-on, so the engine, find-the-notes
+and scoring needed no new path; the controller only listens to the source
+the setting names. The microphone stays off in this mode because it would
+hear the tones the keys play, and the middle C check is skipped. A refused
+microphone now offers Use screen keys instead of a dead end. Sound comes
+from the existing `AudioSynthesizer`, which plays one note at a time, so
+fast runs cut each other off. Checked in a browser: taps tick the notes in
+find-the-notes and the page plays with no check. The sound itself has not
+been heard, and the key press timing was only tested through the stream.
