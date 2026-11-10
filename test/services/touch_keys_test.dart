@@ -39,9 +39,6 @@ void main() {
     await repository.save(
       const AppSettings(inputSource: PracticeInputSource.touch),
     );
-    expect(
-      (await repository.read()).inputSource,
-      PracticeInputSource.touch,
-    );
+    expect((await repository.read()).inputSource, PracticeInputSource.touch);
   });
 }

@@ -64,27 +64,27 @@ class SettingsScreen extends ConsumerWidget {
           PageText(settings.toleranceLevel.description),
           SizedBox(height: 40 * u),
           if (!settings.inputSource.usesTouch) ...[
-          const PageHeading('Does it hear you?'),
-          SizedBox(height: 8 * u),
-          if (settings.verifiedInput == null)
-            const PageText(
-              'The next piece will ask you to play middle C first.',
-            )
-          else ...[
-            const PageText(
-              'Before your first piece it listens for middle C, once for '
-              'each way of playing. Check again if you moved the microphone '
-              'or changed piano.',
-            ),
-            SizedBox(height: 16 * u),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: QuietButton(
-                label: 'Check again',
-                onPressed: () => notifier.setVerifiedInput(null),
+            const PageHeading('Does it hear you?'),
+            SizedBox(height: 8 * u),
+            if (settings.verifiedInput == null)
+              const PageText(
+                'The next piece will ask you to play middle C first.',
+              )
+            else ...[
+              const PageText(
+                'Before your first piece it listens for middle C, once for '
+                'each way of playing. Check again if you moved the microphone '
+                'or changed piano.',
               ),
-            ),
-          ],
+              SizedBox(height: 16 * u),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: QuietButton(
+                  label: 'Check again',
+                  onPressed: () => notifier.setVerifiedInput(null),
+                ),
+              ),
+            ],
           ],
         ],
       ),

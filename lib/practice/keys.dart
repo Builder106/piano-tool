@@ -197,7 +197,9 @@ class _KeysPainter extends CustomPainter {
 
   @override
   bool shouldRebuildSemantics(_KeysPainter old) =>
-      old.low != low || old.high != high || (old.onPress == null) != (onPress == null);
+      old.low != low ||
+      old.high != high ||
+      (old.onPress == null) != (onPress == null);
 
   static final _labels = <(String, double, int), TextPainter>{};
 
