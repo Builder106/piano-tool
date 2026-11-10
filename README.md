@@ -15,10 +15,12 @@ Piano Tool acts as an interactive music coach on your tablet or phone. It displa
 
 ## Project Status
 
-The core practice foundation is fully functional:
-- **Scrolling Staff Renderer**: Clean musical notation rendering notes, measures, and active playheads.
-- **Audio Pitch Detection**: Real-time microphone listening that matches played frequencies to musical notes.
-- **Practice Screen & Transport**: Interactive controls for tempo adjustment, replay, score calculation, and keyboard visualization.
+The interface is being redesigned from scratch. On this branch the old
+screens, widgets, theme, art and fonts have been removed, and the app opens to
+a blank screen. What remains is the part that does not depend on how the app
+looks: pitch detection, MIDI input, the stage engine and scoring, levels and
+imports, saved progress and settings, and the stage controller that ties them
+together.
 
 ## Where the levels actually come from
 
@@ -41,7 +43,7 @@ study, with `stage_2` and `stage_3` gated behind their predecessor via
 
 ```text
 lib/
-├── main.dart                     App entry, theme, landscape lock
+├── main.dart                     App entry; no interface yet
 ├── models/                       Freezed data models and JSON serialisation
 │   ├── level_models.dart         LevelNote, LevelMeasure, LevelModel, StageModel
 │   ├── audio_models.dart         PitchEvent, AudioEngineConfig
@@ -54,24 +56,8 @@ lib/
 │   └── audio_engine.dart         Microphone permission and pitch stream
 ├── engine/
 │   └── stage_engine.dart         Pitch matching, scoring, playback state
-└── ui/
-    ├── theme/
-    │   ├── tokens.dart           Colour, spacing, and motion tokens
-    │   └── app_theme.dart        Material 3 themes built from the tokens
-    ├── staff/
-    │   ├── staff_geometry.dart   Clef, and every measurement in staff-spaces
-    │   ├── note_glyph.dart       Notehead shapes per note state
-    │   ├── staff_painter.dart    One staff system: lines, clef, notes, playhead
-    │   └── staff_view.dart       One or more systems stacked
-    ├── keyboard/
-    │   ├── keyboard_geometry.dart    Key layout math, independent of widgets
-    │   └── piano_keyboard_view.dart  The 61 key visualisation
-    └── practice/
-        ├── practice_screen.dart      The practice loop: HUD, staff, keyboard, transport
-        ├── stage_controller.dart     Riverpod glue between StageEngine and the screen
-        ├── mic_permission_gate.dart  Blocks the screen until the microphone is granted
-        ├── practice_hud.dart         Title, tempo, score, accuracy, progress
-        └── transport_column.dart     Play/pause, Stop, Replay, speed control
+└── practice/
+    └── stage_controller.dart     Riverpod glue between StageEngine, input and progress
 ```
 
 ## The data model
@@ -90,29 +76,11 @@ LevelNote(
 ```
 
 `LevelModel` carries `tempo`, `beatsPerMeasure`, `totalMeasures`, its measures,
-and a `clefOctave` plus `transpose`. It does not carry a clef. `Clef` is a
-rendering concept and lives in `lib/ui/staff/staff_geometry.dart`, because the
-renderer is told which clef to draw rather than reading it from the level.
+and a `clefOctave` plus `transpose`. It does not carry a clef; the
+interface decides which clef to draw.
 
 `NoteState` has six values: `upcoming`, `active`, `hitPerfect`, `hitGood`,
-`hitOkay`, `missed`. The staff draws the three hit gradations identically.
-
-## How notes are drawn
-
-Every measurement derives from the staff's own height. One staff space is a
-quarter of it. Noteheads are one space tall, the time signature is four, stems
-are about two. Halving the staff halves everything, which is why a grand staff
-needs no separate code path: it is two systems, not a special case.
-
-Note state is carried by shape before colour. Upcoming is a hollow hairline,
-the note currently due is filled with a ring, a hit is filled solid, and a miss
-is hollow with a slash struck through it. Filled against hollow noteheads is
-real notation, and it means the display still works for red-green colour
-blindness, which affects roughly one man in twelve.
-
-Clefs are drawn from bundled Bravura, the SMuFL reference font. Unicode clef
-codepoints render from whatever font the operating system supplies, land in the
-wrong vertical position, and are missing outright on some Android builds.
+`hitOkay`, `missed`.
 
 ## Pitch detection
 
@@ -126,17 +94,6 @@ those defaults; it is hardcoded in `PitchDetector.processBuffer`
 (`lib/audio/pitch_detector.dart`), not configurable through `AudioEngineConfig`
 at all. There is no cent-tolerance field anywhere in the config; pitch
 matching accuracy is a property of the scoring engine, not of detection.
-
-## Fonts
-
-Three families are bundled under `assets/fonts/`, all free under the OFL.
-Cormorant Garamond carries titles, IBM Plex Sans carries body text and every
-metric, and Bravura carries music glyphs. Cormorant and Plex are variable fonts
-registered with one asset each and no weight entries, so weight is selected
-through `fontVariations` on the `wght` axis rather than by file.
-
-They are bundled rather than fetched through `google_fonts` so that golden tests
-do not depend on the network and the app works offline from first launch.
 
 ## Building and testing
 
@@ -159,28 +116,6 @@ Run the API from `backend` with `python -m uvicorn app.main:app` and the worker
 with `python -m app.worker`. Job endpoints require a bearer token; `/health`
 is unauthenticated and `/ready` checks runtime dependencies.
 
-Golden tests are skipped off Linux. Font rasterisation differs by host and
-Flutter's default comparator is byte exact, so the images are generated and
-checked on the same platform.
-
-`test/flutter_test_config.dart` loads four fonts before any test runs: the
-three bundled families above, plus the Flutter SDK's own MaterialIcons, read
-from disk since it ships with the SDK rather than this package's assets.
-Without it, Flutter renders text as empty boxes and golden images silently bake
-in missing glyphs. An earlier set of goldens passed every test while showing
-black rectangles where the clef and time signature belonged.
-
-Regenerating goldens, in this order, because the sync to the VM deletes first:
-
-```bash
-verify-on-vm "<repo>" "flutter test --update-goldens"
-rsync -a ampere-dev:work/verify/piano-tool/test/ui/staff/goldens/ test/ui/staff/goldens/
-verify-on-vm "<repo>" "flutter test"
-```
-
-Then look at the images. Twice now, a defect that every test passed was caught
-only by opening the PNG.
-
 ## Platform notes
 
 Android needs `RECORD_AUDIO` and a minimum SDK of 24. iOS needs
@@ -191,6 +126,4 @@ job builds `piano-tool-debug-apk` and smoke-tests it on an x86_64 emulator.
 
 ## Still to build
 
-Settings and broader polish for the import and practice flows. The current app
-supports level selection, import and review storage, practice, and results;
-the router connects those screens by stage ID.
+The whole interface: home, import and review, practice, results and settings.

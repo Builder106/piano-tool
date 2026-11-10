@@ -53,11 +53,19 @@ enum ToleranceLevel {
 enum PracticeInputSource {
   microphone('Microphone', 'Hears your piano through the microphone'),
   midi('Digital piano', 'Reads a digital piano over USB or Bluetooth'),
-  both('Both', 'Listens and reads a digital piano at the same time');
+  both('Both', 'Listens and reads a digital piano at the same time'),
+  touch(
+    'On-screen keys',
+    'Tap the keys on the screen. The piano plays each note you tap.',
+  );
 
   const PracticeInputSource(this.label, this.description);
   final String label;
   final String description;
+
+  bool get usesMicrophone => this == microphone || this == both;
+  bool get usesMidi => this == midi || this == both;
+  bool get usesTouch => this == touch;
 }
 
 /// Immutable app settings model.
@@ -197,6 +205,7 @@ class SettingsRepository {
     final inputSource = switch (inputSourceStr) {
       'microphone' => PracticeInputSource.microphone,
       'midi' => PracticeInputSource.midi,
+      'touch' => PracticeInputSource.touch,
       _ => PracticeInputSource.both,
     };
 

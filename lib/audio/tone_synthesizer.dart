@@ -71,6 +71,42 @@ class FlutterSoundTonePlayer implements AudioTonePlayer {
   }
 }
 
+/// Several tone players taken in turn, so notes sounded close together ring
+/// over each other instead of cutting the last one off. A voice is made the
+/// first time it is needed.
+class PooledTonePlayer implements AudioTonePlayer {
+  PooledTonePlayer({this.voices = 6, AudioTonePlayer Function()? voiceFactory})
+    : _make = voiceFactory ?? FlutterSoundTonePlayer.new;
+
+  final int voices;
+  final AudioTonePlayer Function() _make;
+  final List<AudioTonePlayer> _pool = [];
+  int _next = 0;
+
+  @override
+  Future<void> open() async {}
+
+  @override
+  Future<void> playWav(Uint8List wavBytes) {
+    if (_pool.length < voices) {
+      _pool.add(_make());
+    }
+    final voice = _pool[_next % _pool.length];
+    _next = (_next + 1) % voices;
+    return voice.playWav(wavBytes);
+  }
+
+  @override
+  Future<void> stop() => Future.wait(_pool.map((v) => v.stop()));
+
+  @override
+  Future<void> close() async {
+    await Future.wait(_pool.map((v) => v.close()));
+    _pool.clear();
+    _next = 0;
+  }
+}
+
 /// In-memory silent audio tone player for unit and widget tests.
 class SilentAudioTonePlayer implements AudioTonePlayer {
   final List<Uint8List> playedBuffers = [];
@@ -186,7 +222,7 @@ class ToneGenerator {
 /// Coordinates note playback with audio buffering and caching.
 class AudioSynthesizer {
   AudioSynthesizer({AudioTonePlayer? player})
-    : _player = player ?? FlutterSoundTonePlayer();
+    : _player = player ?? PooledTonePlayer();
 
   final AudioTonePlayer _player;
   final Map<int, Uint8List> _cachedTones = {};

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'app_router.dart';
-import 'data/settings_repository.dart';
-import 'ui/theme/app_theme.dart';
 
+import 'brand/palette.dart';
+import 'data/ingestion_repository.dart';
+import 'data/settings_repository.dart';
+import 'home/home_screen.dart';
+import 'pieces/add_piece_screen.dart';
+import 'pieces/pieces_screen.dart';
+import 'practice/find_notes.dart';
+import 'practice/practice_screen.dart';
+import 'settings/settings_screen.dart';
+
+/// Entry point. The interface is a method book: see DESIGN.md.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // The whole app is landscape. Locking a single screen would rotate the
-  // user in and out as they navigate.
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
   final settings = await SettingsRepository().read();
   runApp(
     ProviderScope(
@@ -26,43 +27,52 @@ Future<void> main() async {
   );
 }
 
-class PianoToolApp extends ConsumerWidget {
+class PianoToolApp extends StatelessWidget {
   const PianoToolApp({super.key});
 
   @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Piano Tool',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        fontFamily: Fonts.ui,
+        scaffoldBackgroundColor: Palette.field,
+      ),
+      home: const _Book(),
+    );
+  }
+}
+
+/// The home screen with its doors wired: a piece opens its first step, and
+/// the book's other screens open from the field above.
+class _Book extends ConsumerWidget {
+  const _Book();
+
+  void _open(BuildContext context, Piece piece) {
+    Navigator.of(context).push(
+      piece.state == PieceState.learned
+          ? practiceRoute(stageId: piece.stage.id)
+          : findNotesRoute(stageId: piece.stage.id),
+    );
+  }
+
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final routerAsync = ref.watch(appRouterProvider);
-    final themeMode = ref.watch(themeModeProvider);
-    return routerAsync.when(
-      data: (router) => MaterialApp.router(
-        title: 'Piano Tool',
-        debugShowCheckedModeBanner: false,
-        theme: PianoTheme.light(),
-        darkTheme: PianoTheme.dark(),
-        themeMode: themeMode,
-        routerConfig: router,
-      ),
-      loading: () => MaterialApp(
-        title: 'Piano Tool',
-        debugShowCheckedModeBanner: false,
-        theme: PianoTheme.light(),
-        darkTheme: PianoTheme.dark(),
-        themeMode: themeMode,
-        home: Scaffold(
-          backgroundColor: PianoTheme.light().colorScheme.surface,
-          body: const Center(child: CircularProgressIndicator()),
+    Future<String?> add() => Navigator.of(context).push(addPieceRoute());
+    final canAdd = ref.watch(importAvailableProvider);
+    return Scaffold(
+      body: HomeScreen(
+        onOpenPiece: (piece) => _open(context, piece),
+        onAddPiece: canAdd ? add : null,
+        onOpenPieces: () => Navigator.of(context).push(
+          piecesRoute(
+            onOpenPiece: (piece) => _open(context, piece),
+            onAddPiece: canAdd ? add : null,
+          ),
         ),
-      ),
-      error: (error, stack) => MaterialApp(
-        title: 'Piano Tool',
-        debugShowCheckedModeBanner: false,
-        theme: PianoTheme.light(),
-        darkTheme: PianoTheme.dark(),
-        themeMode: themeMode,
-        home: Scaffold(
-          backgroundColor: PianoTheme.light().colorScheme.surface,
-          body: Center(child: Text('Error initializing app: $error')),
-        ),
+        onOpenSettings: () => Navigator.of(context).push(settingsRoute()),
       ),
     );
   }

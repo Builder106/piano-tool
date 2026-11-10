@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Piano Tool screen studies</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @font-face { font-family: Atkinson; src: url(fonts/Atkinson.ttf); font-weight: 200 800; font-style: normal; }
+  @font-face { font-family: Atkinson; src: url(fonts/Atkinson-Italic.ttf); font-weight: 200 800; font-style: italic; }
+  @font-face { font-family: Bravura; src: url(../../assets/fonts/Bravura.otf); }
+  :root { --lacquer:#0A0A0B; --paper:#ECEEF1; --ink:#141519; --graphite:#4E535C; --blue:#2456C8; --blueD:#6591E1; --quiet:#A7ACB5; --nickel:#C3C8D0; }
+  html, body { margin: 0; background: var(--lacquer); }
+  body { padding-inline: 16px; }
+  svg { display: block; width: 100%; height: auto; margin-block: 16px; }
+  body.one { padding: 0; } body.one svg { margin: 0; }
+  .serif, .sans { font-family: Atkinson, system-ui, sans-serif; } .mus { font-family: Bravura; }
+</style>
+</head>
+<body>
+<script src="keys.js"></script>
+<script>
+const NS = 'http://www.w3.org/2000/svg', W = 1920, H = 1080;
+const PAPER = '#ECEEF1', INK = '#141519', BLUE = '#2456C8', BLUED = '#6591E1', NICKEL = '#C3C8D0', QUIET = '#A7ACB5';
+const IMG = '../../assets/art/strung/';
+const key = m => KEYS.find(k => k.m === m);
+const keyX = m => { const k = key(m); return (k.x0 + k.x1) / 2 * W; };
+
+function el(tag, attrs = {}, parent, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function stage() {
+  const s = el('svg', { viewBox: `0 0 ${W} ${H}` });
+  const defs = el('defs', {}, s);
+  const glow = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
+  el('feGaussianBlur', { stdDeviation: 7 }, glow);
+  const soft = el('filter', { id: 'soft', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
+  el('feGaussianBlur', { stdDeviation: 20 }, soft);
+  const halo = el('radialGradient', { id: 'halo' }, defs);
+  el('stop', { offset: 0, 'stop-color': BLUED, 'stop-opacity': .85 }, halo);
+  el('stop', { offset: 1, 'stop-color': BLUED, 'stop-opacity': 0 }, halo);
+  const keyG = el('linearGradient', { id: 'keyLit', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+  el('stop', { offset: 0, 'stop-color': BLUED, 'stop-opacity': .95 }, keyG);
+  el('stop', { offset: 1, 'stop-color': BLUE, 'stop-opacity': .55 }, keyG);
+  const fade = el('linearGradient', { id: 'headFade', x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
+  el('stop', { offset: 0, 'stop-color': '#0A0A0B', 'stop-opacity': .92 }, fade);
+  el('stop', { offset: .78, 'stop-color': '#0A0A0B', 'stop-opacity': .9 }, fade);
+  el('stop', { offset: 1, 'stop-color': '#0A0A0B', 'stop-opacity': 0 }, fade);
+  const dim = el('linearGradient', { id: 'dimTop', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+  el('stop', { offset: 0, 'stop-color': '#0A0A0B', 'stop-opacity': .78 }, dim);
+  el('stop', { offset: 1, 'stop-color': '#0A0A0B', 'stop-opacity': .5 }, dim);
+  return s;
+}
+
+/* a pencil loop that overshoots its start and tapers, as in the brand mark */
+function pencilLoop(parent, cx, cy, rx, ry, color, w) {
+  const g = el('g', { 'stroke-linecap': 'round', fill: 'none', stroke: color }, parent);
+  const N = 56, start = -2.0;
+  let prev;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, a = start + t * Math.PI * 2 * 1.1;
+    const wob = 1 + .035 * Math.sin(3 * a + 1) + .09 * t;
+    const p = [cx + rx * wob * Math.cos(a), cy + ry * wob * Math.sin(a) - 4 * t];
+    if (prev) {
+      const taper = Math.min(1, .25 + t * 4) * Math.min(1, .2 + (1 - t) * 4);
+      el('line', { x1: prev[0], y1: prev[1], x2: p[0], y2: p[1], 'stroke-width': w * taper }, g);
+    }
+    prev = p;
+  }
+}
+
+/* the live keyboard: the Blender render, framed, with keys lit over it */
+function keyboard(s, { zoom, focusMidi, topY, srcTop, lit = {}, hint = [] }) {
+  const cx = keyX(focusMidi), sc = zoom;
+  const fx = x => (x - cx) * sc + W / 2, fy = y => (y * H - srcTop) * sc + topY;
+  const clip = el('clipPath', { id: 'kbClip' }, s.querySelector('defs'));
+  el('rect', { x: 0, y: topY, width: W, height: H - topY }, clip);
+  const g = el('g', { 'clip-path': 'url(#kbClip)' }, s);
+  el('image', { href: IMG + 'home.jpg', x: fx(0), y: fy(0), width: W * sc, height: H * sc, preserveAspectRatio: 'none' }, g);
+  const light = (m, strength) => {
+    const k = key(m); if (!k) return;
+    const x0 = fx(k.x0 * W) + 1.5, w = (k.x1 - k.x0) * W * sc - 3, y0 = fy(k.y0), h = (k.y1 - k.y0) * H * sc;
+    el('rect', { x: x0 - 8, y: y0 - 30, width: w + 16, height: h * .5, fill: 'url(#halo)', opacity: strength * .55, filter: 'url(#glow)' }, g);
+    el('rect', { x: x0, y: y0, width: w, height: h, rx: 6, fill: 'url(#keyLit)', opacity: strength, style: k.b ? 'mix-blend-mode:screen' : 'mix-blend-mode:multiply' }, g);
+    if (!k.b) el('rect', { x: x0 + 4, y: y0 + h - 14, width: w - 8, height: 4, rx: 2, fill: '#fff', opacity: strength * .7 }, g);
+  };
+  for (const m in lit) light(+m, lit[m]);
+  for (const m of hint) {
+    const k = key(m);
+    el('rect', { x: fx(k.x0 * W) + 4, y: fy(k.y0) + 6, width: (k.x1 - k.x0) * W * sc - 8, height: 12, rx: 6, fill: BLUED, opacity: .9 }, g);
+  }
+  return { fx, fy };
+}
+
+/* nickel round control with a drawn line icon */
+function control(parent, x, y, r, icon, label, on) {
+  const g = el('g', {}, parent);
+  el('circle', { cx: x, cy: y + 4, r, fill: '#000', opacity: .45, filter: 'url(#glow)' }, g);
+  el('circle', { cx: x, cy: y, r, fill: on ? BLUE : '#17181c', stroke: on ? BLUED : NICKEL, 'stroke-width': 2.5 }, g);
+  el('circle', { cx: x, cy: y, r: r - 7, fill: 'none', stroke: '#fff', opacity: .08, 'stroke-width': 2 }, g);
+  const ic = el('g', { transform: `translate(${x} ${y})`, fill: 'none', stroke: PAPER, 'stroke-width': 3.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+  if (icon === 'hear') { el('path', { d: 'M-14 -6 h8 l11 -9 v30 l-11 -9 h-8z' }, ic); el('path', { d: 'M13 -9 q8 9 0 18 M19 -15 q14 15 0 30' }, ic); }
+  if (icon === 'again') { el('path', { d: 'M-14 4 a15 15 0 1 0 5 -14 M-10 -17 v8 h-8' }, ic); }
+  if (icon === 'speed') { el('path', { d: 'M-12 18 l5 -32 h14 l5 32z M0 8 l9 -22' }, ic); el('rect', { x: -6, y: -3, width: 12, height: 7, rx: 2, fill: PAPER }, ic); }
+  if (icon === 'wait') { el('path', { d: 'M-8 -14 v28 M8 -14 v28' }, ic); }
+  if (icon === 'fingers') { el('text', { x: -8, y: 11, 'text-anchor': 'middle', 'font-size': 32, 'stroke-width': 0, fill: PAPER, class: 'serif', 'font-weight': 600 }, ic, '1'); el('text', { x: 12, y: 11, 'text-anchor': 'middle', 'font-size': 32, 'stroke-width': 0, fill: QUIET, class: 'serif', 'font-weight': 600 }, ic, '2'); }
+  if (icon === 'close') { el('path', { d: 'M-11 -11 l22 22 M11 -11 l-22 22' }, ic); }
+  if (label) el('text', { x: x + r + 16, y: y + 8, fill: QUIET, 'font-size': 22, class: 'sans' }, g, label);
+  return g;
+}
+
+function pill(parent, x, y, w, h, text, primary, sub) {
+  const g = el('g', {}, parent);
+  el('rect', { x: x + 2, y: y + 8, width: w, height: h, rx: h / 2, fill: '#000', opacity: .5, filter: 'url(#glow)' }, g);
+  el('rect', { x, y, width: w, height: h, rx: h / 2, fill: primary ? BLUE : '#17181c', stroke: primary ? BLUED : NICKEL, 'stroke-width': 2.5 }, g);
+  el('text', { x: x + w / 2, y: y + h / 2 + 10, 'text-anchor': 'middle', fill: PAPER, 'font-size': 30, 'font-weight': 600, class: 'sans' }, g, text);
+  return g;
+}
+
+/* ---------------- staff model shared by screens 2 and 3 ---------------- */
+const SS = 46, STAFF_BOTTOM = 440;                      // staff-space and the E4 line
+const lineY = i => STAFF_BOTTOM - i * SS;                 // i = 0..4
+const pitchY = step => STAFF_BOTTOM - step * SS / 2;      // step 0 = E4
+const MIDI = { C: 60, D: 62, E: 64, F: 65, G: 67 };
+const STEP = { C: -2, D: -1, E: 0, F: 1, G: 2 };
+const ODE = 'EEFGGFEDCCDEDDCC'.split('');
+
+function steelString(g, x0, x1, y, amp = 0, phase = 0, alpha = 1) {
+  const pts = [];
+  for (let x = x0; x <= x1; x += 6) {
+    const u = (x - x0) / (x1 - x0);
+    pts.push(`${x},${(y + amp * Math.sin(Math.PI * u) * Math.cos(phase)).toFixed(1)}`);
+  }
+  const d = 'M' + pts.join('L');
+  el('path', { d, stroke: '#000', 'stroke-width': 6, fill: 'none', opacity: .45 * alpha, transform: 'translate(0 5)', filter: 'url(#glow)' }, g);
+  el('path', { d, stroke: '#cfd3da', 'stroke-width': 3.2, fill: 'none', opacity: alpha }, g);
+  el('path', { d, stroke: '#fff', 'stroke-width': 1, fill: 'none', opacity: .7 * alpha, transform: 'translate(0 -1)' }, g);
+}
+function bridgePin(g, x, y0, y1) {
+  el('line', { x1: x, y1: y0, x2: x, y2: y1, stroke: '#cfd3da', 'stroke-width': 2, opacity: .5 }, g);
+  for (const y of [y0, y1]) {
+    el('circle', { cx: x, cy: y, r: 7, fill: '#8d939d', stroke: '#e8ebf0', 'stroke-width': 1.5 }, g);
+    el('circle', { cx: x - 2, cy: y - 2, r: 2.2, fill: '#fff', opacity: .8 }, g);
+  }
+}
+function notehead(g, x, y, color, opts = {}) {
+  if (y > lineY(0) + SS * 0.9) el('line', { x1: x - 34, y1: y, x2: x + 34, y2: y, stroke: '#cfd3da', 'stroke-width': 3, opacity: opts.alpha ?? 1 }, g);
+  const up = y > lineY(2);
+  const sx = up ? x + 25 : x - 25;
+  el('line', { x1: sx, y1: y + (up ? -4 : 4), x2: sx, y2: y + (up ? -3.4 : 3.4) * SS, stroke: color, 'stroke-width': 3.2, opacity: opts.alpha ?? 1 }, g);
+  el('text', { x, y: y, 'text-anchor': 'middle', 'font-size': SS * 4, fill: color, class: 'mus', opacity: opts.alpha ?? 1 }, g, '\uE0A4');
+}
+
+/* ---------------- screen 1: up next, find the notes ---------------- */
+function screen1() {
+  const s = stage();
+  const targets = [['C', 60], ['E', 64], ['G', 67]];
+  const lit = {}; targets.forEach(([, m]) => lit[m] = .95);
+  keyboard(s, { zoom: 1, focusMidi: 60, topY: 0, srcTop: 0, lit });
+  el('rect', { x: 0, y: 0, width: W, height: H * .62, fill: 'url(#dimTop)' }, s);
+
+  // step pegs: hear, find, play in time
+  const steps = [['Hear it', 0], ['Find the notes', 1], ['Play in time', 2]];
+  const px = 760, py = 78;
+  el('line', { x1: px, y1: py, x2: px + 400, y2: py, stroke: '#cfd3da', 'stroke-width': 3, opacity: .7 }, s);
+  el('line', { x1: px, y1: py, x2: px + 200, y2: py, stroke: BLUED, 'stroke-width': 4 }, s);
+  steps.forEach(([t, i]) => {
+    const x = px + i * 200;
+    el('circle', { cx: x, cy: py, r: i === 1 ? 14 : 10, fill: i < 2 ? BLUED : '#8d939d', stroke: '#e8ebf0', 'stroke-width': 2 }, s);
+    el('text', { x, y: py + 46, 'text-anchor': 'middle', fill: i === 1 ? PAPER : QUIET, 'font-size': 25, 'font-weight': i === 1 ? 600 : 400, class: 'sans' }, s, t);
+  });
+  control(s, 70, 70, 34, 'close');
+
+  // the paper slip resting on the strings
+  el('image', { href: IMG + 'slip.png', x: 480, y: 140, width: 960, height: 320 }, s);
+  el('text', { x: 960, y: 290, 'text-anchor': 'middle', fill: INK, 'font-size': 76, class: 'serif', 'font-weight': 800 }, s, 'Find three notes');
+  el('text', { x: 960, y: 352, 'text-anchor': 'middle', fill: '#4E535C', 'font-size': 34, class: 'sans' }, s, 'Press the glowing keys. Any order.');
+
+  // the three keys and their paper tags
+  targets.forEach(([n, m]) => {
+    const x = keyX(m), k = key(m);
+    el('line', { x1: x, y1: 560, x2: x, y2: k.y0 * H - 8, stroke: BLUED, 'stroke-width': 3, 'stroke-dasharray': '2 9', 'stroke-linecap': 'round' }, s);
+    el('rect', { x: x - 34, y: 500, width: 68, height: 64, rx: 6, fill: PAPER }, s);
+    el('text', { x, y: 548, 'text-anchor': 'middle', fill: INK, 'font-size': 52, class: 'serif', 'font-weight': 700 }, s, n);
+  });
+  pencilLoop(s, keyX(60), key(60).y0 * H + 90, 62, 112, BLUED, 7);
+  el('text', { x: keyX(60), y: 470, 'text-anchor': 'middle', fill: BLUED, 'font-size': 27, class: 'serif', 'font-style': 'italic', 'font-weight': 600 }, s, 'middle C');
+
+  control(s, 1600, 520, 44, 'hear');
+  el('text', { x: 1600, y: 596, 'text-anchor': 'middle', fill: QUIET, 'font-size': 24, class: 'sans' }, s, 'Hear it');
+  return s;
+}
+
+/* ---------------- screen 2: practice ---------------- */
+function screen2() {
+  const s = stage();
+  const TOP = 567;
+  el('image', { href: IMG + 'soundboard.jpg', x: 0, y: 0, width: W, height: TOP + 20, preserveAspectRatio: 'xMidYMid slice' }, s);
+  el('rect', { x: 0, y: 0, width: W, height: TOP + 20, fill: 'url(#dimTop)' }, s);
+
+  const spacing = 112, playhead = 900, cur = 6, x0 = playhead - cur * spacing;
+  const nx = i => x0 + i * spacing;
+  const bars = [0, 4, 8, 12, 16];
+  const staff = el('g', {}, s);
+
+  // ringing: strings between barlines carry the decaying notes struck inside that bar
+  const ring = {};
+  for (let i = 0; i <= cur; i++) {
+    const b = Math.floor(i / 4), age = cur - i, step = STEP[ODE[i]];
+    const line = Math.round((step + 4 - 4) / 2) + 0; // nearest line index from E4 (0) upward
+    const li = Math.max(0, Math.min(4, Math.round(step / 2)));
+    (ring[b + '|' + li] ||= []).push({ age });
+  }
+  for (let li = 0; li < 5; li++) {
+    for (let b = 0; b < 4; b++) {
+      const bx0 = nx(bars[b]) - spacing / 2, bx1 = nx(bars[b + 1]) - spacing / 2;
+      if (bx1 < 400 || bx0 > W) continue;
+      const hits = ring[b + '|' + li];
+      const a = hits ? Math.max(...hits.map(h => 28 * Math.exp(-h.age * .55))) : 0;
+      if (a > 1) {
+        steelString(staff, Math.max(bx0, 260), bx1, lineY(li), a, 0, .28);
+        steelString(staff, Math.max(bx0, 260), bx1, lineY(li), -a, 0, .28);
+        steelString(staff, Math.max(bx0, 260), bx1, lineY(li), a * .8, .9, 1);
+        const mid = (Math.max(bx0, 260) + bx1) / 2;
+        el('ellipse', { cx: Math.min(mid, playhead - 60), cy: lineY(li), rx: 150, ry: 26 + a, fill: BLUED, opacity: .2 * a / 28, filter: 'url(#soft)' }, staff);
+      } else steelString(staff, Math.max(bx0, 260), bx1, lineY(li));
+    }
+  }
+  bars.slice(0, 4).forEach(b => bridgePin(staff, nx(b) - spacing / 2, lineY(4), lineY(0)));
+  bridgePin(staff, nx(16) - spacing / 2 > W ? W + 50 : nx(16) - spacing / 2, lineY(4), lineY(0));
+
+  // struck notes ring blue and fade by age; future notes are paper
+  ODE.slice(0, 15).forEach((n, i) => {
+    const x = nx(i); if (x < 400 || x > W + 40) return;
+    const y = pitchY(STEP[n]);
+    if (i <= cur) {
+      const age = cur - i;
+      el('circle', { cx: x, cy: y, r: 62, fill: 'url(#halo)', opacity: Math.max(.15, .9 * Math.exp(-age * .6)) }, staff);
+      notehead(staff, x, y, i === 2 ? '#6d727c' : '#8fb0f0', { alpha: 1 });
+    } else notehead(staff, x, y, PAPER);
+  });
+  // the one miss: a damped thud, shape mark, never colour alone
+  { const x = nx(2), y = pitchY(STEP.F);
+    el('path', { d: `M${x - 13} ${y - SS * 1.2 - 13} l26 26 M${x + 13} ${y - SS * 1.2 - 13} l-26 26`, stroke: QUIET, 'stroke-width': 4, 'stroke-linecap': 'round' }, staff); }
+
+  // next-note hint: the upcoming head breathes with a pencil loop
+  { const x = nx(cur + 1), y = pitchY(STEP[ODE[cur + 1]]); pencilLoop(staff, x, y, 38, 34, BLUED, 5); }
+
+  // header over the scrolling staff: clef, time, controls column
+  el('rect', { x: 0, y: 0, width: 470, height: TOP + 20, fill: 'url(#headFade)' }, s);
+  el('text', { x: 225, y: lineY(1), 'text-anchor': 'middle', 'font-size': SS * 4, fill: PAPER, class: 'mus' }, s, '\uE050');
+  el('text', { x: 345, y: lineY(3) - 0, 'text-anchor': 'middle', 'font-size': SS * 4, fill: PAPER, class: 'mus' }, s, '\uE084');
+  el('text', { x: 345, y: lineY(1) + 0, 'text-anchor': 'middle', 'font-size': SS * 4, fill: PAPER, class: 'mus' }, s, '\uE084');
+
+  // the strike line
+  el('rect', { x: playhead - 3, y: lineY(4) - 64, width: 6, height: 300, rx: 3, fill: BLUED, filter: 'url(#glow)' }, s);
+  el('rect', { x: playhead - 1.5, y: lineY(4) - 60, width: 3, height: 292, rx: 1.5, fill: '#dbe6ff' }, s);
+  el('rect', { x: playhead - 240, y: lineY(4) - 60, width: 240, height: 292, fill: BLUED, opacity: .1 }, s);
+
+  // grade mark over the strike line
+  el('text', { x: playhead, y: 128, 'text-anchor': 'middle', fill: PAPER, 'font-size': 48, class: 'serif', 'font-weight': 700 }, s, 'Right on time');
+  el('circle', { cx: playhead - 190, cy: 110, r: 14, fill: 'none', stroke: BLUED, 'stroke-width': 4 }, s);
+  el('circle', { cx: playhead - 190, cy: 110, r: 5, fill: BLUED }, s);
+
+  // controls column and progress
+  [['again', 78], ['hear', 170], ['speed', 262], ['wait', 354], ['fingers', 446]].forEach(([ic, y], i) => control(s, 66, y, 34, ic, null, ic === 'speed'));
+  el('text', { x: 1760, y: 70, 'text-anchor': 'end', fill: QUIET, 'font-size': 26, class: 'sans' }, s, 'Bar 2 of 4');
+  [0, 1, 2, 3].forEach(i => { el('rect', { x: 1780 + i * 30 - 150 + 150, y: 50, width: 22, height: 22, rx: 11, fill: i < 2 ? BLUED : 'none', stroke: i < 2 ? '#e8ebf0' : QUIET, 'stroke-width': 2 }, s); });
+
+  // lower half: the keyboard, held key bright, next key hinted
+  const kb = keyboard(s, { zoom: 1.35, focusMidi: 64, topY: TOP, srcTop: 700, lit: { 64: 1 }, hint: [62] });
+  el('rect', { x: 0, y: TOP - 4, width: W, height: 8, fill: '#000', opacity: .5 }, s);
+  return s;
+}
+
+/* ---------------- screen 3: results ---------------- */
+function screen3() {
+  const s = stage();
+  el('image', { href: IMG + 'soundboard.jpg', x: 0, y: 0, width: W, height: H, preserveAspectRatio: 'xMidYMid slice' }, s);
+  el('rect', { x: 0, y: 0, width: W, height: H, fill: '#0A0A0B', opacity: .55 }, s);
+
+  // a staff of eight short bars, every string ringing at once; two bars stay quiet
+  const left = 150, right = 1770, barW = (right - left) / 8, midY = 380;
+  const off = k => midY - 92 + k * 46;                 // five lines, top to bottom
+  const g = el('g', {}, s);
+  const quiet = [2, 5];
+  for (let b = 0; b < 8; b++) {
+    const bx0 = left + b * barW, bx1 = bx0 + barW;
+    const q = quiet.includes(b), amp = q ? 0 : 12 + (b % 3) * 4;
+    for (let k = 0; k < 5; k++) {
+      if (!q) {
+        steelString(g, bx0, bx1, off(k), amp * (k % 2 ? .75 : 1), .8 + k * .3, 1);
+        steelString(g, bx0, bx1, off(k), -amp * .5, 0, .22);
+        steelString(g, bx0, bx1, off(k), amp, 0, .22);
+      } else steelString(g, bx0, bx1, off(k), 0, 0, .55);
+    }
+    el('ellipse', { cx: (bx0 + bx1) / 2, cy: midY, rx: barW * .6, ry: 120, fill: q ? 'none' : BLUED, opacity: q ? 0 : .16, filter: 'url(#soft)' }, g);
+    // two notes per bar
+    ODE.slice(b * 2, b * 2 + 2).forEach((n, j) => {
+      const x = bx0 + barW * (.3 + .4 * j), y = off(4) - (STEP[n] + 0) * SS / 2;
+      const base = off(4);
+      const yy = base - STEP[n] * SS / 2;
+      if (yy > off(4) + SS * .9) el('line', { x1: x - 30, y1: yy, x2: x + 30, y2: yy, stroke: '#cfd3da', 'stroke-width': 3 }, g);
+      el('text', { x, y: yy, 'text-anchor': 'middle', 'font-size': SS * 3.4, fill: q ? QUIET : '#8fb0f0', class: 'mus' }, g, '\uE0A4');
+    });
+    bridgePin(g, bx0, off(0), off(4));
+  }
+  bridgePin(g, right, off(0), off(4));
+
+  // quiet bars: pencil bracket underneath, written note
+  quiet.forEach(b => {
+    const bx0 = left + b * barW + 10, bx1 = left + (b + 1) * barW - 10, y = off(4) + 62;
+    el('path', { d: `M${bx0} ${y - 14} q0 14 14 14 h${bx1 - bx0 - 28} q14 0 14 -14`, stroke: BLUED === '#2456C8' ? BLUED : BLUED, 'stroke-width': 5, fill: 'none', 'stroke-linecap': 'round' }, g);
+    el('text', { x: (bx0 + bx1) / 2, y: y + 40, 'text-anchor': 'middle', fill: BLUED, 'font-size': 36, class: 'serif', 'font-style': 'italic', 'font-weight': 600 }, g, 'play me again');
+  });
+  // per-bar shape marks along the top of the staff
+  for (let b = 0; b < 8; b++) {
+    const cx = left + b * barW + barW / 2, cy = off(0) - 62, q = quiet.includes(b);
+    if (q) el('path', { d: `M${cx - 9} ${cy - 9} l18 18 M${cx + 9} ${cy - 9} l-18 18`, stroke: QUIET, 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+    else if (b % 3 === 1) el('path', { d: `M${cx} ${cy - 11} l11 20 h-22z`, fill: 'none', stroke: PAPER, 'stroke-width': 3.5, 'stroke-linejoin': 'round' }, g);
+    else { el('circle', { cx, cy, r: 11, fill: 'none', stroke: BLUED, 'stroke-width': 4 }, g); el('circle', { cx, cy, r: 4, fill: BLUED }, g); }
+  }
+
+  // headline and totals, on the left under the staff
+  el('text', { x: 150, y: 140, fill: PAPER, 'font-size': 84, class: 'serif', 'font-weight': 800 }, s, 'Nicely played.');
+  el('text', { x: 150, y: 712, fill: PAPER, 'font-size': 52, class: 'serif', 'font-weight': 700 }, s, '12 of 16 notes on time');
+  el('text', { x: 150, y: 764, fill: QUIET, 'font-size': 30, class: 'sans' }, s, 'Two bars were quiet. Most of the slip-ups came on the note after a rest.');
+
+  const chips = [['circle', '9', 'right on time'], ['tri', '3', 'a little early or late'], ['x', '4', 'not heard']];
+  chips.forEach(([kind, n, label], i) => {
+    const x = 150 + i * 440, y = 810;
+    el('rect', { x, y, width: 410, height: 92, rx: 46, fill: '#0e0f12', stroke: '#3a3e46', 'stroke-width': 2, opacity: .92 }, s);
+    const cx = x + 50, cy = y + 46;
+    if (kind === 'circle') { el('circle', { cx, cy, r: 14, fill: 'none', stroke: BLUED, 'stroke-width': 4 }, s); el('circle', { cx, cy, r: 5, fill: BLUED }, s); }
+    if (kind === 'tri') el('path', { d: `M${cx} ${cy - 14} l14 24 h-28z`, fill: 'none', stroke: PAPER, 'stroke-width': 3.5, 'stroke-linejoin': 'round' }, s);
+    if (kind === 'x') el('path', { d: `M${cx - 11} ${cy - 11} l22 22 M${cx + 11} ${cy - 11} l-22 22`, stroke: QUIET, 'stroke-width': 4, 'stroke-linecap': 'round' }, s);
+    el('text', { x: x + 90, y: cy + 14, fill: PAPER, 'font-size': 44, class: 'serif', 'font-weight': 800 }, s, n);
+    el('text', { x: x + 130, y: cy + 10, fill: QUIET, 'font-size': 24, class: 'sans' }, s, label);
+  });
+
+  pill(s, 150, 940, 560, 96, 'Practise the two quiet bars', true);
+  pill(s, 740, 940, 300, 96, 'Play again');
+  pill(s, 1070, 940, 200, 96, 'Done');
+  return s;
+}
+
+const which = location.hash.slice(1);
+document.body.classList.toggle('one', !!which);
+[screen1, screen2, screen3].forEach((fn, i) => { if (!which || which === String(i + 1)) document.body.appendChild(fn()); });
+</script>
+</body>
+</html>

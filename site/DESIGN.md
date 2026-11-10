@@ -34,7 +34,7 @@ Kept (named by the user's go-ahead, nothing else is ported):
 | Live figure drivers (heard note, tap test, digital piano key) | `src/instrument/figures.ts` (rewired to new markup) |
 | Blender keyboard: rest render, 13 pressed renders, key geometry | `src/assets/keyboard/*`, `design/blender/keyboard.py` |
 | Glaxnimate source drawings | `design/glaxnimate/*` |
-| Fonts: Cormorant Garamond, IBM Plex Sans, Bravura | `public/fonts/*` |
+| Fonts: Atkinson Hyperlegible Next, Bravura | `public/fonts/*` |
 | Unit data (routes, MIDI, keys, measures, meta descriptions) | `src/data/site.ts` |
 | Staff geometry rules (everything in staff spaces, notehead tilt and size) | `src/data/staff.ts` |
 | Page engine (GSAP context per page, Astro router adapter) | `src/engine/*` |
@@ -134,15 +134,15 @@ Type. Three levels on the sheet, big jumps, nothing in between.
 
 | Level | Face | Size desktop / phone | Where |
 |---|---|---|---|
-| Printed title | Cormorant Garamond 500 | 44 / 30 px, tracking -0.01em | sheet header, centred, once |
-| Annotation heading | Cormorant Garamond 600, graphite | 30 / 24 px | top of the pencil note (roman: italic headings are banned) |
-| Annotation text | Cormorant Garamond italic 400 | 20 / 18 px, leading 1.45 | pencil note body, measure 34ch |
-| Printed small | IBM Plex Sans 400 | 13 px, tabular figures | subtitle line, tempo, measure numbers |
-| Ledge | IBM Plex Sans 500 | 13 px | inputs and progress on the ledge |
+| Printed title | Atkinson Hyperlegible Next 800 | 44 / 30 px, tracking -0.01em | sheet header, centred, once |
+| Annotation heading | Atkinson Hyperlegible Next 700, graphite | 30 / 24 px | top of the pencil note (roman: italic headings are banned) |
+| Annotation text | Atkinson Hyperlegible Next italic 400 | 20 / 18 px, leading 1.45 | pencil note body, measure 34ch |
+| Printed small | Atkinson Hyperlegible Next 400 | 13 px, tabular figures | subtitle line, tempo, measure numbers |
+| Ledge | Atkinson Hyperlegible Next 500 | 13 px | inputs and progress on the ledge |
 
-The pencil note is set in Cormorant italic because a teacher's note is cursive and quick, and
-Cormorant italic at 20 px stays readable on paper. The printed header stays roman, so
-printed and handwritten never look alike. Numbers in figures are Plex. Music glyphs are
+The pencil note is set in Atkinson italic at a light weight because a teacher's note is quick
+and slanted, and the italic stays readable on paper. The printed header stays heavy and
+upright, so printed and handwritten never look alike. Numbers in figures are Atkinson too. Music glyphs are
 Bravura. No uppercase labels, no monospace, no eyebrow lines.
 
 Space. The sheet is dense where it is printed (header, staff, fingering, tight like an

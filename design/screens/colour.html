@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Piano Tool glow study</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @font-face { font-family: Atkinson; src: url(fonts/Atkinson.ttf); font-weight: 200 800; font-style: normal; }
+  @font-face { font-family: Bravura; src: url(../../assets/fonts/Bravura.otf); }
+  :root {
+    --bg0: #070B2A; --bg1: #0E1858; --blue: #3D6BFF; --blue-lit: #86A6FF; --mint: #2EE6B0; --amber: #FFB547;
+    --ink: #0B0F2E; --text: #FFFFFF; --muted: #AEB8EE; --glass: rgb(255 255 255 / .07); --line: rgb(255 255 255 / .14);
+    --spring: linear(0, 0.226 2%, 1.116 5.4%, 1.375 6.6%, 1.585 8.8%, 1.458 10.9%, 0.937 14.3%, 0.67 17.1%, 0.729 19.8%, 1.13 24.5%, 1.201 26.7%, 0.977 32.2%, 0.882 35.6%, 1.045 42.4%, 0.979 50.9%, 1.013 59.9%, 0.986 71.2%, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #04061a; overflow: hidden; font-family: Atkinson, system-ui, sans-serif; color: var(--text); -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; text-align: left; }
+  #fit { position: fixed; left: 0; top: 0; width: 1950px; height: 900px; transform-origin: 0 0; }
+  .screen { position: absolute; inset: 0; overflow: clip; border-radius: 36px; opacity: 0; pointer-events: none; transform: translateX(4%); transition: opacity .3s, transform .6s var(--spring);
+    background: radial-gradient(1000px 620px at 8% -10%, rgb(61 107 255 / .6), transparent 70%), radial-gradient(900px 600px at 100% 110%, rgb(46 230 176 / .16), transparent 70%), linear-gradient(160deg, var(--bg1), var(--bg0)); }
+  .screen.on { opacity: 1; pointer-events: auto; transform: none; }
+
+  .top { position: absolute; left: 64px; right: 64px; top: 38px; height: 64px; display: flex; align-items: center; gap: 16px; }
+  .badge { width: 52px; height: 52px; border-radius: 16px; background: #fff; display: grid; place-items: center; }
+  .badge img { width: 44px; height: 44px; }
+  .word { font-weight: 700; font-size: 30px; letter-spacing: -.01em; }
+  .grow { flex: 1; }
+  .round { width: 56px; height: 56px; border-radius: 50%; background: var(--glass); border: 1px solid var(--line); display: grid; place-items: center; transition: transform .5s var(--spring), background .2s; }
+  .round:hover { background: rgb(255 255 255 / .14); transform: scale(1.08); } .round:active { transform: scale(.94); }
+  .round svg { width: 26px; height: 26px; }
+
+  .card { position: absolute; border-radius: 32px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(16px); transition: transform .5s var(--spring), background .2s; }
+  button.card:hover { transform: translateY(-4px); background: rgb(255 255 255 / .11); } button.card:active { transform: scale(.985); }
+  .card.hero { background: linear-gradient(135deg, #4C78FF, #2B3FE0 70%); border: 0; box-shadow: 0 30px 60px -20px rgb(61 107 255 / .65), inset 0 1px 0 rgb(255 255 255 / .35); }
+  button.card.hero:hover { background: linear-gradient(135deg, #5C86FF, #3347E8 70%); }
+  h2 { margin: 0; font-weight: 700; letter-spacing: -.02em; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+
+  .roll { display: flex; align-items: flex-end; gap: 9px; height: 100px; }
+  .roll i { width: 16px; border-radius: 7px; background: var(--bar, rgb(255 255 255 / .9)); transition: background .2s; }
+  button:hover .roll i { animation: lit .9s both; animation-delay: calc(var(--i) * 70ms); }
+  @keyframes lit { 30% { background: var(--mint); box-shadow: 0 0 18px var(--mint); transform: scaleY(1.12); } }
+  .roll i.miss { background: transparent; border: 2px dashed var(--amber); }
+  .roll i.hit { background: var(--mint); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 12px; height: 64px; padding: 0 34px; border-radius: 999px; background: #fff; color: var(--ink); font-weight: 700; font-size: 24px; transition: transform .5s var(--spring), box-shadow .2s; box-shadow: 0 10px 30px -10px rgb(255 255 255 / .5); }
+  .btn:hover { transform: translateY(-2px) scale(1.04); } .btn:active { transform: scale(.96); }
+  .btn.ghost { background: var(--glass); color: #fff; border: 1px solid var(--line); box-shadow: none; }
+  .btn[disabled] { opacity: .4; pointer-events: none; }
+
+  /* keyboard */
+  .kb { position: absolute; left: 64px; right: 64px; bottom: 0; height: 270px; }
+  .w { position: absolute; top: 0; bottom: 0; background: linear-gradient(#fff, #DCE3FF); border-radius: 0 0 16px 16px; transition: transform .1s, background .15s, box-shadow .2s; transform-origin: 50% 0; }
+  .w .lab { position: absolute; left: 0; right: 0; bottom: 20px; text-align: center; font-weight: 600; font-size: 20px; color: #7380C2; }
+  .k { position: absolute; top: 0; height: 160px; width: 70px; margin-left: -35px; background: linear-gradient(#1C2678, #0B0F2E); border-radius: 0 0 12px 12px; box-shadow: 0 6px 14px rgb(0 0 0 / .4); z-index: 2; transition: transform .1s, background .15s; transform-origin: 50% 0; }
+  .w.down { transform: translateY(6px); background: linear-gradient(#9DB6FF, var(--blue)); box-shadow: 0 0 50px rgb(61 107 255 / .9); } .w.down .lab { color: #fff; }
+  .k.down { transform: translateY(5px); background: linear-gradient(#5F86FF, #2B3FE0); }
+  .w.hint::before { content: ""; position: absolute; left: 6px; right: 6px; bottom: 100%; height: 150px; background: linear-gradient(to top, rgb(61 107 255 / .75), transparent); border-radius: 18px 18px 0 0; animation: beam 1.1s ease-in-out infinite; }
+  .w.hint .lab { color: var(--blue); font-weight: 800; }
+  @keyframes beam { 50% { opacity: .35; } }
+  .w.dim { opacity: .5; }
+  .w.done { background: linear-gradient(#B9F7E3, var(--mint)); } .w.done .lab { color: var(--ink); }
+
+  .burst { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 20; }
+  .burst b { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--col); box-shadow: 0 0 12px var(--col); animation: pop .7s cubic-bezier(.1,.8,.3,1) forwards; }
+  .burst u { position: absolute; left: -36px; top: -36px; width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--col); animation: ring .6s ease-out forwards; }
+  @keyframes pop { to { transform: translate(var(--x), var(--y)) scale(.2); opacity: 0; } }
+  @keyframes ring { from { transform: scale(.3); } to { transform: scale(2.4); opacity: 0; } }
+
+  /* progress */
+  .steps { position: absolute; left: 150px; right: 150px; top: 56px; display: flex; gap: 10px; }
+  .steps span { flex: 1; height: 8px; border-radius: 4px; background: rgb(255 255 255 / .16); position: relative; overflow: hidden; }
+  .steps span.done { background: var(--mint); } .steps span.now::after { content: ""; position: absolute; inset: 0; width: var(--p, 40%); background: var(--blue-lit); border-radius: 4px; transition: width .5s var(--spring); }
+  .steplabels { position: absolute; left: 150px; right: 150px; top: 76px; display: flex; gap: 10px; font-weight: 600; font-size: 20px; color: var(--muted); }
+  .steplabels span { flex: 1; text-align: center; padding-top: 6px; } .steplabels .now { color: #fff; }
+
+  .tiles { display: flex; gap: 36px; justify-content: center; margin-top: 30px; }
+  .tile { width: 150px; height: 150px; border-radius: 50%; border: 2px solid var(--line); background: var(--glass); display: grid; place-items: center; font-weight: 700; font-size: 64px; position: relative; transition: transform .6s var(--spring), background .2s, border-color .2s; }
+  .tile.found { background: var(--blue); border-color: var(--blue-lit); transform: scale(1.1); box-shadow: 0 0 50px rgb(61 107 255 / .7); }
+  .tile.found::after { content: ""; position: absolute; right: -4px; top: -4px; width: 44px; height: 44px; border-radius: 50%; background: var(--mint) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B0F2E' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/24px no-repeat; }
+
+  /* practice */
+  .sheet { position: absolute; left: 64px; right: 64px; top: 130px; height: 380px; }
+  .sheet svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .toast { position: absolute; left: 0; right: 0; top: 520px; text-align: center; font-size: 26px; font-weight: 600; color: var(--muted); pointer-events: none; }
+  .nh { transform-box: fill-box; transform-origin: center; transition: transform .5s var(--spring); }
+  .nh.pop { transform: scale(1.4); } .nh.shake { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-9px); } 75% { transform: translateX(9px); } }
+  .halo { transform-box: fill-box; transform-origin: center; opacity: 0; transition: opacity .3s; }
+  .halo.on { opacity: .5; animation: breathe 1.2s ease-in-out infinite; }
+  @keyframes breathe { 50% { transform: scale(1.18); } }
+  #cursor { transition: transform .6s var(--spring); }
+
+  .big { font-size: 150px; font-weight: 700; letter-spacing: -.04em; line-height: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="fit">
+
+  <!-- HOME -->
+  <section class="screen on" id="home" aria-label="Home">
+    <div class="top">
+      <div class="badge"><img src="../../site/src/assets/brand/mark.svg" alt=""></div>
+      <div class="word">Piano Tool</div>
+      <div class="grow"></div>
+      <button class="round" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"/></svg></button>
+    </div>
+
+    <button class="card hero" style="left:64px;top:140px;width:1040px;height:400px;padding:48px 56px" data-go="lesson">
+      <p style="font-size:22px;font-weight:600;color:#D6E0FF">Up next</p>
+      <h2 style="font-size:64px;margin-top:8px">C Major Scale</h2>
+      <p style="font-size:24px;margin-top:10px;color:#D6E0FF">Eight notes. About a minute.</p>
+      <div class="roll" id="rib-scale" style="position:absolute;right:56px;top:56px;height:170px;gap:14px"></div>
+      <span class="btn" style="position:absolute;right:56px;bottom:52px"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>Play</span>
+    </button>
+
+    <button class="card" style="left:1140px;top:140px;width:746px;height:188px;padding:34px 40px" data-go="lesson">
+      <h2 style="font-size:36px">Ode to Joy</h2><p class="muted" style="font-size:22px;margin-top:4px">After C Major Scale</p>
+      <div class="roll" id="rib-ode" style="position:absolute;right:40px;bottom:34px;height:80px;--bar:var(--blue-lit)"></div>
+    </button>
+    <button class="card" style="left:1140px;top:352px;width:366px;height:188px;padding:34px 36px" aria-disabled="true">
+      <h2 style="font-size:30px;color:#D4DBFF">Mixed Rhythms</h2><p class="muted" style="font-size:20px;margin-top:4px">Finish Ode to Joy first</p>
+      <svg style="position:absolute;right:30px;bottom:28px" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#AEB8EE" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+    </button>
+    <button class="card" style="left:1520px;top:352px;width:366px;height:188px;padding:34px 36px;background:transparent;border:2px dashed rgb(255 255 255 / .35)" data-toast="Importing arrives later in this study.">
+      <h2 style="font-size:30px">Add a piece</h2><p class="muted" style="font-size:20px;margin-top:4px">Record or upload</p>
+      <svg style="position:absolute;right:30px;bottom:28px" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <div class="toast" id="home-toast" style="top:566px;opacity:0;font-size:22px"></div>
+    <div class="kb" data-kb="home"></div>
+  </section>
+
+  <!-- LESSON -->
+  <section class="screen" id="lesson" aria-label="Find the notes">
+    <button class="round" style="position:absolute;left:64px;top:38px" data-go="home" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="steps"><span class="done"></span><span class="now" style="--p:35%"></span><span></span></div>
+    <div class="steplabels"><span>Hear it</span><span class="now">Find the notes</span><span>Play it</span></div>
+    <div class="card" style="left:300px;top:140px;width:1350px;height:380px;padding:40px 60px;text-align:center">
+      <h2 style="font-size:52px">Find these three notes</h2>
+      <p class="muted" style="font-size:26px;margin-top:8px">Press the glowing keys, in any order.</p>
+      <div class="tiles"><div class="tile" data-n="c">C</div><div class="tile" data-n="e">E</div><div class="tile" data-n="g">G</div></div>
+    </div>
+    <button class="btn ghost" id="hear" style="position:absolute;left:300px;top:542px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h4l5-4v13l-5-4H4z"/><path d="M16.5 8.5a5 5 0 010 7"/></svg>Hear them</button>
+    <button class="btn" id="go-play" style="position:absolute;right:300px;top:542px" disabled>Let's play</button>
+    <div class="kb" data-kb="lesson"></div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section class="screen" id="practice" aria-label="Practice">
+    <button class="round" style="position:absolute;left:64px;top:38px" data-go="home" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="steps" style="right:380px"><span class="done"></span><span class="done"></span><span class="now" id="prog" style="--p:0%"></span></div>
+    <div class="steplabels" style="right:380px"><span>Hear it</span><span>Find the notes</span><span class="now">Play it</span></div>
+    <button class="btn ghost" id="hear2" style="position:absolute;right:64px;top:34px;height:56px;font-size:20px;padding:0 26px">Hear it</button>
+    <div class="sheet"><svg id="staff" viewBox="0 0 1822 380"></svg></div>
+    <div class="toast" id="toast"></div>
+    <div class="kb" data-kb="practice"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="screen" id="results" aria-label="Results">
+    <div class="card" style="left:330px;top:90px;width:1290px;height:540px;padding:56px 70px;text-align:center">
+      <p id="r-title" class="muted" style="font-size:30px;font-weight:600">Nice one!</p>
+      <div class="big" id="r-big" style="margin-top:12px">7 of 8</div>
+      <p id="r-sub" style="font-size:28px;margin-top:12px">notes first try</p>
+      <div class="roll" id="rib-result" style="justify-content:center;height:110px;margin-top:40px;gap:16px"></div>
+      <p id="r-note" class="muted" style="font-size:22px;margin-top:22px"></p>
+    </div>
+    <div style="position:absolute;left:0;right:0;top:690px;display:flex;justify-content:center;gap:20px">
+      <button class="btn" id="r-fix">Practise that note</button>
+      <button class="btn ghost" id="r-again">Play again</button>
+      <button class="btn ghost" data-go="home">Back home</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const LETTERS = ['c','d','e','f','g','a','b'];
+const tune = 'eefggfed'.split('');
+const scale = 'cdefgabc'.split('');
+const ode = 'eefggfedccde'.split('');
+const MINT = '#2EE6B0', BLUE = '#86A6FF', AMBER = '#FFB547';
+
+const fit = document.getElementById('fit');
+function resize() { const s = Math.min(innerWidth / 1950, innerHeight / 900); fit.style.transform = `translate(${(innerWidth - 1950 * s) / 2}px, ${(innerHeight - 900 * s) / 2}px) scale(${s})`; }
+addEventListener('resize', resize); resize();
+
+let ctx;
+function tone(midi, len = .55) {
+  try {
+    ctx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+    o.type = 'triangle'; o.frequency.value = 440 * 2 ** ((midi - 69) / 12);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.35, t + .01); g.gain.exponentialRampToValueAtTime(.001, t + len);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + len + .05);
+  } catch {}
+}
+const midiOf = (n, oct = 4) => ({ c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 }[n]) + 12 * (oct + 1);
+
+/* a tune drawn as a row of bars: taller is higher */
+function roll(el, seq, flags) {
+  el.innerHTML = '';
+  seq.forEach((n, i) => {
+    const b = document.createElement('i');
+    b.style.cssText = `--i:${i};height:${34 + LETTERS.indexOf(n) * 11}%`;
+    if (flags) b.className = flags[i] ? 'hit' : 'miss';
+    el.appendChild(b);
+  });
+}
+roll(document.getElementById('rib-scale'), scale);
+roll(document.getElementById('rib-ode'), ode);
+
+/* keyboards */
+const WHITES = [['c',4],['d',4],['e',4],['f',4],['g',4],['a',4],['b',4],['c',5],['d',5],['e',5],['f',5],['g',5],['a',5],['b',5]];
+const BLACK_AFTER = new Set(['c','d','f','g','a']);
+const CKEYS = "asdfghjkl;'zx".split('');
+function buildKeyboard(host) {
+  const step = 1822 / WHITES.length;
+  WHITES.forEach(([n, o], i) => {
+    const k = document.createElement('button');
+    k.className = 'w'; k.dataset.n = n; k.dataset.o = o; k.style.cssText = `left:${i * step}px;width:${step - 5}px`;
+    k.innerHTML = `<span class="lab">${n.toUpperCase()}</span>`; k.setAttribute('aria-label', n.toUpperCase() + o);
+    host.appendChild(k);
+    if (BLACK_AFTER.has(n) && i < WHITES.length - 1) {
+      const b = document.createElement('button'); b.className = 'k'; b.dataset.black = '1'; b.dataset.n = n; b.dataset.o = o;
+      b.style.left = (i + 1) * step - 2.5 + 'px'; b.setAttribute('aria-label', n.toUpperCase() + ' sharp ' + o); host.appendChild(b);
+    }
+  });
+  host.press = el => {
+    const n = el.dataset.n, o = +el.dataset.o, black = !!el.dataset.black;
+    el.classList.add('down'); setTimeout(() => el.classList.remove('down'), 170);
+    tone(midiOf(n, o) + (black ? 1 : 0));
+    host.dispatchEvent(new CustomEvent('note', { detail: { n, o, black, el } }));
+  };
+  host.addEventListener('pointerdown', e => { const k = e.target.closest('.w,.k'); if (k) { e.preventDefault(); host.press(k); } });
+}
+document.querySelectorAll('[data-kb]').forEach(buildKeyboard);
+const keyEl = (host, n, o = 4) => host.querySelector(`.w[data-n="${n}"][data-o="${o}"]`);
+const scale1950 = () => fit.getBoundingClientRect().width / 1950;
+function burstAtEl(el, color, below = 0) {
+  const scr = el.closest('.screen') || document.querySelector('.screen.on'), r = el.getBoundingClientRect(), f = fit.getBoundingClientRect(), k = scale1950();
+  burstAt(scr, (r.left - f.left + r.width / 2) / k, (r.top - f.top + r.height / 2 + below) / k, color);
+}
+function burstAt(screen, x, y, color) {
+  const b = document.createElement('div'); b.className = 'burst'; b.style.cssText = `left:${x}px;top:${y}px;--col:${color}`;
+  b.innerHTML = '<u></u>';
+  for (let i = 0; i < 8; i++) { const p = document.createElement('b'), a = (i / 8) * Math.PI * 2 + .3, d = 70 + Math.random() * 50;
+    p.style.cssText = `--x:${Math.cos(a) * d}px;--y:${Math.sin(a) * d}px`; b.appendChild(p); }
+  screen.appendChild(b); setTimeout(() => b.remove(), 800);
+}
+addEventListener('keydown', e => {
+  if (e.repeat || e.metaKey || e.ctrlKey) return;
+  const i = CKEYS.indexOf(e.key.toLowerCase()); if (i < 0) return;
+  const host = document.querySelector('.screen.on [data-kb]'); if (!host) return;
+  const [n, o] = WHITES[i]; host.press(keyEl(host, n, o));
+});
+
+/* routing */
+const screens = [...document.querySelectorAll('.screen')];
+function go(id) {
+  screens.forEach(s => s.classList.toggle('on', s.id === id));
+  if (id === 'lesson') startLesson(); if (id === 'practice') startPractice(); if (id === 'results') showResults();
+  history.replaceState(null, '', '#' + id);
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go);
+  const m = e.target.closest('[data-toast]'); if (m) { const el = document.getElementById('home-toast'); el.textContent = m.dataset.toast; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 1800); }
+});
+
+/* lesson */
+const lessonKb = document.querySelector('[data-kb="lesson"]');
+const want = ['c','e','g']; let found = new Set();
+function startLesson() {
+  found = new Set(); document.querySelectorAll('.tile').forEach(t => t.classList.remove('found')); document.getElementById('go-play').disabled = true;
+  lessonKb.querySelectorAll('.w').forEach(k => { const t = +k.dataset.o === 4 && want.includes(k.dataset.n); k.classList.toggle('hint', t); k.classList.toggle('dim', !t); k.classList.remove('done'); });
+}
+lessonKb.addEventListener('note', e => {
+  const { n, o, black, el } = e.detail; if (black || o !== 4 || !want.includes(n)) return;
+  found.add(n); document.querySelector(`.tile[data-n="${n}"]`).classList.add('found');
+  el.classList.remove('hint'); el.classList.add('done'); burstAtEl(el, MINT, 20);
+  if (found.size === 3) document.getElementById('go-play').disabled = false;
+});
+document.getElementById('hear').onclick = () => playSeq(want, lessonKb);
+document.getElementById('go-play').onclick = () => go('practice');
+function playSeq(seq, host, gap = 520) { seq.forEach((n, i) => setTimeout(() => { const k = keyEl(host, n, 4); k.classList.add('down'); setTimeout(() => k.classList.remove('down'), 260); tone(midiOf(n)); }, i * gap)); }
+
+/* practice: notation drawn in light on the glow ground */
+const SS = 34, TOP = 96;
+const lineY = i => TOP + i * SS;
+const stepY = n => lineY(4) - ({ c: -2, d: -1, e: 0, f: 1, g: 2, a: 3, b: 4 }[n]) * SS / 2;
+const nx = i => 380 + i * 165 + (i >= 4 ? 50 : 0);
+let idx = 0, flagged = new Array(8).fill(true);
+const practiceKb = document.querySelector('[data-kb="practice"]');
+function svg(tag, attrs, parent, text) { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; parent && parent.appendChild(e); return e; }
+function drawStaff() {
+  const s = document.getElementById('staff'); s.innerHTML = '';
+  svg('rect', { id: 'cursor', x: -40, y: lineY(0) - 70, width: 80, height: 4 * SS + 220, rx: 40, fill: 'url(#cur)', opacity: .9 }, s);
+  const defs = svg('defs', {}, s), g = svg('linearGradient', { id: 'cur', x1: 0, x2: 0, y1: 0, y2: 1 }, defs);
+  svg('stop', { offset: 0, 'stop-color': '#3D6BFF', 'stop-opacity': 0 }, g); svg('stop', { offset: .5, 'stop-color': '#3D6BFF', 'stop-opacity': .35 }, g); svg('stop', { offset: 1, 'stop-color': '#3D6BFF', 'stop-opacity': 0 }, g);
+  for (let i = 0; i < 5; i++) svg('line', { x1: 40, x2: 1782, y1: lineY(i), y2: lineY(i), stroke: '#fff', 'stroke-width': 2, opacity: .38, 'stroke-linecap': 'round' }, s);
+  svg('text', { x: 60, y: lineY(3), 'font-size': SS * 4, 'font-family': 'Bravura', fill: '#fff' }, s, '\uE050');
+  svg('text', { x: 200, y: lineY(1), 'font-size': SS * 4, 'font-family': 'Bravura', fill: '#fff' }, s, '\uE084');
+  svg('text', { x: 200, y: lineY(3), 'font-size': SS * 4, 'font-family': 'Bravura', fill: '#fff' }, s, '\uE084');
+  [nx(4) - 78, 1782].forEach(x => svg('line', { x1: x, x2: x, y1: lineY(0), y2: lineY(4), stroke: '#fff', 'stroke-width': x === 1782 ? 5 : 2, opacity: .5 }, s));
+  tune.forEach((n, i) => {
+    const g = svg('g', { id: 'n' + i }, s), x = nx(i), y = stepY(n), up = y > lineY(2);
+    if (y > lineY(4) + 6) svg('line', { x1: x - 30, x2: x + 30, y1: y, y2: y, stroke: '#fff', 'stroke-width': 2, opacity: .5 }, g);
+    svg('line', { class: 'stem', x1: up ? x + 22 : x - 22, x2: up ? x + 22 : x - 22, y1: y, y2: up ? y - 3.4 * SS : y + 3.4 * SS, stroke: '#fff', 'stroke-width': 3, 'stroke-linecap': 'round' }, g);
+    const h = svg('g', { class: 'nh' }, g);
+    svg('circle', { class: 'halo', cx: x, cy: y, r: 40, fill: '#3D6BFF' }, h);
+    svg('ellipse', { class: 'head', cx: x, cy: y, rx: 25, ry: 18.5, transform: `rotate(-18 ${x} ${y})`, fill: '#fff' }, h);
+    svg('text', { x, y: 336, 'text-anchor': 'middle', 'font-size': 24, 'font-weight': 600, fill: '#AEB8EE', 'font-family': 'Atkinson' }, g, n.toUpperCase());
+  });
+}
+function target() {
+  document.querySelectorAll('#staff .halo').forEach((h, i) => h.classList.toggle('on', i === idx));
+  document.querySelectorAll('#staff .head').forEach((h, i) => { if (i === idx) h.setAttribute('fill', '#fff'); });
+  const c = document.getElementById('cursor'); if (c && idx < 8) c.style.transform = `translateX(${nx(idx)}px)`;
+  document.getElementById('prog').style.setProperty('--p', idx / 8 * 100 + '%');
+}
+function hintNext() { practiceKb.querySelectorAll('.w').forEach(k => k.classList.remove('hint')); if (idx < 8) keyEl(practiceKb, tune[idx], 4)?.classList.add('hint'); }
+function startPractice() {
+  idx = 0; flagged = new Array(8).fill(true); drawStaff(); target();
+  practiceKb.querySelectorAll('.w').forEach(k => k.classList.remove('hint', 'dim', 'done')); hintNext();
+  document.getElementById('toast').textContent = 'Play the glowing note.';
+}
+practiceKb.addEventListener('note', e => {
+  if (idx >= 8) return; const { n, o, black, el } = e.detail; const g = document.querySelector('#n' + idx + ' .nh');
+  if (!black && n === tune[idx] && o === 4) {
+    const head = g.querySelector('.head'); head.setAttribute('fill', MINT); g.querySelector('.halo').classList.remove('on');
+    g.parentNode.querySelector('.stem').setAttribute('stroke', MINT);
+    g.classList.add('pop'); setTimeout(() => g.classList.remove('pop'), 280);
+    burstAtEl(head, MINT); el.classList.add('done'); setTimeout(() => el.classList.remove('done'), 400);
+    idx++; target(); hintNext();
+    document.getElementById('toast').textContent = idx === 8 ? 'All eight.' : ['Yes.', 'Nice.', 'Got it.', 'Keep going.'][idx % 4];
+    if (idx === 8) setTimeout(() => go('results'), 900);
+  } else {
+    flagged[idx] = false;
+    g.parentNode.querySelector('.head').setAttribute('fill', AMBER);
+    g.classList.remove('shake'); void g.getBoundingClientRect(); g.classList.add('shake');
+    document.getElementById('toast').textContent = 'Not that one. Try the glowing key.';
+  }
+});
+document.getElementById('hear2').onclick = () => playSeq(tune, practiceKb, 420);
+
+/* results */
+function showResults() {
+  const ok = flagged.filter(Boolean).length;
+  document.getElementById('r-title').textContent = ok === 8 ? 'Perfect.' : ok >= 5 ? 'Nice one.' : 'Good start.';
+  document.getElementById('r-big').textContent = `${ok} of 8`;
+  document.getElementById('r-note').textContent = ok === 8 ? 'Every note landed. Ready for the next piece.' : 'Dashed bars are the notes that need another go.';
+  roll(document.getElementById('rib-result'), tune, flagged);
+  document.getElementById('r-fix').style.display = ok === 8 ? 'none' : '';
+}
+document.getElementById('r-again').onclick = () => go('practice');
+document.getElementById('r-fix').onclick = () => go('practice');
+
+const start = location.hash.slice(1); if (start && document.getElementById(start)) go(start);
+</script>
+</body>
+</html>

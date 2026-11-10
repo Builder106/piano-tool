@@ -49,6 +49,12 @@ class StageEngine extends ChangeNotifier {
   /// sound ringing on.
   PitchEvent? _lastHeard;
 
+  /// The beat range played over and over, or null. A loop never reaches the
+  /// end of the piece, so practising one bar never completes the stage or
+  /// writes progress.
+  ({double start, double end})? _loop;
+  ({double start, double end})? get loop => _loop;
+
   /// Seconds without a detection that end a sound.
   static const double _sustainGap = 0.15;
 
@@ -103,6 +109,7 @@ class StageEngine extends ChangeNotifier {
   void start() {
     if (_state.engineState == StageEngineStatus.playing) return;
 
+    _loop = null;
     _nextNoteIndex = 0;
     _noteResults.clear();
     _lastHeard = null;
@@ -153,6 +160,7 @@ class StageEngine extends ChangeNotifier {
   /// Reset the stage to initial state
   void reset() {
     _stopPlaybackTimer();
+    _loop = null;
     _nextNoteIndex = 0;
     _noteResults.clear();
     _lastHeard = null;
@@ -338,10 +346,58 @@ class StageEngine extends ChangeNotifier {
     _playbackClock.stop();
   }
 
+  /// Plays from [start] to [end] over and over, judging every pass afresh.
+  void playLoop(double start, double end) {
+    _stopPlaybackTimer();
+    _loop = (start: start, end: end);
+    _lastHeard = null;
+    _state = _state.copyWith(engineState: StageEngineStatus.playing);
+    _restartLoop();
+    _notifyStateChanged();
+  }
+
+  /// Stops looping; playback carries on from where it is.
+  void clearLoop() => _loop = null;
+
+  void _restartLoop() {
+    final loop = _loop!;
+    final states = List<NoteState>.from(_state.noteStates);
+    for (var i = 0; i < _allNotes.length; i++) {
+      final start = _allNotes[i].startBeat;
+      if (start >= loop.start - 1e-9 && start < loop.end) {
+        states[i] = NoteState.upcoming;
+        _noteResults.remove(i);
+      }
+    }
+    _nextNoteIndex = 0;
+    while (_nextNoteIndex < _allNotes.length &&
+        _allNotes[_nextNoteIndex].startBeat < loop.start - 1e-9) {
+      _nextNoteIndex++;
+    }
+    _state = _state.copyWith(currentBeat: loop.start, noteStates: states);
+    _updateNoteStatesForBeat(loop.start);
+    _startPlaybackTimer();
+  }
+
   /// Update playback position
   void _updatePlayback(double deltaBeats) {
     final totalBeats = _level.totalMeasures * _level.beatsPerMeasure;
     double newBeat = _state.currentBeat + deltaBeats;
+
+    final loop = _loop;
+    if (loop != null && newBeat >= loop.end) {
+      _checkMissedNotes(loop.end);
+      _restartLoop();
+      _eventController.add(
+        StageEvent.playbackPosition(
+          currentBeat: loop.start,
+          progress: loop.start / totalBeats,
+          isPlaying: true,
+        ),
+      );
+      notifyListeners();
+      return;
+    }
 
     // Check for missed notes before advancing
     _checkMissedNotes(newBeat);

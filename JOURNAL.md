@@ -1,5 +1,72 @@
 # Journal
 
+## 2026-11-07: notation, metronome, loops, input check, keys #ui #engine #decision
+
+Rests, ties, beams and bass and grand staves are engraved from the level
+in one pure function with tests, so the painter only draws. The engine
+gained a bar loop that restarts before the completion check, so practising
+one bar never writes progress. The input check keeps the old saved-key
+format so an earlier pass still counts. MIDI auto-connects only a single
+wired keyboard and never runs a Bluetooth scan by itself, which would ask
+for permission at launch; on the web it waits for Start because the
+browser prompts for MIDI. Metronome speed is limited to 50 to 100%.
+Everything was checked with injected states and previews; the live mic
+and MIDI path still needs a real piano.
+
+## 2026-11-07: opening a piece and the strung staff #ui #decision
+
+Practice keeps the home render and slides it down to the name board and
+keys; the piece's string swings into the five staff lines. Barlines are
+short maple bridges with pins on the lines: pins in the spaces beside a
+barline read as repeat dots. Bravura glyphs are written as escapes in the
+source; a tool once turned them into literal characters and every glyph
+became the same one, so keep them as escapes. The live mic and MIDI path
+into ringing bars has only been checked with injected note states.
+
+## 2026-11-07: Strung concept and the first home screen #ui #decision
+
+The redesign concept is "Strung": the app is the inside of an open grand.
+A piece is a string, and a note played right will ring its bar of the
+staff. Full reasoning, structure and asset plan are in `DESIGN.md`.
+
+Look development took eight Blender passes. The first three looked
+straight down at tuning pins and dampers, and nobody could tell it was a
+piano; the rule since then is that the keyboard stays in frame, seen from
+the player's seat. Copper bass strings were allowed even though the brand
+has one accent: they are material, and the strings looked like stripes
+without them.
+
+Home placement: pieces sit on every other white key from middle C (C, E,
+G for the built-in three), because two of them start on middle C. Pieces
+are paper slips on the strings; a locked piece's slip lies under them.
+Pieces and Settings are nickel lettering on the name board.
+
+The backdrop is one render plus a geometry file exported by the same
+script, so the app can draw over strings, dampers and keys exactly. Any
+change to the camera or scene means re-exporting both.
+
+## 2026-11-06: frontend removed for a redesign #ui #decision
+
+The interface felt unintuitive and lifeless, and patching it screen by
+screen had not fixed that. On `redesign/app-ui` the whole frontend is
+gone: `lib/ui`, the router, the theme and tokens, the UI and router
+tests, every golden, `test/flutter_test_config.dart`, the bundled art
+and fonts under `assets/`, and the app art sources under `design/`.
+`go_router`, `file_picker` and `record` went with them.
+
+Kept: audio, MIDI, the stage engine, levels, imports, progress,
+settings, and the stage controller, which moved to
+`lib/practice/stage_controller.dart` because it holds no widgets.
+`main.dart` loads settings and shows an empty `Scaffold`, so the app
+still builds for web, Android and iOS. The landscape lock went too;
+orientation is a design decision for the new interface.
+
+Not touched: `site/`, and `brand/` (the logo and palette).
+`brand/icons.py` still writes `assets/art/mark.png`, a folder that no
+longer exists, so recreate it or repoint the script when the new
+interface picks its assets. Old docs under `docs/` refer to the deleted
+paths as history.
+
 ## 2026-10-30: v1.1 notation, input check and practice journey #ui #engine #decision
 
 Implemented most of the v1.1 roadmap on `feat/practice-journey`.
@@ -690,3 +757,40 @@ Also carried forward: the brace on the grand staff, which is unreachable until
 the level format carries a second staff; time-signature digits drawn in Cormorant
 rather than Bravura's own glyphs; and `lib/ui/game/game_screen.dart`, which is
 still the pre-revamp screen and is replaced wholesale in phase 2.
+
+## 2026-11-09: settings, all pieces and add a piece #ui #decision
+
+All three reuse the method-book page: a `BookPage` on the field, `Choices`
+for a few words with the chosen one circled in blue pencil. Settings
+exposes only what changes how a lesson feels (listening source, starting
+speed, marking tolerance, re-run the input check); the theme, tuning pitch
+and API URL stay out because the app is light-only and the rest is
+developer plumbing. Add a piece brings back `file_picker` and `record` for
+the file and recording sources and reuses the ingestion service; the web
+build has no token, so `importAvailableProvider` hides the door there. The
+note-level review inspector is not rebuilt: the learner sees the engraved
+result, names it, and keeps or discards it. File picking and recording were
+checked only through a fake `ImportInputs`; neither has run on a device.
+macOS entitlements gained network client and user-selected file read, which
+import needs in the sandbox.
+
+## 2026-11-09: on-screen keys #ui #decision
+
+Simply Piano's package has a touch course (`TouchCourse1`, `isTouchPiano`)
+for people with no instrument, so Piano Tool got the same as a fourth input
+source rather than a separate screen. A tap is a `PitchEvent` with
+`struck: true`, the same as a MIDI note-on, so the engine, find-the-notes
+and scoring needed no new path; the controller only listens to the source
+the setting names. The microphone stays off in this mode because it would
+hear the tones the keys play, and the middle C check is skipped. A refused
+microphone now offers Use screen keys instead of a dead end. Sound comes
+from the existing `AudioSynthesizer`, which first played one note at a
+time, so fast runs cut each other off. Checked in a browser: taps tick the notes in
+find-the-notes and the page plays with no check. The sound itself has not
+been heard, and the key press timing was only tested through the stream.
+
+The one-note limit was fixed with a pool of six tone players taken in
+turn (`PooledTonePlayer`), so a chord or a quick run rings over itself. A
+single player cannot overlap: starting a buffer stops the one playing.
+Overlap is tested with silent voices; whether six `FlutterSoundPlayer`s
+open together on every platform has only been seen to build, not heard.

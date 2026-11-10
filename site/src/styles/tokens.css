@@ -1,6 +1,5 @@
-@font-face { font-family: 'Cormorant'; src: url('/fonts/cormorant.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Cormorant'; src: url('/fonts/cormorant-italic.woff2') format('woff2'); font-weight: 300 700; font-style: italic; font-display: swap; }
-@font-face { font-family: 'Plex'; src: url('/fonts/plex.woff2') format('woff2'); font-weight: 100 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson'; src: url('/fonts/atkinson.woff2') format('woff2'); font-weight: 200 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson'; src: url('/fonts/atkinson-italic.woff2') format('woff2'); font-weight: 200 800; font-style: italic; font-display: swap; }
 @font-face { font-family: 'Bravura'; src: url('/fonts/bravura.woff2') format('woff2'); font-display: block; }
 :root {
   --c-bg: #0a0a0b;
@@ -13,8 +12,8 @@
   --c-okay: #a85f00;
   --c-miss: #b3261e;
   --c-ledge: #a3a3aa;
-  --f-display: 'Cormorant', Georgia, serif;
-  --f-body: 'Plex', Arial, sans-serif;
+  --f-display: 'Atkinson', Arial, sans-serif;
+  --f-body: 'Atkinson', Arial, sans-serif;
   --f-music: 'Bravura';
   --top-gap: clamp(16px, 3svh, 32px);
   --ledge-h: 52px; /* the strip of piano body between the rack and the keys, where the switches sit */

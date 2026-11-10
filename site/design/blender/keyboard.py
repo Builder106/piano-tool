@@ -163,7 +163,7 @@ def build():
 
     # The decal sits over the stage octave: the C4 to C5 span is centred on the F4|G4 boundary,
     # which is also the centre of the 61 keys.
-    font_path = os.path.join(HERE, '..', '..', '..', 'assets', 'fonts', 'CormorantGaramond.ttf')
+    font_path = os.path.join(HERE, '..', '..', '..', 'assets', 'fonts', 'AtkinsonWordmark.ttf')
     cu = bpy.data.curves.new('decal', 'FONT')
     cu.body = 'Piano Tool'
     cu.font = bpy.data.fonts.load(os.path.abspath(font_path), check_existing=True)

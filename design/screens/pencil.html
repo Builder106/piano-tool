@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Piano Tool pencil study</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @font-face { font-family: Atkinson; src: url(fonts/Atkinson.ttf); font-weight: 200 800; font-style: normal; }
+  @font-face { font-family: Bravura; src: url(../../assets/fonts/Bravura.otf); }
+  :root {
+    --blue: #1F4FE0; --paper: #FFFFFF; --ink: #111327; --graphite: #5B6075; --red: #F0402A; --line: #D9DDEA;
+    --spring: linear(0, 0.226 2%, 1.116 5.4%, 1.375 6.6%, 1.585 8.8%, 1.458 10.9%, 0.937 14.3%, 0.67 17.1%, 0.729 19.8%, 1.13 24.5%, 1.201 26.7%, 0.977 32.2%, 0.882 35.6%, 1.045 42.4%, 0.979 50.9%, 1.013 59.9%, 0.986 71.2%, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0B0D1C; font-family: Atkinson, system-ui, sans-serif; color: var(--ink); -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; text-align: left; }
+  #fit { position: fixed; left: 0; top: 0; width: 1950px; height: 900px; transform-origin: 0 0; }
+  .screen { position: absolute; inset: 0; overflow: clip; background: var(--blue); border-radius: 36px; visibility: hidden; }
+  .screen.on { visibility: visible; }
+  .screen.on .enter { animation: enter .7s var(--spring) both; }
+  @keyframes enter { from { transform: translateY(40px); opacity: 0; } }
+
+  .brand { position: absolute; left: 72px; top: 44px; display: flex; align-items: center; gap: 14px; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: -.01em; }
+  .brand img { width: 46px; height: 46px; filter: brightness(0) invert(1); }
+  .textbtn { color: #fff; font-weight: 700; font-size: 26px; padding: 10px 4px; position: relative; }
+  .textbtn:hover .ul { stroke-dashoffset: 0; }
+
+  .paper { position: absolute; background: var(--paper); }
+  h1, h2 { margin: 0; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  p { margin: 0; }
+
+  /* contents list on the blue field */
+  .contents { position: absolute; left: 72px; top: 170px; width: 860px; }
+  .row { display: flex; align-items: baseline; gap: 44px; width: 100%; padding: 22px 0; color: #fff; position: relative; transition: transform .5s var(--spring); }
+  .row:hover:not([aria-disabled]) { transform: translateX(10px); }
+  .row .num { width: 40px; font-size: 32px; font-weight: 700; color: rgb(255 255 255 / .55); }
+  .row .t { font-size: 64px; font-weight: 800; letter-spacing: -.03em; }
+  .row .s { font-size: 22px; font-weight: 600; color: rgb(255 255 255 / .7); }
+  .row[aria-disabled] { cursor: default; } .row[aria-disabled] .t { color: rgb(255 255 255 / .45); }
+  .row svg.mark { position: absolute; overflow: visible; pointer-events: none; }
+
+  .start { display: inline-flex; align-items: center; gap: 14px; height: 80px; padding: 0 40px; border-radius: 16px; background: var(--red); color: #fff; font-weight: 800; font-size: 32px; transition: transform .45s var(--spring); }
+  .start:hover { transform: rotate(-1.5deg) scale(1.04); } .start:active { transform: scale(.96); }
+  .start[disabled] { background: #C9CDDB; pointer-events: none; }
+  .quiet { display: inline-flex; align-items: center; height: 80px; padding: 0 32px; border-radius: 16px; border: 3px solid var(--ink); font-weight: 800; font-size: 28px; transition: transform .45s var(--spring); }
+  .quiet:hover { transform: rotate(1deg) scale(1.03); }
+
+  /* pencil marks: drawn on with a dash offset */
+  .pencil { fill: none; stroke-linecap: round; stroke-linejoin: round; filter: url(#rough); }
+  .draw { stroke-dasharray: 1 1.2; stroke-dashoffset: 1; animation: draw .55s cubic-bezier(.3,.7,.2,1) forwards; animation-delay: var(--d, 0s); }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  /* keyboard, edge to edge */
+  .kb { position: absolute; left: 0; right: 0; bottom: 0; height: 300px; }
+  .w { position: absolute; top: 0; bottom: 0; background: #fff; border-radius: 0 0 14px 14px; transition: transform .08s, background .12s; }
+  .w .lab { position: absolute; left: 0; right: 0; bottom: 22px; text-align: center; font-weight: 700; font-size: 24px; color: #9AA0B8; }
+  .k { position: absolute; top: 0; height: 180px; width: 80px; margin-left: -40px; background: var(--ink); border-radius: 0 0 10px 10px; z-index: 2; transition: transform .08s, background .12s; }
+  .w.down { background: #E3E9FF; transform: translateY(5px); } .k.down { background: #33395E; transform: translateY(4px); }
+  .w.ok { background: var(--blue); } .w.ok .lab { color: #fff; }
+  .w svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .w.next .lab { color: var(--blue); }
+
+  .note-hit { fill: var(--blue); }
+  .shake { animation: shake .35s; transform-box: fill-box; transform-origin: center; }
+  @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg>
+<div id="fit">
+
+  <!-- HOME: the method book's contents on the left, the open page on the right -->
+  <section class="screen on" id="home" aria-label="Home">
+    <div class="brand"><img src="../../site/src/assets/brand/mark.svg" alt="">Piano Tool</div>
+    <button class="textbtn" style="position:absolute;right:72px;top:46px">Settings</button>
+
+    <div class="contents" id="contents"></div>
+
+    <div class="paper enter" id="page" style="left:1010px;top:150px;right:0;bottom:0;border-radius:28px 0 0 0;padding:64px 72px">
+      <h1 id="p-title" style="font-size:76px">C Major Scale</h1>
+      <p id="p-meta" style="font-size:26px;color:var(--graphite);margin-top:14px">Right hand. Eight notes, one at a time.</p>
+      <svg id="p-staff" viewBox="0 0 800 300" style="width:800px;height:300px;margin-top:20px;overflow:visible"></svg>
+      <div style="margin-top:30px;display:flex;gap:18px;align-items:center">
+        <button class="start" data-go="lesson">Start</button>
+        <button class="quiet" id="p-hear">Hear it</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIND THE NOTES -->
+  <section class="screen" id="lesson" aria-label="Find the notes">
+    <button class="textbtn" style="position:absolute;left:72px;top:40px" data-go="home">Close</button>
+    <p style="position:absolute;right:72px;top:50px;color:#fff;font-size:24px;font-weight:700">Step 2 of 3</p>
+    <div class="paper enter" style="left:0;right:0;top:120px;height:450px;padding:56px 72px;display:flex;gap:90px;align-items:center">
+      <div style="width:820px">
+        <h1 style="font-size:84px">Find C, E and G.</h1>
+        <p style="font-size:28px;color:var(--graphite);margin-top:18px;line-height:1.35">They're circled on the keys below. Press each one, in any order. Middle C is the first.</p>
+        <div style="margin-top:40px;display:flex;gap:18px">
+          <button class="start" id="go-play" disabled>Play the tune</button>
+          <button class="quiet" id="hear">Hear them</button>
+        </div>
+      </div>
+      <svg id="found" viewBox="0 0 760 260" style="width:760px;height:260px;overflow:visible"></svg>
+    </div>
+    <div class="kb" data-kb="lesson" style="height:310px"></div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section class="screen" id="practice" aria-label="Practice">
+    <button class="textbtn" style="position:absolute;left:72px;top:40px" data-go="home">Close</button>
+    <p style="position:absolute;left:0;right:0;top:46px;text-align:center;color:#fff;font-size:30px;font-weight:800">Ode to Joy</p>
+    <p id="count" style="position:absolute;right:240px;top:50px;color:#fff;font-size:24px;font-weight:700">0 of 8</p>
+    <button class="textbtn" id="hear2" style="position:absolute;right:72px;top:40px">Hear it</button>
+    <div class="paper enter" style="left:0;right:0;top:120px;height:450px"><svg id="staff" viewBox="0 0 1950 450" style="width:100%;height:100%;overflow:visible"></svg></div>
+    <div class="kb" data-kb="practice" style="height:310px"></div>
+  </section>
+
+  <!-- RESULTS: the page comes back marked, like a lesson book -->
+  <section class="screen" id="results" aria-label="Results">
+    <button class="textbtn" style="position:absolute;left:72px;top:40px" data-go="home">Close</button>
+    <p style="position:absolute;left:0;right:0;top:46px;text-align:center;color:#fff;font-size:30px;font-weight:800">Ode to Joy</p>
+    <div class="paper" style="left:0;right:0;top:120px;bottom:0">
+      <svg id="r-svg" viewBox="0 0 1950 780" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"></svg>
+      <div style="position:absolute;left:560px;top:430px;width:900px">
+        <p id="r-line" style="font-size:40px;font-weight:800;letter-spacing:-.02em">One note needed a second try.</p>
+        <p id="r-note" style="font-size:27px;color:var(--graphite);margin-top:12px;line-height:1.35"></p>
+      </div>
+      <div style="position:absolute;left:560px;bottom:80px;display:flex;gap:18px">
+        <button class="start" id="r-fix">Practise bar 1</button>
+        <button class="quiet" id="r-again">Play again</button>
+        <button class="quiet" data-go="home" style="border-color:transparent">Done</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const BLUE = '#1F4FE0', RED = '#F0402A', INK = '#111327';
+const STEP = { c: -2, d: -1, e: 0, f: 1, g: 2, a: 3, b: 4 };     // E4 = 0
+const MIDI = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+const PIECES = [
+  { title: 'C Major Scale', meta: 'Right hand. Eight notes, one at a time.', seq: 'cdefgab'.split('').concat(['c5']) },
+  { title: 'Ode to Joy', meta: 'Right hand. Two bars of Beethoven.', seq: 'eefggfed'.split('') },
+  { title: 'Mixed Rhythms', meta: 'Opens after Ode to Joy.', locked: true },
+];
+const tune = PIECES[1].seq;
+
+/* fit the 1950 x 900 stage to the window */
+const fit = document.getElementById('fit');
+function resize() { const s = Math.min(innerWidth / 1950, innerHeight / 900); fit.style.transform = `translate(${(innerWidth - 1950 * s) / 2}px, ${(innerHeight - 900 * s) / 2}px) scale(${s})`; }
+addEventListener('resize', resize); resize();
+
+function el(tag, attrs = {}, parent, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; if (parent) parent.appendChild(e); return e; }
+
+/* seeded wobble so a mark keeps its shape between renders */
+function rng(seed) { let s = seed * 9301 + 49297; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); }
+
+/* a pencil loop that overshoots its start, like the brand mark */
+function loopD(cx, cy, rx, ry, seed = 1) {
+  const r = rng(seed), start = -2.1 + r() * .4, turns = 1.12 + r() * .06, pts = [];
+  for (let i = 0; i <= 56; i++) {
+    const t = i / 56, a = start + t * Math.PI * 2 * turns, wob = 1 + .04 * Math.sin(3 * a + seed) + .08 * t;
+    pts.push([cx + rx * wob * Math.cos(a), cy + ry * wob * Math.sin(a) - 5 * t]);
+  }
+  return 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L');
+}
+const tickD = (x, y, s = 1) => `M${x - 14 * s} ${y - 2 * s}L${x - 4 * s} ${y + 10 * s}L${x + 18 * s} ${y - 20 * s}`;
+const underD = (x0, x1, y, seed = 2) => { const r = rng(seed); return `M${x0} ${y + r() * 4}Q${(x0 + x1) / 2} ${y + 8 + r() * 6} ${x1} ${y - 2 - r() * 4}`; };
+function mark(svg, d, color, width, delay = 0) {
+  return el('path', { d, class: 'pencil draw', stroke: color, 'stroke-width': width, pathLength: 1, style: `--d:${delay}s` }, svg);
+}
+
+/* engraved staff with Bravura glyphs; returns note positions */
+function engrave(svg, seq, { x0, y0, ss, gap, bar = 4, color = INK }) {
+  svg.innerHTML = '';
+  const lineY = i => y0 + i * ss;                     // 0 = top line
+  const w = svg.viewBox.baseVal.width;
+  for (let i = 0; i < 5; i++) el('line', { x1: x0, x2: w - 20, y1: lineY(i), y2: lineY(i), stroke: color, 'stroke-width': ss * .06 }, svg);
+  el('text', { x: x0 + ss * .3, y: lineY(3), 'font-size': ss * 4, 'font-family': 'Bravura', fill: color }, svg, '\uE050');
+  el('text', { x: x0 + ss * 3.7, y: lineY(1), 'font-size': ss * 4, 'font-family': 'Bravura', fill: color }, svg, '\uE084');
+  el('text', { x: x0 + ss * 3.7, y: lineY(3), 'font-size': ss * 4, 'font-family': 'Bravura', fill: color }, svg, '\uE084');
+  el('line', { x1: w - 20, x2: w - 20, y1: lineY(0), y2: lineY(4), stroke: color, 'stroke-width': ss * .16 }, svg);
+  const out = [];
+  seq.forEach((raw, i) => {
+    const n = raw[0], oct = raw[1] ? +raw[1] : 4;
+    const step = STEP[n] + (oct - 4) * 7;
+    const cx = x0 + ss * 7.4 + i * gap + Math.floor(i / bar) * ss * 1.2, cy = lineY(4) - step * ss / 2;
+    if (i && i % bar === 0) el('line', { x1: cx - ss * 1.5, x2: cx - ss * 1.5, y1: lineY(0), y2: lineY(4), stroke: color, 'stroke-width': ss * .08 }, svg);
+    const g = el('g', { class: 'n' }, svg);
+    if (cy > lineY(4) + 2) el('line', { x1: cx - ss * .85, x2: cx + ss * .85, y1: cy, y2: cy, stroke: color, 'stroke-width': ss * .08 }, g);
+    const up = cy > lineY(2), sx = up ? cx + ss * .53 : cx - ss * .53;
+    el('line', { x1: sx, x2: sx, y1: cy + (up ? -ss * .15 : ss * .15), y2: up ? cy - ss * 3.5 : cy + ss * 3.5, stroke: color, 'stroke-width': ss * .1, class: 'stem' }, g);
+    el('text', { x: cx - ss * .59, y: cy, 'font-size': ss * 4, 'font-family': 'Bravura', fill: color, class: 'head' }, g, '\uE0A4');
+    out.push({ g, cx, cy, up, n, oct });
+  });
+  return out;
+}
+
+/* sound */
+let ctx;
+function tone(midi, len = .6) {
+  try {
+    ctx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+    o.type = 'triangle'; o.frequency.value = 440 * 2 ** ((midi - 69) / 12);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.3, t + .01); g.gain.exponentialRampToValueAtTime(.001, t + len);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + len + .05);
+  } catch {}
+}
+const midiOf = (n, o = 4) => MIDI[n] + 12 * (o + 1);
+function playSeq(seq, host, gap = 450) {
+  seq.forEach((raw, i) => setTimeout(() => { const n = raw[0], o = raw[1] ? +raw[1] : 4; tone(midiOf(n, o)); const k = host && keyEl(host, n, o); if (k) { k.classList.add('down'); setTimeout(() => k.classList.remove('down'), 220); } }, i * gap));
+}
+
+/* keyboards: two octaves, edge to edge */
+const WHITES = [['c',4],['d',4],['e',4],['f',4],['g',4],['a',4],['b',4],['c',5],['d',5],['e',5],['f',5],['g',5],['a',5],['b',5]];
+const BLACK_AFTER = new Set(['c','d','f','g','a']);
+const CKEYS = "asdfghjkl;'zx".split('');
+function buildKeyboard(host) {
+  const step = 1950 / WHITES.length;
+  WHITES.forEach(([n, o], i) => {
+    const k = document.createElement('button');
+    k.className = 'w'; k.dataset.n = n; k.dataset.o = o; k.style.cssText = `left:${i * step + 2}px;width:${step - 4}px`;
+    k.innerHTML = `<span class="lab">${n.toUpperCase()}</span>`; k.setAttribute('aria-label', n.toUpperCase() + o);
+    host.appendChild(k);
+    if (BLACK_AFTER.has(n) && i < WHITES.length - 1) {
+      const b = document.createElement('button'); b.className = 'k'; b.dataset.black = '1'; b.dataset.n = n; b.dataset.o = o;
+      b.style.left = (i + 1) * step + 'px'; b.setAttribute('aria-label', n.toUpperCase() + ' sharp ' + o); host.appendChild(b);
+    }
+  });
+  host.press = k => {
+    const n = k.dataset.n, o = +k.dataset.o, black = !!k.dataset.black;
+    k.classList.add('down'); setTimeout(() => k.classList.remove('down'), 160);
+    tone(midiOf(n, o) + (black ? 1 : 0));
+    host.dispatchEvent(new CustomEvent('note', { detail: { n, o, black, k } }));
+  };
+  host.addEventListener('pointerdown', e => { const k = e.target.closest('.w,.k'); if (k) { e.preventDefault(); host.press(k); } });
+}
+document.querySelectorAll('[data-kb]').forEach(buildKeyboard);
+const keyEl = (host, n, o = 4) => host.querySelector(`.w[data-n="${n}"][data-o="${o}"]`);
+function circleKey(k, color = BLUE, seed = 4) {
+  k.querySelector('svg')?.remove();
+  const s = el('svg', { viewBox: `0 0 ${k.offsetWidth} 300` }); k.appendChild(s);
+  mark(s, loopD(k.offsetWidth / 2, 238, k.offsetWidth * .36, 40, seed), color, 5);
+}
+const uncircle = k => k.querySelector('svg')?.remove();
+addEventListener('keydown', e => {
+  if (e.repeat || e.metaKey || e.ctrlKey) return;
+  const i = CKEYS.indexOf(e.key.toLowerCase()); if (i < 0) return;
+  const host = document.querySelector('.screen.on [data-kb]'); if (!host) return;
+  host.press(keyEl(host, WHITES[i][0], WHITES[i][1]));
+});
+
+/* routing */
+const screens = [...document.querySelectorAll('.screen')];
+function go(id) {
+  screens.forEach(s => s.classList.toggle('on', s.id === id));
+  ({ home: showHome, lesson: startLesson, practice: startPractice, results: showResults })[id]?.();
+  history.replaceState(null, '', '#' + id);
+}
+document.addEventListener('click', e => { const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go); });
+
+/* home */
+let current = 0;
+function showHome() {
+  const list = document.getElementById('contents'); list.innerHTML = '';
+  PIECES.forEach((p, i) => {
+    const r = document.createElement('button'); r.className = 'row';
+    if (p.locked) r.setAttribute('aria-disabled', 'true');
+    r.innerHTML = `<span class="num">${i + 1}</span><span><span class="t">${p.title}</span>${p.locked ? '<br><span class="s">Opens after Ode to Joy</span>' : ''}</span>`;
+    if (!p.locked) r.onclick = () => { current = i; showHome(); };
+    list.appendChild(r);
+    if (i === current) requestAnimationFrame(() => {
+      const t = r.querySelector('.t'), w = t.offsetWidth, h = t.offsetHeight, s = el('svg', { class: 'mark', width: w + 120, height: h + 80 });
+      s.style.left = 84 - 60 + 'px'; s.style.top = 22 - 40 + 8 + 'px'; r.appendChild(s);
+      mark(s, loopD((w + 120) / 2, (h + 80) / 2 + 4, w / 2 + 40, h / 2 + 18, 7 + i), '#fff', 5);
+    });
+  });
+  const add = document.createElement('button'); add.className = 'row'; add.style.marginTop = '20px';
+  add.innerHTML = '<span class="num">+</span><span class="t" style="font-size:44px">Add your own piece</span>';
+  list.appendChild(add);
+  const p = PIECES[current];
+  document.getElementById('p-title').textContent = p.title;
+  document.getElementById('p-meta').textContent = p.meta;
+  const staff = document.getElementById('p-staff');
+  const notes = engrave(staff, p.seq, { x0: 0, y0: 100, ss: 26, gap: 74 });
+  mark(staff, loopD(notes[0].cx, notes[0].cy, 30, 24, 3), BLUE, 4.5, .3);
+  const page = document.getElementById('page'); page.classList.remove('enter'); void page.offsetWidth; page.classList.add('enter');
+}
+document.getElementById('p-hear').onclick = () => playSeq(PIECES[current].seq);
+
+/* find the notes */
+const lessonKb = document.querySelector('[data-kb="lesson"]');
+const want = ['c', 'e', 'g']; let found = new Set();
+function drawFound() {
+  const s = document.getElementById('found'); s.innerHTML = '';
+  want.forEach((n, i) => {
+    const x = 130 + i * 250;
+    el('text', { x, y: 168, 'text-anchor': 'middle', 'font-size': 150, 'font-weight': 800, 'font-family': 'Atkinson', fill: found.has(n) ? BLUE : '#C9CDDB' }, s, n.toUpperCase());
+    if (found.has(n)) mark(s, loopD(x, 118, 100, 96, 11 + i), BLUE, 6);
+  });
+}
+function startLesson() {
+  found = new Set(); drawFound(); document.getElementById('go-play').disabled = true;
+  lessonKb.querySelectorAll('.w').forEach(k => { k.classList.remove('ok'); uncircle(k); });
+  requestAnimationFrame(() => want.forEach((n, i) => circleKey(keyEl(lessonKb, n), BLUE, 20 + i)));
+}
+lessonKb.addEventListener('note', e => {
+  const { n, o, black, k } = e.detail; if (black || o !== 4 || !want.includes(n) || found.has(n)) return;
+  found.add(n); k.classList.add('ok'); uncircle(k); drawFound();
+  if (found.size === 3) document.getElementById('go-play').disabled = false;
+});
+document.getElementById('hear').onclick = () => playSeq(want, lessonKb, 520);
+document.getElementById('go-play').onclick = () => go('practice');
+
+/* practice: the next note is circled, right notes get a tick, a wrong key gets a red loop */
+const practiceKb = document.querySelector('[data-kb="practice"]');
+let notes = [], idx = 0, firstTry = [];
+const staff = document.getElementById('staff');
+let cursorMark;
+function circleNext() {
+  cursorMark?.remove();
+  practiceKb.querySelectorAll('.w').forEach(k => { uncircle(k); k.classList.remove('next'); });
+  if (idx >= notes.length) return;
+  const nt = notes[idx];
+  cursorMark = mark(staff, loopD(nt.cx, nt.cy, 46, 36, 30 + idx), BLUE, 5);
+  const k = keyEl(practiceKb, nt.n, nt.oct); circleKey(k, BLUE, 40 + idx); k.classList.add('next');
+}
+function startPractice() {
+  idx = 0; firstTry = new Array(tune.length).fill(true);
+  notes = engrave(staff, tune, { x0: 90, y0: 140, ss: 36, gap: 175 });
+  document.getElementById('count').textContent = `0 of ${tune.length}`;
+  circleNext();
+}
+practiceKb.addEventListener('note', e => {
+  if (idx >= notes.length) return;
+  const { n, o, black } = e.detail, nt = notes[idx];
+  if (!black && n === nt.n && o === nt.oct) {
+    nt.g.querySelector('.head').classList.add('note-hit'); nt.g.querySelector('.stem').setAttribute('stroke', BLUE);
+    const ty = nt.up ? nt.cy - 36 * 3.5 - 34 : nt.cy - 70;
+    mark(staff, tickD(nt.cx, ty, 1.3), BLUE, 6);
+    idx++; document.getElementById('count').textContent = `${idx} of ${tune.length}`;
+    circleNext();
+    if (idx === notes.length) setTimeout(() => go('results'), 900);
+  } else {
+    if (firstTry[idx]) { firstTry[idx] = false; mark(staff, loopD(nt.cx, nt.cy, 54, 44, 60 + idx), RED, 4); }
+    const h = nt.g; h.classList.remove('shake'); void h.getBBox(); h.classList.add('shake');
+  }
+});
+document.getElementById('hear2').onclick = () => playSeq(tune, practiceKb, 420);
+
+/* results: a teacher's mark on the page */
+function showResults() {
+  if (!firstTry.length) firstTry = [true, true, false, true, true, true, true, true];
+  const total = firstTry.length, ok = firstTry.filter(Boolean).length;
+  const missed = firstTry.map((v, i) => v ? null : i).filter(v => v !== null);
+  const s = document.getElementById('r-svg'); s.innerHTML = '';
+  const ns = engrave(s, tune, { x0: 90, y0: 150, ss: 36, gap: 175 });
+  ns.forEach((nt, i) => {
+    const ty = nt.up ? nt.cy - 36 * 3.5 - 34 : nt.cy - 70;
+    if (firstTry[i]) mark(s, tickD(nt.cx, ty, 1.3), BLUE, 6, .15 + i * .07);
+    else { nt.g.querySelector('.head').setAttribute('fill', RED); mark(s, loopD(nt.cx, nt.cy, 54, 44, 70 + i), RED, 5, .15 + i * .07); }
+  });
+  const g = el('text', { x: 120, y: 610, 'font-size': 190, 'font-weight': 800, 'font-family': 'Atkinson', 'letter-spacing': '-8', fill: INK }, s, `${ok}/${total}`);
+  const b = g.getBBox();
+  mark(s, loopD(b.x + b.width / 2, b.y + b.height / 2 + 8, b.width / 2 + 46, b.height / 2 + 14, 99), RED, 7, .8);
+  const many = missed.length > 1, bar = missed.length ? Math.floor(missed[0] / 4) + 1 : 0;
+  document.getElementById('r-line').textContent = !missed.length ? 'Every note right first time.' : many ? `${missed.length} notes needed a second try.` : 'One note needed a second try.';
+  document.getElementById('r-note').textContent = !missed.length ? 'The next piece in the book is open.' : `The ${tune[missed[0]].toUpperCase()} in bar ${bar}. Play bar ${bar} slowly a few times and it will stick.`;
+  const fix = document.getElementById('r-fix'); fix.style.display = missed.length ? '' : 'none'; fix.textContent = `Practise bar ${bar}`;
+  if (missed.length) {
+    const nt = ns[missed[0]], x0 = 552, y0 = 460, x1 = nt.cx - 10, y1 = nt.cy + 62;
+    mark(s, `M${x0} ${y0}Q${(x0 + x1) / 2 - 60} ${y1 + 80} ${x1} ${y1}`, RED, 4.5, 1.1);
+    mark(s, `M${x1 - 26} ${y1 + 6}L${x1} ${y1}L${x1 - 4} ${y1 + 26}`, RED, 4.5, 1.5);
+  }
+}
+document.getElementById('r-again').onclick = () => go('practice');
+document.getElementById('r-fix').onclick = () => go('practice');
+
+document.fonts.ready.then(() => { const start = location.hash.slice(1); go(start && document.getElementById(start) ? start : 'home'); });
+</script>
+</body>
+</html>
