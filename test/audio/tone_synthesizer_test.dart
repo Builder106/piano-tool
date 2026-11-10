@@ -115,4 +115,52 @@ void main() {
       expect(player.isOpen, isFalse);
     });
   });
+
+  group('PooledTonePlayer', () {
+    late List<SilentAudioTonePlayer> made;
+    late PooledTonePlayer pool;
+
+    setUp(() {
+      made = [];
+      pool = PooledTonePlayer(
+        voices: 3,
+        voiceFactory: () {
+          final voice = SilentAudioTonePlayer();
+          made.add(voice);
+          return voice;
+        },
+      );
+    });
+
+    test('notes close together go to different voices', () async {
+      for (var i = 0; i < 3; i++) {
+        await pool.playWav(Uint8List.fromList([i]));
+      }
+      expect(made, hasLength(3));
+      expect([for (final v in made) v.playCount], [1, 1, 1]);
+    });
+
+    test('voices are made only when needed', () async {
+      await pool.playWav(Uint8List(1));
+      expect(made, hasLength(1));
+    });
+
+    test('a full pool reuses its oldest voice', () async {
+      for (var i = 0; i < 4; i++) {
+        await pool.playWav(Uint8List.fromList([i]));
+      }
+      expect(made, hasLength(3));
+      expect(made[0].playedBuffers.map((b) => b.single), [0, 3]);
+      expect(made[1].playedBuffers.map((b) => b.single), [1]);
+    });
+
+    test('closing closes every voice', () async {
+      for (var i = 0; i < 3; i++) {
+        await pool.playWav(Uint8List(1));
+      }
+      await pool.open();
+      await pool.close();
+      expect(made.every((v) => !v.isOpen), isTrue);
+    });
+  });
 }
