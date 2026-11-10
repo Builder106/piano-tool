@@ -31,7 +31,7 @@ class SettingsScreen extends ConsumerWidget {
       child: ListView(
         padding: EdgeInsets.fromLTRB(40 * u, 32 * u, 40 * u, 48 * u),
         children: [
-          const PageHeading('How should it listen?'),
+          const PageHeading('How do you play?'),
           SizedBox(height: 8 * u),
           Choices<PracticeInputSource>(
             options: [for (final s in PracticeInputSource.values) (s, s.label)],
@@ -63,6 +63,7 @@ class SettingsScreen extends ConsumerWidget {
           SizedBox(height: 8 * u),
           PageText(settings.toleranceLevel.description),
           SizedBox(height: 40 * u),
+          if (!settings.inputSource.usesTouch) ...[
           const PageHeading('Does it hear you?'),
           SizedBox(height: 8 * u),
           if (settings.verifiedInput == null)
@@ -83,6 +84,7 @@ class SettingsScreen extends ConsumerWidget {
                 onPressed: () => notifier.setVerifiedInput(null),
               ),
             ),
+          ],
           ],
         ],
       ),

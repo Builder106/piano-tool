@@ -11,6 +11,7 @@ import '../data/settings_repository.dart';
 import '../models/audio_models.dart';
 import '../models/level_models.dart';
 import '../services/midi_service.dart';
+import '../services/touch_keys.dart';
 import 'keys.dart';
 import 'paper_staff.dart';
 import 'practice_screen.dart';
@@ -118,6 +119,11 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
         .firstWhere((s) => s.id == widget.stageId);
     _finder = NoteFinder(notesToFind(_stage.level));
     _keys = keyRange([for (final n in notesOf(_stage.level)) n.midiNote]);
+    // Keys on the screen need no permission, so listening starts at once.
+    if (ref.read(settingsProvider).inputSource.usesTouch) {
+      _subscribe(PracticeInputSource.touch);
+      _listening = true;
+    }
   }
 
   @override
@@ -131,14 +137,14 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
   Future<void> _listen() async {
     final source = ref.read(settingsProvider).inputSource;
     final midi = ref.read(midiServiceProvider);
-    if (source != PracticeInputSource.microphone) {
+    if (source.usesMidi) {
       try {
         await midi.connectSoleWiredDevice();
       } on Object {
         // No MIDI on this platform; the microphone may still do.
       }
     }
-    if (source != PracticeInputSource.midi) {
+    if (source.usesMicrophone) {
       bool granted;
       try {
         granted = await ref.read(audioGrantedProvider.future);
@@ -153,16 +159,34 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
       if (_cantHear) return;
     }
     if (!mounted) return;
-    if (source != PracticeInputSource.midi) {
-      _subs.add(ref.listenManual(audioPitchStreamProvider, (_, e) => _hear(e)));
-    }
-    if (source != PracticeInputSource.microphone) {
-      _subs.add(ref.listenManual(midiPitchStreamProvider, (_, e) => _hear(e)));
-    }
+    _subscribe(source);
     setState(() {
       _listening = true;
       _cantHear = false;
     });
+  }
+
+  void _subscribe(PracticeInputSource source) {
+    if (source.usesMicrophone) {
+      _subs.add(ref.listenManual(audioPitchStreamProvider, (_, e) => _hear(e)));
+    }
+    if (source.usesMidi) {
+      _subs.add(ref.listenManual(midiPitchStreamProvider, (_, e) => _hear(e)));
+    }
+    if (source.usesTouch) {
+      _subs.add(ref.listenManual(touchPitchStreamProvider, (_, e) => _hear(e)));
+    }
+  }
+
+  /// The microphone was refused: find the notes on the screen instead.
+  Future<void> _useScreenKeys() async {
+    await ref
+        .read(settingsProvider.notifier)
+        .setInputSource(PracticeInputSource.touch);
+    if (!mounted) return;
+    setState(() => _cantHear = false);
+    _subscribe(PracticeInputSource.touch);
+    setState(() => _listening = true);
   }
 
   void _hear(AsyncValue<PitchEvent> next) {
@@ -190,15 +214,18 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
     if (_audio) ref.watch(practiceAudioSessionProvider);
     final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
     final targets = _finder.targets;
+    final source = ref.watch(settingsProvider.select((s) => s.inputSource));
     final message = _cantHear
-        ? "The piano can't hear you yet. Allow the microphone, or plug in a "
-              'digital piano.'
+        ? "The piano can't hear you yet. Allow the microphone, plug in a "
+              'digital piano, or tap the keys on the screen.'
         : _finder.done
         ? 'You found all ${targets.length}.'
         : !_listening
         ? 'Press Start listening, then play each circled key.'
         : _wrong != null
         ? 'That was $_wrong. Try the circled keys.'
+        : source.usesTouch
+        ? 'Tap the circled keys, in any order.'
         : 'Listening. Play the circled keys, in any order.';
     return Material(
       color: Palette.field,
@@ -261,6 +288,8 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
                       message: message,
                       done: _finder.done,
                       listening: _listening,
+                      cantHear: _cantHear,
+                      onScreenKeys: _useScreenKeys,
                       u: u,
                       onListen: _listen,
                       onContinue: _toPractice,
@@ -280,6 +309,9 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
                           if (!_finder.found.contains(t)) t,
                       },
                       found: _finder.found,
+                      onPress: source.usesTouch
+                          ? ref.read(touchKeysProvider).press
+                          : null,
                     ),
                   ),
                 ),
@@ -299,6 +331,8 @@ class _Page extends StatelessWidget {
     required this.message,
     required this.done,
     required this.listening,
+    required this.cantHear,
+    required this.onScreenKeys,
     required this.u,
     required this.onListen,
     required this.onContinue,
@@ -309,6 +343,8 @@ class _Page extends StatelessWidget {
   final String message;
   final bool done;
   final bool listening;
+  final bool cantHear;
+  final VoidCallback onScreenKeys;
   final double u;
   final VoidCallback onListen;
   final VoidCallback onContinue;
@@ -343,8 +379,13 @@ class _Page extends StatelessWidget {
         SizedBox(height: 24 * u),
         if (done)
           StartButton(label: 'Play the tune', onPressed: onContinue)
-        else if (!listening)
+        else if (!listening) ...[
           StartButton(label: 'Start listening', onPressed: onListen),
+          if (cantHear) ...[
+            SizedBox(height: 12 * u),
+            QuietButton(label: 'Use screen keys', onPressed: onScreenKeys),
+          ],
+        ],
       ],
     );
     final letters = Row(

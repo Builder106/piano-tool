@@ -9,6 +9,7 @@ import '../brand/palette.dart';
 import '../data/settings_repository.dart';
 import '../models/engine_models.dart';
 import '../services/midi_service.dart';
+import '../services/touch_keys.dart';
 import 'input_check.dart';
 import 'keys.dart';
 import 'notation.dart';
@@ -80,14 +81,14 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     final settings = ref.read(settingsProvider);
     final source = settings.inputSource;
     final midi = ref.read(midiServiceProvider);
-    if (source != PracticeInputSource.microphone) {
+    if (source.usesMidi) {
       try {
         await midi.connectSoleWiredDevice();
       } on Object {
         // No MIDI on this platform; the microphone may still do.
       }
     }
-    if (source != PracticeInputSource.midi && !_listening) {
+    if (source.usesMicrophone && !_listening) {
       bool granted;
       try {
         granted = await ref.read(audioGrantedProvider.future);
@@ -102,6 +103,11 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       if (_cantHear) return;
     }
     if (!mounted) return;
+    // Taps on the screen are certain, so there is nothing to check.
+    if (source.usesTouch) {
+      await _controller.start();
+      return;
+    }
     final key = inputCheckKey(source, midi.selectedDevice?.id);
     if (settings.verifiedInput != key && !_checkSkipped) {
       _beginCheck(key, source);
@@ -121,7 +127,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       ..reset()
       ..start();
     double now() => _checkClock.elapsedMicroseconds / 1e6;
-    if (source != PracticeInputSource.midi) {
+    if (source.usesMicrophone) {
       _checkSubs.add(
         ref.listenManual(audioPitchStreamProvider, (_, next) {
           if (next.value case final e?) check.pitch(e, now());
@@ -134,7 +140,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
             .listen((l) => check.level(l, now())),
       );
     }
-    if (source != PracticeInputSource.microphone) {
+    if (source.usesMidi) {
       _checkSubs.add(
         ref.listenManual(midiPitchStreamProvider, (_, next) {
           if (next.value case final e?) check.pitch(e, now());
@@ -164,6 +170,16 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     if (!mounted) return;
     setState(() => _check = null);
     await _controller.start();
+  }
+
+  /// The microphone was refused: play on the screen instead.
+  Future<void> _useScreenKeys() async {
+    await ref
+        .read(settingsProvider.notifier)
+        .setInputSource(PracticeInputSource.touch);
+    if (!mounted) return;
+    setState(() => _cantHear = false);
+    await _start();
   }
 
   void _skipCheck() {
@@ -212,6 +228,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     if (_listening) ref.watch(practiceAudioSessionProvider);
     final ui = ref.watch(stageControllerProvider(id));
     final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final source = ref.watch(settingsProvider.select((s) => s.inputSource));
     final finished = ui.status == StageEngineStatus.completed;
     final checking = _check != null;
     final title = ui.level.title;
@@ -219,9 +236,10 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       _ when checking =>
         _heard
             ? 'Heard it. Starting the piece.'
-            : 'Play middle C. ${_check!.message(midi: ref.read(settingsProvider).inputSource == PracticeInputSource.midi)}',
+            : 'Play middle C. ${_check!.message(midi: source == PracticeInputSource.midi)}',
       _ when _cantHear =>
-        "The piano can't hear you yet. Allow the microphone, or plug in a digital piano.",
+        "The piano can't hear you yet. Allow the microphone, plug in a "
+            'digital piano, or play on the keys on the screen.',
       _ => null,
     };
     final side = math.max(
@@ -269,6 +287,11 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                             onPressed: _skipCheck,
                           )
                         else if (!checking) ...[
+                          if (_cantHear)
+                            FieldAction(
+                              label: 'Use screen keys',
+                              onPressed: _useScreenKeys,
+                            ),
                           if (ui.loopMeasure != null)
                             FieldAction(
                               label: 'Whole piece',
@@ -340,6 +363,9 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                           : (finished && ui.loopMeasure == null)
                           ? null
                           : _nextNote(ui),
+                      onPress: source.usesTouch
+                          ? ref.read(touchKeysProvider).press
+                          : null,
                     ),
                   ),
                 ),

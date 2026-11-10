@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piano_tool/data/level_repository.dart';
+import 'package:piano_tool/data/settings_repository.dart';
 import 'package:piano_tool/models/audio_models.dart';
 import 'package:piano_tool/practice/find_notes.dart';
 import 'package:piano_tool/services/midi_service.dart';
+import 'package:piano_tool/services/touch_keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/fake_midi_transport.dart';
@@ -85,6 +87,55 @@ void main() {
     expect(find.text('Start listening'), findsWidgets);
     expect(find.text('Skip'), findsWidgets);
     expect(find.text('Play the tune'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('with on-screen keys the step listens at once and ticks taps', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final container = ProviderContainer(
+      overrides: [
+        levelRepositoryProvider.overrideWith((ref) async => LevelRepository()),
+        settingsProvider.overrideWith(
+          () => SettingsNotifier(
+            initialSettings: const AppSettings(
+              inputSource: PracticeInputSource.touch,
+            ),
+          ),
+        ),
+        midiServiceProvider.overrideWith(
+          (ref) => MidiService(transport: FakeMidiTransport([])),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.runAsync(() => container.read(levelRepositoryProvider.future));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: FindNotesScreen(stageId: 'stage_1')),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Start listening'), findsNothing);
+    expect(find.text('Tap the circled keys, in any order.'), findsOneWidget);
+
+    final keys = container.read(touchKeysProvider);
+    keys.press(62);
+    await tester.pump();
+    keys.press(60);
+    keys.press(64);
+    await tester.pump();
+
+    expect(find.text('You found all 3.'), findsOneWidget);
+    expect(find.text('Play the tune'), findsWidgets);
 
     await tester.pumpWidget(const SizedBox());
   });

@@ -40,6 +40,11 @@ void main() {
     expect(now().inputSource, PracticeInputSource.microphone);
     expect(find.text('Hears your piano through the microphone'), findsOne);
 
+    await tester.tap(find.text('On-screen keys'));
+    await tester.pump();
+    expect(now().inputSource, PracticeInputSource.touch);
+    expect(find.text('Does it hear you?'), findsNothing);
+
     await tester.tap(find.text('Half'));
     await tester.pump();
     expect(now().defaultPlaybackSpeed, 0.5);

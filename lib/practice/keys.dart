@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import '../brand/palette.dart';
 import '../brand/pencil_loop.dart';
@@ -37,8 +38,39 @@ String noteName(int midi) => _names[midi % 12];
   return (low, low + octaves * 12 - 1);
 }
 
-/// A keyboard to look at, not to play: the keys heard right now are pressed
-/// in blue, and the key to play next is circled in blue pencil.
+/// Which key is under [point] on a keyboard drawn over [size] from [low] to
+/// [high], or null. Black keys sit over the white ones, so they are tried
+/// first.
+int? keyAt(Offset point, Size size, int low, int high) {
+  final whites = [
+    for (var m = low; m <= high; m++)
+      if (!isBlackKey(m)) m,
+  ];
+  if (whites.isEmpty ||
+      point.dx < 0 ||
+      point.dx >= size.width ||
+      point.dy < 0 ||
+      point.dy > size.height) {
+    return null;
+  }
+  final w = size.width / whites.length;
+  final blackH = size.height * 0.6;
+  final bw = w * 0.62;
+  if (point.dy < blackH) {
+    for (var m = low; m <= high; m++) {
+      if (!isBlackKey(m)) continue;
+      final below = whites.indexOf(m - 1);
+      if (below < 0) continue;
+      final cx = (below + 1) * w;
+      if ((point.dx - cx).abs() <= bw / 2) return m;
+    }
+  }
+  return whites[(point.dx / w).floor().clamp(0, whites.length - 1)];
+}
+
+/// A keyboard. The keys heard right now are pressed in blue, and the key to
+/// play next is circled in blue pencil. With [onPress] the keys can be
+/// tapped, for playing on the screen.
 class PaperKeyboard extends StatelessWidget {
   const PaperKeyboard({
     super.key,
@@ -48,6 +80,7 @@ class PaperKeyboard extends StatelessWidget {
     this.next,
     this.circled = const {},
     this.found = const {},
+    this.onPress,
   });
 
   final int low;
@@ -63,24 +96,40 @@ class PaperKeyboard extends StatelessWidget {
   /// Keys already found, filled in blue.
   final Set<int> found;
 
+  /// Called with the key as soon as it is touched. Null for a keyboard that
+  /// is only to look at.
+  final ValueChanged<int>? onPress;
+
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: next == null
-          ? 'Keyboard'
-          : 'Keyboard. Next note ${noteName(next!)}',
-      child: ExcludeSemantics(
-        child: CustomPaint(
-          painter: _KeysPainter(
-            low: low,
-            high: high,
-            sounding: sounding,
-            next: next,
-            circled: circled,
-            found: found,
-          ),
-          child: const SizedBox.expand(),
+    final painter = _KeysPainter(
+      low: low,
+      high: high,
+      sounding: sounding,
+      next: next,
+      circled: circled,
+      found: found,
+      onPress: onPress,
+    );
+    final press = onPress;
+    if (press == null) {
+      return Semantics(
+        label: next == null
+            ? 'Keyboard'
+            : 'Keyboard. Next note ${noteName(next!)}',
+        child: ExcludeSemantics(
+          child: CustomPaint(painter: painter, child: const SizedBox.expand()),
         ),
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, box) => Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (e) {
+          final key = keyAt(e.localPosition, box.biggest, low, high);
+          if (key != null) press(key);
+        },
+        child: CustomPaint(painter: painter, child: const SizedBox.expand()),
       ),
     );
   }
@@ -94,6 +143,7 @@ class _KeysPainter extends CustomPainter {
     required this.next,
     required this.circled,
     required this.found,
+    required this.onPress,
   });
 
   final int low;
@@ -102,6 +152,52 @@ class _KeysPainter extends CustomPainter {
   final int? next;
   final Set<int> circled;
   final Set<int> found;
+  final ValueChanged<int>? onPress;
+
+  /// One button per key for a screen reader, when the keys can be pressed.
+  @override
+  SemanticsBuilderCallback? get semanticsBuilder {
+    final press = onPress;
+    if (press == null) return null;
+    return (size) {
+      final whites = [
+        for (var m = low; m <= high; m++)
+          if (!isBlackKey(m)) m,
+      ];
+      if (whites.isEmpty) return const [];
+      final w = size.width / whites.length;
+      final blackH = size.height * 0.6;
+      final bw = w * 0.62;
+      CustomPainterSemantics key(int m, Rect rect) => CustomPainterSemantics(
+        rect: rect,
+        properties: SemanticsProperties(
+          label: '${noteName(m)} ${m ~/ 12 - 1}',
+          textDirection: TextDirection.ltr,
+          button: true,
+          onTap: () => press(m),
+        ),
+      );
+      return [
+        for (final (i, m) in whites.indexed)
+          key(m, Rect.fromLTWH(i * w, 0, w, size.height)),
+        for (var m = low; m <= high; m++)
+          if (isBlackKey(m) && whites.contains(m - 1))
+            key(
+              m,
+              Rect.fromLTWH(
+                (whites.indexOf(m - 1) + 1) * w - bw / 2,
+                0,
+                bw,
+                blackH,
+              ),
+            ),
+      ];
+    };
+  }
+
+  @override
+  bool shouldRebuildSemantics(_KeysPainter old) =>
+      old.low != low || old.high != high || (old.onPress == null) != (onPress == null);
 
   static final _labels = <(String, double, int), TextPainter>{};
 
@@ -148,7 +244,7 @@ class _KeysPainter extends CustomPainter {
       _label(
         canvas,
         _noteLetters[_whiteOffsets.indexOf(m % 12)],
-        Offset(x + w / 2, size.height - w * 0.34),
+        Offset(x + w / 2, size.height - w * 0.5),
         w * 0.3,
         isFound
             ? Colors.white
@@ -188,7 +284,7 @@ class _KeysPainter extends CustomPainter {
       final black = isBlackKey(target);
       final cx = black ? whiteX[target - 1]! + w : whiteX[target]! + w / 2;
       // A white key is circled round its letter; a black key near its foot.
-      final centre = Offset(cx, black ? blackH * 0.72 : size.height - w * 0.34);
+      final centre = Offset(cx, black ? blackH * 0.72 : size.height - w * 0.5);
       PencilLoopPainter(
         target: Rect.fromCenter(
           center: centre,
