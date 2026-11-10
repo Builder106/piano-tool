@@ -13,6 +13,7 @@ import '../models/audio_models.dart';
 import '../models/engine_models.dart';
 import '../models/level_models.dart';
 import '../services/midi_service.dart';
+import '../services/touch_keys.dart';
 
 /// One engine for the whole app. Permission and the pitch stream both hang off
 /// it, so a single microphone is opened rather than one per provider.
@@ -368,7 +369,7 @@ final stageControllerProvider =
         audioPitchStreamProvider,
         (_, next) {
           final settings = ref.read(settingsProvider);
-          if (settings.inputSource == PracticeInputSource.midi) return;
+          if (!settings.inputSource.usesMicrophone) return;
           if (next.hasError) {
             _logAudioStreamError(next.error);
             return;
@@ -381,8 +382,13 @@ final stageControllerProvider =
 
       ref.listen(midiPitchStreamProvider, (_, next) {
         final settings = ref.read(settingsProvider);
-        if (settings.inputSource == PracticeInputSource.microphone) return;
+        if (!settings.inputSource.usesMidi) return;
         if (next.hasError) return;
+        next.whenOrNull(data: controller.onPitch);
+      }, fireImmediately: true);
+
+      ref.listen(touchPitchStreamProvider, (_, next) {
+        if (!ref.read(settingsProvider).inputSource.usesTouch) return;
         next.whenOrNull(data: controller.onPitch);
       }, fireImmediately: true);
 
