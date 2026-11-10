@@ -784,7 +784,13 @@ and scoring needed no new path; the controller only listens to the source
 the setting names. The microphone stays off in this mode because it would
 hear the tones the keys play, and the middle C check is skipped. A refused
 microphone now offers Use screen keys instead of a dead end. Sound comes
-from the existing `AudioSynthesizer`, which plays one note at a time, so
-fast runs cut each other off. Checked in a browser: taps tick the notes in
+from the existing `AudioSynthesizer`, which first played one note at a
+time, so fast runs cut each other off. Checked in a browser: taps tick the notes in
 find-the-notes and the page plays with no check. The sound itself has not
 been heard, and the key press timing was only tested through the stream.
+
+The one-note limit was fixed with a pool of six tone players taken in
+turn (`PooledTonePlayer`), so a chord or a quick run rings over itself. A
+single player cannot overlap: starting a buffer stops the one playing.
+Overlap is tested with silent voices; whether six `FlutterSoundPlayer`s
+open together on every platform has only been seen to build, not heard.

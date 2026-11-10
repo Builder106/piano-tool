@@ -61,8 +61,8 @@ and `PaperKeyboard` stays a drawing when no press handler is given.
 
 - Correcting single notes of an added piece before keeping it.
 - Hear it (playing the piece back).
-- Holding a tapped key, and more than one tapped note sounding at once: the
-  tone player plays one note at a time.
+- Holding a tapped key: a note rings for under a second and stops on its
+  own, and letting go does nothing.
 
 ## Type
 
