@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'buttons.dart';
 import 'palette.dart';
+import 'scale.dart';
+
+export 'scale.dart';
 
 /// A fade between screens, the only transition the book uses.
 Route<T> fadeRoute<T>(WidgetBuilder builder) {
@@ -16,10 +19,6 @@ Route<T> fadeRoute<T>(WidgetBuilder builder) {
         ),
   );
 }
-
-/// Scale shared by every screen: 1 at a 720 high window.
-double unitOf(BuildContext context) =>
-    (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
 
 /// A screen that is one white page on the blue field, with Back and the title
 /// on the field above it.
