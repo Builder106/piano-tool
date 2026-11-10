@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../brand/buttons.dart';
+import '../brand/orientation.dart';
 import '../brand/palette.dart';
 import '../brand/pencil_loop.dart';
+import '../brand/scale.dart';
 import '../data/level_repository.dart';
 import '../data/settings_repository.dart';
 import '../models/audio_models.dart';
@@ -103,6 +105,7 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
   late final NoteFinder _finder;
   late final (int, int) _keys;
   final _subs = <ProviderSubscription<AsyncValue<PitchEvent>>>[];
+  final bool _onItsSide = LandscapeLock.acquire();
   bool _listening = false;
   bool _audio = false;
   bool _cantHear = false;
@@ -128,6 +131,7 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
 
   @override
   void dispose() {
+    if (_onItsSide) LandscapeLock.release();
     for (final sub in _subs) {
       sub.close();
     }
@@ -212,7 +216,7 @@ class _FindNotesScreenState extends ConsumerState<FindNotesScreen> {
   @override
   Widget build(BuildContext context) {
     if (_audio) ref.watch(practiceAudioSessionProvider);
-    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final u = unitOf(context);
     final targets = _finder.targets;
     final source = ref.watch(settingsProvider.select((s) => s.inputSource));
     final message = _cantHear
@@ -407,7 +411,11 @@ class _Page extends StatelessWidget {
               children: [
                 text,
                 SizedBox(height: 24 * u),
-                letters,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: letters,
+                ),
               ],
             ),
           );

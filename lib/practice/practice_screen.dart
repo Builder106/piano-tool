@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../brand/buttons.dart';
+import '../brand/orientation.dart';
 import '../brand/palette.dart';
+import '../brand/scale.dart';
 import '../data/settings_repository.dart';
 import '../models/engine_models.dart';
 import '../services/midi_service.dart';
@@ -46,6 +48,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   late final List<Clef> _clefs;
   late final List<Engraved> _engraved;
   late final (int, int) _keys;
+  final bool _onItsSide = LandscapeLock.acquire();
   bool _listening = false;
   bool _cantHear = false;
 
@@ -71,6 +74,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
 
   @override
   void dispose() {
+    if (_onItsSide) LandscapeLock.release();
     _endCheck();
     // The controller outlives the route; leave it halted, not playing on.
     _controller.stop(syncEvents: false, notifyState: false);
@@ -227,7 +231,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     final id = widget.stageId;
     if (_listening) ref.watch(practiceAudioSessionProvider);
     final ui = ref.watch(stageControllerProvider(id));
-    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final u = unitOf(context);
     final source = ref.watch(settingsProvider.select((s) => s.inputSource));
     final finished = ui.status == StageEngineStatus.completed;
     final checking = _check != null;

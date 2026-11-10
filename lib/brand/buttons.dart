@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'scale.dart';
 import 'palette.dart';
 
 /// The main action on a page: a red pencil block, white type.
@@ -55,7 +56,7 @@ class _Block extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final u = unitOf(context);
     return Semantics(
       button: true,
       enabled: onPressed != null,
@@ -100,7 +101,7 @@ class FieldAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final u = unitOf(context);
     return Semantics(
       button: true,
       label: label,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../brand/scale.dart';
 import '../brand/buttons.dart';
 import '../brand/palette.dart';
 import '../brand/pencil_loop.dart';
@@ -87,7 +88,7 @@ class ResultsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final u = unitOf(context);
     final bar = summary.worstBar;
     return Padding(
       padding: EdgeInsets.fromLTRB(40 * u, 8 * u, 40 * u, 20 * u),

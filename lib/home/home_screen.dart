@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../brand/scale.dart';
 import '../brand/buttons.dart';
 import '../brand/palette.dart';
 import '../brand/pencil_loop.dart';
@@ -117,7 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _book(BuildContext context, List<Piece> pieces) {
-    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final u = unitOf(context);
     final open = pieces.where((p) => p.state != PieceState.locked);
     final chosen =
         pieces.where((p) => p.stage.id == _chosen).firstOrNull ??
@@ -151,21 +152,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(36 * u, 18 * u, 24 * u, 0),
-              child: Row(
-                children: [
-                  const _Brand(),
-                  const Spacer(),
-                  if (widget.onOpenPieces != null)
-                    FieldAction(
-                      label: 'All pieces',
-                      onPressed: widget.onOpenPieces,
+              child: SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    const _Brand(),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (widget.onOpenPieces != null)
+                          FieldAction(
+                            label: 'All pieces',
+                            onPressed: widget.onOpenPieces,
+                          ),
+                        if (widget.onOpenSettings != null)
+                          FieldAction(
+                            label: 'Settings',
+                            onPressed: widget.onOpenSettings,
+                          ),
+                      ],
                     ),
-                  if (widget.onOpenSettings != null)
-                    FieldAction(
-                      label: 'Settings',
-                      onPressed: widget.onOpenSettings,
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -196,7 +206,7 @@ class _Brand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final u = (MediaQuery.sizeOf(context).height / 720).clamp(0.7, 1.25);
+    final u = unitOf(context);
     return Text(
       'Piano Tool',
       style: TextStyle(
