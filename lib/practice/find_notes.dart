@@ -404,7 +404,7 @@ class _Page extends StatelessWidget {
     );
     return LayoutBuilder(
       builder: (context, box) {
-        if (box.maxWidth < 760) {
+        if (box.maxWidth < 560) {
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
