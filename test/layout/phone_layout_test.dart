@@ -15,6 +15,7 @@ import 'package:piano_tool/pieces/import_inputs.dart';
 import 'package:piano_tool/pieces/pieces_screen.dart';
 import 'package:piano_tool/practice/find_notes.dart';
 import 'package:piano_tool/practice/keys.dart';
+import 'package:piano_tool/practice/paper_staff.dart';
 import 'package:piano_tool/practice/practice_screen.dart';
 import 'package:piano_tool/services/midi_service.dart';
 import 'package:piano_tool/settings/settings_screen.dart';
@@ -141,6 +142,14 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('Home keeps the engraved preview on a phone upright', (
+    tester,
+  ) async {
+    await show(tester, 'home', sizes.values.first);
+    expect(find.byType(StaticStaff), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('Home shows Start without scrolling on a short screen', (
     tester,
   ) async {
@@ -148,6 +157,7 @@ void main() {
     await show(tester, 'home', window);
     final start = tester.getRect(find.text('Start').first);
     expect(start.bottom, lessThan(window.$1.height));
+    expect(find.byType(StaticStaff), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
 }

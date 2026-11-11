@@ -389,10 +389,11 @@ class _Page extends StatelessWidget {
   Widget build(BuildContext context) {
     final stage = piece.stage;
     // On a short screen, such as a phone on its side, the engraved preview
-    // is dropped so Start is in view without scrolling.
+    // is dropped so Start is in view without scrolling. It is the screen's
+    // height that counts: an upright phone has a short page but plenty of room.
+    final short = MediaQuery.sizeOf(context).height < 480;
     return LayoutBuilder(
       builder: (context, box) {
-        final short = box.maxHeight < 430;
         return Container(
           margin: EdgeInsets.only(top: 8 * u),
           padding: EdgeInsets.fromLTRB(
