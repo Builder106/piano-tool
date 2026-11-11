@@ -388,67 +388,81 @@ class _Page extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stage = piece.stage;
-    return Container(
-      margin: EdgeInsets.only(top: 8 * u),
-      padding: EdgeInsets.fromLTRB(48 * u, 40 * u, 40 * u, 32 * u),
-      decoration: const BoxDecoration(
-        color: Palette.page,
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(28)),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              stage.title,
-              style: TextStyle(
-                fontFamily: Fonts.ui,
-                fontSize: 54 * u,
-                height: 1,
-                letterSpacing: -1.5 * u,
-                color: Palette.ink,
-                fontVariations: const [FontVariation('wght', 800)],
-              ),
-            ),
-            SizedBox(height: 12 * u),
-            Text(
-              stage.description,
-              style: TextStyle(
-                fontFamily: Fonts.ui,
-                fontSize: 21 * u,
-                height: 1.35,
-                color: Palette.graphite,
-              ),
-            ),
-            SizedBox(height: 8 * u),
-            Text(
-              piece.status,
-              style: TextStyle(
-                fontFamily: Fonts.ui,
-                fontSize: 19 * u,
-                color: piece.state == PieceState.next
-                    ? Palette.pencilBlue
-                    : Palette.graphite,
-                fontVariations: const [FontVariation('wght', 700)],
-              ),
-            ),
-            SizedBox(height: 24 * u),
-            SizedBox(
-              height: 210 * u,
-              child: StaticStaff(
-                level: stage.level,
-                notes: notesOf(stage.level),
-                noteStates: [
-                  for (var i = 0; i < notesOf(stage.level).length; i++)
-                    i == 0 ? NoteState.active : NoteState.upcoming,
+    // On a short screen, such as a phone on its side, the engraved preview
+    // is dropped so Start is in view without scrolling.
+    return LayoutBuilder(
+      builder: (context, box) {
+        final short = box.maxHeight < 430;
+        return Container(
+          margin: EdgeInsets.only(top: 8 * u),
+          padding: EdgeInsets.fromLTRB(
+            48 * u,
+            (short ? 24 : 40) * u,
+            40 * u,
+            (short ? 16 : 32) * u,
+          ),
+          decoration: const BoxDecoration(
+            color: Palette.page,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(28)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stage.title,
+                  style: TextStyle(
+                    fontFamily: Fonts.ui,
+                    fontSize: 54 * u,
+                    height: 1,
+                    letterSpacing: -1.5 * u,
+                    color: Palette.ink,
+                    fontVariations: const [FontVariation('wght', 800)],
+                  ),
+                ),
+                SizedBox(height: 12 * u),
+                Text(
+                  stage.description,
+                  style: TextStyle(
+                    fontFamily: Fonts.ui,
+                    fontSize: 21 * u,
+                    height: 1.35,
+                    color: Palette.graphite,
+                  ),
+                ),
+                SizedBox(height: 8 * u),
+                Text(
+                  piece.status,
+                  style: TextStyle(
+                    fontFamily: Fonts.ui,
+                    fontSize: 19 * u,
+                    color: piece.state == PieceState.next
+                        ? Palette.pencilBlue
+                        : Palette.graphite,
+                    fontVariations: const [FontVariation('wght', 700)],
+                  ),
+                ),
+                if (!short) ...[
+                  SizedBox(height: 24 * u),
+                  SizedBox(
+                    height: 210 * u,
+                    child: StaticStaff(
+                      level: stage.level,
+                      notes: notesOf(stage.level),
+                      noteStates: [
+                        for (var i = 0; i < notesOf(stage.level).length; i++)
+                          i == 0 ? NoteState.active : NoteState.upcoming,
+                      ],
+                    ),
+                  ),
                 ],
-              ),
+                SizedBox(height: (short ? 16 : 20) * u),
+                StartButton(label: 'Start', onPressed: onStart),
+              ],
             ),
-            SizedBox(height: 20 * u),
-            StartButton(label: 'Start', onPressed: onStart),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
