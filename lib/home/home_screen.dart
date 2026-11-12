@@ -366,8 +366,8 @@ class _WhiteLoop extends CustomPainter {
     PencilLoopPainter(
       target: Rect.fromCenter(
         center: size.center(Offset.zero),
-        width: size.width + 64,
-        height: size.height + 30,
+        width: size.width + 36,
+        height: size.height + 24,
       ),
       color: Colors.white,
       width: 3.6,
