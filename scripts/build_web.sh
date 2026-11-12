@@ -10,11 +10,15 @@ echo "==> Building showcase site..."
 )
 
 # 2. Build the Flutter web app into build/web/app
+# Keep this version the same as flutter-version in .github/workflows/ci.yml.
+# The stable channel moves, and a newer SDK can stop the dependencies
+# resolving, which broke a deploy.
+FLUTTER_VERSION="${FLUTTER_VERSION:-3.47.0}"
 if ! command -v flutter >/dev/null 2>&1; then
   FLUTTER_HOME="${FLUTTER_HOME:-$HOME/flutter}"
   if [ ! -d "$FLUTTER_HOME" ]; then
-    echo "==> Installing Flutter SDK (stable)..."
-    git clone --depth 1 -b stable https://github.com/flutter/flutter.git "$FLUTTER_HOME"
+    echo "==> Installing Flutter SDK $FLUTTER_VERSION..."
+    git clone --depth 1 -b "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$FLUTTER_HOME"
   fi
   export PATH="$FLUTTER_HOME/bin:$PATH"
 fi
