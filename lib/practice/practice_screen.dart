@@ -234,6 +234,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     final u = unitOf(context);
     final source = ref.watch(settingsProvider.select((s) => s.inputSource));
     final finished = ui.status == StageEngineStatus.completed;
+    final showResults = finished && ui.loopMeasure == null;
     final checking = _check != null;
     final title = ui.level.title;
     final message = switch (true) {
@@ -329,7 +330,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                       ),
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: finished && ui.loopMeasure == null
+                    child: showResults
                         ? ResultsPage(
                             summary: RunSummary.of(ui.noteStates, [
                               for (final n in ui.notes) n.measureIndex,
@@ -354,25 +355,24 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                           ),
                   ),
                 ),
-                SizedBox(
-                  height: keysHeight,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12 * u),
-                    child: PaperKeyboard(
-                      low: _keys.$1,
-                      high: _keys.$2,
-                      sounding: ui.sounding,
-                      next: checking
-                          ? 60
-                          : (finished && ui.loopMeasure == null)
-                          ? null
-                          : _nextNote(ui),
-                      onPress: source.usesTouch
-                          ? ref.read(touchKeysProvider).press
-                          : null,
+                // The marked page has no use for the keys, and the room is better
+                // spent on it.
+                if (!showResults)
+                  SizedBox(
+                    height: keysHeight,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12 * u),
+                      child: PaperKeyboard(
+                        low: _keys.$1,
+                        high: _keys.$2,
+                        sounding: ui.sounding,
+                        next: checking ? 60 : _nextNote(ui),
+                        onPress: source.usesTouch
+                            ? ref.read(touchKeysProvider).press
+                            : null,
+                      ),
                     ),
                   ),
-                ),
               ],
             );
           },
