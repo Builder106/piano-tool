@@ -45,19 +45,23 @@ const _fast = LevelModel(
 );
 
 void main() {
-  test('a loop plays its bar again and never completes the piece', () async {
+  // These run on the test's own clock, advanced by pump, so they do not
+  // depend on how fast the machine happens to be. The engine is disposed in
+  // the body: a timer still running when the test ends fails it.
+  testWidgets('a loop plays its bar again and never completes the piece', (
+    tester,
+  ) async {
     final e = StageEngine(level: _fast);
-    addTearDown(e.dispose);
     e.playLoop(0, 4);
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    await tester.pump(const Duration(milliseconds: 900));
     expect(e.state.engineState, StageEngineStatus.playing);
     expect(e.state.currentBeat, lessThan(4));
     expect(e.loop, isNotNull);
+    e.dispose();
   });
 
-  test('each pass judges the bar afresh', () async {
+  testWidgets('each pass judges the bar afresh', (tester) async {
     final e = StageEngine(level: _fast);
-    addTearDown(e.dispose);
     e.playLoop(0, 4);
     e.processPitchEvent(
       const PitchEvent(
@@ -72,8 +76,9 @@ void main() {
     expect(e.state.noteStates[0], isNot(NoteState.upcoming));
     expect(e.state.noteStates[0], isNot(NoteState.active));
     // Wait for the wrap at beat 4 (0.4 s) and a little into the next pass.
-    await Future<void>.delayed(const Duration(milliseconds: 450));
+    await tester.pump(const Duration(milliseconds: 450));
     expect(e.state.noteStates[0], anyOf(NoteState.upcoming, NoteState.active));
+    e.dispose();
   });
 
   test('starting or resetting clears the loop', () {
