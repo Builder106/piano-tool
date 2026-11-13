@@ -207,6 +207,7 @@ class _AddPieceScreenState extends ConsumerState<AddPieceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(importInputsProvider);
     final u = unitOf(context);
     final content = switch (_step) {
       _Step.choose => _choose(u),

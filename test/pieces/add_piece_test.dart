@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _FakeInputs implements ImportInputs {
   bool allowed = true;
   int recordings = 0;
+  bool disposed = false;
 
   @override
   Future<File?> pickAudioFile() async => null;
@@ -31,7 +32,7 @@ class _FakeInputs implements ImportInputs {
   }
 
   @override
-  void dispose() {}
+  void dispose() => disposed = true;
 }
 
 final _level = LevelModel(
@@ -101,7 +102,11 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         ingestionRepositoryProvider.overrideWith((ref) async => repo),
-        importInputsProvider.overrideWith((ref) => inputs ?? _FakeInputs()),
+        importInputsProvider.overrideWith((ref) {
+          final fake = inputs ?? _FakeInputs();
+          ref.onDispose(fake.dispose);
+          return fake;
+        }),
       ],
     );
     addTearDown(container.dispose);
@@ -139,6 +144,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 30));
     }
   }
+
+  testWidgets('the recorder stays alive while the screen is open', (
+    tester,
+  ) async {
+    final inputs = _FakeInputs();
+    await open(tester, jobStatus: 'done', inputs: inputs);
+
+    await tester.tap(find.text('Start recording'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(inputs.disposed, isFalse);
+  });
 
   testWidgets('a recording becomes a piece you can name and keep', (
     tester,
