@@ -75,14 +75,18 @@ class _Block extends StatelessWidget {
                   : Border.all(color: border!, width: 2.5),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: Fonts.ui,
-                fontSize: 21 * u,
-                height: 1.1,
-                color: text,
-                fontVariations: const [FontVariation('wght', 800)],
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: Fonts.ui,
+                  fontSize: 21 * u,
+                  height: 1.1,
+                  color: text,
+                  fontVariations: const [FontVariation('wght', 800)],
+                ),
               ),
             ),
           ),
