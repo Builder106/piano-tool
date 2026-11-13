@@ -35,6 +35,11 @@ class _FakeInputs implements ImportInputs {
   void dispose() => disposed = true;
 }
 
+class _BrokenInputs extends _FakeInputs {
+  @override
+  Future<bool> startRecording() async => throw StateError('no recorder');
+}
+
 final _level = LevelModel(
   id: 'job-1',
   title: 'recording.wav',
@@ -223,5 +228,15 @@ void main() {
     await tester.tap(find.text('Start recording'));
     await tester.pump();
     expect(find.textContaining('The microphone is not allowed'), findsOne);
+  });
+
+  testWidgets('a recorder that breaks is explained, not silent', (
+    tester,
+  ) async {
+    await open(tester, jobStatus: 'done', inputs: _BrokenInputs());
+    await tester.tap(find.text('Start recording'));
+    await tester.pump();
+    expect(find.textContaining('The recording did not work'), findsOne);
+    expect(find.text('Start recording'), findsOne);
   });
 }

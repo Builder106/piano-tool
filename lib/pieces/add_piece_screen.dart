@@ -92,24 +92,34 @@ class _AddPieceScreenState extends ConsumerState<AddPieceScreen> {
 
   Future<void> _toggleRecording() async {
     final inputs = ref.read(importInputsProvider);
-    if (_recordingNow) {
-      final bytes = await inputs.stopRecording();
+    try {
+      if (_recordingNow) {
+        final bytes = await inputs.stopRecording();
+        if (!mounted) return;
+        setState(() {
+          _recordingNow = false;
+          _recording = bytes;
+          _note = null;
+        });
+      } else {
+        final started = await inputs.startRecording();
+        if (!mounted) return;
+        setState(() {
+          _recordingNow = started;
+          _recording = null;
+          _note = started
+              ? null
+              : 'The microphone is not allowed. Allow it in your settings, or '
+                    'choose a file instead.';
+        });
+      }
+    } on Object {
       if (!mounted) return;
       setState(() {
         _recordingNow = false;
-        _recording = bytes;
-        _note = null;
-      });
-    } else {
-      final started = await inputs.startRecording();
-      if (!mounted) return;
-      setState(() {
-        _recordingNow = started;
-        _recording = null;
-        _note = started
-            ? null
-            : 'The microphone is not allowed. Allow it in your settings, or '
-                  'choose a file instead.';
+        _note =
+            'The recording did not work. Try again, or choose a file '
+            'instead.';
       });
     }
   }
