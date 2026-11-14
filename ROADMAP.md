@@ -77,10 +77,17 @@ reliability so the interaction is both expressive and accurate.
 - [x] **Useful input diagnostics:** Distinguish silence, weak signal, and
   unstable pitch. MIDI-only setup must remain free of microphone requests.
   Permission alone must not display a claim that the piano was heard.
-- [ ] **Measured calibration:** Validate input latency, microphone threshold,
+- [x] **Measured calibration:** Validate input latency, microphone threshold,
   and reference tuning with representative hardware. Keep timing tolerance
   separate from pitch tuning, and calibrate before generating timing advice.
   Do not copy another app's device offsets or recognition thresholds.
+  Implemented: PitchDetector honors AudioEngineConfig.referenceFrequency
+  and rejects frames below minVolumeThreshold / minConfidenceThreshold;
+  PitchCalibration handles reference pitch and cent deviation;
+  StageEngineConfig and AppSettings support calibrated inputLatency;
+  StageEngine compensates measured input latency while preserving signed
+  timing errors; TimingAdvice guards and refuses to generate timing advice
+  until input latency is calibrated.
 
 ### UI composition and response
 

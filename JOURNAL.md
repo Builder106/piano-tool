@@ -1,5 +1,32 @@
 # Journal
 
+## 2026-11-14: input latency calibration, reference tuning, and timing advice guards #engine #audio #decision
+
+Timing tolerance windows must remain strictly decoupled from pitch tuning, and
+device input latency must be calibrated before generating player timing advice:
+- In `PitchDetector`, frequency-to-MIDI note conversion now honors the
+  configured `referenceFrequency` from `AudioEngineConfig` rather than
+  hardcoding standard 440 Hz, supporting alternative historical and concert
+  tunings (e.g. Baroque 415.3 Hz, Verdi 432 Hz, European concert 442 Hz).
+  Microphone volume and confidence thresholds continue to guard against ambient
+  noise and indistinct pitches.
+- `PitchCalibration` encapsulates reference pitch conversion, nominal
+  frequency calculation, and cents deviation.
+- `StageEngineConfig` and `AppSettings` gain `inputLatency` (seconds, default 0.0),
+  persisted in `SettingsRepository`. Rather than copying arbitrary device offsets
+  or thresholds from other applications (such as Simply Piano's hardcoded 130 ms
+  audio latency), latency compensation is configurable and calibrated to the
+  measured hardware and audio capture pipeline.
+- `StageEngine` applies calibrated `inputLatency` to calculate the effective
+  playhead beat when pitch events arrive, neutralizing hardware buffer delays
+  while accurately recording signed early/late timing errors in `NoteHitResult`.
+- Timing tolerance windows (`perfectWindow`, `goodWindow`, `okayWindow`,
+  `missWindow`) govern scoring tolerance independently of pitch tuning.
+- `TimingAdvice` evaluates timing trends (rushing, dragging, on-time) but strictly
+  guards against uncalibrated sessions: if input latency is uncalibrated, timing
+  advice is refused (`TimingTrend.uncalibrated`) so hardware delays are never
+  falsely blamed on the player.
+
 ## 2026-11-14: polyphony verification and honest MIDI requirement #engine #decision
 
 The acoustic microphone path relies on a monophonic YIN pitch detector that
