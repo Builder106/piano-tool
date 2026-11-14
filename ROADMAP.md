@@ -59,10 +59,14 @@ reliability so the interaction is both expressive and accurate.
   Implemented: MIDI note-ons are strikes, and microphone frames start a
   strike on a pitch change, a silence, or a swell. The microphone
   thresholds still need evaluation on real pianos.
-- [ ] **Honest polyphony support:** Verify simultaneous-note matching and
+- [x] **Honest polyphony support:** Verify simultaneous-note matching and
   chord behavior separately from grand staff rendering. The microphone's
   YIN detector estimates a fundamental pitch; require and label MIDI for
   lessons that need capabilities the acoustic path cannot yet verify.
+  Implemented: StageEngine matches and scores simultaneous notes and chords
+  across all timing windows; LevelModel detects polyphony; StageModel
+  flags and labels MIDI requirements; StageController enforces MIDI-only
+  scoring for polyphonic lessons.
 
 ### Instrument setup and calibration
 

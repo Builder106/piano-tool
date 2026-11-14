@@ -1,5 +1,29 @@
 # Journal
 
+## 2026-11-14: polyphony verification and honest MIDI requirement #engine #decision
+
+The acoustic microphone path relies on a monophonic YIN pitch detector that
+estimates a single fundamental pitch from autocorrelation. When multiple
+strings ring together in a chord, multi-frequency harmonics cannot be
+reliably separated or verified by this algorithm.
+
+Rather than claiming to evaluate polyphonic performance acoustically, polyphonic
+pieces and chords now honestly require a digital piano (MIDI) connection:
+- `LevelModel.isPolyphonic` detects overlapping or simultaneous non-rest
+  notes in sorted order ($O(N)$).
+- `StageModel` gains `requiresMidi` (default false), with `effectiveRequiresMidi`
+  derived from either explicit configuration or `level.isPolyphonic`.
+  `inputRequirementLabel` provides clear UI labeling when MIDI is required.
+- Imported polyphonic levels automatically flag `requiresMidi: true`.
+- `StageController` checks `stage.effectiveRequiresMidi` before processing
+  microphone pitch events: acoustic frames are ignored on polyphonic lessons,
+  while MIDI events are processed and scored.
+- `StageEngine` simultaneous-note matching and chord behavior were verified
+  across diverse scenarios: simultaneous arrivals, scrambled order, shared
+  pitches, differing durations, partial hits with missed note tracking, and loop
+  playback resets. In addition, `seekToBeat` was hardened so scrub operations
+  preserve already registered hit notes.
+
 ## 2026-11-07: notation, metronome, loops, input check, keys #ui #engine #decision
 
 Rests, ties, beams and bass and grand staves are engraved from the level
