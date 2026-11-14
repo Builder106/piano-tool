@@ -9,9 +9,9 @@
 
 ## 💡 What is Piano Tool?
 
-Learning to read sheet music on a real piano requires immediate feedback on whether you hit the right key at the right tempo. 
+When learning to read sheet music at a piano, feedback on the notes and timing can help guide practice.
 
-Piano Tool acts as an interactive music coach on your tablet or phone. It displays scrolling musical staves and an on-screen keyboard, listens to your acoustic or digital piano through the microphone, and instantly marks notes as correct or missed while tracking your timing accuracy.
+Piano Tool is designed as an interactive music coach for a tablet or phone. It displays scrolling musical staves and an on-screen keyboard, listens to an acoustic or digital piano through the microphone, and marks notes as correct or missed while tracking timing.
 
 ## Project Status
 
