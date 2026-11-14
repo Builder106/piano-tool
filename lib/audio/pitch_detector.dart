@@ -237,9 +237,10 @@ class PitchDetector {
       return null;
     }
 
-    // Convert frequency to MIDI note
-    final int midiNote = (69 + 12 * math.log(frequency / 440.0) / math.ln2)
-        .round();
+    // Convert frequency to MIDI note using configured reference frequency
+    final int midiNote =
+        (69 + 12 * math.log(frequency / config.referenceFrequency) / math.ln2)
+            .round();
 
     return PitchEvent(
       frequency: frequency,

@@ -874,4 +874,191 @@ void main() {
       },
     );
   });
+
+  group('input latency calibration and tolerance separation', () {
+    const singleNoteLevel = LevelModel(
+      id: 'latency-test',
+      title: 'Latency Test',
+      description: '',
+      tempo: 120, // 2 beats per second => 1 beat = 0.5s = 500ms
+      beatsPerMeasure: 4,
+      totalMeasures: 1,
+      measures: [
+        LevelMeasure(
+          index: 0,
+          startBeat: 0,
+          beatsPerMeasure: 4,
+          notes: [
+            LevelNote(
+              midiNote: 60,
+              startBeat: 1.0,
+              durationBeats: 1.0,
+              measureIndex: 0,
+              beatIndex: 1,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    test('uncompensated input latency reflects raw delivery delay', () {
+      // With zero latency compensation and strict tolerance (perfectWindow: 0.06):
+      final engine = StageEngine(
+        level: singleNoteLevel,
+        config: const StageEngineConfig(
+          inputLatency: 0.0,
+          perfectWindow: 0.06,
+          goodWindow: 0.12,
+          okayWindow: 0.20,
+        ),
+      );
+      engine.start();
+      engine.seekToBeat(1.08);
+
+      engine.processPitchEvent(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1.0,
+          midiNote: 60,
+          timestamp: 0.54,
+          volume: 0.8,
+          struck: true,
+        ),
+      );
+
+      // Raw timing error is 1.08 - 1.0 = +0.08 beats (> 0.06), scored as hitGood
+      expect(engine.state.noteStates[0], NoteState.hitGood);
+      engine.dispose();
+    });
+
+    test(
+      'calibrated input latency compensates hardware delay into perfect hit',
+      () {
+        // 40ms audio/input buffer latency at 120 BPM (2 beats/sec) = 0.08 beats.
+        final engine = StageEngine(
+          level: singleNoteLevel,
+          config: const StageEngineConfig(
+            inputLatency: 0.04, // 40 ms
+            perfectWindow: 0.06,
+            goodWindow: 0.12,
+            okayWindow: 0.20,
+          ),
+        );
+        engine.start();
+        engine.seekToBeat(1.08);
+
+        engine.processPitchEvent(
+          const PitchEvent(
+            frequency: 261.63,
+            confidence: 1.0,
+            midiNote: 60,
+            timestamp: 0.54,
+            volume: 0.8,
+            struck: true,
+          ),
+        );
+
+        // Compensated beat is 1.08 - 0.08 = 1.00 => timingError = 0.00 => hitPerfect
+        expect(engine.state.noteStates[0], NoteState.hitPerfect);
+        engine.dispose();
+      },
+    );
+
+    test('latency compensation preserves signed early timing errors', () {
+      // Event arrives at beat 1.04. With 0.04s (0.08 beat) latency, effective beat is 0.96.
+      final engine = StageEngine(
+        level: singleNoteLevel,
+        config: const StageEngineConfig(
+          inputLatency: 0.04,
+          perfectWindow: 0.03, // narrower than 0.04
+          goodWindow: 0.08,
+          okayWindow: 0.15,
+        ),
+      );
+      engine.start();
+      engine.seekToBeat(1.04);
+
+      StageEvent? hitEvent;
+      engine.events.listen(
+        (e) => e.whenOrNull(noteHit: (idx, res, b) => hitEvent = e),
+      );
+
+      engine.processPitchEvent(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1.0,
+          midiNote: 60,
+          timestamp: 0.52,
+          volume: 0.8,
+          struck: true,
+        ),
+      );
+
+      // Compensated timing error is 0.96 - 1.0 = -0.04 beats (early)
+      expect(engine.state.noteStates[0], NoteState.hitGood);
+      hitEvent?.whenOrNull(
+        noteHit: (idx, res, b) {
+          res.whenOrNull(
+            good: (noteIdx, timingError) {
+              expect(timingError, closeTo(-0.04, 0.001));
+            },
+          );
+        },
+      );
+      engine.dispose();
+    });
+
+    test('timing tolerance windows function independently from pitch tuning', () {
+      // At error = 0.18 beats:
+      // - relaxed window (perfect: 0.15, good: 0.30) rates as hitGood
+      // - strict window (perfect: 0.06, good: 0.12, okay: 0.20) rates as hitOkay
+      final relaxedEngine = StageEngine(
+        level: singleNoteLevel,
+        config: const StageEngineConfig(
+          perfectWindow: 0.15,
+          goodWindow: 0.30,
+          okayWindow: 0.45,
+          missWindow: 0.70,
+        ),
+      );
+      relaxedEngine.start();
+      relaxedEngine.seekToBeat(1.18);
+      relaxedEngine.processPitchEvent(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1.0,
+          midiNote: 60,
+          timestamp: 0.5,
+          volume: 0.8,
+          struck: true,
+        ),
+      );
+      expect(relaxedEngine.state.noteStates[0], NoteState.hitGood);
+      relaxedEngine.dispose();
+
+      final strictEngine = StageEngine(
+        level: singleNoteLevel,
+        config: const StageEngineConfig(
+          perfectWindow: 0.06,
+          goodWindow: 0.12,
+          okayWindow: 0.20,
+          missWindow: 0.35,
+        ),
+      );
+      strictEngine.start();
+      strictEngine.seekToBeat(1.18);
+      strictEngine.processPitchEvent(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1.0,
+          midiNote: 60,
+          timestamp: 0.5,
+          volume: 0.8,
+          struck: true,
+        ),
+      );
+      expect(strictEngine.state.noteStates[0], NoteState.hitOkay);
+      strictEngine.dispose();
+    });
+  });
 }

@@ -94,6 +94,33 @@ void main() {
       });
 
       expect(detector.processBuffer(buffer)!.midiNote, 69);
+
+      // Baroque reference: A4 = 415.3 Hz
+      final baroqueDetector = PitchDetector(
+        config: const AudioEngineConfig(
+          sampleRate: sampleRate,
+          bufferSize: bufferSize,
+          referenceFrequency: 415.3,
+          minConfidenceThreshold: 0.7,
+        ),
+      );
+      final baroqueBuffer = List<int>.generate(bufferSize, (i) {
+        final t = i / sampleRate;
+        return (math.sin(2 * math.pi * 415.3 * t) * 20000).round();
+      });
+      // Under Baroque tuning, 415.3 Hz is A4 (MIDI 69)
+      expect(baroqueDetector.processBuffer(baroqueBuffer)!.midiNote, 69);
+
+      // Under standard 440 Hz tuning, 415.3 Hz is G#4 (MIDI 68)
+      final standardDetector = PitchDetector(
+        config: const AudioEngineConfig(
+          sampleRate: sampleRate,
+          bufferSize: bufferSize,
+          referenceFrequency: 440.0,
+          minConfidenceThreshold: 0.7,
+        ),
+      );
+      expect(standardDetector.processBuffer(baroqueBuffer)!.midiNote, 68);
     });
 
     test('timestamps are zero for buffers processed outside a session', () {

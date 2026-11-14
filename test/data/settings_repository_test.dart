@@ -38,6 +38,14 @@ void main() {
       expect(settings.minVolumeThreshold, 0.1);
       expect(settings.referenceFrequency, 440.0);
       expect(settings.customApiBaseUrl, isNull);
+      expect(settings.inputLatency, 0.0);
+    });
+
+    test('saves and reads updated input latency', () async {
+      final repo = SettingsRepository();
+      await repo.updateInputLatency(0.045);
+      final settings = await repo.read();
+      expect(settings.inputLatency, 0.045);
     });
 
     test('saves and reads updated theme mode', () async {
@@ -139,6 +147,12 @@ void main() {
       final audioConfig = settings.toAudioEngineConfig();
       expect(audioConfig.minVolumeThreshold, 0.15);
       expect(audioConfig.referenceFrequency, 442.0);
+    });
+
+    test('maps inputLatency to StageEngineConfig', () {
+      const settings = AppSettings(inputLatency: 0.035);
+      final config = settings.toStageEngineConfig();
+      expect(config.inputLatency, 0.035);
     });
   });
 }

@@ -80,6 +80,7 @@ class AppSettings {
     this.inputSource = PracticeInputSource.both,
     this.inputConfigured = true,
     this.verifiedInput,
+    this.inputLatency = 0.0,
   });
 
   final ThemeMode themeMode;
@@ -90,6 +91,7 @@ class AppSettings {
   final String? customApiBaseUrl;
   final PracticeInputSource inputSource;
   final bool inputConfigured;
+  final double inputLatency;
 
   /// The input Piano Tool last actually heard a note from, as an
   /// [inputCheckKey]. Permission alone never sets it.
@@ -101,6 +103,7 @@ class AppSettings {
     okayWindow: toleranceLevel.okayWindow,
     missWindow: toleranceLevel.missWindow,
     playbackSpeed: defaultPlaybackSpeed,
+    inputLatency: inputLatency,
   );
 
   AudioEngineConfig toAudioEngineConfig() => AudioEngineConfig(
@@ -118,6 +121,7 @@ class AppSettings {
     PracticeInputSource? inputSource,
     bool? inputConfigured,
     String? verifiedInput,
+    double? inputLatency,
     bool clearCustomApiBaseUrl = false,
     bool clearVerifiedInput = false,
   }) => AppSettings(
@@ -134,6 +138,7 @@ class AppSettings {
     verifiedInput: clearVerifiedInput
         ? null
         : (verifiedInput ?? this.verifiedInput),
+    inputLatency: inputLatency ?? this.inputLatency,
   );
 
   @override
@@ -149,7 +154,8 @@ class AppSettings {
           customApiBaseUrl == other.customApiBaseUrl &&
           inputSource == other.inputSource &&
           inputConfigured == other.inputConfigured &&
-          verifiedInput == other.verifiedInput;
+          verifiedInput == other.verifiedInput &&
+          inputLatency == other.inputLatency;
 
   @override
   int get hashCode => Object.hash(
@@ -162,6 +168,7 @@ class AppSettings {
     inputSource,
     inputConfigured,
     verifiedInput,
+    inputLatency,
   );
 }
 
@@ -177,6 +184,7 @@ class SettingsRepository {
   static const _inputSourceKey = '${_prefix}inputSource';
   static const _inputConfiguredKey = '${_prefix}inputConfigured';
   static const _verifiedInputKey = '${_prefix}verifiedInput';
+  static const _inputLatencyKey = '${_prefix}inputLatency';
 
   Future<AppSettings> read() async {
     final prefs = await SharedPreferences.getInstance();
@@ -208,6 +216,7 @@ class SettingsRepository {
       'touch' => PracticeInputSource.touch,
       _ => PracticeInputSource.both,
     };
+    final inputLatency = prefs.getDouble(_inputLatencyKey) ?? 0.0;
 
     return AppSettings(
       themeMode: themeMode,
@@ -221,6 +230,7 @@ class SettingsRepository {
           prefs.getBool(_inputConfiguredKey) ??
           prefs.containsKey(_inputSourceKey),
       verifiedInput: prefs.getString(_verifiedInputKey),
+      inputLatency: inputLatency,
     );
   }
 
@@ -233,6 +243,7 @@ class SettingsRepository {
     await prefs.setDouble(_referenceFreqKey, settings.referenceFrequency);
     await prefs.setString(_inputSourceKey, settings.inputSource.name);
     await prefs.setBool(_inputConfiguredKey, settings.inputConfigured);
+    await prefs.setDouble(_inputLatencyKey, settings.inputLatency);
     if (settings.verifiedInput != null) {
       await prefs.setString(_verifiedInputKey, settings.verifiedInput!);
     } else {
@@ -263,6 +274,11 @@ class SettingsRepository {
   Future<void> updateTolerance(ToleranceLevel level) async {
     final current = await read();
     await save(current.copyWith(toleranceLevel: level));
+  }
+
+  Future<void> updateInputLatency(double latency) async {
+    final current = await read();
+    await save(current.copyWith(inputLatency: latency));
   }
 }
 
@@ -301,6 +317,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setToleranceLevel(ToleranceLevel level) async {
     state = state.copyWith(toleranceLevel: level);
+    final repo = ref.read(settingsRepositoryProvider);
+    await repo.save(state);
+  }
+
+  Future<void> setInputLatency(double latency) async {
+    state = state.copyWith(inputLatency: latency);
     final repo = ref.read(settingsRepositoryProvider);
     await repo.save(state);
   }

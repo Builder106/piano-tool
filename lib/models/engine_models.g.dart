@@ -171,6 +171,7 @@ _$StageEngineConfigImpl _$$StageEngineConfigImplFromJson(
   missWindow: (json['missWindow'] as num?)?.toDouble() ?? 0.5,
   autoAdvance: json['autoAdvance'] as bool? ?? true,
   playbackSpeed: (json['playbackSpeed'] as num?)?.toDouble() ?? 1.0,
+  inputLatency: (json['inputLatency'] as num?)?.toDouble() ?? 0.0,
 );
 
 Map<String, dynamic> _$$StageEngineConfigImplToJson(
@@ -182,6 +183,7 @@ Map<String, dynamic> _$$StageEngineConfigImplToJson(
   'missWindow': instance.missWindow,
   'autoAdvance': instance.autoAdvance,
   'playbackSpeed': instance.playbackSpeed,
+  'inputLatency': instance.inputLatency,
 };
 
 _$StageEngineStateModelImpl _$$StageEngineStateModelImplFromJson(

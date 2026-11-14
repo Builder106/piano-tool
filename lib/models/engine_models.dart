@@ -96,6 +96,8 @@ sealed class StageEngineConfig with _$StageEngineConfig {
     @Default(0.5) double missWindow, // beats after which note is missed
     @Default(true) bool autoAdvance, // auto-advance playhead
     @Default(1.0) double playbackSpeed, // speed multiplier
+    @Default(0.0)
+    double inputLatency, // seconds of input/buffer latency compensation
   }) = _StageEngineConfig;
 
   factory StageEngineConfig.fromJson(Map<String, dynamic> json) =>

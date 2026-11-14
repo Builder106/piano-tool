@@ -187,8 +187,10 @@ class StageEngine extends ChangeNotifier {
     if (_state.engineState != StageEngineStatus.playing) return;
     if (!_isFreshStrike(event)) return;
 
-    final currentBeat = _state.currentBeat;
-    _tryMatchNote(event.midiNote, currentBeat);
+    final beatsPerSecond = _level.tempo / 60.0 * _playbackSpeed;
+    final latencyBeats = _config.inputLatency * beatsPerSecond;
+    final effectiveBeat = _state.currentBeat - latencyBeats;
+    _tryMatchNote(event.midiNote, effectiveBeat);
   }
 
   /// A MIDI note-on is always a strike. A microphone frame is one when the
@@ -211,6 +213,7 @@ class StageEngine extends ChangeNotifier {
     // Find the best matching note that's upcoming or active
     int? bestMatchIndex;
     double bestTimingError = double.infinity;
+    double bestSignedTimingError = 0.0;
 
     for (int i = _nextNoteIndex; i < _allNotes.length; i++) {
       final note = _allNotes[i];
@@ -236,17 +239,14 @@ class StageEngine extends ChangeNotifier {
       if (absError <= _config.missWindow) {
         if (absError < bestTimingError) {
           bestTimingError = absError;
+          bestSignedTimingError = timingError;
           bestMatchIndex = i;
         }
       }
     }
 
     if (bestMatchIndex != null) {
-      _registerHit(
-        bestMatchIndex,
-        bestTimingError *
-            (currentBeat > _allNotes[bestMatchIndex].startBeat ? 1 : -1),
-      );
+      _registerHit(bestMatchIndex, bestSignedTimingError);
     }
   }
 

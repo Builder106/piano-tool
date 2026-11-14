@@ -2112,6 +2112,7 @@ mixin _$StageEngineConfig {
   bool get autoAdvance =>
       throw _privateConstructorUsedError; // auto-advance playhead
   double get playbackSpeed => throw _privateConstructorUsedError;
+  double get inputLatency => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -2133,6 +2134,7 @@ abstract class $StageEngineConfigCopyWith<$Res> {
     double missWindow,
     bool autoAdvance,
     double playbackSpeed,
+    double inputLatency,
   });
 }
 
@@ -2155,6 +2157,7 @@ class _$StageEngineConfigCopyWithImpl<$Res, $Val extends StageEngineConfig>
     Object? missWindow = null,
     Object? autoAdvance = null,
     Object? playbackSpeed = null,
+    Object? inputLatency = null,
   }) {
     return _then(
       _value.copyWith(
@@ -2182,6 +2185,10 @@ class _$StageEngineConfigCopyWithImpl<$Res, $Val extends StageEngineConfig>
                 ? _value.playbackSpeed
                 : playbackSpeed // ignore: cast_nullable_to_non_nullable
                       as double,
+            inputLatency: null == inputLatency
+                ? _value.inputLatency
+                : inputLatency // ignore: cast_nullable_to_non_nullable
+                      as double,
           )
           as $Val,
     );
@@ -2204,6 +2211,7 @@ abstract class _$$StageEngineConfigImplCopyWith<$Res>
     double missWindow,
     bool autoAdvance,
     double playbackSpeed,
+    double inputLatency,
   });
 }
 
@@ -2225,6 +2233,7 @@ class __$$StageEngineConfigImplCopyWithImpl<$Res>
     Object? missWindow = null,
     Object? autoAdvance = null,
     Object? playbackSpeed = null,
+    Object? inputLatency = null,
   }) {
     return _then(
       _$StageEngineConfigImpl(
@@ -2252,6 +2261,10 @@ class __$$StageEngineConfigImplCopyWithImpl<$Res>
             ? _value.playbackSpeed
             : playbackSpeed // ignore: cast_nullable_to_non_nullable
                   as double,
+        inputLatency: null == inputLatency
+            ? _value.inputLatency
+            : inputLatency // ignore: cast_nullable_to_non_nullable
+                  as double,
       ),
     );
   }
@@ -2267,6 +2280,7 @@ class _$StageEngineConfigImpl implements _StageEngineConfig {
     this.missWindow = 0.5,
     this.autoAdvance = true,
     this.playbackSpeed = 1.0,
+    this.inputLatency = 0.0,
   });
 
   factory _$StageEngineConfigImpl.fromJson(Map<String, dynamic> json) =>
@@ -2295,10 +2309,13 @@ class _$StageEngineConfigImpl implements _StageEngineConfig {
   @override
   @JsonKey()
   final double playbackSpeed;
+  @override
+  @JsonKey()
+  final double inputLatency;
 
   @override
   String toString() {
-    return 'StageEngineConfig(perfectWindow: $perfectWindow, goodWindow: $goodWindow, okayWindow: $okayWindow, missWindow: $missWindow, autoAdvance: $autoAdvance, playbackSpeed: $playbackSpeed)';
+    return 'StageEngineConfig(perfectWindow: $perfectWindow, goodWindow: $goodWindow, okayWindow: $okayWindow, missWindow: $missWindow, autoAdvance: $autoAdvance, playbackSpeed: $playbackSpeed, inputLatency: $inputLatency)';
   }
 
   @override
@@ -2317,7 +2334,9 @@ class _$StageEngineConfigImpl implements _StageEngineConfig {
             (identical(other.autoAdvance, autoAdvance) ||
                 other.autoAdvance == autoAdvance) &&
             (identical(other.playbackSpeed, playbackSpeed) ||
-                other.playbackSpeed == playbackSpeed));
+                other.playbackSpeed == playbackSpeed) &&
+            (identical(other.inputLatency, inputLatency) ||
+                other.inputLatency == inputLatency));
   }
 
   @JsonKey(ignore: true)
@@ -2330,6 +2349,7 @@ class _$StageEngineConfigImpl implements _StageEngineConfig {
     missWindow,
     autoAdvance,
     playbackSpeed,
+    inputLatency,
   );
 
   @JsonKey(ignore: true)
@@ -2355,6 +2375,7 @@ abstract class _StageEngineConfig implements StageEngineConfig {
     final double missWindow,
     final bool autoAdvance,
     final double playbackSpeed,
+    final double inputLatency,
   }) = _$StageEngineConfigImpl;
 
   factory _StageEngineConfig.fromJson(Map<String, dynamic> json) =
@@ -2372,6 +2393,8 @@ abstract class _StageEngineConfig implements StageEngineConfig {
   bool get autoAdvance;
   @override // auto-advance playhead
   double get playbackSpeed;
+  @override
+  double get inputLatency;
   @override
   @JsonKey(ignore: true)
   _$$StageEngineConfigImplCopyWith<_$StageEngineConfigImpl> get copyWith =>
@@ -2773,6 +2796,7 @@ mixin _$GameState {
   int get score => throw _privateConstructorUsedError;
   double get accuracy => throw _privateConstructorUsedError;
   double get playbackSpeed => throw _privateConstructorUsedError;
+  double get inputLatency => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $GameStateCopyWith<GameState> get copyWith =>
