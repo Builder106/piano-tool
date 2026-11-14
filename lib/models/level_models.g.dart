@@ -98,6 +98,7 @@ _StageModel _$StageModelFromJson(Map<String, dynamic> json) => _StageModel(
           .toList() ??
       const [],
   xpReward: (json['xpReward'] as num?)?.toInt() ?? 0,
+  requiresMidi: json['requiresMidi'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$StageModelToJson(_StageModel instance) =>
@@ -110,6 +111,7 @@ Map<String, dynamic> _$StageModelToJson(_StageModel instance) =>
       'order': instance.order,
       'prerequisites': instance.prerequisites,
       'xpReward': instance.xpReward,
+      'requiresMidi': instance.requiresMidi,
     };
 
 const _$DifficultyEnumMap = {

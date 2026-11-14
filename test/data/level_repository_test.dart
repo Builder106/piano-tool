@@ -105,4 +105,226 @@ void main() {
 
     expect(repository.getStage('stage_1'), isNotNull);
   });
+
+  group('polyphony detection and MIDI requirement', () {
+    test('built-in levels are monophonic', () {
+      for (final stage in LevelRepository().getAllStages()) {
+        expect(
+          stage.level.isPolyphonic,
+          isFalse,
+          reason: '${stage.id} should be monophonic',
+        );
+        expect(stage.effectiveRequiresMidi, isFalse);
+        expect(stage.inputRequirementLabel, isNull);
+      }
+    });
+
+    test('detects simultaneous notes starting on the same beat', () {
+      const chordLevel = LevelModel(
+        id: 'chord',
+        title: 'Chord',
+        description: '',
+        tempo: 120,
+        beatsPerMeasure: 4,
+        totalMeasures: 1,
+        measures: [
+          LevelMeasure(
+            index: 0,
+            startBeat: 0,
+            beatsPerMeasure: 4,
+            notes: [
+              LevelNote(
+                midiNote: 60,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+              LevelNote(
+                midiNote: 64,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(chordLevel.isPolyphonic, isTrue);
+
+      const stage = StageModel(
+        id: 'stage_chord',
+        title: 'Chord Stage',
+        description: '',
+        difficulty: Difficulty.beginner,
+        level: chordLevel,
+      );
+
+      expect(stage.effectiveRequiresMidi, isTrue);
+      expect(stage.inputRequirementLabel, 'Digital piano (MIDI) required');
+    });
+
+    test('detects overlapping note durations', () {
+      const overlappingLevel = LevelModel(
+        id: 'overlap',
+        title: 'Overlap',
+        description: '',
+        tempo: 120,
+        beatsPerMeasure: 4,
+        totalMeasures: 1,
+        measures: [
+          LevelMeasure(
+            index: 0,
+            startBeat: 0,
+            beatsPerMeasure: 4,
+            notes: [
+              LevelNote(
+                midiNote: 60,
+                startBeat: 0,
+                durationBeats: 2, // half note (beats 0..2)
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+              LevelNote(
+                midiNote: 64,
+                startBeat: 1, // enters while C4 still rings
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 1,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(overlappingLevel.isPolyphonic, isTrue);
+    });
+
+    test('ignores rest entries when evaluating polyphony', () {
+      const levelWithRests = LevelModel(
+        id: 'rests',
+        title: 'Rests',
+        description: '',
+        tempo: 120,
+        beatsPerMeasure: 4,
+        totalMeasures: 1,
+        measures: [
+          LevelMeasure(
+            index: 0,
+            startBeat: 0,
+            beatsPerMeasure: 4,
+            notes: [
+              LevelNote(
+                midiNote: 60,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+              LevelNote(
+                midiNote: 0,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+                isRest: true,
+              ),
+              LevelNote(
+                midiNote: 64,
+                startBeat: 1,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 1,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(levelWithRests.isPolyphonic, isFalse);
+    });
+
+    test('explicit requiresMidi flags stage even for monophonic levels', () {
+      const monoLevel = LevelModel(
+        id: 'mono',
+        title: 'Mono',
+        description: '',
+        tempo: 120,
+        beatsPerMeasure: 4,
+        totalMeasures: 1,
+        measures: [
+          LevelMeasure(
+            index: 0,
+            startBeat: 0,
+            beatsPerMeasure: 4,
+            notes: [
+              LevelNote(
+                midiNote: 60,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      const stage = StageModel(
+        id: 'stage_midi_required',
+        title: 'MIDI Required Stage',
+        description: '',
+        difficulty: Difficulty.beginner,
+        level: monoLevel,
+        requiresMidi: true,
+      );
+
+      expect(stage.effectiveRequiresMidi, isTrue);
+      expect(stage.inputRequirementLabel, 'Digital piano (MIDI) required');
+    });
+
+    test('addImportedLevel sets requiresMidi on polyphonic levels', () {
+      final repository = LevelRepository();
+      const chordLevel = LevelModel(
+        id: 'imported_chord',
+        title: 'Imported Chord',
+        description: '',
+        tempo: 120,
+        beatsPerMeasure: 4,
+        totalMeasures: 1,
+        measures: [
+          LevelMeasure(
+            index: 0,
+            startBeat: 0,
+            beatsPerMeasure: 4,
+            notes: [
+              LevelNote(
+                midiNote: 60,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+              LevelNote(
+                midiNote: 64,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      repository.addImportedLevel(chordLevel);
+      final stage = repository.getStage('imported_imported_chord');
+      expect(stage, isNotNull);
+      expect(stage!.requiresMidi, isTrue);
+      expect(stage.effectiveRequiresMidi, isTrue);
+      expect(stage.inputRequirementLabel, 'Digital piano (MIDI) required');
+    });
+  });
 }

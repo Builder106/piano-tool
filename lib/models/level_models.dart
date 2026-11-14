@@ -85,10 +85,51 @@ sealed class StageModel with _$StageModel {
     @Default(0) int order,
     @Default([]) List<String> prerequisites,
     @Default(0) int xpReward,
+    @Default(false) bool requiresMidi,
   }) = _StageModel;
 
   factory StageModel.fromJson(Map<String, dynamic> json) =>
       _$StageModelFromJson(json);
+}
+
+/// Extension providing polyphony detection for [LevelModel].
+extension LevelPolyphony on LevelModel {
+  /// Whether this level contains chords or simultaneous notes sounding at the
+  /// same time.
+  ///
+  /// The acoustic microphone path uses a YIN fundamental pitch estimator that
+  /// estimates a single fundamental pitch. It cannot reliably verify
+  /// simultaneous notes or chords.
+  bool get isPolyphonic {
+    final notes = [
+      for (final measure in measures)
+        for (final note in measure.notes)
+          if (!note.isRest) note,
+    ]..sort((a, b) => a.startBeat.compareTo(b.startBeat));
+
+    for (var i = 0; i < notes.length - 1; i++) {
+      final current = notes[i];
+      final next = notes[i + 1];
+      if (next.startBeat < current.startBeat + current.durationBeats) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+/// Extension providing MIDI requirement evaluation and labeling for [StageModel].
+extension StageMidiRequirement on StageModel {
+  /// Whether this stage requires a digital piano (MIDI) because it includes
+  /// polyphonic content or is authored with [requiresMidi].
+  ///
+  /// The microphone's YIN detector estimates a fundamental pitch and cannot
+  /// verify lessons that need polyphony.
+  bool get effectiveRequiresMidi => requiresMidi || level.isPolyphonic;
+
+  /// Label describing the input hardware requirement.
+  String? get inputRequirementLabel =>
+      effectiveRequiresMidi ? 'Digital piano (MIDI) required' : null;
 }
 
 /// Game progress for a stage

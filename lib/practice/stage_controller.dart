@@ -370,6 +370,7 @@ final stageControllerProvider =
         (_, next) {
           final settings = ref.read(settingsProvider);
           if (!settings.inputSource.usesMicrophone) return;
+          if (stage.effectiveRequiresMidi) return;
           if (next.hasError) {
             _logAudioStreamError(next.error);
             return;

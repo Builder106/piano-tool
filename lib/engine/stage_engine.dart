@@ -445,6 +445,13 @@ class StageEngine extends ChangeNotifier {
         );
       }
     }
+
+    // Advance next note index past resolved (hit or missed) notes
+    while (_nextNoteIndex < _allNotes.length &&
+        _state.noteStates[_nextNoteIndex] != NoteState.upcoming &&
+        _state.noteStates[_nextNoteIndex] != NoteState.active) {
+      _nextNoteIndex++;
+    }
   }
 
   /// Update note states based on current beat position
@@ -526,19 +533,24 @@ class StageEngine extends ChangeNotifier {
     final newStates = List<NoteState>.from(_state.noteStates);
     for (int i = 0; i < _allNotes.length; i++) {
       final note = _allNotes[i];
-      if (note.startBeat + note.durationBeats <= clampedBeat) {
-        // Past this note entirely - mark as missed if not hit
+      if (clampedBeat > note.startBeat + _config.missWindow) {
+        // Past the hit window - mark as missed if not hit
         if (newStates[i] == NoteState.upcoming ||
             newStates[i] == NoteState.active) {
           newStates[i] = NoteState.missed;
+          _noteResults[i] = NoteHitResult.missed(noteIndex: i);
         }
-      } else if (note.startBeat <= clampedBeat &&
+      } else if (clampedBeat >= note.startBeat - 0.5 &&
           clampedBeat < note.startBeat + note.durationBeats) {
         // Currently at this note
-        newStates[i] = NoteState.active;
-      } else {
+        if (newStates[i] == NoteState.upcoming) {
+          newStates[i] = NoteState.active;
+        }
+      } else if (clampedBeat < note.startBeat - 0.5) {
         // Future note
-        newStates[i] = NoteState.upcoming;
+        if (newStates[i] == NoteState.active) {
+          newStates[i] = NoteState.upcoming;
+        }
       }
     }
 
@@ -549,7 +561,12 @@ class StageEngine extends ChangeNotifier {
       _nextNoteIndex++;
     }
 
-    _state = _state.copyWith(currentBeat: clampedBeat, noteStates: newStates);
+    final missCount = newStates.where((s) => s == NoteState.missed).length;
+    _state = _state.copyWith(
+      currentBeat: clampedBeat,
+      noteStates: newStates,
+      missCount: missCount,
+    );
     // Re-anchor the clock, or the next tick would pull the playhead back to
     // where it was before the seek.
     if (_state.engineState == StageEngineStatus.playing) {

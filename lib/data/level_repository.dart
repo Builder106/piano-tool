@@ -533,6 +533,7 @@ class LevelRepository {
       order: order,
       prerequisites: const [],
       xpReward: 50,
+      requiresMidi: level.isPolyphonic,
     );
   }
 

@@ -902,7 +902,7 @@ as int,
 /// @nodoc
 mixin _$StageModel implements DiagnosticableTreeMixin {
 
- String get id; String get title; String get description; Difficulty get difficulty; LevelModel get level; int get order; List<String> get prerequisites; int get xpReward;
+ String get id; String get title; String get description; Difficulty get difficulty; LevelModel get level; int get order; List<String> get prerequisites; int get xpReward; bool get requiresMidi;
 /// Create a copy of StageModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -916,21 +916,21 @@ $StageModelCopyWith<StageModel> get copyWith => _$StageModelCopyWithImpl<StageMo
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'StageModel'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('difficulty', difficulty))..add(DiagnosticsProperty('level', level))..add(DiagnosticsProperty('order', order))..add(DiagnosticsProperty('prerequisites', prerequisites))..add(DiagnosticsProperty('xpReward', xpReward));
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('difficulty', difficulty))..add(DiagnosticsProperty('level', level))..add(DiagnosticsProperty('order', order))..add(DiagnosticsProperty('prerequisites', prerequisites))..add(DiagnosticsProperty('xpReward', xpReward))..add(DiagnosticsProperty('requiresMidi', requiresMidi));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.difficulty, difficulty) || other.difficulty == difficulty)&&(identical(other.level, level) || other.level == level)&&(identical(other.order, order) || other.order == order)&&const DeepCollectionEquality().equals(other.prerequisites, prerequisites)&&(identical(other.xpReward, xpReward) || other.xpReward == xpReward));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.difficulty, difficulty) || other.difficulty == difficulty)&&(identical(other.level, level) || other.level == level)&&(identical(other.order, order) || other.order == order)&&const DeepCollectionEquality().equals(other.prerequisites, prerequisites)&&(identical(other.xpReward, xpReward) || other.xpReward == xpReward)&&(identical(other.requiresMidi, requiresMidi) || other.requiresMidi == requiresMidi));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,difficulty,level,order,const DeepCollectionEquality().hash(prerequisites),xpReward);
+int get hashCode => Object.hash(runtimeType,id,title,description,difficulty,level,order,const DeepCollectionEquality().hash(prerequisites),xpReward,requiresMidi);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'StageModel(id: $id, title: $title, description: $description, difficulty: $difficulty, level: $level, order: $order, prerequisites: $prerequisites, xpReward: $xpReward)';
+  return 'StageModel(id: $id, title: $title, description: $description, difficulty: $difficulty, level: $level, order: $order, prerequisites: $prerequisites, xpReward: $xpReward, requiresMidi: $requiresMidi)';
 }
 
 
@@ -941,7 +941,7 @@ abstract mixin class $StageModelCopyWith<$Res>  {
   factory $StageModelCopyWith(StageModel value, $Res Function(StageModel) _then) = _$StageModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String description, Difficulty difficulty, LevelModel level, int order, List<String> prerequisites, int xpReward
+ String id, String title, String description, Difficulty difficulty, LevelModel level, int order, List<String> prerequisites, int xpReward, bool requiresMidi
 });
 
 
@@ -958,7 +958,7 @@ class _$StageModelCopyWithImpl<$Res>
 
 /// Create a copy of StageModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? difficulty = null,Object? level = null,Object? order = null,Object? prerequisites = null,Object? xpReward = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? difficulty = null,Object? level = null,Object? order = null,Object? prerequisites = null,Object? xpReward = null,Object? requiresMidi = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -968,7 +968,8 @@ as Difficulty,level: null == level ? _self.level : level // ignore: cast_nullabl
 as LevelModel,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int,prerequisites: null == prerequisites ? _self.prerequisites : prerequisites // ignore: cast_nullable_to_non_nullable
 as List<String>,xpReward: null == xpReward ? _self.xpReward : xpReward // ignore: cast_nullable_to_non_nullable
-as int,
+as int,requiresMidi: null == requiresMidi ? _self.requiresMidi : requiresMidi // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of StageModel
@@ -1059,10 +1060,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String description,  Difficulty difficulty,  LevelModel level,  int order,  List<String> prerequisites,  int xpReward)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String description,  Difficulty difficulty,  LevelModel level,  int order,  List<String> prerequisites,  int xpReward,  bool requiresMidi)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StageModel() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.level,_that.order,_that.prerequisites,_that.xpReward);case _:
+return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.level,_that.order,_that.prerequisites,_that.xpReward,_that.requiresMidi);case _:
   return orElse();
 
 }
@@ -1080,10 +1081,10 @@ return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.le
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String description,  Difficulty difficulty,  LevelModel level,  int order,  List<String> prerequisites,  int xpReward)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String description,  Difficulty difficulty,  LevelModel level,  int order,  List<String> prerequisites,  int xpReward,  bool requiresMidi)  $default,) {final _that = this;
 switch (_that) {
 case _StageModel():
-return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.level,_that.order,_that.prerequisites,_that.xpReward);}
+return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.level,_that.order,_that.prerequisites,_that.xpReward,_that.requiresMidi);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1097,10 +1098,10 @@ return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.le
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String description,  Difficulty difficulty,  LevelModel level,  int order,  List<String> prerequisites,  int xpReward)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String description,  Difficulty difficulty,  LevelModel level,  int order,  List<String> prerequisites,  int xpReward,  bool requiresMidi)?  $default,) {final _that = this;
 switch (_that) {
 case _StageModel() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.level,_that.order,_that.prerequisites,_that.xpReward);case _:
+return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.level,_that.order,_that.prerequisites,_that.xpReward,_that.requiresMidi);case _:
   return null;
 
 }
@@ -1112,7 +1113,7 @@ return $default(_that.id,_that.title,_that.description,_that.difficulty,_that.le
 @JsonSerializable()
 
 class _StageModel with DiagnosticableTreeMixin implements StageModel {
-  const _StageModel({required this.id, required this.title, required this.description, required this.difficulty, required this.level, this.order = 0, final  List<String> prerequisites = const [], this.xpReward = 0}): _prerequisites = prerequisites;
+  const _StageModel({required this.id, required this.title, required this.description, required this.difficulty, required this.level, this.order = 0, final  List<String> prerequisites = const [], this.xpReward = 0, this.requiresMidi = false}): _prerequisites = prerequisites;
   factory _StageModel.fromJson(Map<String, dynamic> json) => _$StageModelFromJson(json);
 
 @override final  String id;
@@ -1129,6 +1130,7 @@ class _StageModel with DiagnosticableTreeMixin implements StageModel {
 }
 
 @override@JsonKey() final  int xpReward;
+@override@JsonKey() final  bool requiresMidi;
 
 /// Create a copy of StageModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1144,21 +1146,21 @@ Map<String, dynamic> toJson() {
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'StageModel'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('difficulty', difficulty))..add(DiagnosticsProperty('level', level))..add(DiagnosticsProperty('order', order))..add(DiagnosticsProperty('prerequisites', prerequisites))..add(DiagnosticsProperty('xpReward', xpReward));
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('difficulty', difficulty))..add(DiagnosticsProperty('level', level))..add(DiagnosticsProperty('order', order))..add(DiagnosticsProperty('prerequisites', prerequisites))..add(DiagnosticsProperty('xpReward', xpReward))..add(DiagnosticsProperty('requiresMidi', requiresMidi));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.difficulty, difficulty) || other.difficulty == difficulty)&&(identical(other.level, level) || other.level == level)&&(identical(other.order, order) || other.order == order)&&const DeepCollectionEquality().equals(other._prerequisites, _prerequisites)&&(identical(other.xpReward, xpReward) || other.xpReward == xpReward));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.difficulty, difficulty) || other.difficulty == difficulty)&&(identical(other.level, level) || other.level == level)&&(identical(other.order, order) || other.order == order)&&const DeepCollectionEquality().equals(other._prerequisites, _prerequisites)&&(identical(other.xpReward, xpReward) || other.xpReward == xpReward)&&(identical(other.requiresMidi, requiresMidi) || other.requiresMidi == requiresMidi));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,difficulty,level,order,const DeepCollectionEquality().hash(_prerequisites),xpReward);
+int get hashCode => Object.hash(runtimeType,id,title,description,difficulty,level,order,const DeepCollectionEquality().hash(_prerequisites),xpReward,requiresMidi);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'StageModel(id: $id, title: $title, description: $description, difficulty: $difficulty, level: $level, order: $order, prerequisites: $prerequisites, xpReward: $xpReward)';
+  return 'StageModel(id: $id, title: $title, description: $description, difficulty: $difficulty, level: $level, order: $order, prerequisites: $prerequisites, xpReward: $xpReward, requiresMidi: $requiresMidi)';
 }
 
 
@@ -1169,7 +1171,7 @@ abstract mixin class _$StageModelCopyWith<$Res> implements $StageModelCopyWith<$
   factory _$StageModelCopyWith(_StageModel value, $Res Function(_StageModel) _then) = __$StageModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String description, Difficulty difficulty, LevelModel level, int order, List<String> prerequisites, int xpReward
+ String id, String title, String description, Difficulty difficulty, LevelModel level, int order, List<String> prerequisites, int xpReward, bool requiresMidi
 });
 
 
@@ -1186,7 +1188,7 @@ class __$StageModelCopyWithImpl<$Res>
 
 /// Create a copy of StageModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? difficulty = null,Object? level = null,Object? order = null,Object? prerequisites = null,Object? xpReward = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? difficulty = null,Object? level = null,Object? order = null,Object? prerequisites = null,Object? xpReward = null,Object? requiresMidi = null,}) {
   return _then(_StageModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -1196,7 +1198,8 @@ as Difficulty,level: null == level ? _self.level : level // ignore: cast_nullabl
 as LevelModel,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int,prerequisites: null == prerequisites ? _self._prerequisites : prerequisites // ignore: cast_nullable_to_non_nullable
 as List<String>,xpReward: null == xpReward ? _self.xpReward : xpReward // ignore: cast_nullable_to_non_nullable
-as int,
+as int,requiresMidi: null == requiresMidi ? _self.requiresMidi : requiresMidi // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

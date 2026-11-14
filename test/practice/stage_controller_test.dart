@@ -9,6 +9,7 @@ import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
 import 'package:piano_tool/models/audio_models.dart';
 import 'package:piano_tool/models/engine_models.dart';
+import 'package:piano_tool/models/level_models.dart';
 import 'package:piano_tool/services/midi_service.dart';
 import 'package:piano_tool/practice/stage_controller.dart';
 
@@ -332,6 +333,92 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(c.read(stageControllerProvider('stage_1')).sounding, {69});
+    },
+  );
+
+  test(
+    'a stage requiring MIDI ignores microphone frames and accepts MIDI',
+    () async {
+      final repo = LevelRepository();
+      const chordLevel = LevelModel(
+        id: 'poly_level',
+        title: 'Polyphonic Lesson',
+        description: '',
+        tempo: 120,
+        beatsPerMeasure: 4,
+        totalMeasures: 1,
+        measures: [
+          LevelMeasure(
+            index: 0,
+            startBeat: 0,
+            beatsPerMeasure: 4,
+            notes: [
+              LevelNote(
+                midiNote: 60,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+              LevelNote(
+                midiNote: 64,
+                startBeat: 0,
+                durationBeats: 1,
+                measureIndex: 0,
+                beatIndex: 0,
+              ),
+            ],
+          ),
+        ],
+      );
+      repo.addImportedLevel(chordLevel);
+
+      final micController = StreamController<PitchEvent>();
+      addTearDown(micController.close);
+      final midi = MidiService(transport: FakeMidiTransport(const []));
+
+      final c = ProviderContainer(
+        overrides: [
+          audioGrantedProvider.overrideWith((ref) async => true),
+          audioPitchStreamProvider.overrideWith((ref) => micController.stream),
+          midiServiceProvider.overrideWith((ref) => midi),
+          levelRepositoryProvider.overrideWith(
+            (ref) => SynchronousFuture(repo),
+          ),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      const stageId = 'imported_poly_level';
+      c.listen(stageControllerProvider(stageId), (_, _) {});
+      final ctrl = c.read(stageControllerProvider(stageId).notifier);
+      await ctrl.start();
+
+      // 1. Microphone frame arrives - should be ignored because effectiveRequiresMidi is true
+      micController.add(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1.0,
+          midiNote: 60,
+          timestamp: 0,
+          volume: 1.0,
+        ),
+      );
+      await pumpEventQueue();
+
+      final stateAfterMic = c.read(stageControllerProvider(stageId));
+      expect(stateAfterMic.score, 0);
+      expect(stateAfterMic.noteStates[0], NoteState.upcoming);
+
+      // 2. MIDI event arrives - should be processed and score the note
+      midi
+        ..simulateNotePress(60)
+        ..simulateNoteRelease(60);
+      await pumpEventQueue();
+
+      final stateAfterMidi = c.read(stageControllerProvider(stageId));
+      expect(stateAfterMidi.score, greaterThan(0));
+      expect(stateAfterMidi.noteStates[0], NoteState.hitPerfect);
     },
   );
 }
