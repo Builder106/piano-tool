@@ -32,6 +32,8 @@ bool isYoutubeLink(String url) {
       host == 'youtu.be';
 }
 
+String _count(int n, String word) => '$n $word${n == 1 ? '' : 's'}';
+
 enum _Step { choose, working, review, failed }
 
 /// Make a piece from a recording, an audio file or a YouTube link: the service
@@ -389,8 +391,8 @@ class _AddPieceScreenState extends ConsumerState<AddPieceScreen> {
       ),
       SizedBox(height: 12 * u),
       PageText(
-        '${notes.length} notes in ${level.totalMeasures} '
-        '${level.totalMeasures == 1 ? 'bar' : 'bars'}. If it looks wrong, '
+        '${_count(notes.length, 'note')} in '
+        '${_count(level.totalMeasures, 'bar')}. If it looks wrong, '
         'throw it away and play it again, slower.',
       ),
       SizedBox(height: 28 * u),

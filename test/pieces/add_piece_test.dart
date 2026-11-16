@@ -80,6 +80,7 @@ void main() {
     WidgetTester tester, {
     required String jobStatus,
     _FakeInputs? inputs,
+    LevelModel? level,
   }) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
@@ -93,7 +94,7 @@ void main() {
       return http.Response(
         jsonEncode({
           'status': jobStatus,
-          if (jobStatus == 'done') 'level': _level.toJson(),
+          if (jobStatus == 'done') 'level': (level ?? _level).toJson(),
           if (jobStatus == 'failed') 'error': 'No notes detected',
         }),
         200,
@@ -217,6 +218,41 @@ void main() {
     await tester.tap(find.text('Try again'));
     await tester.pump();
     expect(find.text('How will you show it?'), findsOne);
+  });
+
+  testWidgets('one note and one bar are not pluralised', (tester) async {
+    final oneNote = LevelModel(
+      id: _level.id,
+      title: _level.title,
+      description: _level.description,
+      tempo: _level.tempo,
+      beatsPerMeasure: _level.beatsPerMeasure,
+      totalMeasures: 1,
+      measures: [
+        LevelMeasure(
+          index: 0,
+          startBeat: 0,
+          beatsPerMeasure: 4,
+          notes: [_level.measures.first.notes.first],
+        ),
+      ],
+    );
+    final (container, _) = await open(
+      tester,
+      jobStatus: 'done',
+      level: oneNote,
+    );
+    await container.read(ingestionRepositoryProvider.future);
+
+    await tester.tap(find.text('Start recording'));
+    await tester.pump();
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    await tester.tap(find.text('Make the piece'));
+    await tester.pump();
+    await settle(tester);
+
+    expect(find.textContaining('1 note in 1 bar.'), findsOne);
   });
 
   testWidgets('a refused microphone is explained', (tester) async {
