@@ -38,7 +38,11 @@ class DeviceImportInputs implements ImportInputs {
         '${Directory.systemTemp.path}/piano_tool_recording_'
         '${DateTime.now().millisecondsSinceEpoch}.wav';
     await _recorder.start(
-      const RecordConfig(encoder: AudioEncoder.wav),
+      const RecordConfig(
+        encoder: AudioEncoder.wav,
+        sampleRate: 22050,
+        numChannels: 1,
+      ),
       path: path,
     );
     return true;
