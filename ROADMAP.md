@@ -146,9 +146,16 @@ reliability so the interaction is both expressive and accurate.
   and suspending microphone scoring in isMicrophoneScoringActive so audio
   playback cannot score itself; resets note states to upcoming and restores
   the learner's selected input upon phrase completion or stopping.
-- [ ] **Learn notes and play in time:** Provide distinct waiting and timed
+- [x] **Learn notes and play in time:** Provide distinct waiting and timed
   modes. Waiting offers contextual hints without awarding a timed score.
   Preserve notation and accessible state information in both modes.
+  Implemented: StageEngine and StageController support distinct PracticeMode.timed
+  and PracticeMode.waiting modes; waiting mode holds the playhead at awaited notes,
+  disabling miss evaluation and timer progression while generating contextual WaitingHint
+  feedback with note names, target beats, and wrong-note corrections; note hits in
+  waiting mode do not award timed score points (score remains 0); notation (notes,
+  note states, staves) and accessible state descriptions (StageUiState.accessibleDescription)
+  are preserved across both modes.
 - [ ] **Count-in and metronome:** Add an optional count-in and beat reference
   that follow the selected tempo and meter, including appropriate 6/8
   grouping. Show effective BPM alongside the existing speed multiplier.

@@ -1,5 +1,16 @@
 # Journal
 
+## 2026-11-18: distinct waiting and timed practice modes, contextual hints, and accessible state preservation #engine #practice #decision
+
+Learners need to choose between learning notes at their own pace without timing pressure and playing strictly in time with the metronome:
+- `PracticeMode` (`PracticeMode.timed` and `PracticeMode.waiting`) introduces first-class practice modes in `StageEngineConfig`, `StageEngine`, `StageUiState`, and `StageController`.
+- In waiting mode, the playhead pauses and holds at the awaited note(s) instead of automatically advancing with the wall clock. Miss evaluation and timeout penalties are bypassed so learners can take as long as necessary to identify and strike keys.
+- Striking the expected note registers a hit (`NoteHitResult.waiting`) and advances the playhead to the next note's beat without awarding a timed score (`score` remains 0 throughout waiting practice).
+- Contextual hints (`WaitingHint`) provide human-readable guidance for currently awaited notes (e.g. "Play C4 (Middle C)", "Play C4 (Middle C) and E4"). When an incorrect pitch is struck, the engine offers helpful corrective feedback (e.g. "Heard D4. Waiting for C4 (Middle C).") without deducting points or advancing.
+- For chords and simultaneous notes, the engine stays anchored at the current beat until all notes of the chord are resolved, updating hints dynamically for any remaining notes.
+- In both modes, musical notation (staves, clefs, measures, active note heads, hit notes, and playhead cursor position) and accessible state information (`StageUiState.accessibleDescription`) are strictly preserved, keeping the practice sheet and screen readers fully synchronized.
+
+
 ## 2026-11-18: phrase demonstration with tone synthesizer, microphone scoring suspension, and input restoration #engine #practice #audio #decision
 
 "Listen first" demonstration allows learners to hear a phrase before playing, requiring strict audio separation and input state management:
