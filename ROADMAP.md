@@ -136,9 +136,16 @@ reliability so the interaction is both expressive and accurate.
   clamping within bounds and safely resetting/recalculating attempt results
   without polluting notes outside the range; StageController supports
   loopRange and loopBar with StageUiState loopRange tracking.
-- [ ] **Listen first:** Reuse the existing synthesizer to demonstrate a
+- [x] **Listen first:** Reuse the existing synthesizer to demonstrate a
   selected phrase. Suspend microphone scoring during demonstration so
   playback cannot score itself; restore the learner's selected input.
+  Implemented: StageEngine supports phrase demonstration across selected
+  ranges, sounding notes via AudioSynthesizer while ignoring incoming pitch
+  events and skipping miss evaluation; StageController coordinates
+  demonstratePhrase/demonstrate/stopDemonstration, tracking isDemonstrating
+  and suspending microphone scoring in isMicrophoneScoringActive so audio
+  playback cannot score itself; resets note states to upcoming and restores
+  the learner's selected input upon phrase completion or stopping.
 - [ ] **Learn notes and play in time:** Provide distinct waiting and timed
   modes. Waiting offers contextual hints without awarding a timed score.
   Preserve notation and accessible state information in both modes.

@@ -1,5 +1,26 @@
 # Journal
 
+## 2026-11-18: phrase demonstration with tone synthesizer, microphone scoring suspension, and input restoration #engine #practice #audio #decision
+
+"Listen first" demonstration allows learners to hear a phrase before playing, requiring strict audio separation and input state management:
+- In `StageEngine`, `playDemonstration(startBeat, endBeat, ...)` advances the playhead
+  across the selected phrase and triggers note onset callbacks (`onNote`) without
+  scoring, misses, or progress recording.
+- During demonstration, `processPitchEvent` rejects incoming pitch events immediately,
+  and miss evaluation is skipped so the learner's score and accuracy are not degraded
+  while listening.
+- In `StageController`, `demonstratePhrase({startMeasure, endMeasure})` and `demonstrate`
+  reuse `AudioSynthesizer` to sound notes with proper duration based on tempo and playback
+  speed, while lighting active keys via `sounding` timers.
+- Microphone scoring is suspended during demonstration (`isMicrophoneSuspended: true`,
+  `isMicrophoneScoringActive: false`) in both the controller and audio pitch stream listener,
+  guaranteeing speaker output from the device synthesizer cannot score against itself.
+- When demonstration completes or is stopped (`stopDemonstration`), note states in the
+  demonstrated range reset to `upcoming` (or `active`), the playhead returns to the start
+  of the phrase, any sounding audio halts, and the learner's configured input source
+  is restored so practice can begin immediately.
+
+
 ## 2026-11-18: measure range selection, loop-safe seeking, and repeat attempt scoping #engine #practice #decision
 
 Loop practice of a measure range requires clean scoring scoping and attempt boundaries:
