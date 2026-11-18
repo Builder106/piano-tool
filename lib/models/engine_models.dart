@@ -7,6 +7,70 @@ part 'engine_models.g.dart';
 /// State of a note during gameplay
 enum NoteState { upcoming, active, hitPerfect, hitGood, hitOkay, missed }
 
+/// Practice modes supported by the game engine.
+enum PracticeMode {
+  /// Timed mode: playhead advances with tempo, scoring timing accuracy.
+  timed,
+
+  /// Waiting mode: playhead waits at each note until the correct pitch is struck,
+  /// offering contextual hints without awarding timed scores.
+  waiting;
+
+  bool get isTimed => this == timed;
+  bool get isWaiting => this == waiting;
+  String get label => switch (this) {
+    timed => 'Play in time',
+    waiting => 'Learn notes (waiting)',
+  };
+}
+
+const List<String> pitchClassNames = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+];
+
+/// Formats a MIDI note number into scientific pitch notation (e.g. 60 -> "C4 (Middle C)" or "C4").
+String formatPitch(int midiNote, {bool clarifyMiddleC = true}) {
+  final name = pitchClassNames[midiNote % 12];
+  final octave = (midiNote ~/ 12) - 1;
+  if (clarifyMiddleC && midiNote == 60) {
+    return 'C4 (Middle C)';
+  }
+  return '$name$octave';
+}
+
+/// Contextual hint provided when waiting for note input in waiting mode.
+@freezed
+sealed class WaitingHint with _$WaitingHint {
+  const WaitingHint._();
+
+  const factory WaitingHint({
+    required double targetBeat,
+    required List<int> targetMidiNotes,
+    required String hintText,
+    @Default([]) List<String> noteNames,
+    int? measureIndex,
+    int? beatIndex,
+    int? heardWrongMidiNote,
+  }) = _WaitingHint;
+
+  factory WaitingHint.fromJson(Map<String, dynamic> json) =>
+      _$WaitingHintFromJson(json);
+
+  /// Whether the specified MIDI note matches any awaited note in this hint.
+  bool matches(int midiNote) => targetMidiNotes.contains(midiNote);
+}
+
 /// Result of a note hit attempt
 @freezed
 sealed class NoteHitResult with _$NoteHitResult {
@@ -30,6 +94,9 @@ sealed class NoteHitResult with _$NoteHitResult {
   const factory NoteHitResult.missed({required int noteIndex}) =
       _NoteHitResultMissed;
 
+  const factory NoteHitResult.waiting({required int noteIndex}) =
+      _NoteHitResultWaiting;
+
   factory NoteHitResult.fromJson(Map<String, dynamic> json) =>
       _$NoteHitResultFromJson(json);
 
@@ -38,6 +105,7 @@ sealed class NoteHitResult with _$NoteHitResult {
     _NoteHitResultGood() => NoteState.hitGood,
     _NoteHitResultOkay() => NoteState.hitOkay,
     _NoteHitResultMissed() => NoteState.missed,
+    _NoteHitResultWaiting() => NoteState.hitPerfect,
   };
 
   double get score => switch (this) {
@@ -45,6 +113,7 @@ sealed class NoteHitResult with _$NoteHitResult {
     _NoteHitResultGood() => 75.0,
     _NoteHitResultOkay() => 50.0,
     _NoteHitResultMissed() => 0.0,
+    _NoteHitResultWaiting() => 0.0,
   };
 }
 
@@ -98,6 +167,7 @@ sealed class StageEngineConfig with _$StageEngineConfig {
     @Default(1.0) double playbackSpeed, // speed multiplier
     @Default(0.0)
     double inputLatency, // seconds of input/buffer latency compensation
+    @Default(PracticeMode.timed) PracticeMode practiceMode,
   }) = _StageEngineConfig;
 
   factory StageEngineConfig.fromJson(Map<String, dynamic> json) =>
@@ -120,10 +190,15 @@ sealed class StageEngineStateModel with _$StageEngineStateModel {
     @Default(0) int perfectCount,
     @Default(0) int goodCount,
     @Default(0) int okayCount,
+    @Default(PracticeMode.timed) PracticeMode practiceMode,
+    @Default(null) WaitingHint? waitingHint,
   }) = _StageEngineStateModel;
 
   factory StageEngineStateModel.fromJson(Map<String, dynamic> json) =>
       _$StageEngineStateModelFromJson(json);
+
+  bool get isWaitingMode => practiceMode == PracticeMode.waiting;
+  bool get isTimedMode => practiceMode == PracticeMode.timed;
 
   double get progress => level.totalMeasures > 0
       ? (currentBeat / (level.totalMeasures * level.beatsPerMeasure)).clamp(

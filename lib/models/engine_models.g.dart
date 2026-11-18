@@ -6,105 +6,137 @@ part of 'engine_models.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$NoteHitResultPerfectImpl _$$NoteHitResultPerfectImplFromJson(
+_WaitingHint _$WaitingHintFromJson(Map<String, dynamic> json) => _WaitingHint(
+  targetBeat: (json['targetBeat'] as num).toDouble(),
+  targetMidiNotes: (json['targetMidiNotes'] as List<dynamic>)
+      .map((e) => (e as num).toInt())
+      .toList(),
+  hintText: json['hintText'] as String,
+  noteNames:
+      (json['noteNames'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
+  measureIndex: (json['measureIndex'] as num?)?.toInt(),
+  beatIndex: (json['beatIndex'] as num?)?.toInt(),
+  heardWrongMidiNote: (json['heardWrongMidiNote'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$WaitingHintToJson(_WaitingHint instance) =>
+    <String, dynamic>{
+      'targetBeat': instance.targetBeat,
+      'targetMidiNotes': instance.targetMidiNotes,
+      'hintText': instance.hintText,
+      'noteNames': instance.noteNames,
+      'measureIndex': instance.measureIndex,
+      'beatIndex': instance.beatIndex,
+      'heardWrongMidiNote': instance.heardWrongMidiNote,
+    };
+
+_NoteHitResultPerfect _$NoteHitResultPerfectFromJson(
   Map<String, dynamic> json,
-) => _$NoteHitResultPerfectImpl(
+) => _NoteHitResultPerfect(
   noteIndex: (json['noteIndex'] as num).toInt(),
   timingError: (json['timingError'] as num).toDouble(),
   $type: json['runtimeType'] as String?,
 );
 
-Map<String, dynamic> _$$NoteHitResultPerfectImplToJson(
-  _$NoteHitResultPerfectImpl instance,
+Map<String, dynamic> _$NoteHitResultPerfectToJson(
+  _NoteHitResultPerfect instance,
 ) => <String, dynamic>{
   'noteIndex': instance.noteIndex,
   'timingError': instance.timingError,
   'runtimeType': instance.$type,
 };
 
-_$NoteHitResultGoodImpl _$$NoteHitResultGoodImplFromJson(
-  Map<String, dynamic> json,
-) => _$NoteHitResultGoodImpl(
-  noteIndex: (json['noteIndex'] as num).toInt(),
-  timingError: (json['timingError'] as num).toDouble(),
-  $type: json['runtimeType'] as String?,
-);
+_NoteHitResultGood _$NoteHitResultGoodFromJson(Map<String, dynamic> json) =>
+    _NoteHitResultGood(
+      noteIndex: (json['noteIndex'] as num).toInt(),
+      timingError: (json['timingError'] as num).toDouble(),
+      $type: json['runtimeType'] as String?,
+    );
 
-Map<String, dynamic> _$$NoteHitResultGoodImplToJson(
-  _$NoteHitResultGoodImpl instance,
-) => <String, dynamic>{
-  'noteIndex': instance.noteIndex,
-  'timingError': instance.timingError,
-  'runtimeType': instance.$type,
-};
+Map<String, dynamic> _$NoteHitResultGoodToJson(_NoteHitResultGood instance) =>
+    <String, dynamic>{
+      'noteIndex': instance.noteIndex,
+      'timingError': instance.timingError,
+      'runtimeType': instance.$type,
+    };
 
-_$NoteHitResultOkayImpl _$$NoteHitResultOkayImplFromJson(
-  Map<String, dynamic> json,
-) => _$NoteHitResultOkayImpl(
-  noteIndex: (json['noteIndex'] as num).toInt(),
-  timingError: (json['timingError'] as num).toDouble(),
-  $type: json['runtimeType'] as String?,
-);
+_NoteHitResultOkay _$NoteHitResultOkayFromJson(Map<String, dynamic> json) =>
+    _NoteHitResultOkay(
+      noteIndex: (json['noteIndex'] as num).toInt(),
+      timingError: (json['timingError'] as num).toDouble(),
+      $type: json['runtimeType'] as String?,
+    );
 
-Map<String, dynamic> _$$NoteHitResultOkayImplToJson(
-  _$NoteHitResultOkayImpl instance,
-) => <String, dynamic>{
-  'noteIndex': instance.noteIndex,
-  'timingError': instance.timingError,
-  'runtimeType': instance.$type,
-};
+Map<String, dynamic> _$NoteHitResultOkayToJson(_NoteHitResultOkay instance) =>
+    <String, dynamic>{
+      'noteIndex': instance.noteIndex,
+      'timingError': instance.timingError,
+      'runtimeType': instance.$type,
+    };
 
-_$NoteHitResultMissedImpl _$$NoteHitResultMissedImplFromJson(
-  Map<String, dynamic> json,
-) => _$NoteHitResultMissedImpl(
-  noteIndex: (json['noteIndex'] as num).toInt(),
-  $type: json['runtimeType'] as String?,
-);
+_NoteHitResultMissed _$NoteHitResultMissedFromJson(Map<String, dynamic> json) =>
+    _NoteHitResultMissed(
+      noteIndex: (json['noteIndex'] as num).toInt(),
+      $type: json['runtimeType'] as String?,
+    );
 
-Map<String, dynamic> _$$NoteHitResultMissedImplToJson(
-  _$NoteHitResultMissedImpl instance,
+Map<String, dynamic> _$NoteHitResultMissedToJson(
+  _NoteHitResultMissed instance,
 ) => <String, dynamic>{
   'noteIndex': instance.noteIndex,
   'runtimeType': instance.$type,
 };
 
-_$StageEventNoteHitImpl _$$StageEventNoteHitImplFromJson(
+_NoteHitResultWaiting _$NoteHitResultWaitingFromJson(
   Map<String, dynamic> json,
-) => _$StageEventNoteHitImpl(
+) => _NoteHitResultWaiting(
   noteIndex: (json['noteIndex'] as num).toInt(),
-  result: NoteHitResult.fromJson(json['result'] as Map<String, dynamic>),
+  $type: json['runtimeType'] as String?,
+);
+
+Map<String, dynamic> _$NoteHitResultWaitingToJson(
+  _NoteHitResultWaiting instance,
+) => <String, dynamic>{
+  'noteIndex': instance.noteIndex,
+  'runtimeType': instance.$type,
+};
+
+_StageEventNoteHit _$StageEventNoteHitFromJson(Map<String, dynamic> json) =>
+    _StageEventNoteHit(
+      noteIndex: (json['noteIndex'] as num).toInt(),
+      result: NoteHitResult.fromJson(json['result'] as Map<String, dynamic>),
+      currentBeat: (json['currentBeat'] as num).toDouble(),
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$StageEventNoteHitToJson(_StageEventNoteHit instance) =>
+    <String, dynamic>{
+      'noteIndex': instance.noteIndex,
+      'result': instance.result,
+      'currentBeat': instance.currentBeat,
+      'runtimeType': instance.$type,
+    };
+
+_StageEventNoteMissed _$StageEventNoteMissedFromJson(
+  Map<String, dynamic> json,
+) => _StageEventNoteMissed(
+  noteIndex: (json['noteIndex'] as num).toInt(),
   currentBeat: (json['currentBeat'] as num).toDouble(),
   $type: json['runtimeType'] as String?,
 );
 
-Map<String, dynamic> _$$StageEventNoteHitImplToJson(
-  _$StageEventNoteHitImpl instance,
-) => <String, dynamic>{
-  'noteIndex': instance.noteIndex,
-  'result': instance.result,
-  'currentBeat': instance.currentBeat,
-  'runtimeType': instance.$type,
-};
-
-_$StageEventNoteMissedImpl _$$StageEventNoteMissedImplFromJson(
-  Map<String, dynamic> json,
-) => _$StageEventNoteMissedImpl(
-  noteIndex: (json['noteIndex'] as num).toInt(),
-  currentBeat: (json['currentBeat'] as num).toDouble(),
-  $type: json['runtimeType'] as String?,
-);
-
-Map<String, dynamic> _$$StageEventNoteMissedImplToJson(
-  _$StageEventNoteMissedImpl instance,
+Map<String, dynamic> _$StageEventNoteMissedToJson(
+  _StageEventNoteMissed instance,
 ) => <String, dynamic>{
   'noteIndex': instance.noteIndex,
   'currentBeat': instance.currentBeat,
   'runtimeType': instance.$type,
 };
 
-_$StageEventStageCompletedImpl _$$StageEventStageCompletedImplFromJson(
+_StageEventStageCompleted _$StageEventStageCompletedFromJson(
   Map<String, dynamic> json,
-) => _$StageEventStageCompletedImpl(
+) => _StageEventStageCompleted(
   accuracy: (json['accuracy'] as num).toDouble(),
   score: (json['score'] as num).toInt(),
   totalNotes: (json['totalNotes'] as num).toInt(),
@@ -112,8 +144,8 @@ _$StageEventStageCompletedImpl _$$StageEventStageCompletedImplFromJson(
   $type: json['runtimeType'] as String?,
 );
 
-Map<String, dynamic> _$$StageEventStageCompletedImplToJson(
-  _$StageEventStageCompletedImpl instance,
+Map<String, dynamic> _$StageEventStageCompletedToJson(
+  _StageEventStageCompleted instance,
 ) => <String, dynamic>{
   'accuracy': instance.accuracy,
   'score': instance.score,
@@ -122,17 +154,17 @@ Map<String, dynamic> _$$StageEventStageCompletedImplToJson(
   'runtimeType': instance.$type,
 };
 
-_$StageEventPlaybackPositionImpl _$$StageEventPlaybackPositionImplFromJson(
+_StageEventPlaybackPosition _$StageEventPlaybackPositionFromJson(
   Map<String, dynamic> json,
-) => _$StageEventPlaybackPositionImpl(
+) => _StageEventPlaybackPosition(
   currentBeat: (json['currentBeat'] as num).toDouble(),
   progress: (json['progress'] as num).toDouble(),
   isPlaying: json['isPlaying'] as bool,
   $type: json['runtimeType'] as String?,
 );
 
-Map<String, dynamic> _$$StageEventPlaybackPositionImplToJson(
-  _$StageEventPlaybackPositionImpl instance,
+Map<String, dynamic> _$StageEventPlaybackPositionToJson(
+  _StageEventPlaybackPosition instance,
 ) => <String, dynamic>{
   'currentBeat': instance.currentBeat,
   'progress': instance.progress,
@@ -140,15 +172,15 @@ Map<String, dynamic> _$$StageEventPlaybackPositionImplToJson(
   'runtimeType': instance.$type,
 };
 
-_$StageEventStateChangedImpl _$$StageEventStateChangedImplFromJson(
+_StageEventStateChanged _$StageEventStateChangedFromJson(
   Map<String, dynamic> json,
-) => _$StageEventStateChangedImpl(
+) => _StageEventStateChanged(
   state: $enumDecode(_$StageEngineStatusEnumMap, json['state']),
   $type: json['runtimeType'] as String?,
 );
 
-Map<String, dynamic> _$$StageEventStateChangedImplToJson(
-  _$StageEventStateChangedImpl instance,
+Map<String, dynamic> _$StageEventStateChangedToJson(
+  _StageEventStateChanged instance,
 ) => <String, dynamic>{
   'state': _$StageEngineStatusEnumMap[instance.state]!,
   'runtimeType': instance.$type,
@@ -162,33 +194,40 @@ const _$StageEngineStatusEnumMap = {
   StageEngineStatus.stopped: 'stopped',
 };
 
-_$StageEngineConfigImpl _$$StageEngineConfigImplFromJson(
-  Map<String, dynamic> json,
-) => _$StageEngineConfigImpl(
-  perfectWindow: (json['perfectWindow'] as num?)?.toDouble() ?? 0.1,
-  goodWindow: (json['goodWindow'] as num?)?.toDouble() ?? 0.2,
-  okayWindow: (json['okayWindow'] as num?)?.toDouble() ?? 0.3,
-  missWindow: (json['missWindow'] as num?)?.toDouble() ?? 0.5,
-  autoAdvance: json['autoAdvance'] as bool? ?? true,
-  playbackSpeed: (json['playbackSpeed'] as num?)?.toDouble() ?? 1.0,
-  inputLatency: (json['inputLatency'] as num?)?.toDouble() ?? 0.0,
-);
+_StageEngineConfig _$StageEngineConfigFromJson(Map<String, dynamic> json) =>
+    _StageEngineConfig(
+      perfectWindow: (json['perfectWindow'] as num?)?.toDouble() ?? 0.1,
+      goodWindow: (json['goodWindow'] as num?)?.toDouble() ?? 0.2,
+      okayWindow: (json['okayWindow'] as num?)?.toDouble() ?? 0.3,
+      missWindow: (json['missWindow'] as num?)?.toDouble() ?? 0.5,
+      autoAdvance: json['autoAdvance'] as bool? ?? true,
+      playbackSpeed: (json['playbackSpeed'] as num?)?.toDouble() ?? 1.0,
+      inputLatency: (json['inputLatency'] as num?)?.toDouble() ?? 0.0,
+      practiceMode:
+          $enumDecodeNullable(_$PracticeModeEnumMap, json['practiceMode']) ??
+          PracticeMode.timed,
+    );
 
-Map<String, dynamic> _$$StageEngineConfigImplToJson(
-  _$StageEngineConfigImpl instance,
-) => <String, dynamic>{
-  'perfectWindow': instance.perfectWindow,
-  'goodWindow': instance.goodWindow,
-  'okayWindow': instance.okayWindow,
-  'missWindow': instance.missWindow,
-  'autoAdvance': instance.autoAdvance,
-  'playbackSpeed': instance.playbackSpeed,
-  'inputLatency': instance.inputLatency,
+Map<String, dynamic> _$StageEngineConfigToJson(_StageEngineConfig instance) =>
+    <String, dynamic>{
+      'perfectWindow': instance.perfectWindow,
+      'goodWindow': instance.goodWindow,
+      'okayWindow': instance.okayWindow,
+      'missWindow': instance.missWindow,
+      'autoAdvance': instance.autoAdvance,
+      'playbackSpeed': instance.playbackSpeed,
+      'inputLatency': instance.inputLatency,
+      'practiceMode': _$PracticeModeEnumMap[instance.practiceMode]!,
+    };
+
+const _$PracticeModeEnumMap = {
+  PracticeMode.timed: 'timed',
+  PracticeMode.waiting: 'waiting',
 };
 
-_$StageEngineStateModelImpl _$$StageEngineStateModelImplFromJson(
+_StageEngineStateModel _$StageEngineStateModelFromJson(
   Map<String, dynamic> json,
-) => _$StageEngineStateModelImpl(
+) => _StageEngineStateModel(
   engineState: $enumDecode(_$StageEngineStatusEnumMap, json['engineState']),
   level: LevelModel.fromJson(json['level'] as Map<String, dynamic>),
   currentBeat: (json['currentBeat'] as num).toDouble(),
@@ -201,10 +240,16 @@ _$StageEngineStateModelImpl _$$StageEngineStateModelImplFromJson(
   perfectCount: (json['perfectCount'] as num?)?.toInt() ?? 0,
   goodCount: (json['goodCount'] as num?)?.toInt() ?? 0,
   okayCount: (json['okayCount'] as num?)?.toInt() ?? 0,
+  practiceMode:
+      $enumDecodeNullable(_$PracticeModeEnumMap, json['practiceMode']) ??
+      PracticeMode.timed,
+  waitingHint: json['waitingHint'] == null
+      ? null
+      : WaitingHint.fromJson(json['waitingHint'] as Map<String, dynamic>),
 );
 
-Map<String, dynamic> _$$StageEngineStateModelImplToJson(
-  _$StageEngineStateModelImpl instance,
+Map<String, dynamic> _$StageEngineStateModelToJson(
+  _StageEngineStateModel instance,
 ) => <String, dynamic>{
   'engineState': _$StageEngineStatusEnumMap[instance.engineState]!,
   'level': instance.level,
@@ -216,6 +261,8 @@ Map<String, dynamic> _$$StageEngineStateModelImplToJson(
   'perfectCount': instance.perfectCount,
   'goodCount': instance.goodCount,
   'okayCount': instance.okayCount,
+  'practiceMode': _$PracticeModeEnumMap[instance.practiceMode]!,
+  'waitingHint': instance.waitingHint,
 };
 
 const _$NoteStateEnumMap = {

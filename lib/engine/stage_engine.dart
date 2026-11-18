@@ -15,6 +15,12 @@ class StageEngine extends ChangeNotifier {
 
   double get playbackSpeed => _playbackSpeed;
 
+  /// Current practice mode: timed (play in time) or waiting (learn notes).
+  PracticeMode _practiceMode = PracticeMode.timed;
+
+  PracticeMode get practiceMode => _practiceMode;
+  PracticeMode get mode => _practiceMode;
+
   StageEngineStateModel _state = const StageEngineStateModel(
     engineState: StageEngineStatus.idle,
     level: LevelModel(
@@ -74,16 +80,48 @@ class StageEngine extends ChangeNotifier {
   /// key struck again while it still rings.
   static const double _restrikeSwell = 1.6;
 
-  StageEngine({required LevelModel level, StageEngineConfig? config})
-    : _level = level,
-      _config = config ?? const StageEngineConfig() {
+  StageEngine({
+    required LevelModel level,
+    StageEngineConfig? config,
+    PracticeMode? practiceMode,
+  }) : _level = level,
+       _config = config ?? const StageEngineConfig(),
+       _practiceMode =
+           practiceMode ?? config?.practiceMode ?? PracticeMode.timed {
     _playbackSpeed = _config.playbackSpeed;
     _initializeNotes();
     _state = _state.copyWith(
       engineState: StageEngineStatus.idle,
       level: _level,
       noteStates: List.filled(_allNotes.length, NoteState.upcoming),
+      practiceMode: _practiceMode,
     );
+  }
+
+  /// Sets the active practice mode.
+  ///
+  /// In [PracticeMode.timed], playback auto-advances at the selected tempo and speed,
+  /// evaluating timing windows and awarding points.
+  /// In [PracticeMode.waiting], the transport holds at each note until the learner
+  /// strikes the correct pitch, offering contextual hints without awarding a timed score.
+  void setPracticeMode(PracticeMode mode) {
+    if (_practiceMode == mode) return;
+    _practiceMode = mode;
+    if (_state.engineState == StageEngineStatus.playing) {
+      if (_practiceMode == PracticeMode.timed) {
+        _stopPlaybackTimer();
+        _state = _state.copyWith(practiceMode: _practiceMode, waitingHint: null);
+        _updateNoteStatesForBeat(_state.currentBeat);
+        _startPlaybackTimer();
+      } else {
+        _stopPlaybackTimer();
+        _state = _state.copyWith(practiceMode: _practiceMode);
+        _syncWaitingPlayheadAndHint();
+      }
+    } else {
+      _state = _state.copyWith(practiceMode: _practiceMode);
+    }
+    _notifyStateChanged();
   }
 
   /// Initialize the flat list of all notes from measures. Rests are
@@ -140,9 +178,15 @@ class StageEngine extends ChangeNotifier {
       perfectCount: 0,
       goodCount: 0,
       okayCount: 0,
+      practiceMode: _practiceMode,
+      waitingHint: null,
     );
 
-    _startPlaybackTimer();
+    if (_practiceMode == PracticeMode.waiting) {
+      _syncWaitingPlayheadAndHint();
+    } else {
+      _startPlaybackTimer();
+    }
     _notifyStateChanged();
   }
 
@@ -203,6 +247,8 @@ class StageEngine extends ChangeNotifier {
       perfectCount: 0,
       goodCount: 0,
       okayCount: 0,
+      practiceMode: _practiceMode,
+      waitingHint: null,
     );
     _notifyStateChanged();
   }
@@ -214,6 +260,11 @@ class StageEngine extends ChangeNotifier {
     if (_state.engineState != StageEngineStatus.playing) return;
     if (_isDemonstrating) return;
     if (!_isFreshStrike(event)) return;
+
+    if (_practiceMode == PracticeMode.waiting) {
+      _processWaitingPitchEvent(event);
+      return;
+    }
 
     final beatsPerSecond = _level.tempo / 60.0 * _playbackSpeed;
     final latencyBeats = _config.inputLatency * beatsPerSecond;
@@ -530,8 +581,12 @@ class StageEngine extends ChangeNotifier {
       goodCount: 0,
       okayCount: 0,
     );
-    _updateNoteStatesForBeat(loop.start);
-    _startPlaybackTimer();
+    if (_practiceMode == PracticeMode.waiting) {
+      _syncWaitingPlayheadAndHint();
+    } else {
+      _updateNoteStatesForBeat(loop.start);
+      _startPlaybackTimer();
+    }
   }
 
   /// Update playback position
@@ -717,7 +772,10 @@ class StageEngine extends ChangeNotifier {
   /// Complete the stage
   void _completeStage() {
     _stopPlaybackTimer();
-    _state = _state.copyWith(engineState: StageEngineStatus.completed);
+    _state = _state.copyWith(
+      engineState: StageEngineStatus.completed,
+      waitingHint: null,
+    );
 
     final accuracy = _state.accuracy;
     final totalNotes = _allNotes.length;
@@ -785,6 +843,40 @@ class StageEngine extends ChangeNotifier {
         ? loop.end
         : (_level.totalMeasures * _level.beatsPerMeasure).toDouble();
     final clampedBeat = beat.clamp(minBeat, maxBeat);
+
+    if (_practiceMode == PracticeMode.waiting) {
+      final newStates = List<NoteState>.from(_state.noteStates);
+      for (int i = 0; i < _allNotes.length; i++) {
+        final note = _allNotes[i];
+        if (loop != null &&
+            (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end)) {
+          continue;
+        }
+        if (note.startBeat >= clampedBeat - 1e-9) {
+          newStates[i] = NoteState.upcoming;
+          _noteResults.remove(i);
+        }
+      }
+      int hitCount = 0;
+      for (final entry in _noteResults.entries) {
+        final idx = entry.key;
+        final start = _allNotes[idx].startBeat;
+        if (loop != null && (start < loop.start - 1e-9 || start >= loop.end)) {
+          continue;
+        }
+        hitCount++;
+      }
+      _state = _state.copyWith(
+        currentBeat: clampedBeat,
+        noteStates: newStates,
+        score: 0,
+        hitCount: hitCount,
+        missCount: 0,
+      );
+      _syncWaitingPlayheadAndHint();
+      _notifyStateChanged();
+      return;
+    }
 
     // Reset note states up to the seek position
     final newStates = List<NoteState>.from(_state.noteStates);
@@ -905,6 +997,204 @@ class StageEngine extends ChangeNotifier {
     );
 
     notifyListeners();
+  }
+
+  /// Returns the notes at the next unhit beat position currently awaited in waiting mode.
+  List<LevelNote> _getAwaitedNotes() {
+    if (_allNotes.isEmpty) return const [];
+    final loop = _loop;
+
+    for (int i = 0; i < _allNotes.length; i++) {
+      final note = _allNotes[i];
+      if (loop != null &&
+          (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end)) {
+        continue;
+      }
+      final state = _state.noteStates[i];
+      if (state != NoteState.hitPerfect &&
+          state != NoteState.hitGood &&
+          state != NoteState.hitOkay) {
+        final targetBeat = note.startBeat;
+        final awaited = <LevelNote>[];
+        for (int j = i; j < _allNotes.length; j++) {
+          final n = _allNotes[j];
+          if (loop != null &&
+              (n.startBeat < loop.start - 1e-9 || n.startBeat >= loop.end)) {
+            continue;
+          }
+          if ((n.startBeat - targetBeat).abs() < 1e-6) {
+            final s = _state.noteStates[j];
+            if (s != NoteState.hitPerfect &&
+                s != NoteState.hitGood &&
+                s != NoteState.hitOkay) {
+              awaited.add(n);
+            }
+          } else if (n.startBeat > targetBeat + 1e-6) {
+            break;
+          }
+        }
+        return awaited;
+      }
+    }
+    return const [];
+  }
+
+  /// Creates a contextual [WaitingHint] describing the awaited note(s) or feedback on wrong input.
+  WaitingHint _createWaitingHint(
+    List<LevelNote> awaited,
+    double targetBeat, {
+    int? heardWrongMidiNote,
+  }) {
+    final targetMidis = awaited.map((n) => n.midiNote).toList();
+    final noteNames = targetMidis.map((m) => formatPitch(m)).toList();
+    final first = awaited.first;
+    final measureIdx = first.measureIndex;
+    final beatIdx = first.beatIndex;
+
+    String expectedDesc;
+    if (noteNames.length == 1) {
+      expectedDesc = noteNames.first;
+    } else if (noteNames.length == 2) {
+      expectedDesc = '${noteNames[0]} and ${noteNames[1]}';
+    } else {
+      final initial = noteNames.sublist(0, noteNames.length - 1).join(', ');
+      expectedDesc = '$initial, and ${noteNames.last}';
+    }
+
+    String hintText;
+    if (heardWrongMidiNote != null) {
+      final heardName = formatPitch(heardWrongMidiNote, clarifyMiddleC: false);
+      hintText = 'Heard $heardName. Waiting for $expectedDesc.';
+    } else {
+      hintText = 'Play $expectedDesc';
+    }
+
+    return WaitingHint(
+      targetBeat: targetBeat,
+      targetMidiNotes: targetMidis,
+      noteNames: noteNames,
+      hintText: hintText,
+      measureIndex: measureIdx,
+      beatIndex: beatIdx,
+      heardWrongMidiNote: heardWrongMidiNote,
+    );
+  }
+
+  /// Synchronizes playhead position, note states, and contextual hint in waiting mode.
+  void _syncWaitingPlayheadAndHint({int? heardWrongMidiNote}) {
+    if (_practiceMode != PracticeMode.waiting) return;
+    if (_state.engineState != StageEngineStatus.playing) {
+      if (_state.waitingHint != null) {
+        _state = _state.copyWith(waitingHint: null);
+      }
+      return;
+    }
+
+    final awaited = _getAwaitedNotes();
+    if (awaited.isEmpty) {
+      if (_loop != null) {
+        _restartLoop();
+        return;
+      } else {
+        _completeStage();
+        return;
+      }
+    }
+
+    final targetBeat = awaited.first.startBeat;
+    final newStates = List<NoteState>.from(_state.noteStates);
+    final loop = _loop;
+
+    for (int i = 0; i < _allNotes.length; i++) {
+      final note = _allNotes[i];
+      if (loop != null &&
+          (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end)) {
+        continue;
+      }
+      if (newStates[i] == NoteState.hitPerfect ||
+          newStates[i] == NoteState.hitGood ||
+          newStates[i] == NoteState.hitOkay) {
+        continue;
+      }
+      if ((note.startBeat - targetBeat).abs() < 1e-6) {
+        newStates[i] = NoteState.active;
+      } else {
+        newStates[i] = NoteState.upcoming;
+      }
+    }
+
+    final hint = _createWaitingHint(
+      awaited,
+      targetBeat,
+      heardWrongMidiNote: heardWrongMidiNote,
+    );
+
+    _state = _state.copyWith(
+      currentBeat: targetBeat,
+      noteStates: newStates,
+      waitingHint: hint,
+    );
+
+    _nextNoteIndex = 0;
+    while (_nextNoteIndex < _allNotes.length &&
+        _state.noteStates[_nextNoteIndex] != NoteState.upcoming &&
+        _state.noteStates[_nextNoteIndex] != NoteState.active) {
+      _nextNoteIndex++;
+    }
+
+    final totalBeats = _level.totalMeasures * _level.beatsPerMeasure;
+    _eventController.add(
+      StageEvent.playbackPosition(
+        currentBeat: targetBeat,
+        progress: totalBeats > 0 ? targetBeat / totalBeats : 0.0,
+        isPlaying: true,
+      ),
+    );
+  }
+
+  /// Handles pitch events in waiting mode. Correct pitch registers a hit without timed scoring;
+  /// wrong pitch updates contextual hint with feedback without miss penalties.
+  void _processWaitingPitchEvent(PitchEvent event) {
+    final awaited = _getAwaitedNotes();
+    if (awaited.isEmpty) return;
+
+    final matchIdx = awaited.indexWhere((n) => n.midiNote == event.midiNote);
+    if (matchIdx != -1) {
+      final matchedNote = awaited[matchIdx];
+      final noteIndex = _allNotes.indexOf(matchedNote);
+      _registerWaitingHit(noteIndex);
+    } else {
+      _registerWaitingWrongNote(event.midiNote);
+    }
+  }
+
+  void _registerWaitingHit(int noteIndex) {
+    if (_noteResults.containsKey(noteIndex)) return;
+
+    final result = NoteHitResult.waiting(noteIndex: noteIndex);
+    _noteResults[noteIndex] = result;
+    _updateNoteState(noteIndex, NoteState.hitPerfect);
+
+    _state = _state.copyWith(
+      hitCount: _state.hitCount + 1,
+      // score is untouched (no timed score awarded)
+    );
+
+    _eventController.add(
+      StageEvent.noteHit(
+        noteIndex: noteIndex,
+        result: result,
+        currentBeat: _state.currentBeat,
+      ),
+    );
+
+    _syncWaitingPlayheadAndHint();
+    _notifyStateChanged();
+  }
+
+  void _registerWaitingWrongNote(int heardMidi) {
+    _syncWaitingPlayheadAndHint(heardWrongMidiNote: heardMidi);
+    _notifyStateChanged();
   }
 
   @override

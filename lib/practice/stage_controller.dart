@@ -72,6 +72,8 @@ class StageUiState {
     this.isDemonstrating = false,
     this.isMicrophoneSuspended = false,
     this.selectedInputSource = PracticeInputSource.both,
+    this.practiceMode = PracticeMode.timed,
+    this.waitingHint,
   }) : _loopMeasure = loopMeasure;
 
   final LevelModel level;
@@ -106,6 +108,47 @@ class StageUiState {
 
   /// The learner's configured input source.
   final PracticeInputSource selectedInputSource;
+
+  /// Current practice mode: timed or waiting.
+  final PracticeMode practiceMode;
+
+  /// Active contextual hint when waiting for input in waiting mode.
+  final WaitingHint? waitingHint;
+
+  /// Whether the practice is currently in waiting (learn notes) mode.
+  bool get isWaitingMode => practiceMode == PracticeMode.waiting;
+
+  /// Whether the practice is currently in timed (play in time) mode.
+  bool get isTimedMode => practiceMode == PracticeMode.timed;
+
+  /// Semantic / accessible representation of the stage state for assistive technology in both modes.
+  String get accessibleDescription {
+    final modeStr = switch (practiceMode) {
+      PracticeMode.waiting => 'Waiting mode',
+      PracticeMode.timed => 'Timed mode',
+    };
+    final statusStr = switch (status) {
+      StageEngineStatus.idle => 'Ready',
+      StageEngineStatus.playing => 'Playing',
+      StageEngineStatus.paused => 'Paused',
+      StageEngineStatus.completed => 'Completed',
+      StageEngineStatus.stopped => 'Stopped',
+    };
+    final beatsPerMeasure =
+        level.beatsPerMeasure > 0 ? level.beatsPerMeasure : 4;
+    final measure = (currentBeat ~/ beatsPerMeasure) + 1;
+    final beatInMeasure =
+        ((currentBeat % beatsPerMeasure).floor()) + 1;
+    final posStr = 'Measure $measure, beat $beatInMeasure';
+
+    if (practiceMode == PracticeMode.waiting && waitingHint != null) {
+      return '$modeStr: $statusStr. $posStr. ${waitingHint!.hintText}';
+    } else if (practiceMode == PracticeMode.timed) {
+      return '$modeStr: $statusStr. $posStr. Speed ${(speed * 100).round()}%. Score: $score, accuracy: ${(accuracy * 100).round()}%';
+    } else {
+      return '$modeStr: $statusStr. $posStr.';
+    }
+  }
 
   /// Effective input source during practice, accounting for microphone suspension.
   PracticeInputSource get effectiveInputSource {
@@ -142,6 +185,9 @@ class StageUiState {
     bool? isDemonstrating,
     bool? isMicrophoneSuspended,
     PracticeInputSource? selectedInputSource,
+    PracticeMode? practiceMode,
+    WaitingHint? waitingHint,
+    bool clearWaitingHint = false,
   }) {
     final effectiveRange = clearLoop
         ? null
@@ -169,6 +215,8 @@ class StageUiState {
       isMicrophoneSuspended:
           isMicrophoneSuspended ?? this.isMicrophoneSuspended,
       selectedInputSource: selectedInputSource ?? this.selectedInputSource,
+      practiceMode: practiceMode ?? this.practiceMode,
+      waitingHint: clearWaitingHint ? null : (waitingHint ?? this.waitingHint),
     );
   }
 }
@@ -215,6 +263,23 @@ class StageController extends StateNotifier<StageUiState> {
   bool get isMicrophoneScoringActive => state.isMicrophoneScoringActive;
   PracticeInputSource get selectedInputSource => state.selectedInputSource;
   PracticeInputSource get effectiveInputSource => state.effectiveInputSource;
+  PracticeMode get practiceMode => _engine.practiceMode;
+  WaitingHint? get waitingHint => state.waitingHint;
+
+  void setPracticeMode(PracticeMode mode) {
+    if (_disposed || !mounted) return;
+    _syncEngineEvents = true;
+    _engine.setPracticeMode(mode);
+    _sync();
+  }
+
+  void togglePracticeMode() {
+    setPracticeMode(
+      practiceMode == PracticeMode.timed
+          ? PracticeMode.waiting
+          : PracticeMode.timed,
+    );
+  }
 
   void updateSelectedInputSource(PracticeInputSource source) {
     if (_disposed || !mounted) return;
@@ -505,6 +570,9 @@ class StageController extends StateNotifier<StageUiState> {
       clearLoop: _engine.loop == null,
       isDemonstrating: _engine.isDemonstrating,
       isMicrophoneSuspended: _engine.isDemonstrating,
+      practiceMode: _engine.practiceMode,
+      waitingHint: s.waitingHint,
+      clearWaitingHint: s.waitingHint == null,
     );
   }
 
@@ -568,6 +636,8 @@ final stageControllerProvider =
           status: engine.state.engineState,
           speed: engine.playbackSpeed,
           selectedInputSource: settings.inputSource,
+          practiceMode: engine.practiceMode,
+          waitingHint: engine.state.waitingHint,
         ),
         synth: synth,
         selectedInputSource: settings.inputSource,
@@ -666,5 +736,19 @@ final effectiveInputSourceProvider = Provider.autoDispose
     .family<PracticeInputSource, String>(
       (ref, id) => ref.watch(
         stageControllerProvider(id).select((s) => s.effectiveInputSource),
+      ),
+    );
+final practiceModeProvider = Provider.autoDispose.family<PracticeMode, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.practiceMode)),
+);
+final waitingHintProvider = Provider.autoDispose.family<WaitingHint?, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.waitingHint)),
+);
+final accessibleDescriptionProvider =
+    Provider.autoDispose.family<String, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.accessibleDescription),
       ),
     );
