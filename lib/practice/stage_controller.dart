@@ -66,8 +66,9 @@ class StageUiState {
     required this.status,
     required this.speed,
     this.sounding = const {},
-    this.loopMeasure,
-  });
+    this.loopRange,
+    int? loopMeasure,
+  }) : _loopMeasure = loopMeasure;
 
   final LevelModel level;
   final List<LevelNote> notes;
@@ -81,8 +82,17 @@ class StageUiState {
   /// MIDI notes the microphone is hearing right now.
   final Set<int> sounding;
 
+  /// The measure range (startMeasure, endMeasure) being played over and over, or null.
+  final (int, int)? loopRange;
+
+  final int? _loopMeasure;
+
   /// The bar being played over and over, or null.
-  final int? loopMeasure;
+  int? get loopMeasure =>
+      _loopMeasure ??
+      (loopRange != null && loopRange!.$1 == loopRange!.$2
+          ? loopRange!.$1
+          : loopRange?.$1);
 
   double get progress {
     final total = level.totalMeasures * level.beatsPerMeasure;
@@ -98,19 +108,33 @@ class StageUiState {
     double? speed,
     Set<int>? sounding,
     int? loopMeasure,
+    (int, int)? loopRange,
     bool clearLoop = false,
-  }) => StageUiState(
-    level: level,
-    notes: notes,
-    noteStates: noteStates ?? this.noteStates,
-    currentBeat: currentBeat ?? this.currentBeat,
-    score: score ?? this.score,
-    accuracy: accuracy ?? this.accuracy,
-    status: status ?? this.status,
-    speed: speed ?? this.speed,
-    sounding: sounding ?? this.sounding,
-    loopMeasure: clearLoop ? null : (loopMeasure ?? this.loopMeasure),
-  );
+  }) {
+    final effectiveRange = clearLoop
+        ? null
+        : (loopRange ??
+            (loopMeasure != null
+                ? (loopMeasure, loopMeasure)
+                : this.loopRange));
+    final effectiveMeasure = clearLoop
+        ? null
+        : (loopMeasure ??
+            (effectiveRange != null ? effectiveRange.$1 : _loopMeasure));
+    return StageUiState(
+      level: level,
+      notes: notes,
+      noteStates: noteStates ?? this.noteStates,
+      currentBeat: currentBeat ?? this.currentBeat,
+      score: score ?? this.score,
+      accuracy: accuracy ?? this.accuracy,
+      status: status ?? this.status,
+      speed: speed ?? this.speed,
+      sounding: sounding ?? this.sounding,
+      loopRange: effectiveRange,
+      loopMeasure: effectiveMeasure,
+    );
+  }
 }
 
 class StageController extends StateNotifier<StageUiState> {
@@ -248,16 +272,32 @@ class StageController extends StateNotifier<StageUiState> {
 
   /// Plays bar [measure] over and over, every pass judged afresh. Looping
   /// never completes the piece, so it never writes progress.
-  void loopBar(int measure) {
-    final m = state.level.measures[measure];
+  void loopBar(int measure) => loopRange(measure, measure);
+
+  /// Plays measures from [startMeasure] to [endMeasure] (inclusive) over and over,
+  /// judging every repeat pass as a fresh attempt scoped to that range.
+  void loopRange(int startMeasure, int endMeasure) {
+    final measures = state.level.measures;
+    if (measures.isEmpty) return;
+    final start = startMeasure.clamp(0, measures.length - 1);
+    final end = endMeasure.clamp(start, measures.length - 1);
+    final mStart = measures[start];
+    final mEnd = measures[end];
+    final startBeat = mStart.startBeat;
+    final endBeat = mEnd.startBeat + mEnd.beatsPerMeasure;
+
     _syncEngineEvents = true;
-    _engine.playLoop(m.startBeat, m.startBeat + m.beatsPerMeasure);
+    _engine.playLoop(startBeat, endBeat);
     _sync();
-    state = state.copyWith(loopMeasure: measure);
+    state = state.copyWith(
+      loopMeasure: start,
+      loopRange: (start, end),
+    );
   }
 
   /// Stops looping and returns to the start of the piece.
   void stopLoop() {
+    _engine.clearLoop();
     _engine.reset();
     _clearSounding(notify: false);
     _sync();
@@ -298,6 +338,7 @@ class StageController extends StateNotifier<StageUiState> {
       score: s.score,
       accuracy: s.accuracy,
       status: s.engineState,
+      clearLoop: _engine.loop == null,
     );
   }
 

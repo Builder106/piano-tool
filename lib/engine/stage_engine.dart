@@ -217,6 +217,11 @@ class StageEngine extends ChangeNotifier {
 
     for (int i = _nextNoteIndex; i < _allNotes.length; i++) {
       final note = _allNotes[i];
+      if (_loop case final loop?) {
+        if (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end) {
+          continue;
+        }
+      }
       final noteState = _state.noteStates[i];
 
       // Skip if already hit or missed
@@ -374,7 +379,17 @@ class StageEngine extends ChangeNotifier {
         _allNotes[_nextNoteIndex].startBeat < loop.start - 1e-9) {
       _nextNoteIndex++;
     }
-    _state = _state.copyWith(currentBeat: loop.start, noteStates: states);
+    _lastHeard = null;
+    _state = _state.copyWith(
+      currentBeat: loop.start,
+      noteStates: states,
+      score: 0,
+      hitCount: 0,
+      missCount: 0,
+      perfectCount: 0,
+      goodCount: 0,
+      okayCount: 0,
+    );
     _updateNoteStatesForBeat(loop.start);
     _startPlaybackTimer();
   }
@@ -428,6 +443,11 @@ class StageEngine extends ChangeNotifier {
   void _checkMissedNotes(double currentBeat) {
     for (int i = 0; i < _allNotes.length; i++) {
       final note = _allNotes[i];
+      if (_loop case final loop?) {
+        if (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end) {
+          continue;
+        }
+      }
       final noteState = _state.noteStates[i];
 
       if (noteState != NoteState.upcoming && noteState != NoteState.active) {
@@ -460,6 +480,11 @@ class StageEngine extends ChangeNotifier {
 
     for (int i = 0; i < _allNotes.length; i++) {
       final note = _allNotes[i];
+      if (_loop case final loop?) {
+        if (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end) {
+          continue;
+        }
+      }
       final currentState = newStates[i];
 
       if (currentState != NoteState.upcoming &&
@@ -524,15 +549,22 @@ class StageEngine extends ChangeNotifier {
 
   /// Seek to a specific beat position (for scrubbing)
   void seekToBeat(double beat) {
-    final clampedBeat = beat.clamp(
-      0.0,
-      _level.totalMeasures * _level.beatsPerMeasure.toDouble(),
-    );
+    final loop = _loop;
+    final minBeat = loop != null ? loop.start : 0.0;
+    final maxBeat = loop != null
+        ? loop.end
+        : (_level.totalMeasures * _level.beatsPerMeasure).toDouble();
+    final clampedBeat = beat.clamp(minBeat, maxBeat);
 
     // Reset note states up to the seek position
     final newStates = List<NoteState>.from(_state.noteStates);
     for (int i = 0; i < _allNotes.length; i++) {
       final note = _allNotes[i];
+      if (loop != null &&
+          (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end)) {
+        continue;
+      }
+
       if (clampedBeat > note.startBeat + _config.missWindow) {
         // Past the hit window - mark as missed if not hit
         if (newStates[i] == NoteState.upcoming ||
@@ -543,40 +575,101 @@ class StageEngine extends ChangeNotifier {
       } else if (clampedBeat >= note.startBeat - 0.5 &&
           clampedBeat < note.startBeat + note.durationBeats) {
         // Currently at this note
-        if (newStates[i] == NoteState.upcoming) {
-          newStates[i] = NoteState.active;
+        if (loop != null) {
+          if (clampedBeat <= note.startBeat + _config.perfectWindow) {
+            newStates[i] = NoteState.active;
+            _noteResults.remove(i);
+          } else if (newStates[i] == NoteState.upcoming) {
+            newStates[i] = NoteState.active;
+          }
+        } else {
+          if (newStates[i] == NoteState.upcoming) {
+            newStates[i] = NoteState.active;
+          }
         }
       } else if (clampedBeat < note.startBeat - 0.5) {
         // Future note
-        if (newStates[i] == NoteState.active) {
+        if (loop != null) {
           newStates[i] = NoteState.upcoming;
+          _noteResults.remove(i);
+        } else {
+          if (newStates[i] == NoteState.active) {
+            newStates[i] = NoteState.upcoming;
+          }
         }
       }
     }
 
     _nextNoteIndex = 0;
     while (_nextNoteIndex < _allNotes.length &&
-        (newStates[_nextNoteIndex] != NoteState.upcoming &&
-            newStates[_nextNoteIndex] != NoteState.active)) {
+        ((loop != null &&
+                _allNotes[_nextNoteIndex].startBeat < loop.start - 1e-9) ||
+            (newStates[_nextNoteIndex] != NoteState.upcoming &&
+                newStates[_nextNoteIndex] != NoteState.active))) {
       _nextNoteIndex++;
     }
 
-    final missCount = newStates.where((s) => s == NoteState.missed).length;
-    _state = _state.copyWith(
-      currentBeat: clampedBeat,
-      noteStates: newStates,
-      missCount: missCount,
-    );
+    if (loop != null) {
+      int score = 0;
+      int hitCount = 0;
+      int missCount = 0;
+      int perfectCount = 0;
+      int goodCount = 0;
+      int okayCount = 0;
+
+      for (final entry in _noteResults.entries) {
+        final idx = entry.key;
+        final r = entry.value;
+        final start = _allNotes[idx].startBeat;
+        if (start < loop.start - 1e-9 || start >= loop.end) continue;
+        score += r.score.round();
+        switch (r.noteState) {
+          case NoteState.missed:
+            missCount++;
+          case NoteState.hitPerfect:
+            hitCount++;
+            perfectCount++;
+          case NoteState.hitGood:
+            hitCount++;
+            goodCount++;
+          case NoteState.hitOkay:
+            hitCount++;
+            okayCount++;
+          case NoteState.upcoming || NoteState.active:
+            break;
+        }
+      }
+
+      _state = _state.copyWith(
+        currentBeat: clampedBeat,
+        noteStates: newStates,
+        score: score,
+        hitCount: hitCount,
+        missCount: missCount,
+        perfectCount: perfectCount,
+        goodCount: goodCount,
+        okayCount: okayCount,
+      );
+    } else {
+      final missCount = newStates.where((s) => s == NoteState.missed).length;
+      _state = _state.copyWith(
+        currentBeat: clampedBeat,
+        noteStates: newStates,
+        missCount: missCount,
+      );
+    }
+
     // Re-anchor the clock, or the next tick would pull the playhead back to
     // where it was before the seek.
     if (_state.engineState == StageEngineStatus.playing) {
       _startPlaybackTimer();
     }
 
+    final totalBeats = _level.totalMeasures * _level.beatsPerMeasure;
     _eventController.add(
       StageEvent.playbackPosition(
         currentBeat: clampedBeat,
-        progress: clampedBeat / (_level.totalMeasures * _level.beatsPerMeasure),
+        progress: totalBeats > 0 ? clampedBeat / totalBeats : 0.0,
         isPlaying: _state.engineState == StageEngineStatus.playing,
       ),
     );

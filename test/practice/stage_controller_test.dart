@@ -421,6 +421,35 @@ void main() {
       expect(stateAfterMidi.noteStates[0], NoteState.hitPerfect);
     },
   );
+
+  test('loopRange sets loop range, updates engine, and stopLoop clears it', () async {
+    final c = harness();
+    addTearDown(c.dispose);
+    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+    await ctrl.start();
+
+    ctrl.loopRange(0, 1);
+    final stateWithRange = c.read(stageControllerProvider('stage_1'));
+    expect(stateWithRange.loopRange, (0, 1));
+    expect(stateWithRange.loopMeasure, 0);
+
+    ctrl.stopLoop();
+    final stateAfterStop = c.read(stageControllerProvider('stage_1'));
+    expect(stateAfterStop.loopRange, isNull);
+    expect(stateAfterStop.loopMeasure, isNull);
+  });
+
+  test('loopBar sets single bar range', () async {
+    final c = harness();
+    addTearDown(c.dispose);
+    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+    await ctrl.start();
+
+    ctrl.loopBar(2);
+    final s = c.read(stageControllerProvider('stage_1'));
+    expect(s.loopRange, (2, 2));
+    expect(s.loopMeasure, 2);
+  });
 }
 
 class _DelayedProgressRepository extends ProgressRepository {
