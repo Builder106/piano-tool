@@ -5,8 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:piano_tool/audio/tone_synthesizer.dart';
 import 'package:piano_tool/data/level_repository.dart';
 import 'package:piano_tool/data/progress_repository.dart';
+import 'package:piano_tool/data/settings_repository.dart';
 import 'package:piano_tool/models/audio_models.dart';
 import 'package:piano_tool/models/engine_models.dart';
 import 'package:piano_tool/models/level_models.dart';
@@ -22,10 +24,12 @@ void main() {
   ProviderContainer harness({
     ProgressRepository? progressRepository,
     MidiService? midi,
+    AudioSynthesizer? synth,
   }) => ProviderContainer(
     overrides: [
       audioGrantedProvider.overrideWith((ref) async => true),
       if (midi != null) midiServiceProvider.overrideWith((ref) => midi),
+      if (synth != null) audioSynthesizerProvider.overrideWithValue(synth),
       // stageControllerProvider reads levelRepositoryProvider
       // synchronously (requireValue) -- overrideWithValue makes it
       // resolved immediately instead of leaving it in AsyncLoading,
@@ -422,22 +426,25 @@ void main() {
     },
   );
 
-  test('loopRange sets loop range, updates engine, and stopLoop clears it', () async {
-    final c = harness();
-    addTearDown(c.dispose);
-    final ctrl = c.read(stageControllerProvider('stage_1').notifier);
-    await ctrl.start();
+  test(
+    'loopRange sets loop range, updates engine, and stopLoop clears it',
+    () async {
+      final c = harness();
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+      await ctrl.start();
 
-    ctrl.loopRange(0, 1);
-    final stateWithRange = c.read(stageControllerProvider('stage_1'));
-    expect(stateWithRange.loopRange, (0, 1));
-    expect(stateWithRange.loopMeasure, 0);
+      ctrl.loopRange(0, 1);
+      final stateWithRange = c.read(stageControllerProvider('stage_1'));
+      expect(stateWithRange.loopRange, (0, 1));
+      expect(stateWithRange.loopMeasure, 0);
 
-    ctrl.stopLoop();
-    final stateAfterStop = c.read(stageControllerProvider('stage_1'));
-    expect(stateAfterStop.loopRange, isNull);
-    expect(stateAfterStop.loopMeasure, isNull);
-  });
+      ctrl.stopLoop();
+      final stateAfterStop = c.read(stageControllerProvider('stage_1'));
+      expect(stateAfterStop.loopRange, isNull);
+      expect(stateAfterStop.loopMeasure, isNull);
+    },
+  );
 
   test('loopBar sets single bar range', () async {
     final c = harness();
@@ -450,6 +457,106 @@ void main() {
     expect(s.loopRange, (2, 2));
     expect(s.loopMeasure, 2);
   });
+
+  test(
+    'demonstratePhrase plays phrase notes through the synthesizer and suspends microphone scoring',
+    () async {
+      final player = SilentAudioTonePlayer();
+      final synth = AudioSynthesizer(player: player);
+      final c = harness(synth: synth);
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      // Initial state: not demonstrating, microphone scoring active
+      expect(ctrl.isDemonstrating, isFalse);
+      expect(ctrl.isMicrophoneSuspended, isFalse);
+      expect(ctrl.isMicrophoneScoringActive, isTrue);
+
+      // Start demonstration of measure 0
+      await ctrl.demonstratePhrase(startMeasure: 0, endMeasure: 0);
+
+      final demonstratingState = c.read(stageControllerProvider('stage_1'));
+      expect(demonstratingState.isDemonstrating, isTrue);
+      expect(demonstratingState.isMicrophoneSuspended, isTrue);
+      expect(demonstratingState.isMicrophoneScoringActive, isFalse);
+      expect(ctrl.isMicrophoneScoringActive, isFalse);
+
+      // Note at beat 0 was played by the synthesizer into the tone player
+      expect(player.playCount, greaterThan(0));
+
+      // Pitch events received from microphone while demonstrating must not score
+      ctrl.onPitch(
+        const PitchEvent(
+          frequency: 261.63,
+          confidence: 1.0,
+          midiNote: 60,
+          timestamp: 0.0,
+          volume: 0.9,
+          struck: true,
+        ),
+      );
+
+      // Score remains 0 -- audio playback cannot score itself!
+      final stateAfterPitch = c.read(stageControllerProvider('stage_1'));
+      expect(stateAfterPitch.score, 0);
+      expect(stateAfterPitch.noteStates.first, isNot(NoteState.hitPerfect));
+
+      // Stop demonstration
+      ctrl.stopDemonstration();
+
+      final restoredState = c.read(stageControllerProvider('stage_1'));
+      expect(restoredState.isDemonstrating, isFalse);
+      expect(restoredState.isMicrophoneSuspended, isFalse);
+      expect(restoredState.isMicrophoneScoringActive, isTrue);
+      expect(ctrl.isMicrophoneScoringActive, isTrue);
+    },
+  );
+
+  test(
+    'stopDemonstration restores the learner selected input and halts synthesizer',
+    () async {
+      final player = SilentAudioTonePlayer();
+      final synth = AudioSynthesizer(player: player);
+      final c = harness(synth: synth);
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      await ctrl.demonstratePhrase(startMeasure: 0, endMeasure: 1);
+      expect(ctrl.isDemonstrating, isTrue);
+      expect(ctrl.isMicrophoneSuspended, isTrue);
+
+      ctrl.stopDemonstration();
+
+      final s = c.read(stageControllerProvider('stage_1'));
+      expect(s.isDemonstrating, isFalse);
+      expect(s.isMicrophoneSuspended, isFalse);
+      expect(s.effectiveInputSource, PracticeInputSource.both);
+    },
+  );
+
+  test(
+    'demonstratePhrase respects active loopRange when no measure arguments are passed',
+    () async {
+      final player = SilentAudioTonePlayer();
+      final synth = AudioSynthesizer(player: player);
+      final c = harness(synth: synth);
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      ctrl.loopRange(1, 1);
+      expect(c.read(stageControllerProvider('stage_1')).loopRange, (1, 1));
+
+      await ctrl.demonstratePhrase();
+
+      expect(ctrl.isDemonstrating, isTrue);
+      expect(ctrl.isMicrophoneSuspended, isTrue);
+
+      ctrl.stopDemonstration();
+      expect(c.read(stageControllerProvider('stage_1')).loopRange, (1, 1));
+      expect(ctrl.isDemonstrating, isFalse);
+      expect(ctrl.isMicrophoneSuspended, isFalse);
+    },
+  );
 }
 
 class _DelayedProgressRepository extends ProgressRepository {

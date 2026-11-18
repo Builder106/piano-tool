@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../audio/audio_engine.dart';
+import '../audio/tone_synthesizer.dart';
 import '../data/level_repository.dart';
 import '../data/progress_repository.dart';
 import '../data/settings_repository.dart';
@@ -68,6 +69,9 @@ class StageUiState {
     this.sounding = const {},
     this.loopRange,
     int? loopMeasure,
+    this.isDemonstrating = false,
+    this.isMicrophoneSuspended = false,
+    this.selectedInputSource = PracticeInputSource.both,
   }) : _loopMeasure = loopMeasure;
 
   final LevelModel level;
@@ -94,6 +98,31 @@ class StageUiState {
           ? loopRange!.$1
           : loopRange?.$1);
 
+  /// Whether a phrase demonstration is currently playing via the synthesizer.
+  final bool isDemonstrating;
+
+  /// Whether microphone scoring is currently suspended (e.g. during phrase demonstration).
+  final bool isMicrophoneSuspended;
+
+  /// The learner's configured input source.
+  final PracticeInputSource selectedInputSource;
+
+  /// Effective input source during practice, accounting for microphone suspension.
+  PracticeInputSource get effectiveInputSource {
+    if (isMicrophoneSuspended) {
+      return switch (selectedInputSource) {
+        PracticeInputSource.microphone => PracticeInputSource.touch,
+        PracticeInputSource.both => PracticeInputSource.midi,
+        final other => other,
+      };
+    }
+    return selectedInputSource;
+  }
+
+  /// Whether the microphone is currently actively scoring player input.
+  bool get isMicrophoneScoringActive =>
+      !isMicrophoneSuspended && selectedInputSource.usesMicrophone;
+
   double get progress {
     final total = level.totalMeasures * level.beatsPerMeasure;
     return total > 0 ? (currentBeat / total).clamp(0.0, 1.0) : 0.0;
@@ -110,17 +139,20 @@ class StageUiState {
     int? loopMeasure,
     (int, int)? loopRange,
     bool clearLoop = false,
+    bool? isDemonstrating,
+    bool? isMicrophoneSuspended,
+    PracticeInputSource? selectedInputSource,
   }) {
     final effectiveRange = clearLoop
         ? null
         : (loopRange ??
-            (loopMeasure != null
-                ? (loopMeasure, loopMeasure)
-                : this.loopRange));
+              (loopMeasure != null
+                  ? (loopMeasure, loopMeasure)
+                  : this.loopRange));
     final effectiveMeasure = clearLoop
         ? null
         : (loopMeasure ??
-            (effectiveRange != null ? effectiveRange.$1 : _loopMeasure));
+              (effectiveRange != null ? effectiveRange.$1 : _loopMeasure));
     return StageUiState(
       level: level,
       notes: notes,
@@ -133,6 +165,10 @@ class StageUiState {
       sounding: sounding ?? this.sounding,
       loopRange: effectiveRange,
       loopMeasure: effectiveMeasure,
+      isDemonstrating: isDemonstrating ?? this.isDemonstrating,
+      isMicrophoneSuspended:
+          isMicrophoneSuspended ?? this.isMicrophoneSuspended,
+      selectedInputSource: selectedInputSource ?? this.selectedInputSource,
     );
   }
 }
@@ -142,8 +178,16 @@ class StageController extends StateNotifier<StageUiState> {
     this._engine,
     this._stageId,
     this._progress,
-    StageUiState initial,
-  ) : super(initial) {
+    StageUiState initial, {
+    AudioSynthesizer? synth,
+    PracticeInputSource? selectedInputSource,
+  }) : _synth = synth ?? AudioSynthesizer(player: SilentAudioTonePlayer()),
+       super(
+         selectedInputSource != null &&
+                 initial.selectedInputSource != selectedInputSource
+             ? initial.copyWith(selectedInputSource: selectedInputSource)
+             : initial,
+       ) {
     _sub = _engine.events.listen(_onEvent);
     _progress.setLastPlayed(_stageId).catchError((_) {});
   }
@@ -151,6 +195,7 @@ class StageController extends StateNotifier<StageUiState> {
   final StageEngine _engine;
   final String _stageId;
   final ProgressRepository _progress;
+  final AudioSynthesizer _synth;
   StreamSubscription<StageEvent>? _sub;
   Future<void> _progressWrites = Future<void>.value();
   bool _syncEngineEvents = true;
@@ -165,6 +210,17 @@ class StageController extends StateNotifier<StageUiState> {
 
   bool get isCompleted => state.status == StageEngineStatus.completed;
 
+  bool get isDemonstrating => state.isDemonstrating;
+  bool get isMicrophoneSuspended => state.isMicrophoneSuspended;
+  bool get isMicrophoneScoringActive => state.isMicrophoneScoringActive;
+  PracticeInputSource get selectedInputSource => state.selectedInputSource;
+  PracticeInputSource get effectiveInputSource => state.effectiveInputSource;
+
+  void updateSelectedInputSource(PracticeInputSource source) {
+    if (_disposed || !mounted) return;
+    state = state.copyWith(selectedInputSource: source);
+  }
+
   /// One decay timer per lit key. [PitchDetector] only emits an event while
   /// it hears a pitch -- silence produces nothing -- so without a decay a
   /// note would stay lit forever once heard once. Each detection of a note
@@ -177,6 +233,9 @@ class StageController extends StateNotifier<StageUiState> {
   static const double maxSpeed = 2.0;
 
   Future<void> start() async {
+    if (state.isDemonstrating) {
+      stopDemonstration();
+    }
     _syncEngineEvents = true;
     _engine.start();
     _sync();
@@ -189,6 +248,7 @@ class StageController extends StateNotifier<StageUiState> {
     _sync();
     // A paused transport should not show a lit key either.
     _clearSounding();
+    unawaited(_synth.stop());
   }
 
   void resume() {
@@ -203,6 +263,14 @@ class StageController extends StateNotifier<StageUiState> {
     final bool notifyState = true,
     final bool syncState = true,
   }) {
+    if (state.isDemonstrating) {
+      _engine.stopDemonstration();
+      unawaited(_synth.stop());
+      state = state.copyWith(
+        isDemonstrating: false,
+        isMicrophoneSuspended: false,
+      );
+    }
     _syncEngineEvents = syncEvents;
     _engine.stop();
     if (!syncState) {
@@ -236,6 +304,7 @@ class StageController extends StateNotifier<StageUiState> {
   /// a key on a keyboard whose transport reads "stopped."
   void onPitch(PitchEvent event) {
     if (state.status != StageEngineStatus.playing) return;
+    if (state.isDemonstrating) return;
     _engine.processPitchEvent(event);
 
     final note = event.midiNote;
@@ -264,6 +333,9 @@ class StageController extends StateNotifier<StageUiState> {
 
   /// Returns to the start and plays again.
   void replay() {
+    if (state.isDemonstrating) {
+      stopDemonstration();
+    }
     _syncEngineEvents = true;
     _engine.reset();
     _engine.start();
@@ -289,10 +361,7 @@ class StageController extends StateNotifier<StageUiState> {
     _syncEngineEvents = true;
     _engine.playLoop(startBeat, endBeat);
     _sync();
-    state = state.copyWith(
-      loopMeasure: start,
-      loopRange: (start, end),
-    );
+    state = state.copyWith(loopMeasure: start, loopRange: (start, end));
   }
 
   /// Stops looping and returns to the start of the piece.
@@ -302,6 +371,101 @@ class StageController extends StateNotifier<StageUiState> {
     _clearSounding(notify: false);
     _sync();
     state = state.copyWith(clearLoop: true);
+  }
+
+  /// Demonstrates a selected phrase using the synthesizer without scoring.
+  ///
+  /// If [startMeasure] and [endMeasure] are provided, demonstrates that measure range.
+  /// Otherwise, if a loop range is active, demonstrates that loop range.
+  /// If no range is specified or active, demonstrates the entire level.
+  ///
+  /// Suspend microphone scoring during demonstration so playback cannot
+  /// score itself; restores the learner's selected input when finished.
+  Future<void> demonstratePhrase({int? startMeasure, int? endMeasure}) async {
+    final measures = state.level.measures;
+    if (measures.isEmpty) return;
+
+    int startIdx;
+    int endIdx;
+    if (startMeasure != null && endMeasure != null) {
+      startIdx = startMeasure.clamp(0, measures.length - 1);
+      endIdx = endMeasure.clamp(startIdx, measures.length - 1);
+    } else if (state.loopRange != null) {
+      startIdx = state.loopRange!.$1.clamp(0, measures.length - 1);
+      endIdx = state.loopRange!.$2.clamp(startIdx, measures.length - 1);
+    } else {
+      startIdx = 0;
+      endIdx = measures.length - 1;
+    }
+
+    final mStart = measures[startIdx];
+    final mEnd = measures[endIdx];
+    final startBeat = mStart.startBeat;
+    final endBeat = mEnd.startBeat + mEnd.beatsPerMeasure;
+
+    _syncEngineEvents = true;
+    _clearSounding();
+    state = state.copyWith(isDemonstrating: true, isMicrophoneSuspended: true);
+
+    await _synth.open();
+
+    _engine.playDemonstration(
+      startBeat,
+      endBeat,
+      onNote: _onDemonstrationNote,
+      onComplete: _onDemonstrationComplete,
+    );
+    _sync();
+  }
+
+  /// Alias for [demonstratePhrase].
+  Future<void> demonstrate({int? startMeasure, int? endMeasure}) =>
+      demonstratePhrase(startMeasure: startMeasure, endMeasure: endMeasure);
+
+  /// Stops phrase demonstration, halts synthesizer audio,
+  /// and restores the learner's selected input.
+  void stopDemonstration() {
+    if (!state.isDemonstrating) return;
+    _engine.stopDemonstration();
+    unawaited(_synth.stop());
+    _clearSounding();
+    state = state.copyWith(
+      isDemonstrating: false,
+      isMicrophoneSuspended: false,
+    );
+    _sync();
+  }
+
+  void _onDemonstrationNote(LevelNote note) {
+    if (_disposed || !mounted) return;
+    final speed = _engine.playbackSpeed > 0 ? _engine.playbackSpeed : 1.0;
+    final tempo = _engine.level.tempo > 0 ? _engine.level.tempo : 120.0;
+    final durationSeconds = (note.durationBeats * 60.0) / (tempo * speed);
+    unawaited(
+      _synth.playNote(
+        midiNote: note.midiNote,
+        durationSeconds: durationSeconds,
+      ),
+    );
+
+    final noteMidi = note.midiNote;
+    _soundingTimers[noteMidi]?.cancel();
+    _soundingTimers[noteMidi] = Timer(
+      _soundingDecay,
+      () => _dropSounding(noteMidi),
+    );
+    state = state.copyWith(sounding: {...state.sounding, noteMidi});
+  }
+
+  void _onDemonstrationComplete() {
+    if (_disposed || !mounted) return;
+    unawaited(_synth.stop());
+    _clearSounding();
+    state = state.copyWith(
+      isDemonstrating: false,
+      isMicrophoneSuspended: false,
+    );
+    _sync();
   }
 
   void seekTo(double beat) {
@@ -339,12 +503,18 @@ class StageController extends StateNotifier<StageUiState> {
       accuracy: s.accuracy,
       status: s.engineState,
       clearLoop: _engine.loop == null,
+      isDemonstrating: _engine.isDemonstrating,
+      isMicrophoneSuspended: _engine.isDemonstrating,
     );
   }
 
   @override
   void dispose() {
     _disposed = true;
+    if (state.isDemonstrating) {
+      _engine.stopDemonstration();
+      unawaited(_synth.stop());
+    }
     for (final timer in _soundingTimers.values) {
       timer.cancel();
     }
@@ -379,6 +549,7 @@ final stageControllerProvider =
       }
 
       final settings = ref.read(settingsProvider);
+      final synth = ref.read(audioSynthesizerProvider);
       final engine = StageEngine(
         level: stage.level,
         config: settings.toStageEngineConfig(),
@@ -396,7 +567,10 @@ final stageControllerProvider =
           accuracy: 0,
           status: engine.state.engineState,
           speed: engine.playbackSpeed,
+          selectedInputSource: settings.inputSource,
         ),
+        synth: synth,
+        selectedInputSource: settings.inputSource,
       );
 
       // Pitch events only flow once permission was granted; the gate makes sure
@@ -411,6 +585,7 @@ final stageControllerProvider =
         (_, next) {
           final settings = ref.read(settingsProvider);
           if (!settings.inputSource.usesMicrophone) return;
+          if (!controller.isMicrophoneScoringActive) return;
           if (stage.effectiveRequiresMidi) return;
           if (next.hasError) {
             _logAudioStreamError(next.error);
@@ -433,6 +608,11 @@ final stageControllerProvider =
         if (!ref.read(settingsProvider).inputSource.usesTouch) return;
         next.whenOrNull(data: controller.onPitch);
       }, fireImmediately: true);
+
+      ref.listen(
+        settingsProvider.select((s) => s.inputSource),
+        (_, next) => controller.updateSelectedInputSource(next),
+      );
 
       return controller;
     });
@@ -473,3 +653,18 @@ final playbackSpeedProvider = Provider.autoDispose.family<double, String>(
 final soundingProvider = Provider.autoDispose.family<Set<int>, String>(
   (ref, id) => ref.watch(stageControllerProvider(id).select((s) => s.sounding)),
 );
+final isDemonstratingProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.isDemonstrating)),
+);
+final isMicrophoneSuspendedProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) => ref.watch(
+    stageControllerProvider(id).select((s) => s.isMicrophoneSuspended),
+  ),
+);
+final effectiveInputSourceProvider = Provider.autoDispose
+    .family<PracticeInputSource, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.effectiveInputSource),
+      ),
+    );

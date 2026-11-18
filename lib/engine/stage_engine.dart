@@ -45,6 +45,18 @@ class StageEngine extends ChangeNotifier {
   final Map<int, NoteHitResult> _noteResults = {};
   int _nextNoteIndex = 0;
 
+  /// Whether the engine is currently demonstrating a phrase using synthesizer audio.
+  bool _isDemonstrating = false;
+  bool get isDemonstrating => _isDemonstrating;
+
+  /// The active demonstration beat range, or null.
+  ({double start, double end})? _demonstrationRange;
+  ({double start, double end})? get demonstrationRange => _demonstrationRange;
+
+  void Function(LevelNote note)? _onDemonstrationNote;
+  void Function()? _onDemonstrationComplete;
+  final Set<int> _demonstratedNoteIndices = {};
+
   /// The previous microphone frame, to tell a new strike from the same
   /// sound ringing on.
   PitchEvent? _lastHeard;
@@ -107,6 +119,9 @@ class StageEngine extends ChangeNotifier {
 
   /// Start the stage
   void start() {
+    if (_isDemonstrating) {
+      stopDemonstration();
+    }
     if (_state.engineState == StageEngineStatus.playing) return;
 
     _loop = null;
@@ -153,6 +168,13 @@ class StageEngine extends ChangeNotifier {
   void stop() {
     if (_disposed) return;
     _stopPlaybackTimer();
+    if (_isDemonstrating) {
+      _isDemonstrating = false;
+      _demonstrationRange = null;
+      _onDemonstrationNote = null;
+      _onDemonstrationComplete = null;
+      _demonstratedNoteIndices.clear();
+    }
     _state = _state.copyWith(engineState: StageEngineStatus.stopped);
     _notifyStateChanged();
   }
@@ -160,6 +182,11 @@ class StageEngine extends ChangeNotifier {
   /// Reset the stage to initial state
   void reset() {
     _stopPlaybackTimer();
+    _isDemonstrating = false;
+    _demonstrationRange = null;
+    _onDemonstrationNote = null;
+    _onDemonstrationComplete = null;
+    _demonstratedNoteIndices.clear();
     _loop = null;
     _nextNoteIndex = 0;
     _noteResults.clear();
@@ -185,6 +212,7 @@ class StageEngine extends ChangeNotifier {
   /// when its window opens.
   void processPitchEvent(PitchEvent event) {
     if (_state.engineState != StageEngineStatus.playing) return;
+    if (_isDemonstrating) return;
     if (!_isFreshStrike(event)) return;
 
     final beatsPerSecond = _level.tempo / 60.0 * _playbackSpeed;
@@ -351,6 +379,118 @@ class StageEngine extends ChangeNotifier {
     _playbackClock.stop();
   }
 
+  /// Demonstrates the phrase between [start] and [end] beats using synthesizer audio.
+  ///
+  /// Plays each note as the playhead reaches it without scoring, misses, or progress recording.
+  /// When [end] is reached, playback halts, notes in the phrase reset to upcoming,
+  /// and [onComplete] is called.
+  void playDemonstration(
+    double start,
+    double end, {
+    void Function(LevelNote note)? onNote,
+    void Function()? onComplete,
+  }) {
+    _stopPlaybackTimer();
+    _isDemonstrating = true;
+    _demonstrationRange = (start: start, end: end);
+    _onDemonstrationNote = onNote;
+    _onDemonstrationComplete = onComplete;
+    _demonstratedNoteIndices.clear();
+    _lastHeard = null;
+
+    final states = List<NoteState>.from(_state.noteStates);
+    for (var i = 0; i < _allNotes.length; i++) {
+      final s = _allNotes[i].startBeat;
+      if (s >= start - 1e-9 && s < end) {
+        states[i] = NoteState.upcoming;
+        _noteResults.remove(i);
+      }
+    }
+    _nextNoteIndex = 0;
+    while (_nextNoteIndex < _allNotes.length &&
+        _allNotes[_nextNoteIndex].startBeat < start - 1e-9) {
+      _nextNoteIndex++;
+    }
+
+    _state = _state.copyWith(
+      engineState: StageEngineStatus.playing,
+      currentBeat: start,
+      noteStates: states,
+      score: 0,
+      hitCount: 0,
+      missCount: 0,
+      perfectCount: 0,
+      goodCount: 0,
+      okayCount: 0,
+    );
+
+    _soundNotesForBeat(start);
+    _updateNoteStatesForBeat(start);
+    _startPlaybackTimer();
+    _notifyStateChanged();
+  }
+
+  void _soundNotesForBeat(double currentBeat) {
+    if (!_isDemonstrating || _demonstrationRange == null) return;
+    final range = _demonstrationRange!;
+    for (int i = 0; i < _allNotes.length; i++) {
+      if (_demonstratedNoteIndices.contains(i)) continue;
+      final note = _allNotes[i];
+      if (note.startBeat < range.start - 1e-9 || note.startBeat >= range.end) {
+        continue;
+      }
+      if (note.startBeat <= currentBeat + 1e-6) {
+        _demonstratedNoteIndices.add(i);
+        _onDemonstrationNote?.call(note);
+      }
+    }
+  }
+
+  /// Stops phrase demonstration and returns to idle at the phrase start.
+  void stopDemonstration() {
+    if (!_isDemonstrating) return;
+    _stopPlaybackTimer();
+    _isDemonstrating = false;
+    final start = _demonstrationRange?.start ?? 0.0;
+    final end =
+        _demonstrationRange?.end ??
+        (_level.totalMeasures * _level.beatsPerMeasure).toDouble();
+    _demonstrationRange = null;
+    _onDemonstrationNote = null;
+    final onComplete = _onDemonstrationComplete;
+    _onDemonstrationComplete = null;
+    _demonstratedNoteIndices.clear();
+
+    final states = List<NoteState>.from(_state.noteStates);
+    for (var i = 0; i < _allNotes.length; i++) {
+      final s = _allNotes[i].startBeat;
+      if (s >= start - 1e-9 && s < end) {
+        states[i] = NoteState.upcoming;
+        _noteResults.remove(i);
+      }
+    }
+    _nextNoteIndex = 0;
+    while (_nextNoteIndex < _allNotes.length &&
+        _allNotes[_nextNoteIndex].startBeat < start - 1e-9) {
+      _nextNoteIndex++;
+    }
+
+    _state = _state.copyWith(
+      engineState: StageEngineStatus.idle,
+      currentBeat: start,
+      noteStates: states,
+      score: 0,
+      hitCount: 0,
+      missCount: 0,
+      perfectCount: 0,
+      goodCount: 0,
+      okayCount: 0,
+    );
+    _updateNoteStatesForBeat(start);
+    _notifyStateChanged();
+    onComplete?.call();
+  }
+
   /// Plays from [start] to [end] over and over, judging every pass afresh.
   void playLoop(double start, double end) {
     _stopPlaybackTimer();
@@ -398,6 +538,73 @@ class StageEngine extends ChangeNotifier {
   void _updatePlayback(double deltaBeats) {
     final totalBeats = _level.totalMeasures * _level.beatsPerMeasure;
     double newBeat = _state.currentBeat + deltaBeats;
+
+    final demo = _demonstrationRange;
+    if (_isDemonstrating && demo != null) {
+      _soundNotesForBeat(newBeat);
+
+      if (newBeat >= demo.end) {
+        newBeat = demo.end;
+        _stopPlaybackTimer();
+        _isDemonstrating = false;
+        final start = demo.start;
+        final end = demo.end;
+        _demonstrationRange = null;
+        _onDemonstrationNote = null;
+        final onComplete = _onDemonstrationComplete;
+        _onDemonstrationComplete = null;
+        _demonstratedNoteIndices.clear();
+
+        final states = List<NoteState>.from(_state.noteStates);
+        for (var i = 0; i < _allNotes.length; i++) {
+          final s = _allNotes[i].startBeat;
+          if (s >= start - 1e-9 && s < end) {
+            states[i] = NoteState.upcoming;
+            _noteResults.remove(i);
+          }
+        }
+        _nextNoteIndex = 0;
+        while (_nextNoteIndex < _allNotes.length &&
+            _allNotes[_nextNoteIndex].startBeat < start - 1e-9) {
+          _nextNoteIndex++;
+        }
+
+        _state = _state.copyWith(
+          engineState: StageEngineStatus.idle,
+          currentBeat: start,
+          noteStates: states,
+          score: 0,
+          hitCount: 0,
+          missCount: 0,
+          perfectCount: 0,
+          goodCount: 0,
+          okayCount: 0,
+        );
+        _updateNoteStatesForBeat(start);
+        _eventController.add(
+          StageEvent.playbackPosition(
+            currentBeat: start,
+            progress: totalBeats > 0 ? start / totalBeats : 0.0,
+            isPlaying: false,
+          ),
+        );
+        _notifyStateChanged();
+        onComplete?.call();
+        return;
+      }
+
+      _updateNoteStatesForBeat(newBeat);
+      _state = _state.copyWith(currentBeat: newBeat);
+      _eventController.add(
+        StageEvent.playbackPosition(
+          currentBeat: newBeat,
+          progress: totalBeats > 0 ? newBeat / totalBeats : 0.0,
+          isPlaying: true,
+        ),
+      );
+      notifyListeners();
+      return;
+    }
 
     final loop = _loop;
     if (loop != null && newBeat >= loop.end) {
@@ -549,6 +756,29 @@ class StageEngine extends ChangeNotifier {
 
   /// Seek to a specific beat position (for scrubbing)
   void seekToBeat(double beat) {
+    final demo = _demonstrationRange;
+    if (_isDemonstrating && demo != null) {
+      final clampedBeat = beat.clamp(demo.start, demo.end);
+      _demonstratedNoteIndices.removeWhere(
+        (idx) => _allNotes[idx].startBeat > clampedBeat,
+      );
+      _updateNoteStatesForBeat(clampedBeat);
+      _state = _state.copyWith(currentBeat: clampedBeat);
+      if (_state.engineState == StageEngineStatus.playing) {
+        _startPlaybackTimer();
+      }
+      final totalBeats = _level.totalMeasures * _level.beatsPerMeasure;
+      _eventController.add(
+        StageEvent.playbackPosition(
+          currentBeat: clampedBeat,
+          progress: totalBeats > 0 ? clampedBeat / totalBeats : 0.0,
+          isPlaying: true,
+        ),
+      );
+      notifyListeners();
+      return;
+    }
+
     final loop = _loop;
     final minBeat = loop != null ? loop.start : 0.0;
     final maxBeat = loop != null
@@ -680,6 +910,11 @@ class StageEngine extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _isDemonstrating = false;
+    _demonstrationRange = null;
+    _onDemonstrationNote = null;
+    _onDemonstrationComplete = null;
+    _demonstratedNoteIndices.clear();
     _stopPlaybackTimer();
     _pitchSubscription?.cancel();
     _eventController.close();
