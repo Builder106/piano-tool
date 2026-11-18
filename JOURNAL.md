@@ -1,5 +1,27 @@
 # Journal
 
+## 2026-11-18: measure range selection, loop-safe seeking, and repeat attempt scoping #engine #practice #decision
+
+Loop practice of a measure range requires clean scoring scoping and attempt boundaries:
+- In `StageEngine`, `playLoop` and loop playback now strictly scope pitch matching,
+  note state updates, and miss evaluations to notes within the active loop beat
+  range `[loop.start, loop.end)`. Pitch events during a loop cannot erroneously match
+  or score notes outside the active phrase.
+- Each repeat pass across the loop boundary defines a fresh attempt: note states in
+  the loop reset to `upcoming` (or `active`), previous pass note results are cleared,
+  and attempt scoring metrics (`score`, `hitCount`, `missCount`, `perfectCount`,
+  `goodCount`, `okayCount`) reset to zero. Accuracy reflects solely the current
+  attempt without inheriting or double-counting points across repeats.
+- `seekToBeat` is loop-safe: when a loop is active, seeks are clamped strictly to
+  `[loop.start, loop.end]`. Seeking backward inside a loop clears note results ahead
+  of the playhead and recomputes attempt scoring metrics without corrupting or marking
+  outer notes missed.
+- In `StageController`, `loopRange(int startMeasure, int endMeasure)` provides
+  safe multi-measure phrase selection and looping with bounds clamping, while
+  `loopBar(int measure)` delegates to `loopRange(measure, measure)`.
+- `StageUiState` gains `(int, int)? loopRange` alongside backwards-compatible
+  `int? loopMeasure` accessors.
+
 ## 2026-11-14: input latency calibration, reference tuning, and timing advice guards #engine #audio #decision
 
 Timing tolerance windows must remain strictly decoupled from pitch tuning, and

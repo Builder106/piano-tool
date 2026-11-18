@@ -126,10 +126,16 @@ reliability so the interaction is both expressive and accurate.
 
 ### Practice transport and assistance
 
-- [ ] **Measure selection and repeat:** Let learners select a short range,
+- [x] **Measure selection and repeat:** Let learners select a short range,
   seek within it, and repeat it. Scope scoring to that range and define a
   fresh attempt for each repeat. `seekToBeat` currently preserves note
   results and accumulated score, so wiring it directly to a loop is unsafe.
+  Implemented: StageEngine scopes pitch matching, note states, scoring,
+  and misses strictly to the active loop range; fresh attempts are defined
+  on repeat wraps with reset scores and counts; seekToBeat is loop-safe,
+  clamping within bounds and safely resetting/recalculating attempt results
+  without polluting notes outside the range; StageController supports
+  loopRange and loopBar with StageUiState loopRange tracking.
 - [ ] **Listen first:** Reuse the existing synthesizer to demonstrate a
   selected phrase. Suspend microphone scoring during demonstration so
   playback cannot score itself; restore the learner's selected input.
