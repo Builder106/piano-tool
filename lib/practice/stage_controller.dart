@@ -76,6 +76,7 @@ class StageUiState {
     this.waitingHint,
     this.isMetronomeEnabled = false,
     this.isCountInEnabled = false,
+    this.handSelection = HandSelection.both,
   }) : _loopMeasure = loopMeasure;
 
   final LevelModel level;
@@ -86,6 +87,18 @@ class StageUiState {
   final double accuracy;
   final StageEngineStatus status;
   final double speed;
+
+  /// Active hand selection for practice: both, right, or left.
+  final HandSelection handSelection;
+
+  /// Whether the hand assignment of the active level is known from authored voice data.
+  bool get isHandAssignmentKnown => level.isHandAssignmentKnown;
+
+  /// Whether the hand assignment of the active level is unknown.
+  bool get isHandAssignmentUnknown => level.isHandAssignmentUnknown;
+
+  /// The set of hand selections supported by the active level's authored voice data.
+  Set<HandSelection> get supportedHands => level.supportedHands;
 
   /// MIDI notes the microphone is hearing right now.
   final Set<int> sounding;
@@ -141,8 +154,9 @@ class StageUiState {
   }
 
   /// Total count-in beats for the piece's meter.
-  int? get countInTotalBeats =>
-      currentBeat < 0.0 ? (level.beatsPerMeasure > 0 ? level.beatsPerMeasure : 4) : null;
+  int? get countInTotalBeats => currentBeat < 0.0
+      ? (level.beatsPerMeasure > 0 ? level.beatsPerMeasure : 4)
+      : null;
 
   /// Effective BPM taking into account the base level tempo and playback speed multiplier.
   int get effectiveBpm => (level.tempo * speed).round();
@@ -167,21 +181,27 @@ class StageUiState {
       StageEngineStatus.completed => 'Completed',
       StageEngineStatus.stopped => 'Stopped',
     };
-    final beatsPerMeasure =
-        level.beatsPerMeasure > 0 ? level.beatsPerMeasure : 4;
+    final beatsPerMeasure = level.beatsPerMeasure > 0
+        ? level.beatsPerMeasure
+        : 4;
     final measure = (currentBeat ~/ beatsPerMeasure) + 1;
-    final beatInMeasure =
-        ((currentBeat % beatsPerMeasure).floor()) + 1;
+    final beatInMeasure = ((currentBeat % beatsPerMeasure).floor()) + 1;
     final posStr = 'Measure $measure, beat $beatInMeasure';
 
+    final handPrefix = switch (handSelection) {
+      HandSelection.both => '',
+      HandSelection.right => 'Right hand. ',
+      HandSelection.left => 'Left hand. ',
+    };
+
     if (isCountingIn && countInBeat != null) {
-      return 'Count-in: Beat $countInBeat of $countInTotalBeats. Speed ${(speed * 100).round()}% ($effectiveBpm BPM).';
+      return '${handPrefix}Count-in: Beat $countInBeat of $countInTotalBeats. Speed ${(speed * 100).round()}% ($effectiveBpm BPM).';
     } else if (practiceMode == PracticeMode.waiting && waitingHint != null) {
-      return '$modeStr: $statusStr. $posStr. ${waitingHint!.hintText}';
+      return '$handPrefix$modeStr: $statusStr. $posStr. ${waitingHint!.hintText}';
     } else if (practiceMode == PracticeMode.timed) {
-      return '$modeStr: $statusStr. $posStr. Speed ${(speed * 100).round()}% ($effectiveBpm BPM). Score: $score, accuracy: ${(accuracy * 100).round()}%';
+      return '$handPrefix$modeStr: $statusStr. $posStr. Speed ${(speed * 100).round()}% ($effectiveBpm BPM). Score: $score, accuracy: ${(accuracy * 100).round()}%';
     } else {
-      return '$modeStr: $statusStr. $posStr.';
+      return '$handPrefix$modeStr: $statusStr. $posStr.';
     }
   }
 
@@ -199,7 +219,9 @@ class StageUiState {
 
   /// Whether the microphone is currently actively scoring player input.
   bool get isMicrophoneScoringActive =>
-      !isMicrophoneSuspended && !isCountingIn && selectedInputSource.usesMicrophone;
+      !isMicrophoneSuspended &&
+      !isCountingIn &&
+      selectedInputSource.usesMicrophone;
 
   double get progress {
     final total = level.totalMeasures * level.beatsPerMeasure;
@@ -225,6 +247,7 @@ class StageUiState {
     bool clearWaitingHint = false,
     bool? isMetronomeEnabled,
     bool? isCountInEnabled,
+    HandSelection? handSelection,
   }) {
     final effectiveRange = clearLoop
         ? null
@@ -256,6 +279,7 @@ class StageUiState {
       waitingHint: clearWaitingHint ? null : (waitingHint ?? this.waitingHint),
       isMetronomeEnabled: isMetronomeEnabled ?? this.isMetronomeEnabled,
       isCountInEnabled: isCountInEnabled ?? this.isCountInEnabled,
+      handSelection: handSelection ?? this.handSelection,
     );
   }
 }
@@ -344,6 +368,18 @@ class StageController extends StateNotifier<StageUiState> {
 
   /// Toggles the count-in before playback begins.
   void toggleCountIn() => setCountIn(!isCountInEnabled);
+
+  HandSelection get handSelection => _engine.handSelection;
+  Set<HandSelection> get supportedHands => state.supportedHands;
+  bool get isHandAssignmentKnown => state.isHandAssignmentKnown;
+  bool get isHandAssignmentUnknown => state.isHandAssignmentUnknown;
+
+  /// Sets the active hand selection for practice (left, right, or both).
+  void setHandSelection(HandSelection selection) {
+    if (_disposed || !mounted) return;
+    _engine.setHandSelection(selection);
+    _sync();
+  }
 
   void updateSelectedInputSource(PracticeInputSource source) {
     if (_disposed || !mounted) return;
@@ -644,6 +680,7 @@ class StageController extends StateNotifier<StageUiState> {
       clearWaitingHint: s.waitingHint == null,
       isMetronomeEnabled: _engine.isMetronomeEnabled,
       isCountInEnabled: _engine.isCountInEnabled,
+      handSelection: _engine.handSelection,
     );
   }
 
@@ -711,6 +748,7 @@ final stageControllerProvider =
           waitingHint: engine.state.waitingHint,
           isMetronomeEnabled: engine.isMetronomeEnabled,
           isCountInEnabled: engine.isCountInEnabled,
+          handSelection: engine.handSelection,
         ),
         synth: synth,
         selectedInputSource: settings.inputSource,
@@ -819,8 +857,8 @@ final waitingHintProvider = Provider.autoDispose.family<WaitingHint?, String>(
   (ref, id) =>
       ref.watch(stageControllerProvider(id).select((s) => s.waitingHint)),
 );
-final accessibleDescriptionProvider =
-    Provider.autoDispose.family<String, String>(
+final accessibleDescriptionProvider = Provider.autoDispose
+    .family<String, String>(
       (ref, id) => ref.watch(
         stageControllerProvider(id).select((s) => s.accessibleDescription),
       ),
@@ -845,4 +883,23 @@ final isCountingInProvider = Provider.autoDispose.family<bool, String>(
 final countInBeatProvider = Provider.autoDispose.family<int?, String>(
   (ref, id) =>
       ref.watch(stageControllerProvider(id).select((s) => s.countInBeat)),
+);
+
+final handSelectionProvider = Provider.autoDispose
+    .family<HandSelection, String>(
+      (ref, id) =>
+          ref.watch(stageControllerProvider(id).select((s) => s.handSelection)),
+    );
+
+final supportedHandsProvider = Provider.autoDispose
+    .family<Set<HandSelection>, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.supportedHands),
+      ),
+    );
+
+final isHandAssignmentKnownProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) => ref.watch(
+    stageControllerProvider(id).select((s) => s.isHandAssignmentKnown),
+  ),
 );

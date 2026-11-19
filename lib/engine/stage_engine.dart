@@ -47,7 +47,8 @@ class StageEngine extends ChangeNotifier {
       : null;
 
   /// Callback fired whenever a metronome or count-in beat boundary is crossed.
-  void Function(double beat, MetronomeBeatType beatType, bool isCountIn)? onBeat;
+  void Function(double beat, MetronomeBeatType beatType, bool isCountIn)?
+  onBeat;
 
   int _lastEmittedBeat = -999999;
 
@@ -56,6 +57,16 @@ class StageEngine extends ChangeNotifier {
 
   PracticeMode get practiceMode => _practiceMode;
   PracticeMode get mode => _practiceMode;
+
+  /// Target hand selection for practice: left, right, or both.
+  HandSelection _handSelection = HandSelection.both;
+  HandSelection get handSelection => _handSelection;
+
+  /// Whether [note] belongs to the active hand selection for this level.
+  bool _isNoteInHand(LevelNote note) {
+    if (!_level.isHandAssignmentKnown) return true;
+    return _handSelection.matchesVoice(note.voiceIndex);
+  }
 
   StageEngineStateModel _state = const StageEngineStateModel(
     engineState: StageEngineStatus.idle,
@@ -120,6 +131,7 @@ class StageEngine extends ChangeNotifier {
     required LevelModel level,
     StageEngineConfig? config,
     PracticeMode? practiceMode,
+    HandSelection? handSelection,
   }) : _level = level,
        _config = config ?? const StageEngineConfig(),
        _practiceMode =
@@ -127,13 +139,93 @@ class StageEngine extends ChangeNotifier {
     _playbackSpeed = _config.playbackSpeed;
     _metronomeEnabled = _config.metronomeEnabled;
     _countInEnabled = _config.countInEnabled;
+    final requestedHand =
+        handSelection ?? config?.handSelection ?? HandSelection.both;
+    if (!_level.supportedHands.contains(requestedHand)) {
+      _handSelection = HandSelection.both;
+    } else {
+      _handSelection = requestedHand;
+    }
     _initializeNotes();
     _state = _state.copyWith(
       engineState: StageEngineStatus.idle,
       level: _level,
       noteStates: List.filled(_allNotes.length, NoteState.upcoming),
       practiceMode: _practiceMode,
+      handSelection: _handSelection,
     );
+  }
+
+  /// Sets the active hand selection for practice (left, right, or both).
+  ///
+  /// Throws [ArgumentError] if [selection] is not supported by the level's
+  /// authored voice data.
+  void setHandSelection(HandSelection selection) {
+    if (_handSelection == selection) return;
+    if (!_level.supportedHands.contains(selection)) {
+      throw ArgumentError(
+        'Hand selection $selection is not supported for level "${_level.id}"',
+      );
+    }
+    _handSelection = selection;
+
+    _noteResults.removeWhere((idx, _) => !_isNoteInHand(_allNotes[idx]));
+
+    final newStates = List<NoteState>.from(_state.noteStates);
+    for (int i = 0; i < _allNotes.length; i++) {
+      if (!_isNoteInHand(_allNotes[i])) {
+        newStates[i] = NoteState.upcoming;
+      }
+    }
+
+    int score = 0;
+    int hitCount = 0;
+    int missCount = 0;
+    int perfectCount = 0;
+    int goodCount = 0;
+    int okayCount = 0;
+
+    for (final entry in _noteResults.entries) {
+      final idx = entry.key;
+      final r = entry.value;
+      if (!_isNoteInHand(_allNotes[idx])) continue;
+      score += r.score.round();
+      switch (r.noteState) {
+        case NoteState.missed:
+          missCount++;
+        case NoteState.hitPerfect:
+          hitCount++;
+          perfectCount++;
+        case NoteState.hitGood:
+          hitCount++;
+          goodCount++;
+        case NoteState.hitOkay:
+          hitCount++;
+          okayCount++;
+        case NoteState.upcoming || NoteState.active:
+          break;
+      }
+    }
+
+    _state = _state.copyWith(
+      handSelection: _handSelection,
+      noteStates: newStates,
+      score: score,
+      hitCount: hitCount,
+      missCount: missCount,
+      perfectCount: perfectCount,
+      goodCount: goodCount,
+      okayCount: okayCount,
+    );
+
+    if (_practiceMode == PracticeMode.waiting &&
+        _state.engineState == StageEngineStatus.playing) {
+      _syncWaitingPlayheadAndHint();
+    } else if (_practiceMode == PracticeMode.timed &&
+        _state.engineState == StageEngineStatus.playing) {
+      _updateNoteStatesForBeat(_state.currentBeat);
+    }
+    _notifyStateChanged();
   }
 
   /// Enables or disables the metronome beat reference.
@@ -162,7 +254,10 @@ class StageEngine extends ChangeNotifier {
     if (_state.engineState == StageEngineStatus.playing) {
       if (_practiceMode == PracticeMode.timed) {
         _stopPlaybackTimer();
-        _state = _state.copyWith(practiceMode: _practiceMode, waitingHint: null);
+        _state = _state.copyWith(
+          practiceMode: _practiceMode,
+          waitingHint: null,
+        );
         _updateNoteStatesForBeat(_state.currentBeat);
         _startPlaybackTimer();
       } else {
@@ -372,6 +467,9 @@ class StageEngine extends ChangeNotifier {
           continue;
         }
       }
+      if (!_isNoteInHand(note)) {
+        continue;
+      }
       final noteState = _state.noteStates[i];
 
       // Skip if already hit or missed
@@ -558,6 +656,7 @@ class StageEngine extends ChangeNotifier {
     for (int i = 0; i < _allNotes.length; i++) {
       if (_demonstratedNoteIndices.contains(i)) continue;
       final note = _allNotes[i];
+      if (!_isNoteInHand(note)) continue;
       if (note.startBeat < range.start - 1e-9 || note.startBeat >= range.end) {
         continue;
       }
@@ -646,8 +745,7 @@ class StageEngine extends ChangeNotifier {
     final countInBeats = _level.beatsPerMeasure.toDouble();
     _isCountingIn =
         initialStart && _countInEnabled && _practiceMode == PracticeMode.timed;
-    final startBeat =
-        _isCountingIn ? (loop.start - countInBeats) : loop.start;
+    final startBeat = _isCountingIn ? (loop.start - countInBeats) : loop.start;
     _lastEmittedBeat = startBeat.floor() - 1;
 
     _state = _state.copyWith(
@@ -676,13 +774,14 @@ class StageEngine extends ChangeNotifier {
     final currentInt = currentBeat.floor();
     if (currentInt <= _lastEmittedBeat) return;
 
-    final beatsPerMeasure =
-        _level.beatsPerMeasure > 0 ? _level.beatsPerMeasure : 4;
+    final beatsPerMeasure = _level.beatsPerMeasure > 0
+        ? _level.beatsPerMeasure
+        : 4;
     final countInTotal = beatsPerMeasure;
 
     for (var b = _lastEmittedBeat + 1; b <= currentInt; b++) {
-      final isCountIn = b < 0 ||
-          (_isCountingIn && (_loop == null || b < _loop!.start));
+      final isCountIn =
+          b < 0 || (_isCountingIn && (_loop == null || b < _loop!.start));
       final MetronomeBeatType beatType;
       final int measureIndex;
       final int beatInMeasure;
@@ -831,8 +930,9 @@ class StageEngine extends ChangeNotifier {
     // Update active/upcoming states
     _updateNoteStatesForBeat(newBeat);
 
-    final progress =
-        totalBeats > 0 ? (newBeat / totalBeats).clamp(0.0, 1.0) : 0.0;
+    final progress = totalBeats > 0
+        ? (newBeat / totalBeats).clamp(0.0, 1.0)
+        : 0.0;
     _state = _state.copyWith(
       currentBeat: newBeat,
       isCountingIn: _isCountingIn,
@@ -860,6 +960,9 @@ class StageEngine extends ChangeNotifier {
           continue;
         }
       }
+      if (!_isNoteInHand(note)) {
+        continue;
+      }
       final noteState = _state.noteStates[i];
 
       if (noteState != NoteState.upcoming && noteState != NoteState.active) {
@@ -878,10 +981,14 @@ class StageEngine extends ChangeNotifier {
       }
     }
 
-    // Advance next note index past resolved (hit or missed) notes
+    // Advance next note index past resolved (hit or missed) notes or unselected notes past miss window
     while (_nextNoteIndex < _allNotes.length &&
-        _state.noteStates[_nextNoteIndex] != NoteState.upcoming &&
-        _state.noteStates[_nextNoteIndex] != NoteState.active) {
+        ((_state.noteStates[_nextNoteIndex] != NoteState.upcoming &&
+                _state.noteStates[_nextNoteIndex] != NoteState.active) ||
+            (!_isNoteInHand(_allNotes[_nextNoteIndex]) &&
+                currentBeat >
+                    _allNotes[_nextNoteIndex].startBeat +
+                        _config.missWindow))) {
       _nextNoteIndex++;
     }
   }
@@ -896,6 +1003,9 @@ class StageEngine extends ChangeNotifier {
         if (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end) {
           continue;
         }
+      }
+      if (!_isNoteInHand(note)) {
+        continue;
       }
       final currentState = newStates[i];
 
@@ -927,9 +1037,9 @@ class StageEngine extends ChangeNotifier {
       waitingHint: null,
     );
 
-    final accuracy = _state.accuracy;
-    final totalNotes = _allNotes.length;
+    final totalNotes = _allNotes.where(_isNoteInHand).length;
     final hitNotes = _state.hitCount;
+    final accuracy = totalNotes > 0 ? hitNotes / totalNotes : 0.0;
 
     _eventController.add(
       StageEvent.stageCompleted(
@@ -1002,7 +1112,8 @@ class StageEngine extends ChangeNotifier {
       for (int i = 0; i < _allNotes.length; i++) {
         final note = _allNotes[i];
         if (loop != null &&
-            (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end)) {
+            (note.startBeat < loop.start - 1e-9 ||
+                note.startBeat >= loop.end)) {
           continue;
         }
         if (note.startBeat >= clampedBeat - 1e-9) {
@@ -1037,6 +1148,9 @@ class StageEngine extends ChangeNotifier {
       final note = _allNotes[i];
       if (loop != null &&
           (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end)) {
+        continue;
+      }
+      if (!_isNoteInHand(note)) {
         continue;
       }
 
@@ -1095,6 +1209,7 @@ class StageEngine extends ChangeNotifier {
       for (final entry in _noteResults.entries) {
         final idx = entry.key;
         final r = entry.value;
+        if (!_isNoteInHand(_allNotes[idx])) continue;
         final start = _allNotes[idx].startBeat;
         if (start < loop.start - 1e-9 || start >= loop.end) continue;
         score += r.score.round();
@@ -1126,7 +1241,11 @@ class StageEngine extends ChangeNotifier {
         okayCount: okayCount,
       );
     } else {
-      final missCount = newStates.where((s) => s == NoteState.missed).length;
+      final missCount = newStates.indexed
+          .where(
+            (e) => e.$2 == NoteState.missed && _isNoteInHand(_allNotes[e.$1]),
+          )
+          .length;
       _state = _state.copyWith(
         currentBeat: clampedBeat,
         noteStates: newStates,
@@ -1163,6 +1282,9 @@ class StageEngine extends ChangeNotifier {
           (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end)) {
         continue;
       }
+      if (!_isNoteInHand(note)) {
+        continue;
+      }
       final state = _state.noteStates[i];
       if (state != NoteState.hitPerfect &&
           state != NoteState.hitGood &&
@@ -1173,6 +1295,9 @@ class StageEngine extends ChangeNotifier {
           final n = _allNotes[j];
           if (loop != null &&
               (n.startBeat < loop.start - 1e-9 || n.startBeat >= loop.end)) {
+            continue;
+          }
+          if (!_isNoteInHand(n)) {
             continue;
           }
           if ((n.startBeat - targetBeat).abs() < 1e-6) {
@@ -1264,6 +1389,9 @@ class StageEngine extends ChangeNotifier {
           (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end)) {
         continue;
       }
+      if (!_isNoteInHand(note)) {
+        continue;
+      }
       if (newStates[i] == NoteState.hitPerfect ||
           newStates[i] == NoteState.hitGood ||
           newStates[i] == NoteState.hitOkay) {
@@ -1290,8 +1418,9 @@ class StageEngine extends ChangeNotifier {
 
     _nextNoteIndex = 0;
     while (_nextNoteIndex < _allNotes.length &&
-        _state.noteStates[_nextNoteIndex] != NoteState.upcoming &&
-        _state.noteStates[_nextNoteIndex] != NoteState.active) {
+        ((_state.noteStates[_nextNoteIndex] != NoteState.upcoming &&
+                _state.noteStates[_nextNoteIndex] != NoteState.active) ||
+            !_isNoteInHand(_allNotes[_nextNoteIndex]))) {
       _nextNoteIndex++;
     }
 

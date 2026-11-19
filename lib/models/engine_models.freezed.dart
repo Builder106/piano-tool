@@ -1625,7 +1625,7 @@ mixin _$StageEngineConfig {
  bool get autoAdvance;// auto-advance playhead
  double get playbackSpeed;// speed multiplier
  double get inputLatency;// seconds of input/buffer latency compensation
- PracticeMode get practiceMode; bool get metronomeEnabled; bool get countInEnabled;
+ PracticeMode get practiceMode; bool get metronomeEnabled; bool get countInEnabled; HandSelection get handSelection;
 /// Create a copy of StageEngineConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1638,16 +1638,16 @@ $StageEngineConfigCopyWith<StageEngineConfig> get copyWith => _$StageEngineConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageEngineConfig&&(identical(other.perfectWindow, perfectWindow) || other.perfectWindow == perfectWindow)&&(identical(other.goodWindow, goodWindow) || other.goodWindow == goodWindow)&&(identical(other.okayWindow, okayWindow) || other.okayWindow == okayWindow)&&(identical(other.missWindow, missWindow) || other.missWindow == missWindow)&&(identical(other.autoAdvance, autoAdvance) || other.autoAdvance == autoAdvance)&&(identical(other.playbackSpeed, playbackSpeed) || other.playbackSpeed == playbackSpeed)&&(identical(other.inputLatency, inputLatency) || other.inputLatency == inputLatency)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.metronomeEnabled, metronomeEnabled) || other.metronomeEnabled == metronomeEnabled)&&(identical(other.countInEnabled, countInEnabled) || other.countInEnabled == countInEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageEngineConfig&&(identical(other.perfectWindow, perfectWindow) || other.perfectWindow == perfectWindow)&&(identical(other.goodWindow, goodWindow) || other.goodWindow == goodWindow)&&(identical(other.okayWindow, okayWindow) || other.okayWindow == okayWindow)&&(identical(other.missWindow, missWindow) || other.missWindow == missWindow)&&(identical(other.autoAdvance, autoAdvance) || other.autoAdvance == autoAdvance)&&(identical(other.playbackSpeed, playbackSpeed) || other.playbackSpeed == playbackSpeed)&&(identical(other.inputLatency, inputLatency) || other.inputLatency == inputLatency)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.metronomeEnabled, metronomeEnabled) || other.metronomeEnabled == metronomeEnabled)&&(identical(other.countInEnabled, countInEnabled) || other.countInEnabled == countInEnabled)&&(identical(other.handSelection, handSelection) || other.handSelection == handSelection));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,perfectWindow,goodWindow,okayWindow,missWindow,autoAdvance,playbackSpeed,inputLatency,practiceMode,metronomeEnabled,countInEnabled);
+int get hashCode => Object.hash(runtimeType,perfectWindow,goodWindow,okayWindow,missWindow,autoAdvance,playbackSpeed,inputLatency,practiceMode,metronomeEnabled,countInEnabled,handSelection);
 
 @override
 String toString() {
-  return 'StageEngineConfig(perfectWindow: $perfectWindow, goodWindow: $goodWindow, okayWindow: $okayWindow, missWindow: $missWindow, autoAdvance: $autoAdvance, playbackSpeed: $playbackSpeed, inputLatency: $inputLatency, practiceMode: $practiceMode, metronomeEnabled: $metronomeEnabled, countInEnabled: $countInEnabled)';
+  return 'StageEngineConfig(perfectWindow: $perfectWindow, goodWindow: $goodWindow, okayWindow: $okayWindow, missWindow: $missWindow, autoAdvance: $autoAdvance, playbackSpeed: $playbackSpeed, inputLatency: $inputLatency, practiceMode: $practiceMode, metronomeEnabled: $metronomeEnabled, countInEnabled: $countInEnabled, handSelection: $handSelection)';
 }
 
 
@@ -1658,7 +1658,7 @@ abstract mixin class $StageEngineConfigCopyWith<$Res>  {
   factory $StageEngineConfigCopyWith(StageEngineConfig value, $Res Function(StageEngineConfig) _then) = _$StageEngineConfigCopyWithImpl;
 @useResult
 $Res call({
- double perfectWindow, double goodWindow, double okayWindow, double missWindow, bool autoAdvance, double playbackSpeed, double inputLatency, PracticeMode practiceMode, bool metronomeEnabled, bool countInEnabled
+ double perfectWindow, double goodWindow, double okayWindow, double missWindow, bool autoAdvance, double playbackSpeed, double inputLatency, PracticeMode practiceMode, bool metronomeEnabled, bool countInEnabled, HandSelection handSelection
 });
 
 
@@ -1675,7 +1675,7 @@ class _$StageEngineConfigCopyWithImpl<$Res>
 
 /// Create a copy of StageEngineConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? perfectWindow = null,Object? goodWindow = null,Object? okayWindow = null,Object? missWindow = null,Object? autoAdvance = null,Object? playbackSpeed = null,Object? inputLatency = null,Object? practiceMode = null,Object? metronomeEnabled = null,Object? countInEnabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? perfectWindow = null,Object? goodWindow = null,Object? okayWindow = null,Object? missWindow = null,Object? autoAdvance = null,Object? playbackSpeed = null,Object? inputLatency = null,Object? practiceMode = null,Object? metronomeEnabled = null,Object? countInEnabled = null,Object? handSelection = null,}) {
   return _then(_self.copyWith(
 perfectWindow: null == perfectWindow ? _self.perfectWindow : perfectWindow // ignore: cast_nullable_to_non_nullable
 as double,goodWindow: null == goodWindow ? _self.goodWindow : goodWindow // ignore: cast_nullable_to_non_nullable
@@ -1687,7 +1687,8 @@ as double,inputLatency: null == inputLatency ? _self.inputLatency : inputLatency
 as double,practiceMode: null == practiceMode ? _self.practiceMode : practiceMode // ignore: cast_nullable_to_non_nullable
 as PracticeMode,metronomeEnabled: null == metronomeEnabled ? _self.metronomeEnabled : metronomeEnabled // ignore: cast_nullable_to_non_nullable
 as bool,countInEnabled: null == countInEnabled ? _self.countInEnabled : countInEnabled // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,handSelection: null == handSelection ? _self.handSelection : handSelection // ignore: cast_nullable_to_non_nullable
+as HandSelection,
   ));
 }
 
@@ -1769,10 +1770,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double perfectWindow,  double goodWindow,  double okayWindow,  double missWindow,  bool autoAdvance,  double playbackSpeed,  double inputLatency,  PracticeMode practiceMode,  bool metronomeEnabled,  bool countInEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double perfectWindow,  double goodWindow,  double okayWindow,  double missWindow,  bool autoAdvance,  double playbackSpeed,  double inputLatency,  PracticeMode practiceMode,  bool metronomeEnabled,  bool countInEnabled,  HandSelection handSelection)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StageEngineConfig() when $default != null:
-return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.missWindow,_that.autoAdvance,_that.playbackSpeed,_that.inputLatency,_that.practiceMode,_that.metronomeEnabled,_that.countInEnabled);case _:
+return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.missWindow,_that.autoAdvance,_that.playbackSpeed,_that.inputLatency,_that.practiceMode,_that.metronomeEnabled,_that.countInEnabled,_that.handSelection);case _:
   return orElse();
 
 }
@@ -1790,10 +1791,10 @@ return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.miss
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double perfectWindow,  double goodWindow,  double okayWindow,  double missWindow,  bool autoAdvance,  double playbackSpeed,  double inputLatency,  PracticeMode practiceMode,  bool metronomeEnabled,  bool countInEnabled)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double perfectWindow,  double goodWindow,  double okayWindow,  double missWindow,  bool autoAdvance,  double playbackSpeed,  double inputLatency,  PracticeMode practiceMode,  bool metronomeEnabled,  bool countInEnabled,  HandSelection handSelection)  $default,) {final _that = this;
 switch (_that) {
 case _StageEngineConfig():
-return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.missWindow,_that.autoAdvance,_that.playbackSpeed,_that.inputLatency,_that.practiceMode,_that.metronomeEnabled,_that.countInEnabled);}
+return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.missWindow,_that.autoAdvance,_that.playbackSpeed,_that.inputLatency,_that.practiceMode,_that.metronomeEnabled,_that.countInEnabled,_that.handSelection);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1807,10 +1808,10 @@ return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.miss
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double perfectWindow,  double goodWindow,  double okayWindow,  double missWindow,  bool autoAdvance,  double playbackSpeed,  double inputLatency,  PracticeMode practiceMode,  bool metronomeEnabled,  bool countInEnabled)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double perfectWindow,  double goodWindow,  double okayWindow,  double missWindow,  bool autoAdvance,  double playbackSpeed,  double inputLatency,  PracticeMode practiceMode,  bool metronomeEnabled,  bool countInEnabled,  HandSelection handSelection)?  $default,) {final _that = this;
 switch (_that) {
 case _StageEngineConfig() when $default != null:
-return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.missWindow,_that.autoAdvance,_that.playbackSpeed,_that.inputLatency,_that.practiceMode,_that.metronomeEnabled,_that.countInEnabled);case _:
+return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.missWindow,_that.autoAdvance,_that.playbackSpeed,_that.inputLatency,_that.practiceMode,_that.metronomeEnabled,_that.countInEnabled,_that.handSelection);case _:
   return null;
 
 }
@@ -1822,7 +1823,7 @@ return $default(_that.perfectWindow,_that.goodWindow,_that.okayWindow,_that.miss
 @JsonSerializable()
 
 class _StageEngineConfig implements StageEngineConfig {
-  const _StageEngineConfig({this.perfectWindow = 0.1, this.goodWindow = 0.2, this.okayWindow = 0.3, this.missWindow = 0.5, this.autoAdvance = true, this.playbackSpeed = 1.0, this.inputLatency = 0.0, this.practiceMode = PracticeMode.timed, this.metronomeEnabled = false, this.countInEnabled = false});
+  const _StageEngineConfig({this.perfectWindow = 0.1, this.goodWindow = 0.2, this.okayWindow = 0.3, this.missWindow = 0.5, this.autoAdvance = true, this.playbackSpeed = 1.0, this.inputLatency = 0.0, this.practiceMode = PracticeMode.timed, this.metronomeEnabled = false, this.countInEnabled = false, this.handSelection = HandSelection.both});
   factory _StageEngineConfig.fromJson(Map<String, dynamic> json) => _$StageEngineConfigFromJson(json);
 
 @override@JsonKey() final  double perfectWindow;
@@ -1842,6 +1843,7 @@ class _StageEngineConfig implements StageEngineConfig {
 @override@JsonKey() final  PracticeMode practiceMode;
 @override@JsonKey() final  bool metronomeEnabled;
 @override@JsonKey() final  bool countInEnabled;
+@override@JsonKey() final  HandSelection handSelection;
 
 /// Create a copy of StageEngineConfig
 /// with the given fields replaced by the non-null parameter values.
@@ -1856,16 +1858,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEngineConfig&&(identical(other.perfectWindow, perfectWindow) || other.perfectWindow == perfectWindow)&&(identical(other.goodWindow, goodWindow) || other.goodWindow == goodWindow)&&(identical(other.okayWindow, okayWindow) || other.okayWindow == okayWindow)&&(identical(other.missWindow, missWindow) || other.missWindow == missWindow)&&(identical(other.autoAdvance, autoAdvance) || other.autoAdvance == autoAdvance)&&(identical(other.playbackSpeed, playbackSpeed) || other.playbackSpeed == playbackSpeed)&&(identical(other.inputLatency, inputLatency) || other.inputLatency == inputLatency)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.metronomeEnabled, metronomeEnabled) || other.metronomeEnabled == metronomeEnabled)&&(identical(other.countInEnabled, countInEnabled) || other.countInEnabled == countInEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEngineConfig&&(identical(other.perfectWindow, perfectWindow) || other.perfectWindow == perfectWindow)&&(identical(other.goodWindow, goodWindow) || other.goodWindow == goodWindow)&&(identical(other.okayWindow, okayWindow) || other.okayWindow == okayWindow)&&(identical(other.missWindow, missWindow) || other.missWindow == missWindow)&&(identical(other.autoAdvance, autoAdvance) || other.autoAdvance == autoAdvance)&&(identical(other.playbackSpeed, playbackSpeed) || other.playbackSpeed == playbackSpeed)&&(identical(other.inputLatency, inputLatency) || other.inputLatency == inputLatency)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.metronomeEnabled, metronomeEnabled) || other.metronomeEnabled == metronomeEnabled)&&(identical(other.countInEnabled, countInEnabled) || other.countInEnabled == countInEnabled)&&(identical(other.handSelection, handSelection) || other.handSelection == handSelection));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,perfectWindow,goodWindow,okayWindow,missWindow,autoAdvance,playbackSpeed,inputLatency,practiceMode,metronomeEnabled,countInEnabled);
+int get hashCode => Object.hash(runtimeType,perfectWindow,goodWindow,okayWindow,missWindow,autoAdvance,playbackSpeed,inputLatency,practiceMode,metronomeEnabled,countInEnabled,handSelection);
 
 @override
 String toString() {
-  return 'StageEngineConfig(perfectWindow: $perfectWindow, goodWindow: $goodWindow, okayWindow: $okayWindow, missWindow: $missWindow, autoAdvance: $autoAdvance, playbackSpeed: $playbackSpeed, inputLatency: $inputLatency, practiceMode: $practiceMode, metronomeEnabled: $metronomeEnabled, countInEnabled: $countInEnabled)';
+  return 'StageEngineConfig(perfectWindow: $perfectWindow, goodWindow: $goodWindow, okayWindow: $okayWindow, missWindow: $missWindow, autoAdvance: $autoAdvance, playbackSpeed: $playbackSpeed, inputLatency: $inputLatency, practiceMode: $practiceMode, metronomeEnabled: $metronomeEnabled, countInEnabled: $countInEnabled, handSelection: $handSelection)';
 }
 
 
@@ -1876,7 +1878,7 @@ abstract mixin class _$StageEngineConfigCopyWith<$Res> implements $StageEngineCo
   factory _$StageEngineConfigCopyWith(_StageEngineConfig value, $Res Function(_StageEngineConfig) _then) = __$StageEngineConfigCopyWithImpl;
 @override @useResult
 $Res call({
- double perfectWindow, double goodWindow, double okayWindow, double missWindow, bool autoAdvance, double playbackSpeed, double inputLatency, PracticeMode practiceMode, bool metronomeEnabled, bool countInEnabled
+ double perfectWindow, double goodWindow, double okayWindow, double missWindow, bool autoAdvance, double playbackSpeed, double inputLatency, PracticeMode practiceMode, bool metronomeEnabled, bool countInEnabled, HandSelection handSelection
 });
 
 
@@ -1893,7 +1895,7 @@ class __$StageEngineConfigCopyWithImpl<$Res>
 
 /// Create a copy of StageEngineConfig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? perfectWindow = null,Object? goodWindow = null,Object? okayWindow = null,Object? missWindow = null,Object? autoAdvance = null,Object? playbackSpeed = null,Object? inputLatency = null,Object? practiceMode = null,Object? metronomeEnabled = null,Object? countInEnabled = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? perfectWindow = null,Object? goodWindow = null,Object? okayWindow = null,Object? missWindow = null,Object? autoAdvance = null,Object? playbackSpeed = null,Object? inputLatency = null,Object? practiceMode = null,Object? metronomeEnabled = null,Object? countInEnabled = null,Object? handSelection = null,}) {
   return _then(_StageEngineConfig(
 perfectWindow: null == perfectWindow ? _self.perfectWindow : perfectWindow // ignore: cast_nullable_to_non_nullable
 as double,goodWindow: null == goodWindow ? _self.goodWindow : goodWindow // ignore: cast_nullable_to_non_nullable
@@ -1905,7 +1907,8 @@ as double,inputLatency: null == inputLatency ? _self.inputLatency : inputLatency
 as double,practiceMode: null == practiceMode ? _self.practiceMode : practiceMode // ignore: cast_nullable_to_non_nullable
 as PracticeMode,metronomeEnabled: null == metronomeEnabled ? _self.metronomeEnabled : metronomeEnabled // ignore: cast_nullable_to_non_nullable
 as bool,countInEnabled: null == countInEnabled ? _self.countInEnabled : countInEnabled // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,handSelection: null == handSelection ? _self.handSelection : handSelection // ignore: cast_nullable_to_non_nullable
+as HandSelection,
   ));
 }
 
@@ -1916,7 +1919,7 @@ as bool,
 /// @nodoc
 mixin _$StageEngineStateModel {
 
- StageEngineStatus get engineState; LevelModel get level; double get currentBeat; List<NoteState> get noteStates; int get score; int get hitCount; int get missCount; int get perfectCount; int get goodCount; int get okayCount; PracticeMode get practiceMode; WaitingHint? get waitingHint; bool get isCountingIn; int? get countInBeat;
+ StageEngineStatus get engineState; LevelModel get level; double get currentBeat; List<NoteState> get noteStates; int get score; int get hitCount; int get missCount; int get perfectCount; int get goodCount; int get okayCount; PracticeMode get practiceMode; WaitingHint? get waitingHint; bool get isCountingIn; int? get countInBeat; HandSelection get handSelection;
 /// Create a copy of StageEngineStateModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1929,16 +1932,16 @@ $StageEngineStateModelCopyWith<StageEngineStateModel> get copyWith => _$StageEng
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageEngineStateModel&&(identical(other.engineState, engineState) || other.engineState == engineState)&&(identical(other.level, level) || other.level == level)&&(identical(other.currentBeat, currentBeat) || other.currentBeat == currentBeat)&&const DeepCollectionEquality().equals(other.noteStates, noteStates)&&(identical(other.score, score) || other.score == score)&&(identical(other.hitCount, hitCount) || other.hitCount == hitCount)&&(identical(other.missCount, missCount) || other.missCount == missCount)&&(identical(other.perfectCount, perfectCount) || other.perfectCount == perfectCount)&&(identical(other.goodCount, goodCount) || other.goodCount == goodCount)&&(identical(other.okayCount, okayCount) || other.okayCount == okayCount)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.waitingHint, waitingHint) || other.waitingHint == waitingHint)&&(identical(other.isCountingIn, isCountingIn) || other.isCountingIn == isCountingIn)&&(identical(other.countInBeat, countInBeat) || other.countInBeat == countInBeat));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageEngineStateModel&&(identical(other.engineState, engineState) || other.engineState == engineState)&&(identical(other.level, level) || other.level == level)&&(identical(other.currentBeat, currentBeat) || other.currentBeat == currentBeat)&&const DeepCollectionEquality().equals(other.noteStates, noteStates)&&(identical(other.score, score) || other.score == score)&&(identical(other.hitCount, hitCount) || other.hitCount == hitCount)&&(identical(other.missCount, missCount) || other.missCount == missCount)&&(identical(other.perfectCount, perfectCount) || other.perfectCount == perfectCount)&&(identical(other.goodCount, goodCount) || other.goodCount == goodCount)&&(identical(other.okayCount, okayCount) || other.okayCount == okayCount)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.waitingHint, waitingHint) || other.waitingHint == waitingHint)&&(identical(other.isCountingIn, isCountingIn) || other.isCountingIn == isCountingIn)&&(identical(other.countInBeat, countInBeat) || other.countInBeat == countInBeat)&&(identical(other.handSelection, handSelection) || other.handSelection == handSelection));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,engineState,level,currentBeat,const DeepCollectionEquality().hash(noteStates),score,hitCount,missCount,perfectCount,goodCount,okayCount,practiceMode,waitingHint,isCountingIn,countInBeat);
+int get hashCode => Object.hash(runtimeType,engineState,level,currentBeat,const DeepCollectionEquality().hash(noteStates),score,hitCount,missCount,perfectCount,goodCount,okayCount,practiceMode,waitingHint,isCountingIn,countInBeat,handSelection);
 
 @override
 String toString() {
-  return 'StageEngineStateModel(engineState: $engineState, level: $level, currentBeat: $currentBeat, noteStates: $noteStates, score: $score, hitCount: $hitCount, missCount: $missCount, perfectCount: $perfectCount, goodCount: $goodCount, okayCount: $okayCount, practiceMode: $practiceMode, waitingHint: $waitingHint, isCountingIn: $isCountingIn, countInBeat: $countInBeat)';
+  return 'StageEngineStateModel(engineState: $engineState, level: $level, currentBeat: $currentBeat, noteStates: $noteStates, score: $score, hitCount: $hitCount, missCount: $missCount, perfectCount: $perfectCount, goodCount: $goodCount, okayCount: $okayCount, practiceMode: $practiceMode, waitingHint: $waitingHint, isCountingIn: $isCountingIn, countInBeat: $countInBeat, handSelection: $handSelection)';
 }
 
 
@@ -1949,7 +1952,7 @@ abstract mixin class $StageEngineStateModelCopyWith<$Res>  {
   factory $StageEngineStateModelCopyWith(StageEngineStateModel value, $Res Function(StageEngineStateModel) _then) = _$StageEngineStateModelCopyWithImpl;
 @useResult
 $Res call({
- StageEngineStatus engineState, LevelModel level, double currentBeat, List<NoteState> noteStates, int score, int hitCount, int missCount, int perfectCount, int goodCount, int okayCount, PracticeMode practiceMode, WaitingHint? waitingHint, bool isCountingIn, int? countInBeat
+ StageEngineStatus engineState, LevelModel level, double currentBeat, List<NoteState> noteStates, int score, int hitCount, int missCount, int perfectCount, int goodCount, int okayCount, PracticeMode practiceMode, WaitingHint? waitingHint, bool isCountingIn, int? countInBeat, HandSelection handSelection
 });
 
 
@@ -1966,7 +1969,7 @@ class _$StageEngineStateModelCopyWithImpl<$Res>
 
 /// Create a copy of StageEngineStateModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? engineState = null,Object? level = null,Object? currentBeat = null,Object? noteStates = null,Object? score = null,Object? hitCount = null,Object? missCount = null,Object? perfectCount = null,Object? goodCount = null,Object? okayCount = null,Object? practiceMode = null,Object? waitingHint = freezed,Object? isCountingIn = null,Object? countInBeat = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? engineState = null,Object? level = null,Object? currentBeat = null,Object? noteStates = null,Object? score = null,Object? hitCount = null,Object? missCount = null,Object? perfectCount = null,Object? goodCount = null,Object? okayCount = null,Object? practiceMode = null,Object? waitingHint = freezed,Object? isCountingIn = null,Object? countInBeat = freezed,Object? handSelection = null,}) {
   return _then(_self.copyWith(
 engineState: null == engineState ? _self.engineState : engineState // ignore: cast_nullable_to_non_nullable
 as StageEngineStatus,level: null == level ? _self.level : level // ignore: cast_nullable_to_non_nullable
@@ -1982,7 +1985,8 @@ as int,practiceMode: null == practiceMode ? _self.practiceMode : practiceMode //
 as PracticeMode,waitingHint: freezed == waitingHint ? _self.waitingHint : waitingHint // ignore: cast_nullable_to_non_nullable
 as WaitingHint?,isCountingIn: null == isCountingIn ? _self.isCountingIn : isCountingIn // ignore: cast_nullable_to_non_nullable
 as bool,countInBeat: freezed == countInBeat ? _self.countInBeat : countInBeat // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,handSelection: null == handSelection ? _self.handSelection : handSelection // ignore: cast_nullable_to_non_nullable
+as HandSelection,
   ));
 }
 /// Create a copy of StageEngineStateModel
@@ -2085,10 +2089,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StageEngineStateModel() when $default != null:
-return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat);case _:
+return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection);case _:
   return orElse();
 
 }
@@ -2106,10 +2110,10 @@ return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection)  $default,) {final _that = this;
 switch (_that) {
 case _StageEngineStateModel():
-return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat);}
+return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2123,10 +2127,10 @@ return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection)?  $default,) {final _that = this;
 switch (_that) {
 case _StageEngineStateModel() when $default != null:
-return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat);case _:
+return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection);case _:
   return null;
 
 }
@@ -2138,7 +2142,7 @@ return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates
 @JsonSerializable()
 
 class _StageEngineStateModel extends StageEngineStateModel {
-  const _StageEngineStateModel({required this.engineState, required this.level, required this.currentBeat, required final  List<NoteState> noteStates, required this.score, required this.hitCount, required this.missCount, this.perfectCount = 0, this.goodCount = 0, this.okayCount = 0, this.practiceMode = PracticeMode.timed, this.waitingHint = null, this.isCountingIn = false, this.countInBeat}): _noteStates = noteStates,super._();
+  const _StageEngineStateModel({required this.engineState, required this.level, required this.currentBeat, required final  List<NoteState> noteStates, required this.score, required this.hitCount, required this.missCount, this.perfectCount = 0, this.goodCount = 0, this.okayCount = 0, this.practiceMode = PracticeMode.timed, this.waitingHint = null, this.isCountingIn = false, this.countInBeat, this.handSelection = HandSelection.both}): _noteStates = noteStates,super._();
   factory _StageEngineStateModel.fromJson(Map<String, dynamic> json) => _$StageEngineStateModelFromJson(json);
 
 @override final  StageEngineStatus engineState;
@@ -2161,6 +2165,7 @@ class _StageEngineStateModel extends StageEngineStateModel {
 @override@JsonKey() final  WaitingHint? waitingHint;
 @override@JsonKey() final  bool isCountingIn;
 @override final  int? countInBeat;
+@override@JsonKey() final  HandSelection handSelection;
 
 /// Create a copy of StageEngineStateModel
 /// with the given fields replaced by the non-null parameter values.
@@ -2175,16 +2180,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEngineStateModel&&(identical(other.engineState, engineState) || other.engineState == engineState)&&(identical(other.level, level) || other.level == level)&&(identical(other.currentBeat, currentBeat) || other.currentBeat == currentBeat)&&const DeepCollectionEquality().equals(other._noteStates, _noteStates)&&(identical(other.score, score) || other.score == score)&&(identical(other.hitCount, hitCount) || other.hitCount == hitCount)&&(identical(other.missCount, missCount) || other.missCount == missCount)&&(identical(other.perfectCount, perfectCount) || other.perfectCount == perfectCount)&&(identical(other.goodCount, goodCount) || other.goodCount == goodCount)&&(identical(other.okayCount, okayCount) || other.okayCount == okayCount)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.waitingHint, waitingHint) || other.waitingHint == waitingHint)&&(identical(other.isCountingIn, isCountingIn) || other.isCountingIn == isCountingIn)&&(identical(other.countInBeat, countInBeat) || other.countInBeat == countInBeat));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEngineStateModel&&(identical(other.engineState, engineState) || other.engineState == engineState)&&(identical(other.level, level) || other.level == level)&&(identical(other.currentBeat, currentBeat) || other.currentBeat == currentBeat)&&const DeepCollectionEquality().equals(other._noteStates, _noteStates)&&(identical(other.score, score) || other.score == score)&&(identical(other.hitCount, hitCount) || other.hitCount == hitCount)&&(identical(other.missCount, missCount) || other.missCount == missCount)&&(identical(other.perfectCount, perfectCount) || other.perfectCount == perfectCount)&&(identical(other.goodCount, goodCount) || other.goodCount == goodCount)&&(identical(other.okayCount, okayCount) || other.okayCount == okayCount)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.waitingHint, waitingHint) || other.waitingHint == waitingHint)&&(identical(other.isCountingIn, isCountingIn) || other.isCountingIn == isCountingIn)&&(identical(other.countInBeat, countInBeat) || other.countInBeat == countInBeat)&&(identical(other.handSelection, handSelection) || other.handSelection == handSelection));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,engineState,level,currentBeat,const DeepCollectionEquality().hash(_noteStates),score,hitCount,missCount,perfectCount,goodCount,okayCount,practiceMode,waitingHint,isCountingIn,countInBeat);
+int get hashCode => Object.hash(runtimeType,engineState,level,currentBeat,const DeepCollectionEquality().hash(_noteStates),score,hitCount,missCount,perfectCount,goodCount,okayCount,practiceMode,waitingHint,isCountingIn,countInBeat,handSelection);
 
 @override
 String toString() {
-  return 'StageEngineStateModel(engineState: $engineState, level: $level, currentBeat: $currentBeat, noteStates: $noteStates, score: $score, hitCount: $hitCount, missCount: $missCount, perfectCount: $perfectCount, goodCount: $goodCount, okayCount: $okayCount, practiceMode: $practiceMode, waitingHint: $waitingHint, isCountingIn: $isCountingIn, countInBeat: $countInBeat)';
+  return 'StageEngineStateModel(engineState: $engineState, level: $level, currentBeat: $currentBeat, noteStates: $noteStates, score: $score, hitCount: $hitCount, missCount: $missCount, perfectCount: $perfectCount, goodCount: $goodCount, okayCount: $okayCount, practiceMode: $practiceMode, waitingHint: $waitingHint, isCountingIn: $isCountingIn, countInBeat: $countInBeat, handSelection: $handSelection)';
 }
 
 
@@ -2195,7 +2200,7 @@ abstract mixin class _$StageEngineStateModelCopyWith<$Res> implements $StageEngi
   factory _$StageEngineStateModelCopyWith(_StageEngineStateModel value, $Res Function(_StageEngineStateModel) _then) = __$StageEngineStateModelCopyWithImpl;
 @override @useResult
 $Res call({
- StageEngineStatus engineState, LevelModel level, double currentBeat, List<NoteState> noteStates, int score, int hitCount, int missCount, int perfectCount, int goodCount, int okayCount, PracticeMode practiceMode, WaitingHint? waitingHint, bool isCountingIn, int? countInBeat
+ StageEngineStatus engineState, LevelModel level, double currentBeat, List<NoteState> noteStates, int score, int hitCount, int missCount, int perfectCount, int goodCount, int okayCount, PracticeMode practiceMode, WaitingHint? waitingHint, bool isCountingIn, int? countInBeat, HandSelection handSelection
 });
 
 
@@ -2212,7 +2217,7 @@ class __$StageEngineStateModelCopyWithImpl<$Res>
 
 /// Create a copy of StageEngineStateModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? engineState = null,Object? level = null,Object? currentBeat = null,Object? noteStates = null,Object? score = null,Object? hitCount = null,Object? missCount = null,Object? perfectCount = null,Object? goodCount = null,Object? okayCount = null,Object? practiceMode = null,Object? waitingHint = freezed,Object? isCountingIn = null,Object? countInBeat = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? engineState = null,Object? level = null,Object? currentBeat = null,Object? noteStates = null,Object? score = null,Object? hitCount = null,Object? missCount = null,Object? perfectCount = null,Object? goodCount = null,Object? okayCount = null,Object? practiceMode = null,Object? waitingHint = freezed,Object? isCountingIn = null,Object? countInBeat = freezed,Object? handSelection = null,}) {
   return _then(_StageEngineStateModel(
 engineState: null == engineState ? _self.engineState : engineState // ignore: cast_nullable_to_non_nullable
 as StageEngineStatus,level: null == level ? _self.level : level // ignore: cast_nullable_to_non_nullable
@@ -2228,7 +2233,8 @@ as int,practiceMode: null == practiceMode ? _self.practiceMode : practiceMode //
 as PracticeMode,waitingHint: freezed == waitingHint ? _self.waitingHint : waitingHint // ignore: cast_nullable_to_non_nullable
 as WaitingHint?,isCountingIn: null == isCountingIn ? _self.isCountingIn : isCountingIn // ignore: cast_nullable_to_non_nullable
 as bool,countInBeat: freezed == countInBeat ? _self.countInBeat : countInBeat // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,handSelection: null == handSelection ? _self.handSelection : handSelection // ignore: cast_nullable_to_non_nullable
+as HandSelection,
   ));
 }
 

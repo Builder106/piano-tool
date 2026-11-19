@@ -235,6 +235,9 @@ _StageEngineConfig _$StageEngineConfigFromJson(Map<String, dynamic> json) =>
           PracticeMode.timed,
       metronomeEnabled: json['metronomeEnabled'] as bool? ?? false,
       countInEnabled: json['countInEnabled'] as bool? ?? false,
+      handSelection:
+          $enumDecodeNullable(_$HandSelectionEnumMap, json['handSelection']) ??
+          HandSelection.both,
     );
 
 Map<String, dynamic> _$StageEngineConfigToJson(_StageEngineConfig instance) =>
@@ -249,11 +252,18 @@ Map<String, dynamic> _$StageEngineConfigToJson(_StageEngineConfig instance) =>
       'practiceMode': _$PracticeModeEnumMap[instance.practiceMode]!,
       'metronomeEnabled': instance.metronomeEnabled,
       'countInEnabled': instance.countInEnabled,
+      'handSelection': _$HandSelectionEnumMap[instance.handSelection]!,
     };
 
 const _$PracticeModeEnumMap = {
   PracticeMode.timed: 'timed',
   PracticeMode.waiting: 'waiting',
+};
+
+const _$HandSelectionEnumMap = {
+  HandSelection.both: 'both',
+  HandSelection.right: 'right',
+  HandSelection.left: 'left',
 };
 
 _StageEngineStateModel _$StageEngineStateModelFromJson(
@@ -279,6 +289,9 @@ _StageEngineStateModel _$StageEngineStateModelFromJson(
       : WaitingHint.fromJson(json['waitingHint'] as Map<String, dynamic>),
   isCountingIn: json['isCountingIn'] as bool? ?? false,
   countInBeat: (json['countInBeat'] as num?)?.toInt(),
+  handSelection:
+      $enumDecodeNullable(_$HandSelectionEnumMap, json['handSelection']) ??
+      HandSelection.both,
 );
 
 Map<String, dynamic> _$StageEngineStateModelToJson(
@@ -298,6 +311,7 @@ Map<String, dynamic> _$StageEngineStateModelToJson(
   'waitingHint': instance.waitingHint,
   'isCountingIn': instance.isCountingIn,
   'countInBeat': instance.countInBeat,
+  'handSelection': _$HandSelectionEnumMap[instance.handSelection]!,
 };
 
 const _$NoteStateEnumMap = {

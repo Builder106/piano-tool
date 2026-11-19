@@ -24,6 +24,100 @@ enum PracticeMode {
   };
 }
 
+/// Hand classification for an individual note or hand assignment.
+enum NoteHand {
+  @JsonValue('right')
+  right,
+  @JsonValue('left')
+  left,
+  @JsonValue('unknown')
+  unknown;
+
+  bool get isRight => this == right;
+  bool get isLeft => this == left;
+  bool get isUnknown => this == unknown;
+}
+
+/// Target hand selection for practice.
+enum HandSelection {
+  @JsonValue('both')
+  both,
+  @JsonValue('right')
+  right,
+  @JsonValue('left')
+  left;
+
+  bool get isBoth => this == both;
+  bool get isRight => this == right;
+  bool get isLeft => this == left;
+
+  String get label => switch (this) {
+    both => 'Both hands',
+    right => 'Right hand',
+    left => 'Left hand',
+  };
+
+  /// Whether a voice index (0 = right hand, 1+ = left hand) matches this selection.
+  bool matchesVoice(int voiceIndex) => switch (this) {
+    both => true,
+    right => voiceIndex == 0,
+    left => voiceIndex > 0,
+  };
+
+  /// Whether a note matches this hand selection.
+  bool matchesNote(LevelNote note) => matchesVoice(note.voiceIndex);
+}
+
+/// Extension providing hand assignment inspection and supported hand queries on [LevelModel].
+extension LevelHandSupport on LevelModel {
+  /// Whether this level has authored voice data distinguishing hands.
+  bool get hasAuthoredVoices =>
+      measures.any((m) => m.notes.any((n) => !n.isRest && n.voiceIndex > 0));
+
+  /// Whether the hand assignment of notes in this level is known.
+  bool get isHandAssignmentKnown => hasAuthoredVoices;
+
+  /// Whether the hand assignment of notes in this level is unknown.
+  bool get isHandAssignmentUnknown => !isHandAssignmentKnown;
+
+  /// Returns the hands supported by this level's authored voice data.
+  Set<HandSelection> get supportedHands {
+    if (!isHandAssignmentKnown) {
+      return const {HandSelection.both};
+    }
+    final hasRight = measures.any(
+      (m) => m.notes.any((n) => !n.isRest && n.voiceIndex == 0),
+    );
+    final hasLeft = measures.any(
+      (m) => m.notes.any((n) => !n.isRest && n.voiceIndex > 0),
+    );
+    if (hasRight && hasLeft) {
+      return const {
+        HandSelection.both,
+        HandSelection.right,
+        HandSelection.left,
+      };
+    } else if (hasRight) {
+      return const {HandSelection.right};
+    } else if (hasLeft) {
+      return const {HandSelection.left};
+    }
+    return const {HandSelection.both};
+  }
+
+  /// Identifies the authored hand for a specific note in this level,
+  /// or [NoteHand.unknown] if hand assignment is not authored/known.
+  NoteHand handForNote(LevelNote note) {
+    if (!isHandAssignmentKnown) return NoteHand.unknown;
+    return note.voiceIndex > 0 ? NoteHand.left : NoteHand.right;
+  }
+}
+
+extension LevelNoteHand on LevelNote {
+  /// The hand assigned to this note based on authored voice index.
+  NoteHand get hand => voiceIndex > 0 ? NoteHand.left : NoteHand.right;
+}
+
 const List<String> pitchClassNames = [
   'C',
   'C#',
@@ -193,6 +287,7 @@ sealed class StageEngineConfig with _$StageEngineConfig {
     @Default(PracticeMode.timed) PracticeMode practiceMode,
     @Default(false) bool metronomeEnabled,
     @Default(false) bool countInEnabled,
+    @Default(HandSelection.both) HandSelection handSelection,
   }) = _StageEngineConfig;
 
   factory StageEngineConfig.fromJson(Map<String, dynamic> json) =>
@@ -219,6 +314,7 @@ sealed class StageEngineStateModel with _$StageEngineStateModel {
     @Default(null) WaitingHint? waitingHint,
     @Default(false) bool isCountingIn,
     int? countInBeat,
+    @Default(HandSelection.both) HandSelection handSelection,
   }) = _StageEngineStateModel;
 
   factory StageEngineStateModel.fromJson(Map<String, dynamic> json) =>
