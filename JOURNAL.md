@@ -1,5 +1,25 @@
 # Journal
 
+## 2026-11-19: count-in, metronome beat reference, 6/8 meter grouping, and effective BPM #engine #practice #audio #decision
+
+Learners practicing in time need an audible beat reference and a preparatory count-in that respect musical meter and tempo adjustments:
+- `MeterGrouping` classifies meter signatures into simple and compound structures:
+  - In simple meters (e.g. 4/4, 3/4, 2/4), beat 0 is a downbeat and subsequent integer beats are regular pulses.
+  - In compound meters with beat unit 8 (e.g. 6/8, 9/8, 12/8), beats represent eighth notes grouped into dotted-quarter pulses: for 6/8 meter, beat 0 is a primary downbeat, beat 3 is a secondary accent, and beats 1, 2, 4, and 5 are subdivisions.
+- `ToneGenerator.generateMetronomeClickWav` and `AudioSynthesizer.playMetronomeClick` generate and play pitched percussive woodblock clicks with custom attack/decay envelopes tailored to each `MetronomeBeatType` (`downbeat` at 1000 Hz, `secondaryAccent` at 800 Hz, `regular` at 650 Hz, `subdivision` at 500 Hz).
+- In `StageEngine`:
+  - `effectiveBpm` dynamically calculates `(tempo * speed).round()`.
+  - When `countInEnabled` is active in timed mode, playback begins with a preparatory count-in measure (`startBeat = -beatsPerMeasure`). Integer beat boundaries emit `StageEvent.beat` and invoke `onBeat`.
+  - During count-in, pitch event scoring, note hit checking, and miss evaluations are bypassed so premature key presses or environmental room noise do not score or penalize the learner.
+  - When count-in completes at beat 0, playback seamlessly transitions into active scoring. In loop practice (`playLoop`), count-in precedes the initial loop pass and subsequent repeat cycles wrap directly to `loop.start`.
+  - Scrubbing or seeking (`seekToBeat`) resets count-in and synchronizes beat emission tracking to prevent historical click floods.
+- In `StageController` and `StageUiState`:
+  - Added `setMetronome`, `toggleMetronome`, `setCountIn`, and `toggleCountIn`.
+  - `effectiveBpm`, `effectiveTempo`, and `speedMultiplierLabel` provide clean string and integer representations of tempo under active speed multipliers.
+  - `accessibleDescription` announces count-in status and effective BPM to screen readers.
+  - Microphone scoring is suspended during count-in (`!isCountingIn`), ensuring audible count-in clicks from device speakers cannot cause false pitch triggers.
+  - Sliced Riverpod providers (`effectiveBpmProvider`, `isMetronomeEnabledProvider`, `isCountInEnabledProvider`, `isCountingInProvider`, `countInBeatProvider`) provide efficient UI binding hooks.
+
 ## 2026-11-18: distinct waiting and timed practice modes, contextual hints, and accessible state preservation #engine #practice #decision
 
 Learners need to choose between learning notes at their own pace without timing pressure and playing strictly in time with the metronome:

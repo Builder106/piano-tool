@@ -156,9 +156,19 @@ reliability so the interaction is both expressive and accurate.
   waiting mode do not award timed score points (score remains 0); notation (notes,
   note states, staves) and accessible state descriptions (StageUiState.accessibleDescription)
   are preserved across both modes.
-- [ ] **Count-in and metronome:** Add an optional count-in and beat reference
+- [x] **Count-in and metronome:** Add an optional count-in and beat reference
   that follow the selected tempo and meter, including appropriate 6/8
   grouping. Show effective BPM alongside the existing speed multiplier.
+  Implemented: `MeterGrouping` supports simple (4/4, 3/4, 2/4) and compound (6/8,
+  9/8, 12/8) meter classifications, providing correct compound 6/8 pulse accents
+  (primary downbeat on beat 0, secondary accent on beat 3, and subdivisions on beats
+  1, 2, 4, 5); `ToneGenerator` and `AudioSynthesizer` synthesize distinct woodblock click
+  WAV buffers for `downbeat`, `secondaryAccent`, `regular`, and `subdivision` beats;
+  `StageEngine` emits `StageEvent.beat` with beat classification across tempo and speed
+  multiplier changes, supports optional pre-roll count-in with negative beat progression
+  and pitch scoring suppression, and computes `effectiveBpm`; `StageController` and
+  `StageUiState` expose `effectiveBpm`, `speedMultiplierLabel`, count-in state tracking,
+  synthesizer click triggering, and microphone scoring suspension during count-in.
 - [ ] **Hand selection:** Offer left, right, or both hands where authored
   voice data supports it. Filter playback, hints, and scoring consistently;
   identify content whose hand assignment is unknown.
