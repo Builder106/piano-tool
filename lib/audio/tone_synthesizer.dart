@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 
+import '../models/engine_models.dart';
+
 /// Low-level audio player interface for synthesized tone buffers.
 abstract interface class AudioTonePlayer {
   Future<void> open();
@@ -217,6 +219,69 @@ class ToneGenerator {
 
     return header;
   }
+
+  /// Synthesizes a crisp, percussive click PCM WAV buffer for metronome and beat references.
+  static Uint8List generateMetronomeClickWav({
+    required MetronomeBeatType type,
+    double durationSeconds = 0.03,
+    int sampleRate = defaultSampleRate,
+  }) {
+    final numSamples = (sampleRate * durationSeconds).toInt();
+    final pcmBytes = Uint8List(numSamples * 2);
+    final byteData = ByteData.sublistView(pcmBytes);
+
+    final double freq;
+    final double amplitude;
+    final double decayFactor;
+
+    switch (type) {
+      case MetronomeBeatType.downbeat:
+        freq = 2000.0;
+        amplitude = 0.95;
+        decayFactor = 70.0;
+      case MetronomeBeatType.secondaryAccent:
+        freq = 1400.0;
+        amplitude = 0.80;
+        decayFactor = 70.0;
+      case MetronomeBeatType.regular:
+        freq = 1000.0;
+        amplitude = 0.75;
+        decayFactor = 75.0;
+      case MetronomeBeatType.subdivision:
+        freq = 750.0;
+        amplitude = 0.40;
+        decayFactor = 90.0;
+    }
+
+    final attackSamples = (sampleRate * 0.002).toInt(); // 2ms fast attack
+
+    for (int i = 0; i < numSamples; i++) {
+      final t = i / sampleRate;
+      final attack = i < attackSamples ? (i / attackSamples) : 1.0;
+      final decay = math.exp(-decayFactor * t);
+
+      final sample = (math.sin(2 * math.pi * freq * t) * 0.8 +
+              math.sin(4 * math.pi * freq * t) * 0.2) *
+          attack *
+          decay *
+          amplitude;
+
+      final int16Val = (sample.clamp(-1.0, 1.0) * 32767).toInt();
+      byteData.setInt16(i * 2, int16Val, Endian.little);
+    }
+
+    final header = buildWavHeader(
+      totalAudioLen: pcmBytes.length,
+      sampleRate: sampleRate,
+      channels: 1,
+      bitsPerSample: 16,
+    );
+
+    final wav = Uint8List(header.length + pcmBytes.length);
+    wav.setRange(0, header.length, header);
+    wav.setRange(header.length, wav.length, pcmBytes);
+    return wav;
+  }
 }
 
 /// Coordinates note playback with audio buffering and caching.
@@ -226,6 +291,7 @@ class AudioSynthesizer {
 
   final AudioTonePlayer _player;
   final Map<int, Uint8List> _cachedTones = {};
+  final Map<MetronomeBeatType, Uint8List> _cachedClicks = {};
   bool _isMuted = false;
 
   bool get isMuted => _isMuted;
@@ -251,6 +317,20 @@ class AudioSynthesizer {
         midiNote: midiNote,
         durationSeconds: durationSeconds,
       ),
+    );
+
+    await _player.playWav(wav);
+  }
+
+  /// Sounds a metronome click for the specified beat type.
+  Future<void> playMetronomeClick({
+    MetronomeBeatType type = MetronomeBeatType.regular,
+  }) async {
+    if (_isMuted) return;
+
+    final wav = _cachedClicks.putIfAbsent(
+      type,
+      () => ToneGenerator.generateMetronomeClickWav(type: type),
     );
 
     await _player.playWav(wav);

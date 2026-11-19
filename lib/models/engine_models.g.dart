@@ -194,6 +194,33 @@ const _$StageEngineStatusEnumMap = {
   StageEngineStatus.stopped: 'stopped',
 };
 
+_StageEventBeat _$StageEventBeatFromJson(Map<String, dynamic> json) =>
+    _StageEventBeat(
+      beat: (json['beat'] as num).toDouble(),
+      beatType: $enumDecode(_$MetronomeBeatTypeEnumMap, json['beatType']),
+      measureIndex: (json['measureIndex'] as num).toInt(),
+      beatInMeasure: (json['beatInMeasure'] as num).toInt(),
+      isCountIn: json['isCountIn'] as bool? ?? false,
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$StageEventBeatToJson(_StageEventBeat instance) =>
+    <String, dynamic>{
+      'beat': instance.beat,
+      'beatType': _$MetronomeBeatTypeEnumMap[instance.beatType]!,
+      'measureIndex': instance.measureIndex,
+      'beatInMeasure': instance.beatInMeasure,
+      'isCountIn': instance.isCountIn,
+      'runtimeType': instance.$type,
+    };
+
+const _$MetronomeBeatTypeEnumMap = {
+  MetronomeBeatType.downbeat: 'downbeat',
+  MetronomeBeatType.secondaryAccent: 'secondaryAccent',
+  MetronomeBeatType.regular: 'regular',
+  MetronomeBeatType.subdivision: 'subdivision',
+};
+
 _StageEngineConfig _$StageEngineConfigFromJson(Map<String, dynamic> json) =>
     _StageEngineConfig(
       perfectWindow: (json['perfectWindow'] as num?)?.toDouble() ?? 0.1,
@@ -206,6 +233,8 @@ _StageEngineConfig _$StageEngineConfigFromJson(Map<String, dynamic> json) =>
       practiceMode:
           $enumDecodeNullable(_$PracticeModeEnumMap, json['practiceMode']) ??
           PracticeMode.timed,
+      metronomeEnabled: json['metronomeEnabled'] as bool? ?? false,
+      countInEnabled: json['countInEnabled'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$StageEngineConfigToJson(_StageEngineConfig instance) =>
@@ -218,6 +247,8 @@ Map<String, dynamic> _$StageEngineConfigToJson(_StageEngineConfig instance) =>
       'playbackSpeed': instance.playbackSpeed,
       'inputLatency': instance.inputLatency,
       'practiceMode': _$PracticeModeEnumMap[instance.practiceMode]!,
+      'metronomeEnabled': instance.metronomeEnabled,
+      'countInEnabled': instance.countInEnabled,
     };
 
 const _$PracticeModeEnumMap = {
@@ -246,6 +277,8 @@ _StageEngineStateModel _$StageEngineStateModelFromJson(
   waitingHint: json['waitingHint'] == null
       ? null
       : WaitingHint.fromJson(json['waitingHint'] as Map<String, dynamic>),
+  isCountingIn: json['isCountingIn'] as bool? ?? false,
+  countInBeat: (json['countInBeat'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$StageEngineStateModelToJson(
@@ -263,6 +296,8 @@ Map<String, dynamic> _$StageEngineStateModelToJson(
   'okayCount': instance.okayCount,
   'practiceMode': _$PracticeModeEnumMap[instance.practiceMode]!,
   'waitingHint': instance.waitingHint,
+  'isCountingIn': instance.isCountingIn,
+  'countInBeat': instance.countInBeat,
 };
 
 const _$NoteStateEnumMap = {

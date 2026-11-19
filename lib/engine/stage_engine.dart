@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/level_models.dart';
 import '../models/audio_models.dart';
 import '../models/engine_models.dart';
+import 'meter_grouping.dart';
 
 /// Core game engine that manages stage state and processes pitch events
 class StageEngine extends ChangeNotifier {
@@ -14,6 +15,41 @@ class StageEngine extends ChangeNotifier {
   double _playbackSpeed = 1.0;
 
   double get playbackSpeed => _playbackSpeed;
+
+  /// Effective BPM taking into account the base level tempo and playback speed multiplier.
+  double get effectiveBpm => _level.tempo * _playbackSpeed;
+
+  /// Whether metronome beat references are enabled during playback.
+  bool _metronomeEnabled = false;
+  bool get isMetronomeEnabled => _metronomeEnabled;
+  bool get metronomeEnabled => _metronomeEnabled;
+
+  /// Whether count-in before playback is enabled.
+  bool _countInEnabled = false;
+  bool get isCountInEnabled => _countInEnabled;
+  bool get countInEnabled => _countInEnabled;
+
+  /// Whether the engine is currently playing count-in beats prior to measure 0.
+  bool _isCountingIn = false;
+  bool get isCountingIn => _isCountingIn;
+
+  /// The active 1-based beat within the count-in measure, or null if not counting in.
+  int? get countInBeat {
+    if (!_isCountingIn || _state.currentBeat >= 0.0) return null;
+    final total = _level.beatsPerMeasure > 0 ? _level.beatsPerMeasure : 4;
+    final count = (_state.currentBeat + total).floor() + 1;
+    return count.clamp(1, total);
+  }
+
+  /// Total count-in beats for the piece's meter.
+  int? get countInTotalBeats => _isCountingIn
+      ? (_level.beatsPerMeasure > 0 ? _level.beatsPerMeasure : 4)
+      : null;
+
+  /// Callback fired whenever a metronome or count-in beat boundary is crossed.
+  void Function(double beat, MetronomeBeatType beatType, bool isCountIn)? onBeat;
+
+  int _lastEmittedBeat = -999999;
 
   /// Current practice mode: timed (play in time) or waiting (learn notes).
   PracticeMode _practiceMode = PracticeMode.timed;
@@ -89,6 +125,8 @@ class StageEngine extends ChangeNotifier {
        _practiceMode =
            practiceMode ?? config?.practiceMode ?? PracticeMode.timed {
     _playbackSpeed = _config.playbackSpeed;
+    _metronomeEnabled = _config.metronomeEnabled;
+    _countInEnabled = _config.countInEnabled;
     _initializeNotes();
     _state = _state.copyWith(
       engineState: StageEngineStatus.idle,
@@ -96,6 +134,20 @@ class StageEngine extends ChangeNotifier {
       noteStates: List.filled(_allNotes.length, NoteState.upcoming),
       practiceMode: _practiceMode,
     );
+  }
+
+  /// Enables or disables the metronome beat reference.
+  void setMetronomeEnabled(bool enabled) {
+    if (_metronomeEnabled == enabled) return;
+    _metronomeEnabled = enabled;
+    notifyListeners();
+  }
+
+  /// Enables or disables the count-in before playback begins.
+  void setCountInEnabled(bool enabled) {
+    if (_countInEnabled == enabled) return;
+    _countInEnabled = enabled;
+    notifyListeners();
   }
 
   /// Sets the active practice mode.
@@ -168,9 +220,14 @@ class StageEngine extends ChangeNotifier {
     _lastHeard = null;
 
     final initialNoteStates = List.filled(_allNotes.length, NoteState.upcoming);
+    final countInBeats = _level.beatsPerMeasure.toDouble();
+    _isCountingIn = _countInEnabled && _practiceMode == PracticeMode.timed;
+    final startBeat = _isCountingIn ? -countInBeats : 0.0;
+    _lastEmittedBeat = startBeat.floor() - 1;
+
     _state = _state.copyWith(
       engineState: StageEngineStatus.playing,
-      currentBeat: 0.0,
+      currentBeat: startBeat,
       noteStates: initialNoteStates,
       score: 0,
       hitCount: 0,
@@ -180,12 +237,15 @@ class StageEngine extends ChangeNotifier {
       okayCount: 0,
       practiceMode: _practiceMode,
       waitingHint: null,
+      isCountingIn: _isCountingIn,
+      countInBeat: _isCountingIn ? 1 : null,
     );
 
     if (_practiceMode == PracticeMode.waiting) {
       _syncWaitingPlayheadAndHint();
     } else {
       _startPlaybackTimer();
+      _checkAndEmitBeats(startBeat);
     }
     _notifyStateChanged();
   }
@@ -212,6 +272,8 @@ class StageEngine extends ChangeNotifier {
   void stop() {
     if (_disposed) return;
     _stopPlaybackTimer();
+    _isCountingIn = false;
+    _lastEmittedBeat = -999999;
     if (_isDemonstrating) {
       _isDemonstrating = false;
       _demonstrationRange = null;
@@ -219,13 +281,19 @@ class StageEngine extends ChangeNotifier {
       _onDemonstrationComplete = null;
       _demonstratedNoteIndices.clear();
     }
-    _state = _state.copyWith(engineState: StageEngineStatus.stopped);
+    _state = _state.copyWith(
+      engineState: StageEngineStatus.stopped,
+      isCountingIn: false,
+      countInBeat: null,
+    );
     _notifyStateChanged();
   }
 
   /// Reset the stage to initial state
   void reset() {
     _stopPlaybackTimer();
+    _isCountingIn = false;
+    _lastEmittedBeat = -999999;
     _isDemonstrating = false;
     _demonstrationRange = null;
     _onDemonstrationNote = null;
@@ -249,6 +317,8 @@ class StageEngine extends ChangeNotifier {
       okayCount: 0,
       practiceMode: _practiceMode,
       waitingHint: null,
+      isCountingIn: false,
+      countInBeat: null,
     );
     _notifyStateChanged();
   }
@@ -259,6 +329,7 @@ class StageEngine extends ChangeNotifier {
   void processPitchEvent(PitchEvent event) {
     if (_state.engineState != StageEngineStatus.playing) return;
     if (_isDemonstrating) return;
+    if (_isCountingIn || _state.currentBeat < 0.0) return;
     if (!_isFreshStrike(event)) return;
 
     if (_practiceMode == PracticeMode.waiting) {
@@ -548,14 +619,14 @@ class StageEngine extends ChangeNotifier {
     _loop = (start: start, end: end);
     _lastHeard = null;
     _state = _state.copyWith(engineState: StageEngineStatus.playing);
-    _restartLoop();
+    _restartLoop(initialStart: true);
     _notifyStateChanged();
   }
 
   /// Stops looping; playback carries on from where it is.
   void clearLoop() => _loop = null;
 
-  void _restartLoop() {
+  void _restartLoop({bool initialStart = false}) {
     final loop = _loop!;
     final states = List<NoteState>.from(_state.noteStates);
     for (var i = 0; i < _allNotes.length; i++) {
@@ -571,8 +642,16 @@ class StageEngine extends ChangeNotifier {
       _nextNoteIndex++;
     }
     _lastHeard = null;
+
+    final countInBeats = _level.beatsPerMeasure.toDouble();
+    _isCountingIn =
+        initialStart && _countInEnabled && _practiceMode == PracticeMode.timed;
+    final startBeat =
+        _isCountingIn ? (loop.start - countInBeats) : loop.start;
+    _lastEmittedBeat = startBeat.floor() - 1;
+
     _state = _state.copyWith(
-      currentBeat: loop.start,
+      currentBeat: startBeat,
       noteStates: states,
       score: 0,
       hitCount: 0,
@@ -580,13 +659,67 @@ class StageEngine extends ChangeNotifier {
       perfectCount: 0,
       goodCount: 0,
       okayCount: 0,
+      isCountingIn: _isCountingIn,
+      countInBeat: _isCountingIn ? 1 : null,
     );
     if (_practiceMode == PracticeMode.waiting) {
       _syncWaitingPlayheadAndHint();
     } else {
-      _updateNoteStatesForBeat(loop.start);
+      _updateNoteStatesForBeat(startBeat);
       _startPlaybackTimer();
+      _checkAndEmitBeats(startBeat);
     }
+  }
+
+  /// Emits beat events for any beat boundaries crossed up to [currentBeat].
+  void _checkAndEmitBeats(double currentBeat) {
+    final currentInt = currentBeat.floor();
+    if (currentInt <= _lastEmittedBeat) return;
+
+    final beatsPerMeasure =
+        _level.beatsPerMeasure > 0 ? _level.beatsPerMeasure : 4;
+    final countInTotal = beatsPerMeasure;
+
+    for (var b = _lastEmittedBeat + 1; b <= currentInt; b++) {
+      final isCountIn = b < 0 ||
+          (_isCountingIn && (_loop == null || b < _loop!.start));
+      final MetronomeBeatType beatType;
+      final int measureIndex;
+      final int beatInMeasure;
+
+      if (b < 0) {
+        measureIndex = -1;
+        beatInMeasure =
+            ((b + countInTotal) % countInTotal + countInTotal) % countInTotal;
+        beatType = MeterGrouping.beatType(
+          beatsPerMeasure: _level.beatsPerMeasure,
+          beatUnit: _level.beatUnit,
+          beatInMeasure: beatInMeasure,
+        );
+      } else {
+        measureIndex = b ~/ beatsPerMeasure;
+        beatInMeasure = b % beatsPerMeasure;
+        beatType = MeterGrouping.beatType(
+          beatsPerMeasure: _level.beatsPerMeasure,
+          beatUnit: _level.beatUnit,
+          beatInMeasure: beatInMeasure,
+        );
+      }
+
+      _eventController.add(
+        StageEvent.beat(
+          beat: b.toDouble(),
+          beatType: beatType,
+          measureIndex: measureIndex,
+          beatInMeasure: beatInMeasure,
+          isCountIn: isCountIn,
+        ),
+      );
+
+      onBeat?.call(b.toDouble(), beatType, isCountIn);
+    }
+
+    _lastEmittedBeat = currentInt;
   }
 
   /// Update playback position
@@ -597,6 +730,7 @@ class StageEngine extends ChangeNotifier {
     final demo = _demonstrationRange;
     if (_isDemonstrating && demo != null) {
       _soundNotesForBeat(newBeat);
+      _checkAndEmitBeats(newBeat);
 
       if (newBeat >= demo.end) {
         newBeat = demo.end;
@@ -634,6 +768,8 @@ class StageEngine extends ChangeNotifier {
           perfectCount: 0,
           goodCount: 0,
           okayCount: 0,
+          isCountingIn: false,
+          countInBeat: null,
         );
         _updateNoteStatesForBeat(start);
         _eventController.add(
@@ -662,6 +798,13 @@ class StageEngine extends ChangeNotifier {
     }
 
     final loop = _loop;
+    final countInThreshold = loop != null ? loop.start : 0.0;
+    if (_isCountingIn && newBeat >= countInThreshold) {
+      _isCountingIn = false;
+    }
+
+    _checkAndEmitBeats(newBeat);
+
     if (loop != null && newBeat >= loop.end) {
       _checkMissedNotes(loop.end);
       _restartLoop();
@@ -688,12 +831,18 @@ class StageEngine extends ChangeNotifier {
     // Update active/upcoming states
     _updateNoteStatesForBeat(newBeat);
 
-    _state = _state.copyWith(currentBeat: newBeat);
+    final progress =
+        totalBeats > 0 ? (newBeat / totalBeats).clamp(0.0, 1.0) : 0.0;
+    _state = _state.copyWith(
+      currentBeat: newBeat,
+      isCountingIn: _isCountingIn,
+      countInBeat: countInBeat,
+    );
 
     _eventController.add(
       StageEvent.playbackPosition(
         currentBeat: newBeat,
-        progress: newBeat / totalBeats,
+        progress: progress,
         isPlaying: _state.engineState == StageEngineStatus.playing,
       ),
     );
@@ -703,6 +852,7 @@ class StageEngine extends ChangeNotifier {
 
   /// Check for notes that should be marked as missed
   void _checkMissedNotes(double currentBeat) {
+    if (_isCountingIn || currentBeat < 0.0) return;
     for (int i = 0; i < _allNotes.length; i++) {
       final note = _allNotes[i];
       if (_loop case final loop?) {
@@ -843,6 +993,9 @@ class StageEngine extends ChangeNotifier {
         ? loop.end
         : (_level.totalMeasures * _level.beatsPerMeasure).toDouble();
     final clampedBeat = beat.clamp(minBeat, maxBeat);
+
+    _isCountingIn = false;
+    _lastEmittedBeat = clampedBeat.floor();
 
     if (_practiceMode == PracticeMode.waiting) {
       final newStates = List<NoteState>.from(_state.noteStates);

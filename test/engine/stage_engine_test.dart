@@ -448,6 +448,7 @@ void main() {
         },
         playbackPosition: (_) => fail('Expected a stage completion event'),
         stateChanged: (_) => fail('Expected a stage completion event'),
+        beat: (_) => fail('Expected a stage completion event'),
       );
     });
   });

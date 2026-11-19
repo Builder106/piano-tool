@@ -671,6 +671,139 @@ void main() {
       );
     });
   });
+
+  group('metronome, count-in, and effective BPM', () {
+    test('toggles metronome and count-in and synchronizes StageUiState', () {
+      final c = harness();
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      expect(ctrl.isMetronomeEnabled, isFalse);
+      expect(c.read(stageControllerProvider('stage_1')).isMetronomeEnabled, isFalse);
+
+      ctrl.setMetronome(true);
+      expect(ctrl.isMetronomeEnabled, isTrue);
+      expect(c.read(stageControllerProvider('stage_1')).isMetronomeEnabled, isTrue);
+
+      ctrl.toggleMetronome();
+      expect(ctrl.isMetronomeEnabled, isFalse);
+      expect(c.read(stageControllerProvider('stage_1')).isMetronomeEnabled, isFalse);
+
+      expect(ctrl.isCountInEnabled, isFalse);
+      expect(c.read(stageControllerProvider('stage_1')).isCountInEnabled, isFalse);
+
+      ctrl.setCountIn(true);
+      expect(ctrl.isCountInEnabled, isTrue);
+      expect(c.read(stageControllerProvider('stage_1')).isCountInEnabled, isTrue);
+
+      ctrl.toggleCountIn();
+      expect(ctrl.isCountInEnabled, isFalse);
+      expect(c.read(stageControllerProvider('stage_1')).isCountInEnabled, isFalse);
+    });
+
+    test('effective BPM, effective tempo, and speed multiplier label reflect tempo and speed', () {
+      final c = harness();
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      final state = c.read(stageControllerProvider('stage_1'));
+      final baseTempo = state.level.tempo;
+
+      expect(state.effectiveBpm, baseTempo);
+      expect(state.effectiveTempo, baseTempo.toDouble());
+      expect(
+        state.speedMultiplierLabel,
+        'Speed 100% ($baseTempo BPM)',
+      );
+      expect(
+        state.accessibleDescription,
+        contains('Speed 100% ($baseTempo BPM)'),
+      );
+
+      ctrl.setSpeed(0.75);
+      final state75 = c.read(stageControllerProvider('stage_1'));
+      final expectedBpm75 = (baseTempo * 0.75).round();
+      expect(state75.effectiveBpm, expectedBpm75);
+      expect(
+        state75.speedMultiplierLabel,
+        'Speed 75% ($expectedBpm75 BPM)',
+      );
+      expect(
+        state75.accessibleDescription,
+        contains('Speed 75% ($expectedBpm75 BPM)'),
+      );
+    });
+
+    test('count-in suspends microphone scoring and describes count-in state', () async {
+      final player = SilentAudioTonePlayer();
+      final synth = AudioSynthesizer(player: player);
+      final c = harness(synth: synth);
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      ctrl.setCountIn(true);
+      await ctrl.start();
+
+      final state = c.read(stageControllerProvider('stage_1'));
+      expect(state.isCountingIn, isTrue);
+      expect(ctrl.isCountingIn, isTrue);
+      expect(ctrl.isMicrophoneScoringActive, isFalse);
+      expect(state.countInBeat, 1);
+      expect(state.countInTotalBeats, state.level.beatsPerMeasure);
+      expect(
+        state.accessibleDescription,
+        contains('Count-in: Beat 1 of ${state.level.beatsPerMeasure}'),
+      );
+      expect(
+        state.accessibleDescription,
+        contains('BPM)'),
+      );
+    });
+
+    test('sounds metronome click through AudioSynthesizer on beat events', () async {
+      final player = SilentAudioTonePlayer();
+      final synth = AudioSynthesizer(player: player);
+      final c = harness(synth: synth);
+      addTearDown(c.dispose);
+
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+      ctrl.setMetronome(true);
+
+      expect(player.playCount, 0);
+      await ctrl.start();
+
+      // On start with metronome enabled, downbeat beat event triggers a click
+      await Future<void>.delayed(Duration.zero);
+      expect(player.playCount, greaterThanOrEqualTo(1));
+    });
+
+    test('derived providers reactively expose metronome, count-in, and effective BPM slices', () async {
+      final player = SilentAudioTonePlayer();
+      final synth = AudioSynthesizer(player: player);
+      final c = harness(synth: synth);
+      addTearDown(c.dispose);
+      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+      final baseTempo = c.read(stageControllerProvider('stage_1')).level.tempo;
+      expect(c.read(effectiveBpmProvider('stage_1')), baseTempo);
+      expect(c.read(isMetronomeEnabledProvider('stage_1')), isFalse);
+      expect(c.read(isCountInEnabledProvider('stage_1')), isFalse);
+      expect(c.read(isCountingInProvider('stage_1')), isFalse);
+      expect(c.read(countInBeatProvider('stage_1')), isNull);
+
+      ctrl.setMetronome(true);
+      ctrl.setCountIn(true);
+      ctrl.setSpeed(0.5);
+
+      expect(c.read(isMetronomeEnabledProvider('stage_1')), isTrue);
+      expect(c.read(isCountInEnabledProvider('stage_1')), isTrue);
+      expect(c.read(effectiveBpmProvider('stage_1')), (baseTempo * 0.5).round());
+
+      await ctrl.start();
+      expect(c.read(isCountingInProvider('stage_1')), isTrue);
+      expect(c.read(countInBeatProvider('stage_1')), 1);
+    });
+  });
 }
 
 class _DelayedProgressRepository extends ProgressRepository {

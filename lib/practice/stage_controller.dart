@@ -74,6 +74,8 @@ class StageUiState {
     this.selectedInputSource = PracticeInputSource.both,
     this.practiceMode = PracticeMode.timed,
     this.waitingHint,
+    this.isMetronomeEnabled = false,
+    this.isCountInEnabled = false,
   }) : _loopMeasure = loopMeasure;
 
   final LevelModel level;
@@ -115,11 +117,42 @@ class StageUiState {
   /// Active contextual hint when waiting for input in waiting mode.
   final WaitingHint? waitingHint;
 
+  /// Whether the metronome beat reference is enabled.
+  final bool isMetronomeEnabled;
+
+  /// Whether count-in before playback is enabled.
+  final bool isCountInEnabled;
+
   /// Whether the practice is currently in waiting (learn notes) mode.
   bool get isWaitingMode => practiceMode == PracticeMode.waiting;
 
   /// Whether the practice is currently in timed (play in time) mode.
   bool get isTimedMode => practiceMode == PracticeMode.timed;
+
+  /// Whether the stage is currently playing count-in beats prior to measure 0.
+  bool get isCountingIn => currentBeat < 0.0;
+
+  /// Active 1-based count-in beat number (e.g. 1, 2, 3, 4), or null when not counting in.
+  int? get countInBeat {
+    if (currentBeat >= 0.0) return null;
+    final total = level.beatsPerMeasure > 0 ? level.beatsPerMeasure : 4;
+    final count = (currentBeat + total).floor() + 1;
+    return count.clamp(1, total);
+  }
+
+  /// Total count-in beats for the piece's meter.
+  int? get countInTotalBeats =>
+      currentBeat < 0.0 ? (level.beatsPerMeasure > 0 ? level.beatsPerMeasure : 4) : null;
+
+  /// Effective BPM taking into account the base level tempo and playback speed multiplier.
+  int get effectiveBpm => (level.tempo * speed).round();
+
+  /// Effective double tempo.
+  double get effectiveTempo => level.tempo * speed;
+
+  /// Human-readable label showing speed multiplier and effective BPM.
+  String get speedMultiplierLabel =>
+      'Speed ${(speed * 100).round()}% ($effectiveBpm BPM)';
 
   /// Semantic / accessible representation of the stage state for assistive technology in both modes.
   String get accessibleDescription {
@@ -141,10 +174,12 @@ class StageUiState {
         ((currentBeat % beatsPerMeasure).floor()) + 1;
     final posStr = 'Measure $measure, beat $beatInMeasure';
 
-    if (practiceMode == PracticeMode.waiting && waitingHint != null) {
+    if (isCountingIn && countInBeat != null) {
+      return 'Count-in: Beat $countInBeat of $countInTotalBeats. Speed ${(speed * 100).round()}% ($effectiveBpm BPM).';
+    } else if (practiceMode == PracticeMode.waiting && waitingHint != null) {
       return '$modeStr: $statusStr. $posStr. ${waitingHint!.hintText}';
     } else if (practiceMode == PracticeMode.timed) {
-      return '$modeStr: $statusStr. $posStr. Speed ${(speed * 100).round()}%. Score: $score, accuracy: ${(accuracy * 100).round()}%';
+      return '$modeStr: $statusStr. $posStr. Speed ${(speed * 100).round()}% ($effectiveBpm BPM). Score: $score, accuracy: ${(accuracy * 100).round()}%';
     } else {
       return '$modeStr: $statusStr. $posStr.';
     }
@@ -164,7 +199,7 @@ class StageUiState {
 
   /// Whether the microphone is currently actively scoring player input.
   bool get isMicrophoneScoringActive =>
-      !isMicrophoneSuspended && selectedInputSource.usesMicrophone;
+      !isMicrophoneSuspended && !isCountingIn && selectedInputSource.usesMicrophone;
 
   double get progress {
     final total = level.totalMeasures * level.beatsPerMeasure;
@@ -188,6 +223,8 @@ class StageUiState {
     PracticeMode? practiceMode,
     WaitingHint? waitingHint,
     bool clearWaitingHint = false,
+    bool? isMetronomeEnabled,
+    bool? isCountInEnabled,
   }) {
     final effectiveRange = clearLoop
         ? null
@@ -217,6 +254,8 @@ class StageUiState {
       selectedInputSource: selectedInputSource ?? this.selectedInputSource,
       practiceMode: practiceMode ?? this.practiceMode,
       waitingHint: clearWaitingHint ? null : (waitingHint ?? this.waitingHint),
+      isMetronomeEnabled: isMetronomeEnabled ?? this.isMetronomeEnabled,
+      isCountInEnabled: isCountInEnabled ?? this.isCountInEnabled,
     );
   }
 }
@@ -280,6 +319,31 @@ class StageController extends StateNotifier<StageUiState> {
           : PracticeMode.timed,
     );
   }
+
+  bool get isMetronomeEnabled => _engine.isMetronomeEnabled;
+  bool get isCountInEnabled => _engine.isCountInEnabled;
+  bool get isCountingIn => _engine.isCountingIn;
+  double get effectiveBpm => _engine.effectiveBpm;
+
+  /// Enables or disables the metronome beat reference.
+  void setMetronome(bool enabled) {
+    if (_disposed || !mounted) return;
+    _engine.setMetronomeEnabled(enabled);
+    _sync();
+  }
+
+  /// Toggles the metronome beat reference.
+  void toggleMetronome() => setMetronome(!isMetronomeEnabled);
+
+  /// Enables or disables the count-in before playback begins.
+  void setCountIn(bool enabled) {
+    if (_disposed || !mounted) return;
+    _engine.setCountInEnabled(enabled);
+    _sync();
+  }
+
+  /// Toggles the count-in before playback begins.
+  void toggleCountIn() => setCountIn(!isCountInEnabled);
 
   void updateSelectedInputSource(PracticeInputSource source) {
     if (_disposed || !mounted) return;
@@ -555,6 +619,11 @@ class StageController extends StateNotifier<StageUiState> {
                 .catchError((_) {});
             await _progress.setLastPlayed(_stageId).catchError((_) {});
           }),
+      beat: (beat, beatType, measureIndex, beatInMeasure, isCountIn) {
+        if (_engine.isMetronomeEnabled || isCountIn) {
+          unawaited(_synth.playMetronomeClick(type: beatType));
+        }
+      },
     );
   }
 
@@ -573,6 +642,8 @@ class StageController extends StateNotifier<StageUiState> {
       practiceMode: _engine.practiceMode,
       waitingHint: s.waitingHint,
       clearWaitingHint: s.waitingHint == null,
+      isMetronomeEnabled: _engine.isMetronomeEnabled,
+      isCountInEnabled: _engine.isCountInEnabled,
     );
   }
 
@@ -638,6 +709,8 @@ final stageControllerProvider =
           selectedInputSource: settings.inputSource,
           practiceMode: engine.practiceMode,
           waitingHint: engine.state.waitingHint,
+          isMetronomeEnabled: engine.isMetronomeEnabled,
+          isCountInEnabled: engine.isCountInEnabled,
         ),
         synth: synth,
         selectedInputSource: settings.inputSource,
@@ -752,3 +825,24 @@ final accessibleDescriptionProvider =
         stageControllerProvider(id).select((s) => s.accessibleDescription),
       ),
     );
+final effectiveBpmProvider = Provider.autoDispose.family<int, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.effectiveBpm)),
+);
+final isMetronomeEnabledProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) => ref.watch(
+    stageControllerProvider(id).select((s) => s.isMetronomeEnabled),
+  ),
+);
+final isCountInEnabledProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.isCountInEnabled)),
+);
+final isCountingInProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.isCountingIn)),
+);
+final countInBeatProvider = Provider.autoDispose.family<int?, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.countInBeat)),
+);

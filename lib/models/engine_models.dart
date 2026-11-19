@@ -147,8 +147,31 @@ sealed class StageEvent with _$StageEvent {
   const factory StageEvent.stateChanged({required StageEngineStatus state}) =
       _StageEventStateChanged;
 
+  const factory StageEvent.beat({
+    required double beat,
+    required MetronomeBeatType beatType,
+    required int measureIndex,
+    required int beatInMeasure,
+    @Default(false) bool isCountIn,
+  }) = _StageEventBeat;
+
   factory StageEvent.fromJson(Map<String, dynamic> json) =>
       _$StageEventFromJson(json);
+}
+
+/// Beat emphasis classification for metronome and beat references.
+enum MetronomeBeatType {
+  /// First beat of a measure (strong primary accent).
+  downbeat,
+
+  /// Secondary accent in compound or complex meters (e.g. beat 4 in 6/8 meter).
+  secondaryAccent,
+
+  /// Regular pulse in simple meter (e.g. beats 2, 3, 4 in 4/4).
+  regular,
+
+  /// Subdivision or weak pulse in compound meter (e.g. eighth notes 2, 3, 5, 6 in 6/8).
+  subdivision,
 }
 
 /// Stage engine state (enum for internal state machine)
@@ -168,6 +191,8 @@ sealed class StageEngineConfig with _$StageEngineConfig {
     @Default(0.0)
     double inputLatency, // seconds of input/buffer latency compensation
     @Default(PracticeMode.timed) PracticeMode practiceMode,
+    @Default(false) bool metronomeEnabled,
+    @Default(false) bool countInEnabled,
   }) = _StageEngineConfig;
 
   factory StageEngineConfig.fromJson(Map<String, dynamic> json) =>
@@ -192,6 +217,8 @@ sealed class StageEngineStateModel with _$StageEngineStateModel {
     @Default(0) int okayCount,
     @Default(PracticeMode.timed) PracticeMode practiceMode,
     @Default(null) WaitingHint? waitingHint,
+    @Default(false) bool isCountingIn,
+    int? countInBeat,
   }) = _StageEngineStateModel;
 
   factory StageEngineStateModel.fromJson(Map<String, dynamic> json) =>

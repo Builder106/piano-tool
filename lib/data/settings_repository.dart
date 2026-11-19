@@ -81,6 +81,8 @@ class AppSettings {
     this.inputConfigured = true,
     this.verifiedInput,
     this.inputLatency = 0.0,
+    this.metronomeEnabled = false,
+    this.countInEnabled = false,
   });
 
   final ThemeMode themeMode;
@@ -92,6 +94,8 @@ class AppSettings {
   final PracticeInputSource inputSource;
   final bool inputConfigured;
   final double inputLatency;
+  final bool metronomeEnabled;
+  final bool countInEnabled;
 
   /// The input Piano Tool last actually heard a note from, as an
   /// [inputCheckKey]. Permission alone never sets it.
@@ -104,6 +108,8 @@ class AppSettings {
     missWindow: toleranceLevel.missWindow,
     playbackSpeed: defaultPlaybackSpeed,
     inputLatency: inputLatency,
+    metronomeEnabled: metronomeEnabled,
+    countInEnabled: countInEnabled,
   );
 
   AudioEngineConfig toAudioEngineConfig() => AudioEngineConfig(
@@ -122,6 +128,8 @@ class AppSettings {
     bool? inputConfigured,
     String? verifiedInput,
     double? inputLatency,
+    bool? metronomeEnabled,
+    bool? countInEnabled,
     bool clearCustomApiBaseUrl = false,
     bool clearVerifiedInput = false,
   }) => AppSettings(
@@ -139,6 +147,8 @@ class AppSettings {
         ? null
         : (verifiedInput ?? this.verifiedInput),
     inputLatency: inputLatency ?? this.inputLatency,
+    metronomeEnabled: metronomeEnabled ?? this.metronomeEnabled,
+    countInEnabled: countInEnabled ?? this.countInEnabled,
   );
 
   @override
@@ -155,7 +165,9 @@ class AppSettings {
           inputSource == other.inputSource &&
           inputConfigured == other.inputConfigured &&
           verifiedInput == other.verifiedInput &&
-          inputLatency == other.inputLatency;
+          inputLatency == other.inputLatency &&
+          metronomeEnabled == other.metronomeEnabled &&
+          countInEnabled == other.countInEnabled;
 
   @override
   int get hashCode => Object.hash(
@@ -169,6 +181,8 @@ class AppSettings {
     inputConfigured,
     verifiedInput,
     inputLatency,
+    metronomeEnabled,
+    countInEnabled,
   );
 }
 
