@@ -14,9 +14,21 @@ class RunSummary {
     required this.total,
     required this.missedBars,
     required this.worstBar,
+    this.attemptDetail,
+    this.noteResults = const {},
+    this.signedTimingErrors = const [],
+    this.missedExpectedCount = 0,
+    this.wrongPitchCount = 0,
+    this.missedExpectedBars = const [],
+    this.wrongPitchBars = const [],
   });
 
-  factory RunSummary.of(List<NoteState> states, List<int> measureOfNote) {
+  factory RunSummary.of(
+    List<NoteState> states,
+    List<int> measureOfNote, {
+    Map<int, NoteHitResult>? noteResults,
+    AttemptDetail? attemptDetail,
+  }) {
     var right = 0;
     final misses = <int, int>{};
     for (final (i, s) in states.indexed) {
@@ -24,7 +36,9 @@ class RunSummary {
         case NoteState.hitPerfect || NoteState.hitGood || NoteState.hitOkay:
           right++;
         case NoteState.missed:
-          misses[measureOfNote[i]] = (misses[measureOfNote[i]] ?? 0) + 1;
+          if (i < measureOfNote.length) {
+            misses[measureOfNote[i]] = (misses[measureOfNote[i]] ?? 0) + 1;
+          }
         case NoteState.upcoming || NoteState.active:
           break;
       }
@@ -34,11 +48,52 @@ class RunSummary {
     for (final bar in bars) {
       if (worst == null || misses[bar]! > misses[worst]!) worst = bar;
     }
+
+    final resultsMap = noteResults ?? attemptDetail?.noteResultsMap ?? const {};
+    final timingErrors = attemptDetail?.signedTimingErrors ??
+        [
+          for (final res in resultsMap.values)
+            if (res.timingError != null) res.timingError!,
+        ];
+
+    final missedExpectedBars = <int>{};
+    final wrongPitchBars = <int>{};
+    var missedExpectedCount = 0;
+    var wrongPitchCount = 0;
+
+    for (final entry in resultsMap.entries) {
+      final idx = entry.key;
+      final res = entry.value;
+      final bar = idx < measureOfNote.length ? measureOfNote[idx] : null;
+
+      if (res.isMissed) {
+        missedExpectedCount++;
+        if (bar != null) missedExpectedBars.add(bar);
+      } else if (res.isWrongPitch) {
+        wrongPitchCount++;
+        if (bar != null) wrongPitchBars.add(bar);
+      }
+    }
+
+    if (resultsMap.isEmpty && attemptDetail != null) {
+      missedExpectedCount = attemptDetail.missedNotes;
+      wrongPitchCount = attemptDetail.wrongPitchNotes;
+      missedExpectedBars.addAll(attemptDetail.missedMeasureIndices);
+      wrongPitchBars.addAll(attemptDetail.wrongPitchMeasureIndices);
+    }
+
     return RunSummary(
       right: right,
       total: states.length,
       missedBars: bars,
       worstBar: worst,
+      attemptDetail: attemptDetail,
+      noteResults: resultsMap,
+      signedTimingErrors: timingErrors,
+      missedExpectedCount: missedExpectedCount,
+      wrongPitchCount: wrongPitchCount,
+      missedExpectedBars: missedExpectedBars.toList()..sort(),
+      wrongPitchBars: wrongPitchBars.toList()..sort(),
     );
   }
 
@@ -48,6 +103,41 @@ class RunSummary {
   /// Measure indices, zero-based, that held a missed note.
   final List<int> missedBars;
   final int? worstBar;
+
+  /// Preserved attempt detail, or null if constructed without attempt details.
+  final AttemptDetail? attemptDetail;
+
+  /// Per-note hit results preserving attempt performance details.
+  final Map<int, NoteHitResult> noteResults;
+
+  /// Signed timing errors from all struck notes in the attempt (beats: negative = early, positive = late).
+  final List<double> signedTimingErrors;
+
+  /// Number of missed expected notes (unplayed / expired).
+  final int missedExpectedCount;
+
+  /// Number of confirmed wrong pitches.
+  final int wrongPitchCount;
+
+  /// Measure indices containing unplayed missed notes.
+  final List<int> missedExpectedBars;
+
+  /// Measure indices containing confirmed wrong pitches.
+  final List<int> wrongPitchBars;
+
+  /// Whether attempt detail was preserved in this summary.
+  bool get hasAttemptDetail => attemptDetail != null || noteResults.isNotEmpty;
+
+  /// Whether any confirmed wrong pitches occurred in this run.
+  bool get hasWrongPitches => wrongPitchCount > 0;
+
+  /// Whether any missed expected notes (unplayed) occurred in this run.
+  bool get hasMissedExpected => missedExpectedCount > 0;
+
+  /// Average signed timing error across played notes, or null if no timing errors exist.
+  double? get averageTimingError => signedTimingErrors.isNotEmpty
+      ? signedTimingErrors.reduce((a, b) => a + b) / signedTimingErrors.length
+      : null;
 
   int get missed => total - right;
 

@@ -78,6 +78,8 @@ class StageUiState {
     this.isMetronomeEnabled = false,
     this.isCountInEnabled = false,
     this.handSelection = HandSelection.both,
+    this.noteResults = const {},
+    this.attemptDetail,
     this.assistanceOffer,
     this.appliedAssistance,
     this.consecutiveUnsuccessfulAttempts = 0,
@@ -91,6 +93,36 @@ class StageUiState {
   final double accuracy;
   final StageEngineStatus status;
   final double speed;
+
+  /// Per-note hit results preserving attempt performance details.
+  final Map<int, NoteHitResult> noteResults;
+
+  /// Preserved detail of the completed attempt or loop pass, or null.
+  final AttemptDetail? attemptDetail;
+
+  /// Signed timing errors from all struck notes in the attempt (beats: negative = early, positive = late).
+  List<double> get signedTimingErrors =>
+      attemptDetail?.signedTimingErrors ??
+      [
+        for (final res in noteResults.values)
+          if (res.timingError != null) res.timingError!,
+      ];
+
+  /// Number of missed expected notes (unplayed / expired).
+  int get missedExpectedCount =>
+      attemptDetail?.missedNotes ??
+      noteResults.values.where((r) => r.isMissed).length;
+
+  /// Number of confirmed wrong pitches.
+  int get wrongPitchCount =>
+      attemptDetail?.wrongPitchNotes ??
+      noteResults.values.where((r) => r.isWrongPitch).length;
+
+  /// Whether this attempt has any confirmed wrong pitches.
+  bool get hasWrongPitches => wrongPitchCount > 0;
+
+  /// Whether this attempt has any missed expected notes (unplayed).
+  bool get hasMissedExpected => missedExpectedCount > 0;
 
   /// Active hand selection for practice: both, right, or left.
   final HandSelection handSelection;
@@ -274,6 +306,9 @@ class StageUiState {
     bool? isMetronomeEnabled,
     bool? isCountInEnabled,
     HandSelection? handSelection,
+    Map<int, NoteHitResult>? noteResults,
+    AttemptDetail? attemptDetail,
+    bool clearAttemptDetail = false,
     AssistanceOffer? assistanceOffer,
     bool clearAssistanceOffer = false,
     AppliedAssistance? appliedAssistance,
@@ -311,6 +346,10 @@ class StageUiState {
       isMetronomeEnabled: isMetronomeEnabled ?? this.isMetronomeEnabled,
       isCountInEnabled: isCountInEnabled ?? this.isCountInEnabled,
       handSelection: handSelection ?? this.handSelection,
+      noteResults: noteResults ?? this.noteResults,
+      attemptDetail: clearAttemptDetail
+          ? null
+          : (attemptDetail ?? this.attemptDetail),
       assistanceOffer: clearAssistanceOffer
           ? null
           : (assistanceOffer ?? this.assistanceOffer),
@@ -822,7 +861,7 @@ class StageController extends StateNotifier<StageUiState> {
     if (!_syncEngineEvents) return;
     _sync();
     event.whenOrNull(
-      stageCompleted: (accuracy, score, totalNotes, hitNotes) {
+      stageCompleted: (accuracy, score, totalNotes, hitNotes, attemptDetail) {
         _progressWrites = _progressWrites.then((_) async {
           await _progress
               .record(stageId: _stageId, accuracy: accuracy, score: score)
@@ -838,6 +877,7 @@ class StageController extends StateNotifier<StageUiState> {
         hitNotes,
         loopStart,
         loopEnd,
+        attemptDetail,
       ) {
         _handleAttemptFinished(accuracy: accuracy, totalNotes: totalNotes);
       },
@@ -909,6 +949,9 @@ class StageController extends StateNotifier<StageUiState> {
       isMetronomeEnabled: _engine.isMetronomeEnabled,
       isCountInEnabled: _engine.isCountInEnabled,
       handSelection: _engine.handSelection,
+      noteResults: Map.of(_engine.noteResults),
+      attemptDetail: _engine.attemptDetail,
+      clearAttemptDetail: _engine.attemptDetail == null,
     );
   }
 
@@ -1166,6 +1209,41 @@ final consecutiveUnsuccessfulAttemptsProvider = Provider.autoDispose
         stageControllerProvider(
           id,
         ).select((s) => s.consecutiveUnsuccessfulAttempts),
+      ),
+    );
+
+final noteResultsProvider = Provider.autoDispose
+    .family<Map<int, NoteHitResult>, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.noteResults),
+      ),
+    );
+
+final attemptDetailProvider = Provider.autoDispose
+    .family<AttemptDetail?, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.attemptDetail),
+      ),
+    );
+
+final signedTimingErrorsProvider = Provider.autoDispose
+    .family<List<double>, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.signedTimingErrors),
+      ),
+    );
+
+final missedExpectedCountProvider = Provider.autoDispose
+    .family<int, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.missedExpectedCount),
+      ),
+    );
+
+final wrongPitchCountProvider = Provider.autoDispose
+    .family<int, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.wrongPitchCount),
       ),
     );
 

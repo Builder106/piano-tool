@@ -332,9 +332,12 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                     clipBehavior: Clip.antiAlias,
                     child: showResults
                         ? ResultsPage(
-                            summary: RunSummary.of(ui.noteStates, [
-                              for (final n in ui.notes) n.measureIndex,
-                            ]),
+                            summary: RunSummary.of(
+                              ui.noteStates,
+                              [for (final n in ui.notes) n.measureIndex],
+                              noteResults: ui.noteResults,
+                              attemptDetail: ui.attemptDetail,
+                            ),
                             staff: StaticStaff(
                               level: ui.level,
                               notes: ui.notes,
