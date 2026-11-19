@@ -201,7 +201,7 @@ reliability so the interaction is both expressive and accurate.
 
 ### Coaching and progress
 
-- [ ] **Preserve attempt detail:** Carry note results and signed timing errors
+- [x] **Preserve attempt detail:** Carry note results and signed timing errors
   into the results flow. Separate a missed expected note from a confirmed
   wrong pitch; the current scorer does not classify every unexpected pitch.
 - [ ] **Results that lead somewhere:** Derive a specific observation and

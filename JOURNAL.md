@@ -961,3 +961,18 @@ turn (`PooledTonePlayer`), so a chord or a quick run rings over itself. A
 single player cannot overlap: starting a buffer stops the one playing.
 Overlap is tested with silent voices; whether six `FlutterSoundPlayer`s
 open together on every platform has only been seen to build, not heard.
+
+## 2026-11-19: preserve attempt detail and separate missed from confirmed wrong pitch #engine #scoring #decision
+
+Preserved attempt performance details into the results flow and separated missed expected notes from confirmed wrong pitches:
+
+1. `NoteHitResult.wrongPitch`: Added `NoteHitResult.wrongPitch({required int noteIndex, required int playedMidiNote, required double timingError})` with getters `isWrongPitch`, `isMissed`, `isHit`, `timingError`, and `playedMidiNote`. Maps to `NoteState.missed` with a score of 0.0 while preserving the struck pitch and signed timing error.
+2. Hit Window Scorer Specificity: In `StageEngine._tryMatchNote`, if no matching note is found for a detected pitch, the engine checks for unresolved notes in the active hand within their open hit window (`timingError >= -okayWindow && absError <= missWindow`). If present, the closest expected note is marked with `NoteHitResult.wrongPitch`. Pitches occurring outside any active hit window (rests, early strikes, or distant upcoming notes) remain ignored, adhering to the requirement that the scorer does not classify every unexpected pitch.
+3. `AttemptDetail` Freezed Data Model: Added `AttemptDetail` containing aggregate counts (`hitNotes`, `missedNotes`, `wrongPitchNotes`), accuracy, score, signed timing errors across all played notes, measure indices for missed vs wrong pitches, most missed measure, and average timing error.
+4. Propagation to Results Flow:
+   - `StageEvent.stageCompleted` and `StageEvent.loopPassCompleted` carry `AttemptDetail`.
+   - `StageEngineStateModel` and `StageUiState` expose `noteResults`, `attemptDetail`, and derived timing and pitch error queries (`signedTimingErrors`, `missedExpectedCount`, `wrongPitchCount`, `hasWrongPitches`, `hasMissedExpected`).
+   - Sliced Riverpod providers added for `noteResultsProvider`, `attemptDetailProvider`, `signedTimingErrorsProvider`, `missedExpectedCountProvider`, and `wrongPitchCountProvider`.
+   - `RunSummary` and `RunSummary.of` preserve `noteResults`, `attemptDetail`, signed timing errors, and distinct missed vs wrong pitch bar lists while remaining backwards compatible.
+   - `TimingAdvice.evaluateAttempt` updated to accept `AttemptDetail`.
+
