@@ -70,22 +70,25 @@ void main() {
   );
 
   group('NoteHitResult and AttemptDetail models', () {
-    test('wrongPitch note hit result preserves details and maps to missed state', () {
-      const wrong = NoteHitResult.wrongPitch(
-        noteIndex: 2,
-        playedMidiNote: 63,
-        timingError: -0.08,
-      );
+    test(
+      'wrongPitch note hit result preserves details and maps to missed state',
+      () {
+        const wrong = NoteHitResult.wrongPitch(
+          noteIndex: 2,
+          playedMidiNote: 63,
+          timingError: -0.08,
+        );
 
-      expect(wrong.noteIndex, 2);
-      expect(wrong.playedMidiNote, 63);
-      expect(wrong.timingError, -0.08);
-      expect(wrong.noteState, NoteState.missed);
-      expect(wrong.score, 0.0);
-      expect(wrong.isHit, isFalse);
-      expect(wrong.isMissed, isFalse);
-      expect(wrong.isWrongPitch, isTrue);
-    });
+        expect(wrong.noteIndex, 2);
+        expect(wrong.playedMidiNote, 63);
+        expect(wrong.timingError, -0.08);
+        expect(wrong.noteState, NoteState.missed);
+        expect(wrong.score, 0.0);
+        expect(wrong.isHit, isFalse);
+        expect(wrong.isMissed, isFalse);
+        expect(wrong.isWrongPitch, isTrue);
+      },
+    );
 
     test('missed note hit result separates unplayed from wrong pitch', () {
       const missed = NoteHitResult.missed(noteIndex: 1);
@@ -100,40 +103,46 @@ void main() {
       expect(missed.isWrongPitch, isFalse);
     });
 
-    test('AttemptDetail.fromResults compiles note results and signed timing errors', () {
-      final allNotes = testLevel.measures.expand((m) => m.notes).toList();
-      final results = <int, NoteHitResult>{
-        0: const NoteHitResult.perfect(noteIndex: 0, timingError: -0.02),
-        1: const NoteHitResult.wrongPitch(
-          noteIndex: 1,
-          playedMidiNote: 63,
-          timingError: 0.12,
-        ),
-        2: const NoteHitResult.good(noteIndex: 2, timingError: 0.09),
-        3: const NoteHitResult.missed(noteIndex: 3),
-      };
+    test(
+      'AttemptDetail.fromResults compiles note results and signed timing errors',
+      () {
+        final allNotes = testLevel.measures.expand((m) => m.notes).toList();
+        final results = <int, NoteHitResult>{
+          0: const NoteHitResult.perfect(noteIndex: 0, timingError: -0.02),
+          1: const NoteHitResult.wrongPitch(
+            noteIndex: 1,
+            playedMidiNote: 63,
+            timingError: 0.12,
+          ),
+          2: const NoteHitResult.good(noteIndex: 2, timingError: 0.09),
+          3: const NoteHitResult.missed(noteIndex: 3),
+        };
 
-      final detail = AttemptDetail.fromResults(
-        allNotes: allNotes,
-        noteResults: results,
-        handSelection: HandSelection.both,
-        score: 175,
-      );
+        final detail = AttemptDetail.fromResults(
+          allNotes: allNotes,
+          noteResults: results,
+          handSelection: HandSelection.both,
+          score: 175,
+        );
 
-      expect(detail.totalNotes, 4);
-      expect(detail.hitNotes, 2);
-      expect(detail.wrongPitchNotes, 1);
-      expect(detail.missedNotes, 1);
-      expect(detail.accuracy, 0.5);
-      expect(detail.score, 175);
-      expect(detail.hasErrors, isTrue);
-      expect(detail.hasWrongPitches, isTrue);
-      expect(detail.hasMissedExpected, isTrue);
-      expect(detail.signedTimingErrors, [-0.02, 0.12, 0.09]);
-      expect(detail.averageTimingError, closeTo((-0.02 + 0.12 + 0.09) / 3, 0.0001));
-      expect(detail.wrongPitchMeasureIndices, [0]);
-      expect(detail.missedMeasureIndices, [1]);
-    });
+        expect(detail.totalNotes, 4);
+        expect(detail.hitNotes, 2);
+        expect(detail.wrongPitchNotes, 1);
+        expect(detail.missedNotes, 1);
+        expect(detail.accuracy, 0.5);
+        expect(detail.score, 175);
+        expect(detail.hasErrors, isTrue);
+        expect(detail.hasWrongPitches, isTrue);
+        expect(detail.hasMissedExpected, isTrue);
+        expect(detail.signedTimingErrors, [-0.02, 0.12, 0.09]);
+        expect(
+          detail.averageTimingError,
+          closeTo((-0.02 + 0.12 + 0.09) / 3, 0.0001),
+        );
+        expect(detail.wrongPitchMeasureIndices, [0]);
+        expect(detail.missedMeasureIndices, [1]);
+      },
+    );
 
     test('TimingAdvice evaluates from AttemptDetail', () {
       final allNotes = testLevel.measures.expand((m) => m.notes).toList();
@@ -160,80 +169,79 @@ void main() {
   });
 
   group('StageEngine - Preserve attempt detail and separate missed from wrong pitch', () {
-    test(
-      'separates missed expected note from confirmed wrong pitch',
-      () async {
-        final engine = StageEngine(
-          level: testLevel,
-          config: const StageEngineConfig(
-            playbackSpeed: 50.0,
-            countInEnabled: false,
-          ),
-        );
-        addTearDown(engine.dispose);
+    test('separates missed expected note from confirmed wrong pitch', () async {
+      final engine = StageEngine(
+        level: testLevel,
+        config: const StageEngineConfig(
+          playbackSpeed: 50.0,
+          countInEnabled: false,
+        ),
+      );
+      addTearDown(engine.dispose);
 
-        final completion = engine.events
-            .where((e) => e.maybeMap(stageCompleted: (_) => true, orElse: () => false))
-            .first;
+      final completion = engine.events
+          .where(
+            (e) => e.maybeMap(stageCompleted: (_) => true, orElse: () => false),
+          )
+          .first;
 
-        engine.start();
+      engine.start();
 
-        // Note 0 (C4 at beat 1.0): strike wrong pitch D#4 (63) at beat 1.05
-        engine.seekToBeat(1.05);
-        engine.processPitchEvent(_strike(63, timestamp: 0.05));
+      // Note 0 (C4 at beat 1.0): strike wrong pitch D#4 (63) at beat 1.05
+      engine.seekToBeat(1.05);
+      engine.processPitchEvent(_strike(63, timestamp: 0.05));
 
-        expect(engine.state.noteStates[0], NoteState.missed);
-        expect(engine.noteResults[0], isA<NoteHitResult>());
-        final res0 = engine.noteResults[0]!;
-        expect(res0.isWrongPitch, isTrue);
-        expect(res0.isMissed, isFalse);
-        expect(res0.playedMidiNote, 63);
-        expect(res0.timingError, closeTo(0.05, 0.001));
+      expect(engine.state.noteStates[0], NoteState.missed);
+      expect(engine.noteResults[0], isA<NoteHitResult>());
+      final res0 = engine.noteResults[0]!;
+      expect(res0.isWrongPitch, isTrue);
+      expect(res0.isMissed, isFalse);
+      expect(res0.playedMidiNote, 63);
+      expect(res0.timingError, closeTo(0.05, 0.001));
 
-        // Note 1 (D4 at beat 3.0): hit correctly at beat 2.95 (timingError = -0.05)
-        engine.seekToBeat(2.95);
-        engine.processPitchEvent(_strike(62, timestamp: 0.1));
+      // Note 1 (D4 at beat 3.0): hit correctly at beat 2.95 (timingError = -0.05)
+      engine.seekToBeat(2.95);
+      engine.processPitchEvent(_strike(62, timestamp: 0.1));
 
-        expect(engine.state.noteStates[1], NoteState.hitPerfect);
-        final res1 = engine.noteResults[1]!;
-        expect(res1.isHit, isTrue);
-        expect(res1.timingError, closeTo(-0.05, 0.001));
+      expect(engine.state.noteStates[1], NoteState.hitPerfect);
+      final res1 = engine.noteResults[1]!;
+      expect(res1.isHit, isTrue);
+      expect(res1.timingError, closeTo(-0.05, 0.001));
 
-        // Note 2 (E4 at beat 5.0): leave unplayed, advance past miss window (5.0 + 0.5 = 5.5)
-        engine.seekToBeat(5.6);
+      // Note 2 (E4 at beat 5.0): leave unplayed, advance past miss window (5.0 + 0.5 = 5.5)
+      engine.seekToBeat(5.6);
 
-        expect(engine.state.noteStates[2], NoteState.missed);
-        final res2 = engine.noteResults[2]!;
-        expect(res2.isMissed, isTrue);
-        expect(res2.isWrongPitch, isFalse);
-        expect(res2.playedMidiNote, isNull);
-        expect(res2.timingError, isNull);
+      expect(engine.state.noteStates[2], NoteState.missed);
+      final res2 = engine.noteResults[2]!;
+      expect(res2.isMissed, isTrue);
+      expect(res2.isWrongPitch, isFalse);
+      expect(res2.playedMidiNote, isNull);
+      expect(res2.timingError, isNull);
 
-        // Note 3 (G4 at beat 7.0): hit correctly at beat 7.0
-        engine.seekToBeat(7.0);
-        engine.processPitchEvent(_strike(67, timestamp: 0.2));
+      // Note 3 (G4 at beat 7.0): hit correctly at beat 7.0
+      engine.seekToBeat(7.0);
+      engine.processPitchEvent(_strike(67, timestamp: 0.2));
 
-        expect(engine.state.noteStates[3], NoteState.hitPerfect);
+      expect(engine.state.noteStates[3], NoteState.hitPerfect);
 
-        // Advance to near end and wait for stage completion event
-        engine.seekToBeat(7.8);
-        await completion.timeout(const Duration(seconds: 1));
+      // Advance to near end and wait for stage completion event
+      engine.seekToBeat(7.8);
+      await completion.timeout(const Duration(seconds: 1));
 
-        expect(engine.state.engineState, StageEngineStatus.completed);
-        final detail = engine.attemptDetail;
-        expect(detail, isNotNull);
-        expect(detail!.totalNotes, 4);
-        expect(detail.hitNotes, 2);
-        expect(detail.wrongPitchNotes, 1);
-        expect(detail.missedNotes, 1);
-        expect(detail.accuracy, 0.5);
-        expect(detail.hasWrongPitches, isTrue);
-        expect(detail.hasMissedExpected, isTrue);
-        expect(detail.wrongPitchMeasureIndices, [0]);
-        expect(detail.missedMeasureIndices, [1]);
-        expect(detail.signedTimingErrors.length, 3); // 2 hits + 1 wrong pitch
-      },
-    );
+      expect(engine.state.engineState, StageEngineStatus.completed);
+      final detail = engine.attemptDetail;
+      expect(detail, isNotNull);
+      expect(detail!.totalNotes, 4);
+      expect(detail.hitNotes, 2);
+      expect(detail.wrongPitchNotes, 1);
+      expect(detail.missedNotes, 1);
+      expect(detail.accuracy, 0.5);
+      expect(detail.hasWrongPitches, isTrue);
+      expect(detail.hasMissedExpected, isTrue);
+      expect(detail.wrongPitchMeasureIndices, [0]);
+      expect(detail.missedMeasureIndices, [1]);
+      expect(detail.signedTimingErrors.length, 3); // 2 hits + 1 wrong pitch
+    });
 
     test(
       'scorer does not classify every unexpected pitch outside active hit window',
@@ -276,53 +284,59 @@ void main() {
       },
     );
 
-    test('stageCompleted event carries attemptDetail into results flow', () async {
-      final engine = StageEngine(
-        level: testLevel,
-        config: const StageEngineConfig(
-          playbackSpeed: 50.0,
-          countInEnabled: false,
-        ),
-      );
-      addTearDown(engine.dispose);
+    test(
+      'stageCompleted event carries attemptDetail into results flow',
+      () async {
+        final engine = StageEngine(
+          level: testLevel,
+          config: const StageEngineConfig(
+            playbackSpeed: 50.0,
+            countInEnabled: false,
+          ),
+        );
+        addTearDown(engine.dispose);
 
-      final completion = engine.events
-          .where((e) => e.maybeMap(stageCompleted: (_) => true, orElse: () => false))
-          .first;
+        final completion = engine.events
+            .where(
+              (e) =>
+                  e.maybeMap(stageCompleted: (_) => true, orElse: () => false),
+            )
+            .first;
 
-      engine.start();
+        engine.start();
 
-      // Note 0: wrong pitch
-      engine.seekToBeat(1.0);
-      engine.processPitchEvent(_strike(61)); // C#4 instead of C4
+        // Note 0: wrong pitch
+        engine.seekToBeat(1.0);
+        engine.processPitchEvent(_strike(61)); // C#4 instead of C4
 
-      // Note 1: hit
-      engine.seekToBeat(3.0);
-      engine.processPitchEvent(_strike(62));
+        // Note 1: hit
+        engine.seekToBeat(3.0);
+        engine.processPitchEvent(_strike(62));
 
-      // Note 2: unplayed missed
-      // Note 3: hit
-      engine.seekToBeat(7.0);
-      engine.processPitchEvent(_strike(67));
+        // Note 2: unplayed missed
+        // Note 3: hit
+        engine.seekToBeat(7.0);
+        engine.processPitchEvent(_strike(67));
 
-      // Finish piece
-      engine.seekToBeat(7.8);
-      final event = await completion.timeout(const Duration(seconds: 1));
+        // Finish piece
+        engine.seekToBeat(7.8);
+        final event = await completion.timeout(const Duration(seconds: 1));
 
-      AttemptDetail? receivedDetail;
-      event.whenOrNull(
-        stageCompleted: (acc, score, total, hit, attemptDetail) {
-          receivedDetail = attemptDetail;
-        },
-      );
+        AttemptDetail? receivedDetail;
+        event.whenOrNull(
+          stageCompleted: (acc, score, total, hit, attemptDetail) {
+            receivedDetail = attemptDetail;
+          },
+        );
 
-      expect(receivedDetail, isNotNull);
-      expect(receivedDetail!.totalNotes, 4);
-      expect(receivedDetail!.hitNotes, 2);
-      expect(receivedDetail!.wrongPitchNotes, 1);
-      expect(receivedDetail!.missedNotes, 1);
-      expect(receivedDetail!.accuracy, 0.5);
-    });
+        expect(receivedDetail, isNotNull);
+        expect(receivedDetail!.totalNotes, 4);
+        expect(receivedDetail!.hitNotes, 2);
+        expect(receivedDetail!.wrongPitchNotes, 1);
+        expect(receivedDetail!.missedNotes, 1);
+        expect(receivedDetail!.accuracy, 0.5);
+      },
+    );
 
     test('loopPassCompleted carries attemptDetail for repeat loops', () async {
       final engine = StageEngine(
@@ -335,7 +349,10 @@ void main() {
       addTearDown(engine.dispose);
 
       final loopCompleted = engine.events
-          .where((e) => e.maybeMap(loopPassCompleted: (_) => true, orElse: () => false))
+          .where(
+            (e) =>
+                e.maybeMap(loopPassCompleted: (_) => true, orElse: () => false),
+          )
           .first;
 
       // Loop measure 0 (beats [0, 4))

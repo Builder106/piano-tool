@@ -167,8 +167,7 @@ class DifficultyAssistanceEvaluator {
       message =
           'Try practicing at ${(suggestedSpeed * 100).round()}% speed or focusing on $rangeStr.';
     } else if (suggestedSpeed != null) {
-      message =
-          'Try slowing down to ${(suggestedSpeed * 100).round()}% speed.';
+      message = 'Try slowing down to ${(suggestedSpeed * 100).round()}% speed.';
     } else {
       final rangeStr = suggestedPhrase!.$1 == suggestedPhrase.$2
           ? 'measure ${suggestedPhrase.$1 + 1}'

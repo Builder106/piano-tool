@@ -538,8 +538,7 @@ class StageController extends StateNotifier<StageUiState> {
   void applySlowerSpeed() {
     final offer = state.assistanceOffer;
     if (offer == null || offer.suggestedSpeed == null) return;
-    final originalSpeed =
-        state.appliedAssistance?.originalSpeed ?? state.speed;
+    final originalSpeed = state.appliedAssistance?.originalSpeed ?? state.speed;
     final originalStart =
         state.appliedAssistance?.originalStartMeasure ?? state.loopRange?.$1;
     final originalEnd =
@@ -565,8 +564,7 @@ class StageController extends StateNotifier<StageUiState> {
   void applyShorterPhrase() {
     final offer = state.assistanceOffer;
     if (offer == null || offer.suggestedLoopRange == null) return;
-    final originalSpeed =
-        state.appliedAssistance?.originalSpeed ?? state.speed;
+    final originalSpeed = state.appliedAssistance?.originalSpeed ?? state.speed;
     final originalStart =
         state.appliedAssistance?.originalStartMeasure ?? state.loopRange?.$1;
     final originalEnd =
@@ -590,8 +588,7 @@ class StageController extends StateNotifier<StageUiState> {
   void applyAssistance({bool speed = true, bool phrase = true}) {
     final offer = state.assistanceOffer;
     if (offer == null) return;
-    final originalSpeed =
-        state.appliedAssistance?.originalSpeed ?? state.speed;
+    final originalSpeed = state.appliedAssistance?.originalSpeed ?? state.speed;
     final originalStart =
         state.appliedAssistance?.originalStartMeasure ?? state.loopRange?.$1;
     final originalEnd =
@@ -949,17 +946,18 @@ class StageController extends StateNotifier<StageUiState> {
         });
         _handleAttemptFinished(accuracy: accuracy, totalNotes: totalNotes);
       },
-      loopPassCompleted: (
-        accuracy,
-        score,
-        totalNotes,
-        hitNotes,
-        loopStart,
-        loopEnd,
-        attemptDetail,
-      ) {
-        _handleAttemptFinished(accuracy: accuracy, totalNotes: totalNotes);
-      },
+      loopPassCompleted:
+          (
+            accuracy,
+            score,
+            totalNotes,
+            hitNotes,
+            loopStart,
+            loopEnd,
+            attemptDetail,
+          ) {
+            _handleAttemptFinished(accuracy: accuracy, totalNotes: totalNotes);
+          },
       beat: (beat, beatType, measureIndex, beatInMeasure, isCountIn) {
         if (_engine.isMetronomeEnabled || isCountIn) {
           unawaited(_synth.playMetronomeClick(type: beatType));
@@ -1332,19 +1330,17 @@ final appliedAssistanceProvider = Provider.autoDispose
       ),
     );
 
-final isAssistanceAvailableProvider = Provider.autoDispose
-    .family<bool, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.isAssistanceAvailable),
-      ),
-    );
+final isAssistanceAvailableProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) => ref.watch(
+    stageControllerProvider(id).select((s) => s.isAssistanceAvailable),
+  ),
+);
 
-final isAssistanceActiveProvider = Provider.autoDispose
-    .family<bool, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.isAssistanceActive),
-      ),
-    );
+final isAssistanceActiveProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) => ref.watch(
+    stageControllerProvider(id).select((s) => s.isAssistanceActive),
+  ),
+);
 
 final consecutiveUnsuccessfulAttemptsProvider = Provider.autoDispose
     .family<int, String>(
@@ -1357,16 +1353,14 @@ final consecutiveUnsuccessfulAttemptsProvider = Provider.autoDispose
 
 final noteResultsProvider = Provider.autoDispose
     .family<Map<int, NoteHitResult>, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.noteResults),
-      ),
+      (ref, id) =>
+          ref.watch(stageControllerProvider(id).select((s) => s.noteResults)),
     );
 
 final attemptDetailProvider = Provider.autoDispose
     .family<AttemptDetail?, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.attemptDetail),
-      ),
+      (ref, id) =>
+          ref.watch(stageControllerProvider(id).select((s) => s.attemptDetail)),
     );
 
 final signedTimingErrorsProvider = Provider.autoDispose
@@ -1376,19 +1370,16 @@ final signedTimingErrorsProvider = Provider.autoDispose
       ),
     );
 
-final missedExpectedCountProvider = Provider.autoDispose
-    .family<int, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.missedExpectedCount),
-      ),
-    );
+final missedExpectedCountProvider = Provider.autoDispose.family<int, String>(
+  (ref, id) => ref.watch(
+    stageControllerProvider(id).select((s) => s.missedExpectedCount),
+  ),
+);
 
-final wrongPitchCountProvider = Provider.autoDispose
-    .family<int, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.wrongPitchCount),
-      ),
-    );
+final wrongPitchCountProvider = Provider.autoDispose.family<int, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.wrongPitchCount)),
+);
 
 final difficultMeasureRangeProvider = Provider.autoDispose
     .family<(int, int)?, String>(
@@ -1404,24 +1395,18 @@ final specificObservationProvider = Provider.autoDispose
       ),
     );
 
-final isAbandonedOrEmptyProvider = Provider.autoDispose
-    .family<bool, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.isAbandonedOrEmpty),
-      ),
-    );
+final isAbandonedOrEmptyProvider = Provider.autoDispose.family<bool, String>(
+  (ref, id) => ref.watch(
+    stageControllerProvider(id).select((s) => s.isAbandonedOrEmpty),
+  ),
+);
 
-final nextStageIdProvider = Provider.autoDispose
-    .family<String?, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.nextStageId),
-      ),
-    );
+final nextStageIdProvider = Provider.autoDispose.family<String?, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.nextStageId)),
+);
 
-final nextStageTitleProvider = Provider.autoDispose
-    .family<String?, String>(
-      (ref, id) => ref.watch(
-        stageControllerProvider(id).select((s) => s.nextStageTitle),
-      ),
-    );
-
+final nextStageTitleProvider = Provider.autoDispose.family<String?, String>(
+  (ref, id) =>
+      ref.watch(stageControllerProvider(id).select((s) => s.nextStageTitle)),
+);

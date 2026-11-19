@@ -572,104 +572,113 @@ void main() {
       expect(s.accessibleDescription, contains('Score: 0, accuracy: 0%'));
     });
 
-    test('setPracticeMode and togglePracticeMode update controller and state', () {
-      final c = harness();
-      addTearDown(c.dispose);
-      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+    test(
+      'setPracticeMode and togglePracticeMode update controller and state',
+      () {
+        final c = harness();
+        addTearDown(c.dispose);
+        final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-      ctrl.setPracticeMode(PracticeMode.waiting);
-      var s = c.read(stageControllerProvider('stage_1'));
-      expect(s.practiceMode, PracticeMode.waiting);
-      expect(s.isWaitingMode, isTrue);
-      expect(ctrl.practiceMode, PracticeMode.waiting);
+        ctrl.setPracticeMode(PracticeMode.waiting);
+        var s = c.read(stageControllerProvider('stage_1'));
+        expect(s.practiceMode, PracticeMode.waiting);
+        expect(s.isWaitingMode, isTrue);
+        expect(ctrl.practiceMode, PracticeMode.waiting);
 
-      ctrl.togglePracticeMode();
-      s = c.read(stageControllerProvider('stage_1'));
-      expect(s.practiceMode, PracticeMode.timed);
-      expect(s.isTimedMode, isTrue);
+        ctrl.togglePracticeMode();
+        s = c.read(stageControllerProvider('stage_1'));
+        expect(s.practiceMode, PracticeMode.timed);
+        expect(s.isTimedMode, isTrue);
 
-      ctrl.togglePracticeMode();
-      s = c.read(stageControllerProvider('stage_1'));
-      expect(s.practiceMode, PracticeMode.waiting);
-    });
+        ctrl.togglePracticeMode();
+        s = c.read(stageControllerProvider('stage_1'));
+        expect(s.practiceMode, PracticeMode.waiting);
+      },
+    );
 
-    test('waiting mode provides contextual hints and accessible descriptions during practice', () async {
-      final c = harness();
-      addTearDown(c.dispose);
-      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+    test(
+      'waiting mode provides contextual hints and accessible descriptions during practice',
+      () async {
+        final c = harness();
+        addTearDown(c.dispose);
+        final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-      ctrl.setPracticeMode(PracticeMode.waiting);
-      await ctrl.start();
+        ctrl.setPracticeMode(PracticeMode.waiting);
+        await ctrl.start();
 
-      final s = c.read(stageControllerProvider('stage_1'));
-      expect(s.status, StageEngineStatus.playing);
-      expect(s.waitingHint, isNotNull);
-      expect(s.waitingHint!.hintText, contains('Play'));
-      expect(s.accessibleDescription, contains('Waiting mode: Playing.'));
-      expect(s.accessibleDescription, contains(s.waitingHint!.hintText));
-      expect(s.score, 0);
+        final s = c.read(stageControllerProvider('stage_1'));
+        expect(s.status, StageEngineStatus.playing);
+        expect(s.waitingHint, isNotNull);
+        expect(s.waitingHint!.hintText, contains('Play'));
+        expect(s.accessibleDescription, contains('Waiting mode: Playing.'));
+        expect(s.accessibleDescription, contains(s.waitingHint!.hintText));
+        expect(s.score, 0);
 
-      // Strike a wrong note (e.g. MIDI 62 if stage 1 starts on 60)
-      final expectedMidi = s.waitingHint!.targetMidiNotes.first;
-      final wrongMidi = expectedMidi + 2;
+        // Strike a wrong note (e.g. MIDI 62 if stage 1 starts on 60)
+        final expectedMidi = s.waitingHint!.targetMidiNotes.first;
+        final wrongMidi = expectedMidi + 2;
 
-      ctrl.onPitch(
-        PitchEvent(
-          frequency: 300.0,
-          confidence: 0.9,
-          midiNote: wrongMidi,
-          timestamp: 0.0,
-          volume: 0.8,
-          struck: true,
-        ),
-      );
+        ctrl.onPitch(
+          PitchEvent(
+            frequency: 300.0,
+            confidence: 0.9,
+            midiNote: wrongMidi,
+            timestamp: 0.0,
+            volume: 0.8,
+            struck: true,
+          ),
+        );
 
-      final wrongState = c.read(stageControllerProvider('stage_1'));
-      expect(wrongState.waitingHint!.heardWrongMidiNote, wrongMidi);
-      expect(wrongState.accessibleDescription, contains('Heard'));
-      expect(wrongState.accessibleDescription, contains('Waiting for'));
-      expect(wrongState.score, 0);
+        final wrongState = c.read(stageControllerProvider('stage_1'));
+        expect(wrongState.waitingHint!.heardWrongMidiNote, wrongMidi);
+        expect(wrongState.accessibleDescription, contains('Heard'));
+        expect(wrongState.accessibleDescription, contains('Waiting for'));
+        expect(wrongState.score, 0);
 
-      // Now strike the correct expected note
-      ctrl.onPitch(
-        PitchEvent(
-          frequency: 261.63,
-          confidence: 0.9,
-          midiNote: expectedMidi,
-          timestamp: 0.1,
-          volume: 0.8,
-          struck: true,
-        ),
-      );
+        // Now strike the correct expected note
+        ctrl.onPitch(
+          PitchEvent(
+            frequency: 261.63,
+            confidence: 0.9,
+            midiNote: expectedMidi,
+            timestamp: 0.1,
+            volume: 0.8,
+            struck: true,
+          ),
+        );
 
-      final hitState = c.read(stageControllerProvider('stage_1'));
-      // Hit count incremented, score remains 0 ("without awarding a timed score")
-      expect(hitState.score, 0);
-      expect(hitState.waitingHint!.heardWrongMidiNote, isNull);
-    });
+        final hitState = c.read(stageControllerProvider('stage_1'));
+        // Hit count incremented, score remains 0 ("without awarding a timed score")
+        expect(hitState.score, 0);
+        expect(hitState.waitingHint!.heardWrongMidiNote, isNull);
+      },
+    );
 
-    test('practiceModeProvider, waitingHintProvider, and accessibleDescriptionProvider update reactively', () async {
-      final c = harness();
-      addTearDown(c.dispose);
-      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+    test(
+      'practiceModeProvider, waitingHintProvider, and accessibleDescriptionProvider update reactively',
+      () async {
+        final c = harness();
+        addTearDown(c.dispose);
+        final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-      expect(c.read(practiceModeProvider('stage_1')), PracticeMode.timed);
-      expect(c.read(waitingHintProvider('stage_1')), isNull);
-      expect(
-        c.read(accessibleDescriptionProvider('stage_1')),
-        contains('Timed mode'),
-      );
+        expect(c.read(practiceModeProvider('stage_1')), PracticeMode.timed);
+        expect(c.read(waitingHintProvider('stage_1')), isNull);
+        expect(
+          c.read(accessibleDescriptionProvider('stage_1')),
+          contains('Timed mode'),
+        );
 
-      ctrl.setPracticeMode(PracticeMode.waiting);
-      await ctrl.start();
+        ctrl.setPracticeMode(PracticeMode.waiting);
+        await ctrl.start();
 
-      expect(c.read(practiceModeProvider('stage_1')), PracticeMode.waiting);
-      expect(c.read(waitingHintProvider('stage_1')), isNotNull);
-      expect(
-        c.read(accessibleDescriptionProvider('stage_1')),
-        contains('Waiting mode'),
-      );
-    });
+        expect(c.read(practiceModeProvider('stage_1')), PracticeMode.waiting);
+        expect(c.read(waitingHintProvider('stage_1')), isNotNull);
+        expect(
+          c.read(accessibleDescriptionProvider('stage_1')),
+          contains('Waiting mode'),
+        );
+      },
+    );
   });
 
   group('metronome, count-in, and effective BPM', () {
@@ -679,130 +688,157 @@ void main() {
       final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
       expect(ctrl.isMetronomeEnabled, isFalse);
-      expect(c.read(stageControllerProvider('stage_1')).isMetronomeEnabled, isFalse);
+      expect(
+        c.read(stageControllerProvider('stage_1')).isMetronomeEnabled,
+        isFalse,
+      );
 
       ctrl.setMetronome(true);
       expect(ctrl.isMetronomeEnabled, isTrue);
-      expect(c.read(stageControllerProvider('stage_1')).isMetronomeEnabled, isTrue);
+      expect(
+        c.read(stageControllerProvider('stage_1')).isMetronomeEnabled,
+        isTrue,
+      );
 
       ctrl.toggleMetronome();
       expect(ctrl.isMetronomeEnabled, isFalse);
-      expect(c.read(stageControllerProvider('stage_1')).isMetronomeEnabled, isFalse);
+      expect(
+        c.read(stageControllerProvider('stage_1')).isMetronomeEnabled,
+        isFalse,
+      );
 
       expect(ctrl.isCountInEnabled, isFalse);
-      expect(c.read(stageControllerProvider('stage_1')).isCountInEnabled, isFalse);
+      expect(
+        c.read(stageControllerProvider('stage_1')).isCountInEnabled,
+        isFalse,
+      );
 
       ctrl.setCountIn(true);
       expect(ctrl.isCountInEnabled, isTrue);
-      expect(c.read(stageControllerProvider('stage_1')).isCountInEnabled, isTrue);
+      expect(
+        c.read(stageControllerProvider('stage_1')).isCountInEnabled,
+        isTrue,
+      );
 
       ctrl.toggleCountIn();
       expect(ctrl.isCountInEnabled, isFalse);
-      expect(c.read(stageControllerProvider('stage_1')).isCountInEnabled, isFalse);
-    });
-
-    test('effective BPM, effective tempo, and speed multiplier label reflect tempo and speed', () {
-      final c = harness();
-      addTearDown(c.dispose);
-      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
-
-      final state = c.read(stageControllerProvider('stage_1'));
-      final baseTempo = state.level.tempo;
-
-      expect(state.effectiveBpm, baseTempo);
-      expect(state.effectiveTempo, baseTempo.toDouble());
       expect(
-        state.speedMultiplierLabel,
-        'Speed 100% ($baseTempo BPM)',
-      );
-      expect(
-        state.accessibleDescription,
-        contains('Speed 100% ($baseTempo BPM)'),
-      );
-
-      ctrl.setSpeed(0.75);
-      final state75 = c.read(stageControllerProvider('stage_1'));
-      final expectedBpm75 = (baseTempo * 0.75).round();
-      expect(state75.effectiveBpm, expectedBpm75);
-      expect(
-        state75.speedMultiplierLabel,
-        'Speed 75% ($expectedBpm75 BPM)',
-      );
-      expect(
-        state75.accessibleDescription,
-        contains('Speed 75% ($expectedBpm75 BPM)'),
+        c.read(stageControllerProvider('stage_1')).isCountInEnabled,
+        isFalse,
       );
     });
 
-    test('count-in suspends microphone scoring and describes count-in state', () async {
-      final player = SilentAudioTonePlayer();
-      final synth = AudioSynthesizer(player: player);
-      final c = harness(synth: synth);
-      addTearDown(c.dispose);
-      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+    test(
+      'effective BPM, effective tempo, and speed multiplier label reflect tempo and speed',
+      () {
+        final c = harness();
+        addTearDown(c.dispose);
+        final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-      ctrl.setCountIn(true);
-      await ctrl.start();
+        final state = c.read(stageControllerProvider('stage_1'));
+        final baseTempo = state.level.tempo;
 
-      final state = c.read(stageControllerProvider('stage_1'));
-      expect(state.isCountingIn, isTrue);
-      expect(ctrl.isCountingIn, isTrue);
-      expect(ctrl.isMicrophoneScoringActive, isFalse);
-      expect(state.countInBeat, 1);
-      expect(state.countInTotalBeats, state.level.beatsPerMeasure);
-      expect(
-        state.accessibleDescription,
-        contains('Count-in: Beat 1 of ${state.level.beatsPerMeasure}'),
-      );
-      expect(
-        state.accessibleDescription,
-        contains('BPM)'),
-      );
-    });
+        expect(state.effectiveBpm, baseTempo);
+        expect(state.effectiveTempo, baseTempo.toDouble());
+        expect(state.speedMultiplierLabel, 'Speed 100% ($baseTempo BPM)');
+        expect(
+          state.accessibleDescription,
+          contains('Speed 100% ($baseTempo BPM)'),
+        );
 
-    test('sounds metronome click through AudioSynthesizer on beat events', () async {
-      final player = SilentAudioTonePlayer();
-      final synth = AudioSynthesizer(player: player);
-      final c = harness(synth: synth);
-      addTearDown(c.dispose);
+        ctrl.setSpeed(0.75);
+        final state75 = c.read(stageControllerProvider('stage_1'));
+        final expectedBpm75 = (baseTempo * 0.75).round();
+        expect(state75.effectiveBpm, expectedBpm75);
+        expect(state75.speedMultiplierLabel, 'Speed 75% ($expectedBpm75 BPM)');
+        expect(
+          state75.accessibleDescription,
+          contains('Speed 75% ($expectedBpm75 BPM)'),
+        );
+      },
+    );
 
-      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
-      ctrl.setMetronome(true);
+    test(
+      'count-in suspends microphone scoring and describes count-in state',
+      () async {
+        final player = SilentAudioTonePlayer();
+        final synth = AudioSynthesizer(player: player);
+        final c = harness(synth: synth);
+        addTearDown(c.dispose);
+        final ctrl = c.read(stageControllerProvider('stage_1').notifier);
 
-      expect(player.playCount, 0);
-      await ctrl.start();
+        ctrl.setCountIn(true);
+        await ctrl.start();
 
-      // On start with metronome enabled, downbeat beat event triggers a click
-      await Future<void>.delayed(Duration.zero);
-      expect(player.playCount, greaterThanOrEqualTo(1));
-    });
+        final state = c.read(stageControllerProvider('stage_1'));
+        expect(state.isCountingIn, isTrue);
+        expect(ctrl.isCountingIn, isTrue);
+        expect(ctrl.isMicrophoneScoringActive, isFalse);
+        expect(state.countInBeat, 1);
+        expect(state.countInTotalBeats, state.level.beatsPerMeasure);
+        expect(
+          state.accessibleDescription,
+          contains('Count-in: Beat 1 of ${state.level.beatsPerMeasure}'),
+        );
+        expect(state.accessibleDescription, contains('BPM)'));
+      },
+    );
 
-    test('derived providers reactively expose metronome, count-in, and effective BPM slices', () async {
-      final player = SilentAudioTonePlayer();
-      final synth = AudioSynthesizer(player: player);
-      final c = harness(synth: synth);
-      addTearDown(c.dispose);
-      final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+    test(
+      'sounds metronome click through AudioSynthesizer on beat events',
+      () async {
+        final player = SilentAudioTonePlayer();
+        final synth = AudioSynthesizer(player: player);
+        final c = harness(synth: synth);
+        addTearDown(c.dispose);
 
-      final baseTempo = c.read(stageControllerProvider('stage_1')).level.tempo;
-      expect(c.read(effectiveBpmProvider('stage_1')), baseTempo);
-      expect(c.read(isMetronomeEnabledProvider('stage_1')), isFalse);
-      expect(c.read(isCountInEnabledProvider('stage_1')), isFalse);
-      expect(c.read(isCountingInProvider('stage_1')), isFalse);
-      expect(c.read(countInBeatProvider('stage_1')), isNull);
+        final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+        ctrl.setMetronome(true);
 
-      ctrl.setMetronome(true);
-      ctrl.setCountIn(true);
-      ctrl.setSpeed(0.5);
+        expect(player.playCount, 0);
+        await ctrl.start();
 
-      expect(c.read(isMetronomeEnabledProvider('stage_1')), isTrue);
-      expect(c.read(isCountInEnabledProvider('stage_1')), isTrue);
-      expect(c.read(effectiveBpmProvider('stage_1')), (baseTempo * 0.5).round());
+        // On start with metronome enabled, downbeat beat event triggers a click
+        await Future<void>.delayed(Duration.zero);
+        expect(player.playCount, greaterThanOrEqualTo(1));
+      },
+    );
 
-      await ctrl.start();
-      expect(c.read(isCountingInProvider('stage_1')), isTrue);
-      expect(c.read(countInBeatProvider('stage_1')), 1);
-    });
+    test(
+      'derived providers reactively expose metronome, count-in, and effective BPM slices',
+      () async {
+        final player = SilentAudioTonePlayer();
+        final synth = AudioSynthesizer(player: player);
+        final c = harness(synth: synth);
+        addTearDown(c.dispose);
+        final ctrl = c.read(stageControllerProvider('stage_1').notifier);
+
+        final baseTempo = c
+            .read(stageControllerProvider('stage_1'))
+            .level
+            .tempo;
+        expect(c.read(effectiveBpmProvider('stage_1')), baseTempo);
+        expect(c.read(isMetronomeEnabledProvider('stage_1')), isFalse);
+        expect(c.read(isCountInEnabledProvider('stage_1')), isFalse);
+        expect(c.read(isCountingInProvider('stage_1')), isFalse);
+        expect(c.read(countInBeatProvider('stage_1')), isNull);
+
+        ctrl.setMetronome(true);
+        ctrl.setCountIn(true);
+        ctrl.setSpeed(0.5);
+
+        expect(c.read(isMetronomeEnabledProvider('stage_1')), isTrue);
+        expect(c.read(isCountInEnabledProvider('stage_1')), isTrue);
+        expect(
+          c.read(effectiveBpmProvider('stage_1')),
+          (baseTempo * 0.5).round(),
+        );
+
+        await ctrl.start();
+        expect(c.read(isCountingInProvider('stage_1')), isTrue);
+        expect(c.read(countInBeatProvider('stage_1')), 1);
+      },
+    );
   });
 }
 

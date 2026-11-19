@@ -398,9 +398,10 @@ void main() {
         StageEvent? completedEvent;
         engine.events.listen((e) {
           e.whenOrNull(
-            stageCompleted: (accuracy, score, totalNotes, hitNotes, attemptDetail) {
-              completedEvent = e;
-            },
+            stageCompleted:
+                (accuracy, score, totalNotes, hitNotes, attemptDetail) {
+                  completedEvent = e;
+                },
           );
         });
 
@@ -418,12 +419,13 @@ void main() {
 
         expect(completedEvent, isNotNull);
         completedEvent!.whenOrNull(
-          stageCompleted: (accuracy, score, totalNotes, hitNotes, attemptDetail) {
-            expect(totalNotes, 3); // exactly 3 right hand notes
-            expect(hitNotes, 3);
-            expect(accuracy, 1.0); // 100% accuracy
-            expect(score, 0); // waiting mode awards 0 timed score
-          },
+          stageCompleted:
+              (accuracy, score, totalNotes, hitNotes, attemptDetail) {
+                expect(totalNotes, 3); // exactly 3 right hand notes
+                expect(hitNotes, 3);
+                expect(accuracy, 1.0); // 100% accuracy
+                expect(score, 0); // waiting mode awards 0 timed score
+              },
         );
       },
     );

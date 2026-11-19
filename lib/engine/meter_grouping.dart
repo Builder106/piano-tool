@@ -30,7 +30,8 @@ class MeterGrouping {
     required int beatInMeasure,
   }) {
     final measureLength = beatsPerMeasure > 0 ? beatsPerMeasure : 4;
-    final normalized = (beatInMeasure % measureLength + measureLength) % measureLength;
+    final normalized =
+        (beatInMeasure % measureLength + measureLength) % measureLength;
 
     if (normalized == 0) {
       return MetronomeBeatType.downbeat;

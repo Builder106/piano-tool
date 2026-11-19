@@ -80,65 +80,74 @@ void main() {
       expect(obsAbandoned.nextStageId, isNull);
     });
 
-    test('derives single-bar difficult measure range and missed note observation', () {
-      final obs = ResultsObservationEvaluator.evaluate(
-        noteStates: const [
-          NoteState.hitPerfect,
-          NoteState.missed,
-          NoteState.hitGood,
-          NoteState.hitOkay,
-        ],
-        measureOfNote: const [0, 1, 2, 3],
-      );
+    test(
+      'derives single-bar difficult measure range and missed note observation',
+      () {
+        final obs = ResultsObservationEvaluator.evaluate(
+          noteStates: const [
+            NoteState.hitPerfect,
+            NoteState.missed,
+            NoteState.hitGood,
+            NoteState.hitOkay,
+          ],
+          measureOfNote: const [0, 1, 2, 3],
+        );
 
-      expect(obs.isAbandonedOrEmpty, isFalse);
-      expect(obs.difficultMeasureRange, (1, 1));
-      expect(obs.worstMeasure, 1);
-      expect(obs.observation, contains('Bar 2'));
-      expect(obs.observation, contains('missed'));
-    });
+        expect(obs.isAbandonedOrEmpty, isFalse);
+        expect(obs.difficultMeasureRange, (1, 1));
+        expect(obs.worstMeasure, 1);
+        expect(obs.observation, contains('Bar 2'));
+        expect(obs.observation, contains('missed'));
+      },
+    );
 
-    test('derives multi-measure contiguous difficult range for adjacent error bars', () {
-      final obs = ResultsObservationEvaluator.evaluate(
-        noteStates: const [
-          NoteState.hitPerfect,
-          NoteState.missed,
-          NoteState.missed,
-          NoteState.hitPerfect,
-        ],
-        measureOfNote: const [0, 1, 2, 3],
-      );
+    test(
+      'derives multi-measure contiguous difficult range for adjacent error bars',
+      () {
+        final obs = ResultsObservationEvaluator.evaluate(
+          noteStates: const [
+            NoteState.hitPerfect,
+            NoteState.missed,
+            NoteState.missed,
+            NoteState.hitPerfect,
+          ],
+          measureOfNote: const [0, 1, 2, 3],
+        );
 
-      expect(obs.isAbandonedOrEmpty, isFalse);
-      expect(obs.difficultMeasureRange, (1, 2));
-      expect(obs.observation, contains('Bars 2–3'));
-    });
+        expect(obs.isAbandonedOrEmpty, isFalse);
+        expect(obs.difficultMeasureRange, (1, 2));
+        expect(obs.observation, contains('Bars 2–3'));
+      },
+    );
 
-    test('distinguishes confirmed wrong pitches from missed expected notes', () {
-      final noteResults = <int, NoteHitResult>{
-        0: const NoteHitResult.perfect(noteIndex: 0, timingError: 0.0),
-        1: const NoteHitResult.wrongPitch(
-          noteIndex: 1,
-          playedMidiNote: 63,
-          timingError: 0.02,
-        ),
-        2: const NoteHitResult.good(noteIndex: 2, timingError: 0.0),
-      };
+    test(
+      'distinguishes confirmed wrong pitches from missed expected notes',
+      () {
+        final noteResults = <int, NoteHitResult>{
+          0: const NoteHitResult.perfect(noteIndex: 0, timingError: 0.0),
+          1: const NoteHitResult.wrongPitch(
+            noteIndex: 1,
+            playedMidiNote: 63,
+            timingError: 0.02,
+          ),
+          2: const NoteHitResult.good(noteIndex: 2, timingError: 0.0),
+        };
 
-      final obs = ResultsObservationEvaluator.evaluate(
-        noteStates: const [
-          NoteState.hitPerfect,
-          NoteState.missed,
-          NoteState.hitGood,
-        ],
-        measureOfNote: const [0, 1, 2],
-        noteResults: noteResults,
-      );
+        final obs = ResultsObservationEvaluator.evaluate(
+          noteStates: const [
+            NoteState.hitPerfect,
+            NoteState.missed,
+            NoteState.hitGood,
+          ],
+          measureOfNote: const [0, 1, 2],
+          noteResults: noteResults,
+        );
 
-      expect(obs.isAbandonedOrEmpty, isFalse);
-      expect(obs.difficultMeasureRange, (1, 1));
-      expect(obs.observation, contains('Bar 2 had unexpected pitches'));
-    });
+        expect(obs.isAbandonedOrEmpty, isFalse);
+        expect(obs.difficultMeasureRange, (1, 1));
+        expect(obs.observation, contains('Bar 2 had unexpected pitches'));
+      },
+    );
 
     test('identifies rushing timing errors in missed phrase', () {
       final noteResults = <int, NoteHitResult>{

@@ -61,7 +61,8 @@ class RunSummary {
     }
 
     final resultsMap = noteResults ?? attemptDetail?.noteResultsMap ?? const {};
-    final timingErrors = attemptDetail?.signedTimingErrors ??
+    final timingErrors =
+        attemptDetail?.signedTimingErrors ??
         [
           for (final res in resultsMap.values)
             if (res.timingError != null) res.timingError!,

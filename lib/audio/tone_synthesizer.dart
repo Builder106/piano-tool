@@ -260,7 +260,8 @@ class ToneGenerator {
       final attack = i < attackSamples ? (i / attackSamples) : 1.0;
       final decay = math.exp(-decayFactor * t);
 
-      final sample = (math.sin(2 * math.pi * freq * t) * 0.8 +
+      final sample =
+          (math.sin(2 * math.pi * freq * t) * 0.8 +
               math.sin(4 * math.pi * freq * t) * 0.2) *
           attack *
           decay *

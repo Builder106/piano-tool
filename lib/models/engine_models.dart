@@ -191,7 +191,8 @@ sealed class NoteHitResult with _$NoteHitResult {
   const factory NoteHitResult.wrongPitch({
     required int noteIndex,
     required int playedMidiNote,
-    required double timingError, // signed beats (negative = early, positive = late)
+    required double
+    timingError, // signed beats (negative = early, positive = late)
   }) = _NoteHitResultWrongPitch;
 
   const factory NoteHitResult.waiting({required int noteIndex}) =
@@ -560,14 +561,14 @@ sealed class AssistanceOffer with _$AssistanceOffer {
   /// Current loop measure range at the time of the offer, or null for whole piece.
   (int, int)? get currentLoopRange =>
       currentStartMeasure != null && currentEndMeasure != null
-          ? (currentStartMeasure!, currentEndMeasure!)
-          : null;
+      ? (currentStartMeasure!, currentEndMeasure!)
+      : null;
 
   /// Suggested shorter phrase loop range, or null if no shorter phrase is applicable.
   (int, int)? get suggestedLoopRange =>
       suggestedStartMeasure != null && suggestedEndMeasure != null
-          ? (suggestedStartMeasure!, suggestedEndMeasure!)
-          : null;
+      ? (suggestedStartMeasure!, suggestedEndMeasure!)
+      : null;
 
   /// Whether a slower playback speed is suggested.
   bool get hasSlowerSpeed =>
@@ -598,14 +599,14 @@ sealed class AppliedAssistance with _$AppliedAssistance {
   /// Baseline loop measure range prior to applying assistance, or null if whole piece.
   (int, int)? get originalLoopRange =>
       originalStartMeasure != null && originalEndMeasure != null
-          ? (originalStartMeasure!, originalEndMeasure!)
-          : null;
+      ? (originalStartMeasure!, originalEndMeasure!)
+      : null;
 
   /// Active assisted loop measure range, or null if loop was not modified.
   (int, int)? get assistedLoopRange =>
       assistedStartMeasure != null && assistedEndMeasure != null
-          ? (assistedStartMeasure!, assistedEndMeasure!)
-          : null;
+      ? (assistedStartMeasure!, assistedEndMeasure!)
+      : null;
 
   /// Whether playback speed was modified by assistance.
   bool get isSpeedAssisted =>
@@ -617,4 +618,3 @@ sealed class AppliedAssistance with _$AppliedAssistance {
       (assistedStartMeasure != originalStartMeasure ||
           assistedEndMeasure != originalEndMeasure);
 }
-

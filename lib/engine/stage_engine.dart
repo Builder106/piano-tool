@@ -1026,8 +1026,9 @@ class StageEngine extends ChangeNotifier {
           )
           .length;
       final hitNotes = _state.hitCount;
-      final totalNotes =
-          loopNotes > 0 ? loopNotes : (hitNotes + _state.missCount);
+      final totalNotes = loopNotes > 0
+          ? loopNotes
+          : (hitNotes + _state.missCount);
       final accuracy = totalNotes > 0 ? hitNotes / totalNotes : 0.0;
       final detail = _buildAttemptDetail(loopRange: loop);
       _attemptDetail = detail;

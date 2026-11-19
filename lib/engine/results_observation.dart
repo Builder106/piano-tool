@@ -64,10 +64,13 @@ class ResultsObservationEvaluator {
           s == NoteState.hitOkay ||
           s == NoteState.missed,
     );
-    final hasAttemptResults = noteResults.isNotEmpty ||
+    final hasAttemptResults =
+        noteResults.isNotEmpty ||
         (attemptDetail != null && attemptDetail.totalNotes > 0);
 
-    if (isAbandoned || totalNotes == 0 || (!hasResolvedNotes && !hasAttemptResults)) {
+    if (isAbandoned ||
+        totalNotes == 0 ||
+        (!hasResolvedNotes && !hasAttemptResults)) {
       return const AttemptObservation(
         observation: '',
         difficultMeasureRange: null,
@@ -87,7 +90,9 @@ class ResultsObservationEvaluator {
 
     var rightCount = 0;
     for (final s in noteStates) {
-      if (s == NoteState.hitPerfect || s == NoteState.hitGood || s == NoteState.hitOkay) {
+      if (s == NoteState.hitPerfect ||
+          s == NoteState.hitGood ||
+          s == NoteState.hitOkay) {
         rightCount++;
       }
     }
@@ -101,19 +106,24 @@ class ResultsObservationEvaluator {
       if (res.timingError != null) {
         allTimingErrors.add(res.timingError!);
         if (measure != null) {
-          timingErrorsPerMeasure.putIfAbsent(measure, () => []).add(res.timingError!);
+          timingErrorsPerMeasure
+              .putIfAbsent(measure, () => [])
+              .add(res.timingError!);
         }
       }
 
       if (res.isMissed) {
         if (measure != null) {
           missesPerMeasure[measure] = (missesPerMeasure[measure] ?? 0) + 1;
-          totalErrorsPerMeasure[measure] = (totalErrorsPerMeasure[measure] ?? 0) + 1;
+          totalErrorsPerMeasure[measure] =
+              (totalErrorsPerMeasure[measure] ?? 0) + 1;
         }
       } else if (res.isWrongPitch) {
         if (measure != null) {
-          wrongPitchesPerMeasure[measure] = (wrongPitchesPerMeasure[measure] ?? 0) + 1;
-          totalErrorsPerMeasure[measure] = (totalErrorsPerMeasure[measure] ?? 0) + 1;
+          wrongPitchesPerMeasure[measure] =
+              (wrongPitchesPerMeasure[measure] ?? 0) + 1;
+          totalErrorsPerMeasure[measure] =
+              (totalErrorsPerMeasure[measure] ?? 0) + 1;
         }
       }
     }
@@ -125,7 +135,8 @@ class ResultsObservationEvaluator {
         final measure = i < measureOfNote.length ? measureOfNote[i] : null;
         if (state == NoteState.missed && measure != null) {
           missesPerMeasure[measure] = (missesPerMeasure[measure] ?? 0) + 1;
-          totalErrorsPerMeasure[measure] = (totalErrorsPerMeasure[measure] ?? 0) + 1;
+          totalErrorsPerMeasure[measure] =
+              (totalErrorsPerMeasure[measure] ?? 0) + 1;
         }
       }
     }
@@ -168,21 +179,26 @@ class ResultsObservationEvaluator {
       final maxMeasureInLevel = measureOfNote.isNotEmpty
           ? measureOfNote.reduce((a, b) => a > b ? a : b)
           : worstMeasure;
-      while (end < maxMeasureInLevel && totalErrorsPerMeasure.containsKey(end + 1)) {
+      while (end < maxMeasureInLevel &&
+          totalErrorsPerMeasure.containsKey(end + 1)) {
         end++;
       }
       difficultRange = (start, end);
     }
 
     final accuracy = totalNotes > 0 ? (rightCount / totalNotes) : 0.0;
-    final isSuccess = totalErrorsPerMeasure.isEmpty || accuracy >= passingAccuracyThreshold;
+    final isSuccess =
+        totalErrorsPerMeasure.isEmpty || accuracy >= passingAccuracyThreshold;
 
     // 4. Derive next stage if successful
     String? nextStageId;
     String? nextStageTitle;
     if (isSuccess && currentStageId != null && allStages.isNotEmpty) {
-      final sortedStages = [...allStages]..sort((a, b) => a.order.compareTo(b.order));
-      final currentIndex = sortedStages.indexWhere((s) => s.id == currentStageId);
+      final sortedStages = [...allStages]
+        ..sort((a, b) => a.order.compareTo(b.order));
+      final currentIndex = sortedStages.indexWhere(
+        (s) => s.id == currentStageId,
+      );
       if (currentIndex != -1 && currentIndex + 1 < sortedStages.length) {
         final candidate = sortedStages[currentIndex + 1];
         nextStageId = candidate.id;

@@ -56,111 +56,135 @@ void main() {
       );
     });
 
-    test('emits loopPassCompleted event when a loop pass finishes and wraps', () async {
-      final engine = StageEngine(
-        level: level,
-        config: const StageEngineConfig(
-          playbackSpeed: 10.0, // fast playback for quick test
-          countInEnabled: false,
-        ),
-      );
-
-      final loopEvents = <({double accuracy, int totalNotes, int hitNotes})>[];
-      final sub = engine.events.listen((event) {
-        event.whenOrNull(
-          loopPassCompleted: (accuracy, score, totalNotes, hitNotes, start, end, attemptDetail) {
-            loopEvents.add((
-              accuracy: accuracy,
-              totalNotes: totalNotes,
-              hitNotes: hitNotes,
-            ));
-          },
+    test(
+      'emits loopPassCompleted event when a loop pass finishes and wraps',
+      () async {
+        final engine = StageEngine(
+          level: level,
+          config: const StageEngineConfig(
+            playbackSpeed: 10.0, // fast playback for quick test
+            countInEnabled: false,
+          ),
         );
-      });
 
-      // Loop measure 0: beats [0, 4) containing 2 notes (C4 at 0, D4 at 2)
-      engine.playLoop(0, 4);
+        final loopEvents =
+            <({double accuracy, int totalNotes, int hitNotes})>[];
+        final sub = engine.events.listen((event) {
+          event.whenOrNull(
+            loopPassCompleted:
+                (
+                  accuracy,
+                  score,
+                  totalNotes,
+                  hitNotes,
+                  start,
+                  end,
+                  attemptDetail,
+                ) {
+                  loopEvents.add((
+                    accuracy: accuracy,
+                    totalNotes: totalNotes,
+                    hitNotes: hitNotes,
+                  ));
+                },
+          );
+        });
 
-      // Hit note 0 (C4 at beat 0)
-      engine.processPitchEvent(
-        const PitchEvent(
-          frequency: 261.63,
-          confidence: 1.0,
-          midiNote: 60,
-          timestamp: 0,
-          volume: 0.8,
-        ),
-      );
+        // Loop measure 0: beats [0, 4) containing 2 notes (C4 at 0, D4 at 2)
+        engine.playLoop(0, 4);
 
-      // Wait for loop to wrap once
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      engine.stop();
-      await sub.cancel();
-      engine.dispose();
-
-      expect(loopEvents, isNotEmpty);
-      final firstPass = loopEvents.first;
-      expect(firstPass.totalNotes, 2);
-      expect(firstPass.hitNotes, 1);
-      expect(firstPass.accuracy, 0.5); // 1 hit, 1 miss
-    });
-
-    test('emits loopPassCompleted with accuracy 1.0 in waiting mode loop wrap', () async {
-      final engine = StageEngine(
-        level: level,
-        config: const StageEngineConfig(
-          practiceMode: PracticeMode.waiting,
-        ),
-      );
-
-      final loopEvents = <({double accuracy, int totalNotes, int hitNotes})>[];
-      final sub = engine.events.listen((event) {
-        event.whenOrNull(
-          loopPassCompleted: (accuracy, score, totalNotes, hitNotes, start, end, attemptDetail) {
-            loopEvents.add((
-              accuracy: accuracy,
-              totalNotes: totalNotes,
-              hitNotes: hitNotes,
-            ));
-          },
+        // Hit note 0 (C4 at beat 0)
+        engine.processPitchEvent(
+          const PitchEvent(
+            frequency: 261.63,
+            confidence: 1.0,
+            midiNote: 60,
+            timestamp: 0,
+            volume: 0.8,
+          ),
         );
-      });
 
-      // Loop measure 0: beats [0, 4) containing 2 notes (60 at beat 0, 62 at beat 2)
-      engine.playLoop(0, 4);
+        // Wait for loop to wrap once
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        engine.stop();
+        await sub.cancel();
+        engine.dispose();
 
-      // Hit first note
-      engine.processPitchEvent(
-        const PitchEvent(
-          frequency: 261.63,
-          confidence: 1.0,
-          midiNote: 60,
-          timestamp: 0,
-          volume: 0.8,
-        ),
-      );
+        expect(loopEvents, isNotEmpty);
+        final firstPass = loopEvents.first;
+        expect(firstPass.totalNotes, 2);
+        expect(firstPass.hitNotes, 1);
+        expect(firstPass.accuracy, 0.5); // 1 hit, 1 miss
+      },
+    );
 
-      // Hit second note
-      engine.processPitchEvent(
-        const PitchEvent(
-          frequency: 293.66,
-          confidence: 1.0,
-          midiNote: 62,
-          timestamp: 0,
-          volume: 0.8,
-        ),
-      );
+    test(
+      'emits loopPassCompleted with accuracy 1.0 in waiting mode loop wrap',
+      () async {
+        final engine = StageEngine(
+          level: level,
+          config: const StageEngineConfig(practiceMode: PracticeMode.waiting),
+        );
 
-      // In waiting mode, hitting all awaited notes in the loop triggers wrap
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      engine.stop();
-      await sub.cancel();
-      engine.dispose();
+        final loopEvents =
+            <({double accuracy, int totalNotes, int hitNotes})>[];
+        final sub = engine.events.listen((event) {
+          event.whenOrNull(
+            loopPassCompleted:
+                (
+                  accuracy,
+                  score,
+                  totalNotes,
+                  hitNotes,
+                  start,
+                  end,
+                  attemptDetail,
+                ) {
+                  loopEvents.add((
+                    accuracy: accuracy,
+                    totalNotes: totalNotes,
+                    hitNotes: hitNotes,
+                  ));
+                },
+          );
+        });
 
-      expect(loopEvents, isNotEmpty);
-      expect(loopEvents.first.accuracy, 1.0);
-      expect(loopEvents.first.totalNotes, 2);
-      expect(loopEvents.first.hitNotes, 2);
-    });
+        // Loop measure 0: beats [0, 4) containing 2 notes (60 at beat 0, 62 at beat 2)
+        engine.playLoop(0, 4);
+
+        // Hit first note
+        engine.processPitchEvent(
+          const PitchEvent(
+            frequency: 261.63,
+            confidence: 1.0,
+            midiNote: 60,
+            timestamp: 0,
+            volume: 0.8,
+          ),
+        );
+
+        // Hit second note
+        engine.processPitchEvent(
+          const PitchEvent(
+            frequency: 293.66,
+            confidence: 1.0,
+            midiNote: 62,
+            timestamp: 0,
+            volume: 0.8,
+          ),
+        );
+
+        // In waiting mode, hitting all awaited notes in the loop triggers wrap
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        engine.stop();
+        await sub.cancel();
+        engine.dispose();
+
+        expect(loopEvents, isNotEmpty);
+        expect(loopEvents.first.accuracy, 1.0);
+        expect(loopEvents.first.totalNotes, 2);
+        expect(loopEvents.first.hitNotes, 2);
+      },
+    );
   });
 }

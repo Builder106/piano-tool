@@ -144,28 +144,31 @@ void main() {
       );
     });
 
-    test('findMostMissedMeasure identifies the measure with highest miss count', () {
-      final allNotes = multiMeasureLevel.measures
-          .expand((m) => m.notes)
-          .toList();
-      // Notes: 0,1 (m0), 2,3 (m1), 4,5 (m2), 6,7 (m3)
-      final states = [
-        NoteState.hitPerfect, // n0 (m0)
-        NoteState.missed,     // n1 (m0) -> 1 miss
-        NoteState.hitPerfect, // n2 (m1)
-        NoteState.hitPerfect, // n3 (m1) -> 0 misses
-        NoteState.missed,     // n4 (m2) -> 2 misses
-        NoteState.missed,     // n5 (m2)
-        NoteState.hitPerfect, // n6 (m3)
-        NoteState.hitPerfect, // n7 (m3) -> 0 misses
-      ];
+    test(
+      'findMostMissedMeasure identifies the measure with highest miss count',
+      () {
+        final allNotes = multiMeasureLevel.measures
+            .expand((m) => m.notes)
+            .toList();
+        // Notes: 0,1 (m0), 2,3 (m1), 4,5 (m2), 6,7 (m3)
+        final states = [
+          NoteState.hitPerfect, // n0 (m0)
+          NoteState.missed, // n1 (m0) -> 1 miss
+          NoteState.hitPerfect, // n2 (m1)
+          NoteState.hitPerfect, // n3 (m1) -> 0 misses
+          NoteState.missed, // n4 (m2) -> 2 misses
+          NoteState.missed, // n5 (m2)
+          NoteState.hitPerfect, // n6 (m3)
+          NoteState.hitPerfect, // n7 (m3) -> 0 misses
+        ];
 
-      final worst = DifficultyAssistanceEvaluator.findMostMissedMeasure(
-        allNotes: allNotes,
-        noteStates: states,
-      );
-      expect(worst, 2);
-    });
+        final worst = DifficultyAssistanceEvaluator.findMostMissedMeasure(
+          allNotes: allNotes,
+          noteStates: states,
+        );
+        expect(worst, 2);
+      },
+    );
 
     test('suggestShorterPhrase targets most missed measure on full piece', () {
       final allNotes = multiMeasureLevel.measures
@@ -204,54 +207,60 @@ void main() {
       expect(suggested, isNull);
     });
 
-    test('suggestShorterPhrase narrows multi-measure loop to hardest measure', () {
-      final allNotes = multiMeasureLevel.measures
-          .expand((m) => m.notes)
-          .toList();
-      // Currently looping measures 1 to 3
-      final states = [
-        NoteState.upcoming,
-        NoteState.upcoming,
-        NoteState.hitPerfect,
-        NoteState.hitPerfect,
-        NoteState.missed, // Measure 2 has miss
-        NoteState.missed,
-        NoteState.hitPerfect,
-        NoteState.hitPerfect,
-      ];
+    test(
+      'suggestShorterPhrase narrows multi-measure loop to hardest measure',
+      () {
+        final allNotes = multiMeasureLevel.measures
+            .expand((m) => m.notes)
+            .toList();
+        // Currently looping measures 1 to 3
+        final states = [
+          NoteState.upcoming,
+          NoteState.upcoming,
+          NoteState.hitPerfect,
+          NoteState.hitPerfect,
+          NoteState.missed, // Measure 2 has miss
+          NoteState.missed,
+          NoteState.hitPerfect,
+          NoteState.hitPerfect,
+        ];
 
-      final suggested = DifficultyAssistanceEvaluator.suggestShorterPhrase(
-        level: multiMeasureLevel,
-        currentLoopRange: (1, 3),
-        allNotes: allNotes,
-        noteStates: states,
-      );
-      expect(suggested, (2, 2));
-    });
+        final suggested = DifficultyAssistanceEvaluator.suggestShorterPhrase(
+          level: multiMeasureLevel,
+          currentLoopRange: (1, 3),
+          allNotes: allNotes,
+          noteStates: states,
+        );
+        expect(suggested, (2, 2));
+      },
+    );
 
-    test('suggestShorterPhrase returns null when already looping a single measure', () {
-      final allNotes = multiMeasureLevel.measures
-          .expand((m) => m.notes)
-          .toList();
-      final states = [
-        NoteState.missed,
-        NoteState.missed,
-        NoteState.upcoming,
-        NoteState.upcoming,
-        NoteState.upcoming,
-        NoteState.upcoming,
-        NoteState.upcoming,
-        NoteState.upcoming,
-      ];
+    test(
+      'suggestShorterPhrase returns null when already looping a single measure',
+      () {
+        final allNotes = multiMeasureLevel.measures
+            .expand((m) => m.notes)
+            .toList();
+        final states = [
+          NoteState.missed,
+          NoteState.missed,
+          NoteState.upcoming,
+          NoteState.upcoming,
+          NoteState.upcoming,
+          NoteState.upcoming,
+          NoteState.upcoming,
+          NoteState.upcoming,
+        ];
 
-      final suggested = DifficultyAssistanceEvaluator.suggestShorterPhrase(
-        level: multiMeasureLevel,
-        currentLoopRange: (0, 0),
-        allNotes: allNotes,
-        noteStates: states,
-      );
-      expect(suggested, isNull);
-    });
+        final suggested = DifficultyAssistanceEvaluator.suggestShorterPhrase(
+          level: multiMeasureLevel,
+          currentLoopRange: (0, 0),
+          allNotes: allNotes,
+          noteStates: states,
+        );
+        expect(suggested, isNull);
+      },
+    );
   });
 
   group('DifficultyAssistanceEvaluator evaluate', () {
@@ -325,25 +334,32 @@ void main() {
       expect(offer, isNull);
     });
 
-    test('offers both slower speed and shorter phrase after 2 unsuccessful attempts', () {
-      final offer = DifficultyAssistanceEvaluator.evaluate(
-        level: level,
-        currentSpeed: 1.0,
-        allNotes: allNotes,
-        noteStates: [NoteState.hitPerfect, NoteState.missed, NoteState.missed],
-        unsuccessfulAttempts: 2,
-      );
-      expect(offer, isNotNull);
-      expect(offer!.unsuccessfulAttempts, 2);
-      expect(offer.currentSpeed, 1.0);
-      expect(offer.suggestedSpeed, 0.75);
-      expect(offer.hasSlowerSpeed, isTrue);
-      expect(offer.suggestedLoopRange, isNotNull);
-      expect(offer.hasShorterPhrase, isTrue);
-      expect(offer.message, contains('75% speed'));
-      expect(offer.message, contains('focusing on measure'));
-      expect(offer.reason, contains('2 unsuccessful attempts'));
-    });
+    test(
+      'offers both slower speed and shorter phrase after 2 unsuccessful attempts',
+      () {
+        final offer = DifficultyAssistanceEvaluator.evaluate(
+          level: level,
+          currentSpeed: 1.0,
+          allNotes: allNotes,
+          noteStates: [
+            NoteState.hitPerfect,
+            NoteState.missed,
+            NoteState.missed,
+          ],
+          unsuccessfulAttempts: 2,
+        );
+        expect(offer, isNotNull);
+        expect(offer!.unsuccessfulAttempts, 2);
+        expect(offer.currentSpeed, 1.0);
+        expect(offer.suggestedSpeed, 0.75);
+        expect(offer.hasSlowerSpeed, isTrue);
+        expect(offer.suggestedLoopRange, isNotNull);
+        expect(offer.hasShorterPhrase, isTrue);
+        expect(offer.message, contains('75% speed'));
+        expect(offer.message, contains('focusing on measure'));
+        expect(offer.reason, contains('2 unsuccessful attempts'));
+      },
+    );
 
     test('offers only shorter phrase when already at minimum speed (0.5)', () {
       final offer = DifficultyAssistanceEvaluator.evaluate(
@@ -378,16 +394,23 @@ void main() {
       expect(offer.message, 'Try slowing down to 75% speed.');
     });
 
-    test('returns null when at minimum speed and already looping a single measure', () {
-      final offer = DifficultyAssistanceEvaluator.evaluate(
-        level: level,
-        currentSpeed: 0.5,
-        currentLoopRange: (1, 1),
-        allNotes: allNotes,
-        noteStates: [NoteState.upcoming, NoteState.missed, NoteState.upcoming],
-        unsuccessfulAttempts: 3,
-      );
-      expect(offer, isNull);
-    });
+    test(
+      'returns null when at minimum speed and already looping a single measure',
+      () {
+        final offer = DifficultyAssistanceEvaluator.evaluate(
+          level: level,
+          currentSpeed: 0.5,
+          currentLoopRange: (1, 1),
+          allNotes: allNotes,
+          noteStates: [
+            NoteState.upcoming,
+            NoteState.missed,
+            NoteState.upcoming,
+          ],
+          unsuccessfulAttempts: 3,
+        );
+        expect(offer, isNull);
+      },
+    );
   });
 }
