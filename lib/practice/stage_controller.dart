@@ -10,6 +10,7 @@ import '../data/level_repository.dart';
 import '../data/progress_repository.dart';
 import '../data/settings_repository.dart';
 import '../engine/difficulty_assistance.dart';
+import '../engine/results_observation.dart';
 import '../engine/stage_engine.dart';
 import '../models/audio_models.dart';
 import '../models/engine_models.dart';
@@ -83,6 +84,11 @@ class StageUiState {
     this.assistanceOffer,
     this.appliedAssistance,
     this.consecutiveUnsuccessfulAttempts = 0,
+    this.difficultMeasureRange,
+    this.specificObservation,
+    this.isAbandonedOrEmpty = false,
+    this.nextStageId,
+    this.nextStageTitle,
   }) : _loopMeasure = loopMeasure;
 
   final LevelModel level;
@@ -135,6 +141,27 @@ class StageUiState {
 
   /// Number of consecutive unsuccessful attempts recorded in the current session.
   final int consecutiveUnsuccessfulAttempts;
+
+  /// The contiguous measure range (startMeasure, endMeasure) containing clustered difficulty, or null.
+  final (int, int)? difficultMeasureRange;
+
+  /// Specific observation derived from the attempt performance, or null.
+  final String? specificObservation;
+
+  /// Whether the attempt was empty or abandoned prematurely.
+  final bool isAbandonedOrEmpty;
+
+  /// ID of the next available stage unlocked after success, or null.
+  final String? nextStageId;
+
+  /// Title of the next available stage unlocked after success, or null.
+  final String? nextStageTitle;
+
+  /// Whether a difficult measure range is available for targeted practice.
+  bool get hasDifficultRange => difficultMeasureRange != null;
+
+  /// Whether a next stage is available for progression.
+  bool get hasNextStage => nextStageId != null;
 
   /// Whether an assistance offer is currently available to the learner.
   bool get isAssistanceAvailable => assistanceOffer != null;
@@ -314,6 +341,15 @@ class StageUiState {
     AppliedAssistance? appliedAssistance,
     bool clearAppliedAssistance = false,
     int? consecutiveUnsuccessfulAttempts,
+    (int, int)? difficultMeasureRange,
+    bool clearDifficultMeasureRange = false,
+    String? specificObservation,
+    bool clearSpecificObservation = false,
+    bool? isAbandonedOrEmpty,
+    String? nextStageId,
+    bool clearNextStageId = false,
+    String? nextStageTitle,
+    bool clearNextStageTitle = false,
   }) {
     final effectiveRange = clearLoop
         ? null
@@ -359,6 +395,17 @@ class StageUiState {
       consecutiveUnsuccessfulAttempts:
           consecutiveUnsuccessfulAttempts ??
           this.consecutiveUnsuccessfulAttempts,
+      difficultMeasureRange: clearDifficultMeasureRange
+          ? null
+          : (difficultMeasureRange ?? this.difficultMeasureRange),
+      specificObservation: clearSpecificObservation
+          ? null
+          : (specificObservation ?? this.specificObservation),
+      isAbandonedOrEmpty: isAbandonedOrEmpty ?? this.isAbandonedOrEmpty,
+      nextStageId: clearNextStageId ? null : (nextStageId ?? this.nextStageId),
+      nextStageTitle: clearNextStageTitle
+          ? null
+          : (nextStageTitle ?? this.nextStageTitle),
     );
   }
 }
@@ -371,6 +418,7 @@ class StageController extends StateNotifier<StageUiState> {
     StageUiState initial, {
     AudioSynthesizer? synth,
     PracticeInputSource? selectedInputSource,
+    this.allStages = const [],
     this.difficultyAccuracyThreshold =
         DifficultyAssistanceEvaluator.defaultDifficultyAccuracyThreshold,
     this.repeatedAttemptsThreshold =
@@ -390,6 +438,7 @@ class StageController extends StateNotifier<StageUiState> {
   final String _stageId;
   final ProgressRepository _progress;
   final AudioSynthesizer _synth;
+  final List<StageModel> allStages;
   final double difficultyAccuracyThreshold;
   final int repeatedAttemptsThreshold;
   int _consecutiveUnsuccessfulAttempts = 0;
@@ -594,6 +643,29 @@ class StageController extends StateNotifier<StageUiState> {
     state = state.copyWith(clearAssistanceOffer: true);
   }
 
+  /// The contiguous measure range (startMeasure, endMeasure) with clustered difficulty, or null.
+  (int, int)? get difficultMeasureRange => state.difficultMeasureRange;
+
+  /// Specific observation derived from the attempt performance, or null.
+  String? get specificObservation => state.specificObservation;
+
+  /// Whether the attempt was empty or abandoned prematurely.
+  bool get isAbandonedOrEmpty => state.isAbandonedOrEmpty;
+
+  /// ID of the next available stage unlocked after success, or null.
+  String? get nextStageId => state.nextStageId;
+
+  /// Title of the next available stage unlocked after success, or null.
+  String? get nextStageTitle => state.nextStageTitle;
+
+  /// Loops the derived difficult measure range, if one was identified from the attempt.
+  void practiceDifficultRange() {
+    final range = state.difficultMeasureRange;
+    if (range != null) {
+      loopRange(range.$1, range.$2);
+    }
+  }
+
   void updateSelectedInputSource(PracticeInputSource source) {
     if (_disposed || !mounted) return;
     state = state.copyWith(selectedInputSource: source);
@@ -718,6 +790,13 @@ class StageController extends StateNotifier<StageUiState> {
     _engine.reset();
     _engine.start();
     _sync();
+    state = state.copyWith(
+      clearDifficultMeasureRange: true,
+      clearSpecificObservation: true,
+      isAbandonedOrEmpty: false,
+      clearNextStageId: true,
+      clearNextStageTitle: true,
+    );
   }
 
   /// Plays bar [measure] over and over, every pass judged afresh. Looping
@@ -894,7 +973,32 @@ class StageController extends StateNotifier<StageUiState> {
     required int totalNotes,
   }) {
     if (_disposed || !mounted) return;
-    if (totalNotes <= 0 || practiceMode == PracticeMode.waiting) return;
+
+    final observation = ResultsObservationEvaluator.evaluate(
+      noteStates: _engine.state.noteStates,
+      measureOfNote: [for (final n in _engine.allNotes) n.measureIndex],
+      noteResults: _engine.noteResults,
+      attemptDetail: _engine.attemptDetail,
+      isAbandoned: false,
+      allStages: allStages,
+      currentStageId: _stageId,
+      passingAccuracyThreshold: difficultyAccuracyThreshold,
+    );
+
+    if (totalNotes <= 0 || practiceMode == PracticeMode.waiting) {
+      state = state.copyWith(
+        difficultMeasureRange: observation.difficultMeasureRange,
+        clearDifficultMeasureRange: observation.difficultMeasureRange == null,
+        specificObservation: observation.observation,
+        clearSpecificObservation: observation.observation.isEmpty,
+        isAbandonedOrEmpty: observation.isAbandonedOrEmpty,
+        nextStageId: observation.nextStageId,
+        clearNextStageId: observation.nextStageId == null,
+        nextStageTitle: observation.nextStageTitle,
+        clearNextStageTitle: observation.nextStageTitle == null,
+      );
+      return;
+    }
 
     if (accuracy < difficultyAccuracyThreshold) {
       _consecutiveUnsuccessfulAttempts++;
@@ -912,10 +1016,28 @@ class StageController extends StateNotifier<StageUiState> {
         state = state.copyWith(
           assistanceOffer: offer,
           consecutiveUnsuccessfulAttempts: _consecutiveUnsuccessfulAttempts,
+          difficultMeasureRange: observation.difficultMeasureRange,
+          clearDifficultMeasureRange: observation.difficultMeasureRange == null,
+          specificObservation: observation.observation,
+          clearSpecificObservation: observation.observation.isEmpty,
+          isAbandonedOrEmpty: observation.isAbandonedOrEmpty,
+          nextStageId: observation.nextStageId,
+          clearNextStageId: observation.nextStageId == null,
+          nextStageTitle: observation.nextStageTitle,
+          clearNextStageTitle: observation.nextStageTitle == null,
         );
       } else {
         state = state.copyWith(
           consecutiveUnsuccessfulAttempts: _consecutiveUnsuccessfulAttempts,
+          difficultMeasureRange: observation.difficultMeasureRange,
+          clearDifficultMeasureRange: observation.difficultMeasureRange == null,
+          specificObservation: observation.observation,
+          clearSpecificObservation: observation.observation.isEmpty,
+          isAbandonedOrEmpty: observation.isAbandonedOrEmpty,
+          nextStageId: observation.nextStageId,
+          clearNextStageId: observation.nextStageId == null,
+          nextStageTitle: observation.nextStageTitle,
+          clearNextStageTitle: observation.nextStageTitle == null,
         );
       }
     } else {
@@ -924,9 +1046,29 @@ class StageController extends StateNotifier<StageUiState> {
         state = state.copyWith(
           clearAssistanceOffer: true,
           consecutiveUnsuccessfulAttempts: 0,
+          difficultMeasureRange: observation.difficultMeasureRange,
+          clearDifficultMeasureRange: observation.difficultMeasureRange == null,
+          specificObservation: observation.observation,
+          clearSpecificObservation: observation.observation.isEmpty,
+          isAbandonedOrEmpty: observation.isAbandonedOrEmpty,
+          nextStageId: observation.nextStageId,
+          clearNextStageId: observation.nextStageId == null,
+          nextStageTitle: observation.nextStageTitle,
+          clearNextStageTitle: observation.nextStageTitle == null,
         );
-      } else if (state.consecutiveUnsuccessfulAttempts != 0) {
-        state = state.copyWith(consecutiveUnsuccessfulAttempts: 0);
+      } else {
+        state = state.copyWith(
+          consecutiveUnsuccessfulAttempts: 0,
+          difficultMeasureRange: observation.difficultMeasureRange,
+          clearDifficultMeasureRange: observation.difficultMeasureRange == null,
+          specificObservation: observation.observation,
+          clearSpecificObservation: observation.observation.isEmpty,
+          isAbandonedOrEmpty: observation.isAbandonedOrEmpty,
+          nextStageId: observation.nextStageId,
+          clearNextStageId: observation.nextStageId == null,
+          nextStageTitle: observation.nextStageTitle,
+          clearNextStageTitle: observation.nextStageTitle == null,
+        );
       }
     }
   }
@@ -1023,6 +1165,7 @@ final stageControllerProvider =
         ),
         synth: synth,
         selectedInputSource: settings.inputSource,
+        allStages: stages,
       );
 
       // Pitch events only flow once permission was granted; the gate makes sure
@@ -1244,6 +1387,41 @@ final wrongPitchCountProvider = Provider.autoDispose
     .family<int, String>(
       (ref, id) => ref.watch(
         stageControllerProvider(id).select((s) => s.wrongPitchCount),
+      ),
+    );
+
+final difficultMeasureRangeProvider = Provider.autoDispose
+    .family<(int, int)?, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.difficultMeasureRange),
+      ),
+    );
+
+final specificObservationProvider = Provider.autoDispose
+    .family<String?, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.specificObservation),
+      ),
+    );
+
+final isAbandonedOrEmptyProvider = Provider.autoDispose
+    .family<bool, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.isAbandonedOrEmpty),
+      ),
+    );
+
+final nextStageIdProvider = Provider.autoDispose
+    .family<String?, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.nextStageId),
+      ),
+    );
+
+final nextStageTitleProvider = Provider.autoDispose
+    .family<String?, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.nextStageTitle),
       ),
     );
 

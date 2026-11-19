@@ -139,6 +139,46 @@ void main() {
       expect(detail.wrongPitchNotes, 1);
       expect(stateFinished.hasMissedExpected, isTrue);
       expect(c.read(missedExpectedCountProvider(stageId)), greaterThan(0));
+
+      // Results that lead somewhere: derived difficult measure range and observation
+      expect(stateFinished.hasDifficultRange, isTrue);
+      expect(stateFinished.difficultMeasureRange, isNotNull);
+      expect(c.read(difficultMeasureRangeProvider(stageId)), isNotNull);
+      expect(stateFinished.specificObservation, isNotNull);
+      expect(c.read(specificObservationProvider(stageId)), isNotNull);
+      expect(stateFinished.isAbandonedOrEmpty, isFalse);
+
+      // Offer practice of difficult range
+      controller.practiceDifficultRange();
+      final loopState = c.read(stageControllerProvider(stageId));
+      expect(loopState.loopRange, stateFinished.difficultMeasureRange);
+    });
+
+    test('replay resets difficult measure range and observation for a fresh attempt', () async {
+      final c = harness();
+      addTearDown(c.dispose);
+
+      const stageId = 'stage_1';
+      final controller = c.read(stageControllerProvider(stageId).notifier);
+      controller.start();
+
+      controller.seekTo(1.0);
+      controller.onPitch(_strike(66)); // wrong note
+
+      final completedFuture = controller.events.firstWhere(
+        (e) => e.maybeMap(stageCompleted: (_) => true, orElse: () => false),
+      );
+      controller.setSpeed(50.0);
+      controller.seekTo(16.0);
+      await completedFuture.timeout(const Duration(seconds: 3));
+
+      expect(c.read(stageControllerProvider(stageId)).difficultMeasureRange, isNotNull);
+
+      controller.replay();
+      final resetState = c.read(stageControllerProvider(stageId));
+      expect(resetState.difficultMeasureRange, isNull);
+      expect(resetState.specificObservation, isNull);
+      expect(resetState.isAbandonedOrEmpty, isFalse);
     });
   });
 }

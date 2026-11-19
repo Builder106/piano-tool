@@ -4,7 +4,9 @@ import '../brand/scale.dart';
 import '../brand/buttons.dart';
 import '../brand/palette.dart';
 import '../brand/pencil_loop.dart';
+import '../engine/results_observation.dart';
 import '../models/engine_models.dart';
+import '../models/level_models.dart';
 
 /// What a run came to, in the teacher's terms: notes right first time, and
 /// which bars to play again.
@@ -21,6 +23,11 @@ class RunSummary {
     this.wrongPitchCount = 0,
     this.missedExpectedBars = const [],
     this.wrongPitchBars = const [],
+    this.difficultMeasureRange,
+    this.specificObservation,
+    this.isAbandonedOrEmpty = false,
+    this.nextStageId,
+    this.nextStageTitle,
   });
 
   factory RunSummary.of(
@@ -28,6 +35,10 @@ class RunSummary {
     List<int> measureOfNote, {
     Map<int, NoteHitResult>? noteResults,
     AttemptDetail? attemptDetail,
+    bool isAbandoned = false,
+    List<StageModel> allStages = const [],
+    Map<String, dynamic> progress = const {},
+    String? currentStageId,
   }) {
     var right = 0;
     final misses = <int, int>{};
@@ -82,11 +93,22 @@ class RunSummary {
       wrongPitchBars.addAll(attemptDetail.wrongPitchMeasureIndices);
     }
 
+    final obs = ResultsObservationEvaluator.evaluate(
+      noteStates: states,
+      measureOfNote: measureOfNote,
+      noteResults: resultsMap,
+      attemptDetail: attemptDetail,
+      isAbandoned: isAbandoned,
+      allStages: allStages,
+      progress: progress,
+      currentStageId: currentStageId,
+    );
+
     return RunSummary(
       right: right,
       total: states.length,
       missedBars: bars,
-      worstBar: worst,
+      worstBar: obs.worstMeasure ?? worst,
       attemptDetail: attemptDetail,
       noteResults: resultsMap,
       signedTimingErrors: timingErrors,
@@ -94,6 +116,11 @@ class RunSummary {
       wrongPitchCount: wrongPitchCount,
       missedExpectedBars: missedExpectedBars.toList()..sort(),
       wrongPitchBars: wrongPitchBars.toList()..sort(),
+      difficultMeasureRange: obs.difficultMeasureRange,
+      specificObservation: obs.observation,
+      isAbandonedOrEmpty: obs.isAbandonedOrEmpty,
+      nextStageId: obs.nextStageId,
+      nextStageTitle: obs.nextStageTitle,
     );
   }
 
@@ -125,6 +152,21 @@ class RunSummary {
   /// Measure indices containing confirmed wrong pitches.
   final List<int> wrongPitchBars;
 
+  /// Contiguous measure range (startMeasure, endMeasure) containing clustered difficulty.
+  final (int, int)? difficultMeasureRange;
+
+  /// Specific observation derived from the attempt.
+  final String? specificObservation;
+
+  /// Whether the attempt was empty or abandoned before completing.
+  final bool isAbandonedOrEmpty;
+
+  /// Next available stage ID if attempt succeeded.
+  final String? nextStageId;
+
+  /// Next available stage title if attempt succeeded.
+  final String? nextStageTitle;
+
   /// Whether attempt detail was preserved in this summary.
   bool get hasAttemptDetail => attemptDetail != null || noteResults.isNotEmpty;
 
@@ -134,6 +176,9 @@ class RunSummary {
   /// Whether any missed expected notes (unplayed) occurred in this run.
   bool get hasMissedExpected => missedExpectedCount > 0;
 
+  /// Whether a difficult measure range was derived.
+  bool get hasDifficultRange => difficultMeasureRange != null;
+
   /// Average signed timing error across played notes, or null if no timing errors exist.
   double? get averageTimingError => signedTimingErrors.isNotEmpty
       ? signedTimingErrors.reduce((a, b) => a + b) / signedTimingErrors.length
@@ -142,6 +187,7 @@ class RunSummary {
   int get missed => total - right;
 
   String get headline {
+    if (isAbandonedOrEmpty) return 'Attempt not completed.';
     if (missed == 0) return 'Every note right first time.';
     return missed == 1
         ? 'One note needed another go.'
@@ -149,6 +195,10 @@ class RunSummary {
   }
 
   String get advice {
+    if (isAbandonedOrEmpty) return '';
+    if (specificObservation != null && specificObservation!.isNotEmpty) {
+      return specificObservation!;
+    }
     final bar = worstBar;
     if (bar == null) return 'The next piece in the book is open.';
     return 'Bar ${bar + 1} had the most. Play it slowly a few times and it '
@@ -164,6 +214,8 @@ class ResultsPage extends StatelessWidget {
     required this.summary,
     required this.staff,
     required this.onPractise,
+    this.onPractiseRange,
+    this.onNextStage,
     required this.onAgain,
     required this.onDone,
   });
@@ -173,6 +225,8 @@ class ResultsPage extends StatelessWidget {
   /// The piece, marked, shown above the verdict.
   final Widget staff;
   final void Function(int bar) onPractise;
+  final void Function(int startBar, int endBar)? onPractiseRange;
+  final VoidCallback? onNextStage;
   final VoidCallback onAgain;
   final VoidCallback onDone;
 
@@ -180,6 +234,9 @@ class ResultsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final u = unitOf(context);
     final bar = summary.worstBar;
+    final range = summary.difficultMeasureRange;
+    final adviceText = summary.advice;
+
     return Padding(
       padding: EdgeInsets.fromLTRB(40 * u, 8 * u, 40 * u, 20 * u),
       child: Column(
@@ -207,26 +264,50 @@ class ResultsPage extends StatelessWidget {
                             fontVariations: const [FontVariation('wght', 800)],
                           ),
                         ),
-                        SizedBox(height: 8 * u),
-                        Text(
-                          summary.advice,
-                          style: TextStyle(
-                            fontFamily: Fonts.ui,
-                            fontSize: 20 * u,
-                            height: 1.35,
-                            color: Palette.graphite,
+                        if (adviceText.isNotEmpty) ...[
+                          SizedBox(height: 8 * u),
+                          Text(
+                            adviceText,
+                            style: TextStyle(
+                              fontFamily: Fonts.ui,
+                              fontSize: 20 * u,
+                              height: 1.35,
+                              color: Palette.graphite,
+                            ),
                           ),
-                        ),
+                        ],
                         SizedBox(height: 22 * u),
                         Wrap(
                           spacing: 14 * u,
                           runSpacing: 12 * u,
                           children: [
-                            if (bar != null)
-                              StartButton(
-                                label: 'Practise bar ${bar + 1}',
-                                onPressed: () => onPractise(bar),
-                              ),
+                            if (!summary.isAbandonedOrEmpty) ...[
+                              if (range != null)
+                                StartButton(
+                                  label: range.$1 == range.$2
+                                      ? 'Practise bar ${range.$1 + 1}'
+                                      : 'Practise bars ${range.$1 + 1}–${range.$2 + 1}',
+                                  onPressed: () {
+                                    if (onPractiseRange != null) {
+                                      onPractiseRange!(range.$1, range.$2);
+                                    } else {
+                                      onPractise(range.$1);
+                                    }
+                                  },
+                                )
+                              else if (bar != null)
+                                StartButton(
+                                  label: 'Practise bar ${bar + 1}',
+                                  onPressed: () => onPractise(bar),
+                                )
+                              else if (onNextStage != null)
+                                StartButton(
+                                  label: summary.nextStageTitle != null
+                                      ? 'Next piece: ${summary.nextStageTitle}'
+                                      : 'Next piece',
+                                  onPressed: onNextStage,
+                                ),
+                            ],
                             QuietButton(
                               label: 'Play again',
                               onPressed: onAgain,

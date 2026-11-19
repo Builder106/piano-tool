@@ -337,6 +337,9 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                               [for (final n in ui.notes) n.measureIndex],
                               noteResults: ui.noteResults,
                               attemptDetail: ui.attemptDetail,
+                              isAbandoned:
+                                  ui.status != StageEngineStatus.completed,
+                              currentStageId: widget.stageId,
                             ),
                             staff: StaticStaff(
                               level: ui.level,
@@ -345,6 +348,18 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                               fitWhole: true,
                             ),
                             onPractise: _controller.loopBar,
+                            onPractiseRange: _controller.loopRange,
+                            onNextStage: ui.nextStageId != null
+                                ? () {
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (_) => PracticeScreen(
+                                          stageId: ui.nextStageId!,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                : null,
                             onAgain: _controller.replay,
                             onDone: () => Navigator.of(context).maybePop(),
                           )
