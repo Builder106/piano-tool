@@ -1,5 +1,27 @@
 # Journal
 
+## 2026-11-19: assistance after difficulty, visible and reversible offers, and loop pass attempt tracking #engine #practice #models #decision
+
+Learners struggling through repeated unsuccessful attempts need targeted assistance options (slower tempo, focused phrase drill) without silent mode or tempo mutations, paired with a clear and reversible way back:
+- In `lib/models/engine_models.dart`:
+  - `AssistanceOffer` encapsulates recommended assistance (`unsuccessfulAttempts`, `currentSpeed`, `suggestedSpeed`, `currentLoopRange`, `suggestedLoopRange`, `mostMissedMeasure`, `reason`, `message`), supporting optional slower speeds and shorter phrase targets.
+  - `AppliedAssistance` captures baseline settings (`originalSpeed`, `originalLoopRange`) alongside applied values (`assistedSpeed`, `assistedLoopRange`) so the controller can cleanly revert anytime.
+  - `StageEvent.loopPassCompleted` emits loop pass performance (`accuracy`, `score`, `totalNotes`, `hitNotes`, `loopStartBeat`, `loopEndBeat`) upon every repeat wrap in both timed and waiting modes.
+- In `lib/engine/difficulty_assistance.dart`:
+  - `DifficultyAssistanceEvaluator` derives deterministic assistance recommendations after repeated unsuccessful attempts (default threshold: 2 consecutive runs with accuracy < 80%):
+    - Speed suggestion: stepped down through standard increments (1.0 -> 0.75 -> 0.5); capped when already at minimum speed (0.5).
+    - Phrase suggestion: identifies `mostMissedMeasure` to focus on the single measure with the highest miss count; narrows multi-measure loops or full pieces into focused single-measure drills; avoids shortening already single-measure loops or 1-measure pieces.
+    - Evaluator enforces that empty attempts (0 notes) and waiting mode practice never invent advice or count as failures.
+- In `lib/engine/stage_engine.dart`:
+  - Emits `StageEvent.loopPassCompleted` with accurate accuracy and note tallies before `_restartLoop` clears attempt metrics for subsequent repeat passes.
+- In `lib/practice/stage_controller.dart` and `StageUiState`:
+  - `StageController` listens to `stageCompleted` and `loopPassCompleted` events, maintaining `_consecutiveUnsuccessfulAttempts`.
+  - Non-silent: speed, loop range, and practice mode remain completely untouched when assistance is offered; suggestions are surfaced solely via `state.assistanceOffer`.
+  - Visible: `StageUiState` exposes `assistanceOffer`, `appliedAssistance`, `consecutiveUnsuccessfulAttempts`, `isAssistanceAvailable`, and `isAssistanceActive`. Sliced Riverpod providers (`assistanceOfferProvider`, `appliedAssistanceProvider`, `isAssistanceAvailableProvider`, `isAssistanceActiveProvider`, `consecutiveUnsuccessfulAttemptsProvider`) allow reactive UI observation.
+  - Reversible: `applySlowerSpeed`, `applyShorterPhrase`, and `applyAssistance` store baseline parameters in `appliedAssistance`. `revertAssistance` restores baseline speed and loop range (`stopLoop` or previous loop), clearing assisted state. `dismissAssistanceOffer` dismisses pending offers.
+  - Accessible: `accessibleDescription` announces assistance offers when available, and announces active assistance with reversible status.
+
+
 ## 2026-11-19: hand selection, consistent playback/hint/scoring filtering, and unknown hand assignment identification #engine #practice #models #decision
 
 Learners practicing multi-voice piano pieces need the ability to isolate hands (left hand only, right hand only, or both hands together), while content lacking authored hand assignments must be cleanly identified and guarded:

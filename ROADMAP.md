@@ -184,9 +184,20 @@ reliability so the interaction is both expressive and accurate.
   `StageController` and `StageUiState` expose `handSelection`, `supportedHands`,
   `isHandAssignmentKnown`, and reactive Riverpod providers, with screen reader
   announcements in `accessibleDescription` prefixed by active hand context.
-- [ ] **Assistance after difficulty:** After repeated unsuccessful attempts,
+- [x] **Assistance after difficulty:** After repeated unsuccessful attempts,
   offer a shorter phrase or slower speed with a clear way back. Keep the
   change visible and reversible; do not silently change mode or tempo.
+  Implemented: `DifficultyAssistanceEvaluator` derives deterministic assistance
+  offers (`AssistanceOffer`) after repeated unsuccessful attempts (< 80% accuracy)
+  in timed mode, identifying the most-missed measure to suggest a targeted single-measure
+  drill or sub-range, alongside stepped-down playback speeds (1.0 -> 0.75 -> 0.5);
+  `StageEngine` emits `StageEvent.loopPassCompleted` on repeat wraps; `StageController`
+  and `StageUiState` expose `assistanceOffer`, `appliedAssistance`, and consecutive
+  failure metrics without silently changing tempo, loop, or mode; actions
+  (`applySlowerSpeed`, `applyShorterPhrase`, `applyAssistance`, `revertAssistance`,
+  `dismissAssistanceOffer`) preserve baseline parameters in `AppliedAssistance` for
+  a clear way back; screen reader announcements in `accessibleDescription` and reactive
+  Riverpod providers keep assistance visible and accessible.
 
 ### Coaching and progress
 
