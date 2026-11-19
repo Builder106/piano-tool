@@ -976,3 +976,22 @@ Preserved attempt performance details into the results flow and separated missed
    - `RunSummary` and `RunSummary.of` preserve `noteResults`, `attemptDetail`, signed timing errors, and distinct missed vs wrong pitch bar lists while remaining backwards compatible.
    - `TimingAdvice.evaluateAttempt` updated to accept `AttemptDetail`.
 
+## 2026-11-19: results that lead somewhere, specific observations, difficult measure ranges, and empty attempt advice guards #engine #practice #coaching #decision
+
+Connected completed attempt performance directly to actionable next steps:
+
+1. `ResultsObservationEvaluator` and `AttemptObservation`:
+   - Derives specific observations distinguishing confirmed wrong pitches, missed expected notes, and signed timing errors (rushing vs dragging) localized to specific bars.
+   - Derives contiguous difficult measure ranges `(startMeasure, endMeasure)` by clustering adjacent error measures around the measure with peak errors (`worstMeasure`).
+   - Guard against inventing advice: empty attempts (0 notes or unplayed notes) and attempts abandoned early (`isAbandoned: true`) strictly return `isAbandonedOrEmpty: true`, an empty observation string, and no difficult measure range.
+2. `RunSummary` and `ResultsPage` integration:
+   - `RunSummary` exposes `difficultMeasureRange`, `specificObservation`, `isAbandonedOrEmpty`, `nextStageId`, and `nextStageTitle`. `headline` reflects `'Attempt not completed.'` for uncompleted runs, and `advice` outputs the derived observation without inventing advice for empty runs.
+   - `ResultsPage` presents focused practice for the difficult measure range via `StartButton(label: 'Practise bars X–Y' / 'Practise bar X')` triggering `onPractiseRange`, or offers the next available stage via `StartButton(label: 'Next piece: Title')` upon successful completion.
+   - Preserves replay (`'Play again'` -> `onAgain`) and return-to-desk (`'Back to pieces'` -> `onDone`) actions across all outcomes.
+3. `StageController` and `StageUiState`:
+   - Exposes `difficultMeasureRange`, `specificObservation`, `isAbandonedOrEmpty`, `nextStageId`, `nextStageTitle`, `hasDifficultRange`, and `hasNextStage`.
+   - `StageController.practiceDifficultRange()` automatically invokes `loopRange` with the derived range bounds.
+   - `StageController.replay()` clears attempt observations and difficult ranges for a clean repeat attempt.
+   - Sliced reactive Riverpod providers added: `difficultMeasureRangeProvider`, `specificObservationProvider`, `isAbandonedOrEmptyProvider`, `nextStageIdProvider`, and `nextStageTitleProvider`.
+
+

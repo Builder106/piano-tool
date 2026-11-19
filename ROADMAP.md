@@ -204,10 +204,21 @@ reliability so the interaction is both expressive and accurate.
 - [x] **Preserve attempt detail:** Carry note results and signed timing errors
   into the results flow. Separate a missed expected note from a confirmed
   wrong pitch; the current scorer does not classify every unexpected pitch.
-- [ ] **Results that lead somewhere:** Derive a specific observation and
+- [x] **Results that lead somewhere:** Derive a specific observation and
   difficult measure range from the completed attempt. Offer practice of
   that range, or the next available stage after success. Keep replay and
   return-to-desk actions. Empty or abandoned attempts must not invent advice.
+  Implemented: `ResultsObservationEvaluator` derives specific observations
+  and contiguous difficult measure ranges `(startMeasure, endMeasure)` by
+  analyzing confirmed wrong pitches, missed expected notes, and signed
+  timing errors per measure; empty or uncompleted/abandoned attempts are guarded
+  to never invent advice (`isAbandonedOrEmpty`); `RunSummary` and `ResultsPage`
+  offer focused practice of the difficult measure range (`Practise bars X–Y` /
+  `Practise bar X`) or the next available stage after successful runs
+  (`Next piece: Title`), while preserving 'Play again' (replay) and 'Back to pieces'
+  (return-to-desk) actions; `StageController` and `StageUiState` expose
+  `difficultMeasureRange`, `specificObservation`, `nextStageId`, `nextStageTitle`,
+  and `practiceDifficultRange()` with reactive Riverpod providers.
 - [ ] **Mastery at a tempo:** Store a bounded history of exercise, range,
   hand, mode, tempo, result, and date. Distinguish assisted completion from
   timed performance; a high score earned slowly does not establish target
