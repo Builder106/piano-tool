@@ -944,6 +944,10 @@ StageEvent _$StageEventFromJson(
           return _StageEventBeat.fromJson(
             json
           );
+                case 'loopPassCompleted':
+          return _StageEventLoopPassCompleted.fromJson(
+            json
+          );
         
           default:
             throw CheckedFromJsonException(
@@ -1002,7 +1006,7 @@ extension StageEventPatterns on StageEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _StageEventNoteHit value)?  noteHit,TResult Function( _StageEventNoteMissed value)?  noteMissed,TResult Function( _StageEventStageCompleted value)?  stageCompleted,TResult Function( _StageEventPlaybackPosition value)?  playbackPosition,TResult Function( _StageEventStateChanged value)?  stateChanged,TResult Function( _StageEventBeat value)?  beat,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _StageEventNoteHit value)?  noteHit,TResult Function( _StageEventNoteMissed value)?  noteMissed,TResult Function( _StageEventStageCompleted value)?  stageCompleted,TResult Function( _StageEventPlaybackPosition value)?  playbackPosition,TResult Function( _StageEventStateChanged value)?  stateChanged,TResult Function( _StageEventBeat value)?  beat,TResult Function( _StageEventLoopPassCompleted value)?  loopPassCompleted,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _StageEventNoteHit() when noteHit != null:
@@ -1011,7 +1015,8 @@ return noteMissed(_that);case _StageEventStageCompleted() when stageCompleted !=
 return stageCompleted(_that);case _StageEventPlaybackPosition() when playbackPosition != null:
 return playbackPosition(_that);case _StageEventStateChanged() when stateChanged != null:
 return stateChanged(_that);case _StageEventBeat() when beat != null:
-return beat(_that);case _:
+return beat(_that);case _StageEventLoopPassCompleted() when loopPassCompleted != null:
+return loopPassCompleted(_that);case _:
   return orElse();
 
 }
@@ -1029,7 +1034,7 @@ return beat(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _StageEventNoteHit value)  noteHit,required TResult Function( _StageEventNoteMissed value)  noteMissed,required TResult Function( _StageEventStageCompleted value)  stageCompleted,required TResult Function( _StageEventPlaybackPosition value)  playbackPosition,required TResult Function( _StageEventStateChanged value)  stateChanged,required TResult Function( _StageEventBeat value)  beat,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _StageEventNoteHit value)  noteHit,required TResult Function( _StageEventNoteMissed value)  noteMissed,required TResult Function( _StageEventStageCompleted value)  stageCompleted,required TResult Function( _StageEventPlaybackPosition value)  playbackPosition,required TResult Function( _StageEventStateChanged value)  stateChanged,required TResult Function( _StageEventBeat value)  beat,required TResult Function( _StageEventLoopPassCompleted value)  loopPassCompleted,}){
 final _that = this;
 switch (_that) {
 case _StageEventNoteHit():
@@ -1038,7 +1043,8 @@ return noteMissed(_that);case _StageEventStageCompleted():
 return stageCompleted(_that);case _StageEventPlaybackPosition():
 return playbackPosition(_that);case _StageEventStateChanged():
 return stateChanged(_that);case _StageEventBeat():
-return beat(_that);}
+return beat(_that);case _StageEventLoopPassCompleted():
+return loopPassCompleted(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1052,7 +1058,7 @@ return beat(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _StageEventNoteHit value)?  noteHit,TResult? Function( _StageEventNoteMissed value)?  noteMissed,TResult? Function( _StageEventStageCompleted value)?  stageCompleted,TResult? Function( _StageEventPlaybackPosition value)?  playbackPosition,TResult? Function( _StageEventStateChanged value)?  stateChanged,TResult? Function( _StageEventBeat value)?  beat,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _StageEventNoteHit value)?  noteHit,TResult? Function( _StageEventNoteMissed value)?  noteMissed,TResult? Function( _StageEventStageCompleted value)?  stageCompleted,TResult? Function( _StageEventPlaybackPosition value)?  playbackPosition,TResult? Function( _StageEventStateChanged value)?  stateChanged,TResult? Function( _StageEventBeat value)?  beat,TResult? Function( _StageEventLoopPassCompleted value)?  loopPassCompleted,}){
 final _that = this;
 switch (_that) {
 case _StageEventNoteHit() when noteHit != null:
@@ -1061,7 +1067,8 @@ return noteMissed(_that);case _StageEventStageCompleted() when stageCompleted !=
 return stageCompleted(_that);case _StageEventPlaybackPosition() when playbackPosition != null:
 return playbackPosition(_that);case _StageEventStateChanged() when stateChanged != null:
 return stateChanged(_that);case _StageEventBeat() when beat != null:
-return beat(_that);case _:
+return beat(_that);case _StageEventLoopPassCompleted() when loopPassCompleted != null:
+return loopPassCompleted(_that);case _:
   return null;
 
 }
@@ -1078,7 +1085,7 @@ return beat(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int noteIndex,  NoteHitResult result,  double currentBeat)?  noteHit,TResult Function( int noteIndex,  double currentBeat)?  noteMissed,TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes)?  stageCompleted,TResult Function( double currentBeat,  double progress,  bool isPlaying)?  playbackPosition,TResult Function( StageEngineStatus state)?  stateChanged,TResult Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)?  beat,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int noteIndex,  NoteHitResult result,  double currentBeat)?  noteHit,TResult Function( int noteIndex,  double currentBeat)?  noteMissed,TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes)?  stageCompleted,TResult Function( double currentBeat,  double progress,  bool isPlaying)?  playbackPosition,TResult Function( StageEngineStatus state)?  stateChanged,TResult Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)?  beat,TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat)?  loopPassCompleted,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StageEventNoteHit() when noteHit != null:
 return noteHit(_that.noteIndex,_that.result,_that.currentBeat);case _StageEventNoteMissed() when noteMissed != null:
@@ -1086,7 +1093,8 @@ return noteMissed(_that.noteIndex,_that.currentBeat);case _StageEventStageComple
 return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes);case _StageEventPlaybackPosition() when playbackPosition != null:
 return playbackPosition(_that.currentBeat,_that.progress,_that.isPlaying);case _StageEventStateChanged() when stateChanged != null:
 return stateChanged(_that.state);case _StageEventBeat() when beat != null:
-return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);case _:
+return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);case _StageEventLoopPassCompleted() when loopPassCompleted != null:
+return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat);case _:
   return orElse();
 
 }
@@ -1104,7 +1112,7 @@ return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int noteIndex,  NoteHitResult result,  double currentBeat)  noteHit,required TResult Function( int noteIndex,  double currentBeat)  noteMissed,required TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes)  stageCompleted,required TResult Function( double currentBeat,  double progress,  bool isPlaying)  playbackPosition,required TResult Function( StageEngineStatus state)  stateChanged,required TResult Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)  beat,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int noteIndex,  NoteHitResult result,  double currentBeat)  noteHit,required TResult Function( int noteIndex,  double currentBeat)  noteMissed,required TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes)  stageCompleted,required TResult Function( double currentBeat,  double progress,  bool isPlaying)  playbackPosition,required TResult Function( StageEngineStatus state)  stateChanged,required TResult Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)  beat,required TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat)  loopPassCompleted,}) {final _that = this;
 switch (_that) {
 case _StageEventNoteHit():
 return noteHit(_that.noteIndex,_that.result,_that.currentBeat);case _StageEventNoteMissed():
@@ -1112,7 +1120,8 @@ return noteMissed(_that.noteIndex,_that.currentBeat);case _StageEventStageComple
 return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes);case _StageEventPlaybackPosition():
 return playbackPosition(_that.currentBeat,_that.progress,_that.isPlaying);case _StageEventStateChanged():
 return stateChanged(_that.state);case _StageEventBeat():
-return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);}
+return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);case _StageEventLoopPassCompleted():
+return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1126,7 +1135,7 @@ return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int noteIndex,  NoteHitResult result,  double currentBeat)?  noteHit,TResult? Function( int noteIndex,  double currentBeat)?  noteMissed,TResult? Function( double accuracy,  int score,  int totalNotes,  int hitNotes)?  stageCompleted,TResult? Function( double currentBeat,  double progress,  bool isPlaying)?  playbackPosition,TResult? Function( StageEngineStatus state)?  stateChanged,TResult? Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)?  beat,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int noteIndex,  NoteHitResult result,  double currentBeat)?  noteHit,TResult? Function( int noteIndex,  double currentBeat)?  noteMissed,TResult? Function( double accuracy,  int score,  int totalNotes,  int hitNotes)?  stageCompleted,TResult? Function( double currentBeat,  double progress,  bool isPlaying)?  playbackPosition,TResult? Function( StageEngineStatus state)?  stateChanged,TResult? Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)?  beat,TResult? Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat)?  loopPassCompleted,}) {final _that = this;
 switch (_that) {
 case _StageEventNoteHit() when noteHit != null:
 return noteHit(_that.noteIndex,_that.result,_that.currentBeat);case _StageEventNoteMissed() when noteMissed != null:
@@ -1134,7 +1143,8 @@ return noteMissed(_that.noteIndex,_that.currentBeat);case _StageEventStageComple
 return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes);case _StageEventPlaybackPosition() when playbackPosition != null:
 return playbackPosition(_that.currentBeat,_that.progress,_that.isPlaying);case _StageEventStateChanged() when stateChanged != null:
 return stateChanged(_that.state);case _StageEventBeat() when beat != null:
-return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);case _:
+return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);case _StageEventLoopPassCompleted() when loopPassCompleted != null:
+return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat);case _:
   return null;
 
 }
@@ -1608,6 +1618,89 @@ as MetronomeBeatType,measureIndex: null == measureIndex ? _self.measureIndex : m
 as int,beatInMeasure: null == beatInMeasure ? _self.beatInMeasure : beatInMeasure // ignore: cast_nullable_to_non_nullable
 as int,isCountIn: null == isCountIn ? _self.isCountIn : isCountIn // ignore: cast_nullable_to_non_nullable
 as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _StageEventLoopPassCompleted implements StageEvent {
+  const _StageEventLoopPassCompleted({required this.accuracy, required this.score, required this.totalNotes, required this.hitNotes, required this.loopStartBeat, required this.loopEndBeat, final  String? $type}): $type = $type ?? 'loopPassCompleted';
+  factory _StageEventLoopPassCompleted.fromJson(Map<String, dynamic> json) => _$StageEventLoopPassCompletedFromJson(json);
+
+ final  double accuracy;
+ final  int score;
+ final  int totalNotes;
+ final  int hitNotes;
+ final  double loopStartBeat;
+ final  double loopEndBeat;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
+/// Create a copy of StageEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$StageEventLoopPassCompletedCopyWith<_StageEventLoopPassCompleted> get copyWith => __$StageEventLoopPassCompletedCopyWithImpl<_StageEventLoopPassCompleted>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$StageEventLoopPassCompletedToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEventLoopPassCompleted&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes)&&(identical(other.loopStartBeat, loopStartBeat) || other.loopStartBeat == loopStartBeat)&&(identical(other.loopEndBeat, loopEndBeat) || other.loopEndBeat == loopEndBeat));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,accuracy,score,totalNotes,hitNotes,loopStartBeat,loopEndBeat);
+
+@override
+String toString() {
+  return 'StageEvent.loopPassCompleted(accuracy: $accuracy, score: $score, totalNotes: $totalNotes, hitNotes: $hitNotes, loopStartBeat: $loopStartBeat, loopEndBeat: $loopEndBeat)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$StageEventLoopPassCompletedCopyWith<$Res> implements $StageEventCopyWith<$Res> {
+  factory _$StageEventLoopPassCompletedCopyWith(_StageEventLoopPassCompleted value, $Res Function(_StageEventLoopPassCompleted) _then) = __$StageEventLoopPassCompletedCopyWithImpl;
+@useResult
+$Res call({
+ double accuracy, int score, int totalNotes, int hitNotes, double loopStartBeat, double loopEndBeat
+});
+
+
+
+
+}
+/// @nodoc
+class __$StageEventLoopPassCompletedCopyWithImpl<$Res>
+    implements _$StageEventLoopPassCompletedCopyWith<$Res> {
+  __$StageEventLoopPassCompletedCopyWithImpl(this._self, this._then);
+
+  final _StageEventLoopPassCompleted _self;
+  final $Res Function(_StageEventLoopPassCompleted) _then;
+
+/// Create a copy of StageEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? accuracy = null,Object? score = null,Object? totalNotes = null,Object? hitNotes = null,Object? loopStartBeat = null,Object? loopEndBeat = null,}) {
+  return _then(_StageEventLoopPassCompleted(
+accuracy: null == accuracy ? _self.accuracy : accuracy // ignore: cast_nullable_to_non_nullable
+as double,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as int,totalNotes: null == totalNotes ? _self.totalNotes : totalNotes // ignore: cast_nullable_to_non_nullable
+as int,hitNotes: null == hitNotes ? _self.hitNotes : hitNotes // ignore: cast_nullable_to_non_nullable
+as int,loopStartBeat: null == loopStartBeat ? _self.loopStartBeat : loopStartBeat // ignore: cast_nullable_to_non_nullable
+as double,loopEndBeat: null == loopEndBeat ? _self.loopEndBeat : loopEndBeat // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 
@@ -2577,6 +2670,562 @@ $LevelModelCopyWith<$Res>? get currentLevel {
     return _then(_self.copyWith(currentLevel: value));
   });
 }
+}
+
+
+/// @nodoc
+mixin _$AssistanceOffer {
+
+ int get unsuccessfulAttempts; double get currentSpeed; double? get suggestedSpeed; int? get currentStartMeasure; int? get currentEndMeasure; int? get suggestedStartMeasure; int? get suggestedEndMeasure; int? get mostMissedMeasure; String get reason; String get message;
+/// Create a copy of AssistanceOffer
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AssistanceOfferCopyWith<AssistanceOffer> get copyWith => _$AssistanceOfferCopyWithImpl<AssistanceOffer>(this as AssistanceOffer, _$identity);
+
+  /// Serializes this AssistanceOffer to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistanceOffer&&(identical(other.unsuccessfulAttempts, unsuccessfulAttempts) || other.unsuccessfulAttempts == unsuccessfulAttempts)&&(identical(other.currentSpeed, currentSpeed) || other.currentSpeed == currentSpeed)&&(identical(other.suggestedSpeed, suggestedSpeed) || other.suggestedSpeed == suggestedSpeed)&&(identical(other.currentStartMeasure, currentStartMeasure) || other.currentStartMeasure == currentStartMeasure)&&(identical(other.currentEndMeasure, currentEndMeasure) || other.currentEndMeasure == currentEndMeasure)&&(identical(other.suggestedStartMeasure, suggestedStartMeasure) || other.suggestedStartMeasure == suggestedStartMeasure)&&(identical(other.suggestedEndMeasure, suggestedEndMeasure) || other.suggestedEndMeasure == suggestedEndMeasure)&&(identical(other.mostMissedMeasure, mostMissedMeasure) || other.mostMissedMeasure == mostMissedMeasure)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.message, message) || other.message == message));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,unsuccessfulAttempts,currentSpeed,suggestedSpeed,currentStartMeasure,currentEndMeasure,suggestedStartMeasure,suggestedEndMeasure,mostMissedMeasure,reason,message);
+
+@override
+String toString() {
+  return 'AssistanceOffer(unsuccessfulAttempts: $unsuccessfulAttempts, currentSpeed: $currentSpeed, suggestedSpeed: $suggestedSpeed, currentStartMeasure: $currentStartMeasure, currentEndMeasure: $currentEndMeasure, suggestedStartMeasure: $suggestedStartMeasure, suggestedEndMeasure: $suggestedEndMeasure, mostMissedMeasure: $mostMissedMeasure, reason: $reason, message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AssistanceOfferCopyWith<$Res>  {
+  factory $AssistanceOfferCopyWith(AssistanceOffer value, $Res Function(AssistanceOffer) _then) = _$AssistanceOfferCopyWithImpl;
+@useResult
+$Res call({
+ int unsuccessfulAttempts, double currentSpeed, double? suggestedSpeed, int? currentStartMeasure, int? currentEndMeasure, int? suggestedStartMeasure, int? suggestedEndMeasure, int? mostMissedMeasure, String reason, String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$AssistanceOfferCopyWithImpl<$Res>
+    implements $AssistanceOfferCopyWith<$Res> {
+  _$AssistanceOfferCopyWithImpl(this._self, this._then);
+
+  final AssistanceOffer _self;
+  final $Res Function(AssistanceOffer) _then;
+
+/// Create a copy of AssistanceOffer
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? unsuccessfulAttempts = null,Object? currentSpeed = null,Object? suggestedSpeed = freezed,Object? currentStartMeasure = freezed,Object? currentEndMeasure = freezed,Object? suggestedStartMeasure = freezed,Object? suggestedEndMeasure = freezed,Object? mostMissedMeasure = freezed,Object? reason = null,Object? message = null,}) {
+  return _then(_self.copyWith(
+unsuccessfulAttempts: null == unsuccessfulAttempts ? _self.unsuccessfulAttempts : unsuccessfulAttempts // ignore: cast_nullable_to_non_nullable
+as int,currentSpeed: null == currentSpeed ? _self.currentSpeed : currentSpeed // ignore: cast_nullable_to_non_nullable
+as double,suggestedSpeed: freezed == suggestedSpeed ? _self.suggestedSpeed : suggestedSpeed // ignore: cast_nullable_to_non_nullable
+as double?,currentStartMeasure: freezed == currentStartMeasure ? _self.currentStartMeasure : currentStartMeasure // ignore: cast_nullable_to_non_nullable
+as int?,currentEndMeasure: freezed == currentEndMeasure ? _self.currentEndMeasure : currentEndMeasure // ignore: cast_nullable_to_non_nullable
+as int?,suggestedStartMeasure: freezed == suggestedStartMeasure ? _self.suggestedStartMeasure : suggestedStartMeasure // ignore: cast_nullable_to_non_nullable
+as int?,suggestedEndMeasure: freezed == suggestedEndMeasure ? _self.suggestedEndMeasure : suggestedEndMeasure // ignore: cast_nullable_to_non_nullable
+as int?,mostMissedMeasure: freezed == mostMissedMeasure ? _self.mostMissedMeasure : mostMissedMeasure // ignore: cast_nullable_to_non_nullable
+as int?,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AssistanceOffer].
+extension AssistanceOfferPatterns on AssistanceOffer {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AssistanceOffer value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AssistanceOffer() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AssistanceOffer value)  $default,){
+final _that = this;
+switch (_that) {
+case _AssistanceOffer():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AssistanceOffer value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AssistanceOffer() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int unsuccessfulAttempts,  double currentSpeed,  double? suggestedSpeed,  int? currentStartMeasure,  int? currentEndMeasure,  int? suggestedStartMeasure,  int? suggestedEndMeasure,  int? mostMissedMeasure,  String reason,  String message)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AssistanceOffer() when $default != null:
+return $default(_that.unsuccessfulAttempts,_that.currentSpeed,_that.suggestedSpeed,_that.currentStartMeasure,_that.currentEndMeasure,_that.suggestedStartMeasure,_that.suggestedEndMeasure,_that.mostMissedMeasure,_that.reason,_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int unsuccessfulAttempts,  double currentSpeed,  double? suggestedSpeed,  int? currentStartMeasure,  int? currentEndMeasure,  int? suggestedStartMeasure,  int? suggestedEndMeasure,  int? mostMissedMeasure,  String reason,  String message)  $default,) {final _that = this;
+switch (_that) {
+case _AssistanceOffer():
+return $default(_that.unsuccessfulAttempts,_that.currentSpeed,_that.suggestedSpeed,_that.currentStartMeasure,_that.currentEndMeasure,_that.suggestedStartMeasure,_that.suggestedEndMeasure,_that.mostMissedMeasure,_that.reason,_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int unsuccessfulAttempts,  double currentSpeed,  double? suggestedSpeed,  int? currentStartMeasure,  int? currentEndMeasure,  int? suggestedStartMeasure,  int? suggestedEndMeasure,  int? mostMissedMeasure,  String reason,  String message)?  $default,) {final _that = this;
+switch (_that) {
+case _AssistanceOffer() when $default != null:
+return $default(_that.unsuccessfulAttempts,_that.currentSpeed,_that.suggestedSpeed,_that.currentStartMeasure,_that.currentEndMeasure,_that.suggestedStartMeasure,_that.suggestedEndMeasure,_that.mostMissedMeasure,_that.reason,_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AssistanceOffer extends AssistanceOffer {
+  const _AssistanceOffer({required this.unsuccessfulAttempts, required this.currentSpeed, this.suggestedSpeed, this.currentStartMeasure, this.currentEndMeasure, this.suggestedStartMeasure, this.suggestedEndMeasure, this.mostMissedMeasure, required this.reason, required this.message}): super._();
+  factory _AssistanceOffer.fromJson(Map<String, dynamic> json) => _$AssistanceOfferFromJson(json);
+
+@override final  int unsuccessfulAttempts;
+@override final  double currentSpeed;
+@override final  double? suggestedSpeed;
+@override final  int? currentStartMeasure;
+@override final  int? currentEndMeasure;
+@override final  int? suggestedStartMeasure;
+@override final  int? suggestedEndMeasure;
+@override final  int? mostMissedMeasure;
+@override final  String reason;
+@override final  String message;
+
+/// Create a copy of AssistanceOffer
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AssistanceOfferCopyWith<_AssistanceOffer> get copyWith => __$AssistanceOfferCopyWithImpl<_AssistanceOffer>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AssistanceOfferToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssistanceOffer&&(identical(other.unsuccessfulAttempts, unsuccessfulAttempts) || other.unsuccessfulAttempts == unsuccessfulAttempts)&&(identical(other.currentSpeed, currentSpeed) || other.currentSpeed == currentSpeed)&&(identical(other.suggestedSpeed, suggestedSpeed) || other.suggestedSpeed == suggestedSpeed)&&(identical(other.currentStartMeasure, currentStartMeasure) || other.currentStartMeasure == currentStartMeasure)&&(identical(other.currentEndMeasure, currentEndMeasure) || other.currentEndMeasure == currentEndMeasure)&&(identical(other.suggestedStartMeasure, suggestedStartMeasure) || other.suggestedStartMeasure == suggestedStartMeasure)&&(identical(other.suggestedEndMeasure, suggestedEndMeasure) || other.suggestedEndMeasure == suggestedEndMeasure)&&(identical(other.mostMissedMeasure, mostMissedMeasure) || other.mostMissedMeasure == mostMissedMeasure)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.message, message) || other.message == message));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,unsuccessfulAttempts,currentSpeed,suggestedSpeed,currentStartMeasure,currentEndMeasure,suggestedStartMeasure,suggestedEndMeasure,mostMissedMeasure,reason,message);
+
+@override
+String toString() {
+  return 'AssistanceOffer(unsuccessfulAttempts: $unsuccessfulAttempts, currentSpeed: $currentSpeed, suggestedSpeed: $suggestedSpeed, currentStartMeasure: $currentStartMeasure, currentEndMeasure: $currentEndMeasure, suggestedStartMeasure: $suggestedStartMeasure, suggestedEndMeasure: $suggestedEndMeasure, mostMissedMeasure: $mostMissedMeasure, reason: $reason, message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AssistanceOfferCopyWith<$Res> implements $AssistanceOfferCopyWith<$Res> {
+  factory _$AssistanceOfferCopyWith(_AssistanceOffer value, $Res Function(_AssistanceOffer) _then) = __$AssistanceOfferCopyWithImpl;
+@override @useResult
+$Res call({
+ int unsuccessfulAttempts, double currentSpeed, double? suggestedSpeed, int? currentStartMeasure, int? currentEndMeasure, int? suggestedStartMeasure, int? suggestedEndMeasure, int? mostMissedMeasure, String reason, String message
+});
+
+
+
+
+}
+/// @nodoc
+class __$AssistanceOfferCopyWithImpl<$Res>
+    implements _$AssistanceOfferCopyWith<$Res> {
+  __$AssistanceOfferCopyWithImpl(this._self, this._then);
+
+  final _AssistanceOffer _self;
+  final $Res Function(_AssistanceOffer) _then;
+
+/// Create a copy of AssistanceOffer
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? unsuccessfulAttempts = null,Object? currentSpeed = null,Object? suggestedSpeed = freezed,Object? currentStartMeasure = freezed,Object? currentEndMeasure = freezed,Object? suggestedStartMeasure = freezed,Object? suggestedEndMeasure = freezed,Object? mostMissedMeasure = freezed,Object? reason = null,Object? message = null,}) {
+  return _then(_AssistanceOffer(
+unsuccessfulAttempts: null == unsuccessfulAttempts ? _self.unsuccessfulAttempts : unsuccessfulAttempts // ignore: cast_nullable_to_non_nullable
+as int,currentSpeed: null == currentSpeed ? _self.currentSpeed : currentSpeed // ignore: cast_nullable_to_non_nullable
+as double,suggestedSpeed: freezed == suggestedSpeed ? _self.suggestedSpeed : suggestedSpeed // ignore: cast_nullable_to_non_nullable
+as double?,currentStartMeasure: freezed == currentStartMeasure ? _self.currentStartMeasure : currentStartMeasure // ignore: cast_nullable_to_non_nullable
+as int?,currentEndMeasure: freezed == currentEndMeasure ? _self.currentEndMeasure : currentEndMeasure // ignore: cast_nullable_to_non_nullable
+as int?,suggestedStartMeasure: freezed == suggestedStartMeasure ? _self.suggestedStartMeasure : suggestedStartMeasure // ignore: cast_nullable_to_non_nullable
+as int?,suggestedEndMeasure: freezed == suggestedEndMeasure ? _self.suggestedEndMeasure : suggestedEndMeasure // ignore: cast_nullable_to_non_nullable
+as int?,mostMissedMeasure: freezed == mostMissedMeasure ? _self.mostMissedMeasure : mostMissedMeasure // ignore: cast_nullable_to_non_nullable
+as int?,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$AppliedAssistance {
+
+ double get originalSpeed; int? get originalStartMeasure; int? get originalEndMeasure; double? get assistedSpeed; int? get assistedStartMeasure; int? get assistedEndMeasure;
+/// Create a copy of AppliedAssistance
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AppliedAssistanceCopyWith<AppliedAssistance> get copyWith => _$AppliedAssistanceCopyWithImpl<AppliedAssistance>(this as AppliedAssistance, _$identity);
+
+  /// Serializes this AppliedAssistance to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppliedAssistance&&(identical(other.originalSpeed, originalSpeed) || other.originalSpeed == originalSpeed)&&(identical(other.originalStartMeasure, originalStartMeasure) || other.originalStartMeasure == originalStartMeasure)&&(identical(other.originalEndMeasure, originalEndMeasure) || other.originalEndMeasure == originalEndMeasure)&&(identical(other.assistedSpeed, assistedSpeed) || other.assistedSpeed == assistedSpeed)&&(identical(other.assistedStartMeasure, assistedStartMeasure) || other.assistedStartMeasure == assistedStartMeasure)&&(identical(other.assistedEndMeasure, assistedEndMeasure) || other.assistedEndMeasure == assistedEndMeasure));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,originalSpeed,originalStartMeasure,originalEndMeasure,assistedSpeed,assistedStartMeasure,assistedEndMeasure);
+
+@override
+String toString() {
+  return 'AppliedAssistance(originalSpeed: $originalSpeed, originalStartMeasure: $originalStartMeasure, originalEndMeasure: $originalEndMeasure, assistedSpeed: $assistedSpeed, assistedStartMeasure: $assistedStartMeasure, assistedEndMeasure: $assistedEndMeasure)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AppliedAssistanceCopyWith<$Res>  {
+  factory $AppliedAssistanceCopyWith(AppliedAssistance value, $Res Function(AppliedAssistance) _then) = _$AppliedAssistanceCopyWithImpl;
+@useResult
+$Res call({
+ double originalSpeed, int? originalStartMeasure, int? originalEndMeasure, double? assistedSpeed, int? assistedStartMeasure, int? assistedEndMeasure
+});
+
+
+
+
+}
+/// @nodoc
+class _$AppliedAssistanceCopyWithImpl<$Res>
+    implements $AppliedAssistanceCopyWith<$Res> {
+  _$AppliedAssistanceCopyWithImpl(this._self, this._then);
+
+  final AppliedAssistance _self;
+  final $Res Function(AppliedAssistance) _then;
+
+/// Create a copy of AppliedAssistance
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? originalSpeed = null,Object? originalStartMeasure = freezed,Object? originalEndMeasure = freezed,Object? assistedSpeed = freezed,Object? assistedStartMeasure = freezed,Object? assistedEndMeasure = freezed,}) {
+  return _then(_self.copyWith(
+originalSpeed: null == originalSpeed ? _self.originalSpeed : originalSpeed // ignore: cast_nullable_to_non_nullable
+as double,originalStartMeasure: freezed == originalStartMeasure ? _self.originalStartMeasure : originalStartMeasure // ignore: cast_nullable_to_non_nullable
+as int?,originalEndMeasure: freezed == originalEndMeasure ? _self.originalEndMeasure : originalEndMeasure // ignore: cast_nullable_to_non_nullable
+as int?,assistedSpeed: freezed == assistedSpeed ? _self.assistedSpeed : assistedSpeed // ignore: cast_nullable_to_non_nullable
+as double?,assistedStartMeasure: freezed == assistedStartMeasure ? _self.assistedStartMeasure : assistedStartMeasure // ignore: cast_nullable_to_non_nullable
+as int?,assistedEndMeasure: freezed == assistedEndMeasure ? _self.assistedEndMeasure : assistedEndMeasure // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AppliedAssistance].
+extension AppliedAssistancePatterns on AppliedAssistance {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AppliedAssistance value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AppliedAssistance() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AppliedAssistance value)  $default,){
+final _that = this;
+switch (_that) {
+case _AppliedAssistance():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AppliedAssistance value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AppliedAssistance() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double originalSpeed,  int? originalStartMeasure,  int? originalEndMeasure,  double? assistedSpeed,  int? assistedStartMeasure,  int? assistedEndMeasure)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AppliedAssistance() when $default != null:
+return $default(_that.originalSpeed,_that.originalStartMeasure,_that.originalEndMeasure,_that.assistedSpeed,_that.assistedStartMeasure,_that.assistedEndMeasure);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double originalSpeed,  int? originalStartMeasure,  int? originalEndMeasure,  double? assistedSpeed,  int? assistedStartMeasure,  int? assistedEndMeasure)  $default,) {final _that = this;
+switch (_that) {
+case _AppliedAssistance():
+return $default(_that.originalSpeed,_that.originalStartMeasure,_that.originalEndMeasure,_that.assistedSpeed,_that.assistedStartMeasure,_that.assistedEndMeasure);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double originalSpeed,  int? originalStartMeasure,  int? originalEndMeasure,  double? assistedSpeed,  int? assistedStartMeasure,  int? assistedEndMeasure)?  $default,) {final _that = this;
+switch (_that) {
+case _AppliedAssistance() when $default != null:
+return $default(_that.originalSpeed,_that.originalStartMeasure,_that.originalEndMeasure,_that.assistedSpeed,_that.assistedStartMeasure,_that.assistedEndMeasure);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AppliedAssistance extends AppliedAssistance {
+  const _AppliedAssistance({required this.originalSpeed, this.originalStartMeasure, this.originalEndMeasure, this.assistedSpeed, this.assistedStartMeasure, this.assistedEndMeasure}): super._();
+  factory _AppliedAssistance.fromJson(Map<String, dynamic> json) => _$AppliedAssistanceFromJson(json);
+
+@override final  double originalSpeed;
+@override final  int? originalStartMeasure;
+@override final  int? originalEndMeasure;
+@override final  double? assistedSpeed;
+@override final  int? assistedStartMeasure;
+@override final  int? assistedEndMeasure;
+
+/// Create a copy of AppliedAssistance
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AppliedAssistanceCopyWith<_AppliedAssistance> get copyWith => __$AppliedAssistanceCopyWithImpl<_AppliedAssistance>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AppliedAssistanceToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppliedAssistance&&(identical(other.originalSpeed, originalSpeed) || other.originalSpeed == originalSpeed)&&(identical(other.originalStartMeasure, originalStartMeasure) || other.originalStartMeasure == originalStartMeasure)&&(identical(other.originalEndMeasure, originalEndMeasure) || other.originalEndMeasure == originalEndMeasure)&&(identical(other.assistedSpeed, assistedSpeed) || other.assistedSpeed == assistedSpeed)&&(identical(other.assistedStartMeasure, assistedStartMeasure) || other.assistedStartMeasure == assistedStartMeasure)&&(identical(other.assistedEndMeasure, assistedEndMeasure) || other.assistedEndMeasure == assistedEndMeasure));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,originalSpeed,originalStartMeasure,originalEndMeasure,assistedSpeed,assistedStartMeasure,assistedEndMeasure);
+
+@override
+String toString() {
+  return 'AppliedAssistance(originalSpeed: $originalSpeed, originalStartMeasure: $originalStartMeasure, originalEndMeasure: $originalEndMeasure, assistedSpeed: $assistedSpeed, assistedStartMeasure: $assistedStartMeasure, assistedEndMeasure: $assistedEndMeasure)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AppliedAssistanceCopyWith<$Res> implements $AppliedAssistanceCopyWith<$Res> {
+  factory _$AppliedAssistanceCopyWith(_AppliedAssistance value, $Res Function(_AppliedAssistance) _then) = __$AppliedAssistanceCopyWithImpl;
+@override @useResult
+$Res call({
+ double originalSpeed, int? originalStartMeasure, int? originalEndMeasure, double? assistedSpeed, int? assistedStartMeasure, int? assistedEndMeasure
+});
+
+
+
+
+}
+/// @nodoc
+class __$AppliedAssistanceCopyWithImpl<$Res>
+    implements _$AppliedAssistanceCopyWith<$Res> {
+  __$AppliedAssistanceCopyWithImpl(this._self, this._then);
+
+  final _AppliedAssistance _self;
+  final $Res Function(_AppliedAssistance) _then;
+
+/// Create a copy of AppliedAssistance
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? originalSpeed = null,Object? originalStartMeasure = freezed,Object? originalEndMeasure = freezed,Object? assistedSpeed = freezed,Object? assistedStartMeasure = freezed,Object? assistedEndMeasure = freezed,}) {
+  return _then(_AppliedAssistance(
+originalSpeed: null == originalSpeed ? _self.originalSpeed : originalSpeed // ignore: cast_nullable_to_non_nullable
+as double,originalStartMeasure: freezed == originalStartMeasure ? _self.originalStartMeasure : originalStartMeasure // ignore: cast_nullable_to_non_nullable
+as int?,originalEndMeasure: freezed == originalEndMeasure ? _self.originalEndMeasure : originalEndMeasure // ignore: cast_nullable_to_non_nullable
+as int?,assistedSpeed: freezed == assistedSpeed ? _self.assistedSpeed : assistedSpeed // ignore: cast_nullable_to_non_nullable
+as double?,assistedStartMeasure: freezed == assistedStartMeasure ? _self.assistedStartMeasure : assistedStartMeasure // ignore: cast_nullable_to_non_nullable
+as int?,assistedEndMeasure: freezed == assistedEndMeasure ? _self.assistedEndMeasure : assistedEndMeasure // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+
 }
 
 // dart format on

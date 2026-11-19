@@ -249,6 +249,15 @@ sealed class StageEvent with _$StageEvent {
     @Default(false) bool isCountIn,
   }) = _StageEventBeat;
 
+  const factory StageEvent.loopPassCompleted({
+    required double accuracy,
+    required int score,
+    required int totalNotes,
+    required int hitNotes,
+    required double loopStartBeat,
+    required double loopEndBeat,
+  }) = _StageEventLoopPassCompleted;
+
   factory StageEvent.fromJson(Map<String, dynamic> json) =>
       _$StageEventFromJson(json);
 }
@@ -351,3 +360,86 @@ sealed class GameState with _$GameState {
 
   factory GameState.initial() => const GameState();
 }
+
+/// Assistance offered to the learner after repeated unsuccessful attempts.
+@freezed
+sealed class AssistanceOffer with _$AssistanceOffer {
+  const AssistanceOffer._();
+
+  const factory AssistanceOffer({
+    required int unsuccessfulAttempts,
+    required double currentSpeed,
+    double? suggestedSpeed,
+    int? currentStartMeasure,
+    int? currentEndMeasure,
+    int? suggestedStartMeasure,
+    int? suggestedEndMeasure,
+    int? mostMissedMeasure,
+    required String reason,
+    required String message,
+  }) = _AssistanceOffer;
+
+  factory AssistanceOffer.fromJson(Map<String, dynamic> json) =>
+      _$AssistanceOfferFromJson(json);
+
+  /// Current loop measure range at the time of the offer, or null for whole piece.
+  (int, int)? get currentLoopRange =>
+      currentStartMeasure != null && currentEndMeasure != null
+          ? (currentStartMeasure!, currentEndMeasure!)
+          : null;
+
+  /// Suggested shorter phrase loop range, or null if no shorter phrase is applicable.
+  (int, int)? get suggestedLoopRange =>
+      suggestedStartMeasure != null && suggestedEndMeasure != null
+          ? (suggestedStartMeasure!, suggestedEndMeasure!)
+          : null;
+
+  /// Whether a slower playback speed is suggested.
+  bool get hasSlowerSpeed =>
+      suggestedSpeed != null && suggestedSpeed! < currentSpeed;
+
+  /// Whether a shorter phrase range is suggested.
+  bool get hasShorterPhrase =>
+      suggestedStartMeasure != null && suggestedEndMeasure != null;
+}
+
+/// Active assistance settings and the baseline configuration needed to revert cleanly.
+@freezed
+sealed class AppliedAssistance with _$AppliedAssistance {
+  const AppliedAssistance._();
+
+  const factory AppliedAssistance({
+    required double originalSpeed,
+    int? originalStartMeasure,
+    int? originalEndMeasure,
+    double? assistedSpeed,
+    int? assistedStartMeasure,
+    int? assistedEndMeasure,
+  }) = _AppliedAssistance;
+
+  factory AppliedAssistance.fromJson(Map<String, dynamic> json) =>
+      _$AppliedAssistanceFromJson(json);
+
+  /// Baseline loop measure range prior to applying assistance, or null if whole piece.
+  (int, int)? get originalLoopRange =>
+      originalStartMeasure != null && originalEndMeasure != null
+          ? (originalStartMeasure!, originalEndMeasure!)
+          : null;
+
+  /// Active assisted loop measure range, or null if loop was not modified.
+  (int, int)? get assistedLoopRange =>
+      assistedStartMeasure != null && assistedEndMeasure != null
+          ? (assistedStartMeasure!, assistedEndMeasure!)
+          : null;
+
+  /// Whether playback speed was modified by assistance.
+  bool get isSpeedAssisted =>
+      assistedSpeed != null && (assistedSpeed! - originalSpeed).abs() > 0.001;
+
+  /// Whether phrase / loop range was modified by assistance.
+  bool get isPhraseAssisted =>
+      assistedStartMeasure != null &&
+      (assistedStartMeasure != originalStartMeasure ||
+          assistedEndMeasure != originalEndMeasure);
+}
+

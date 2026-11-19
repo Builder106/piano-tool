@@ -221,6 +221,30 @@ const _$MetronomeBeatTypeEnumMap = {
   MetronomeBeatType.subdivision: 'subdivision',
 };
 
+_StageEventLoopPassCompleted _$StageEventLoopPassCompletedFromJson(
+  Map<String, dynamic> json,
+) => _StageEventLoopPassCompleted(
+  accuracy: (json['accuracy'] as num).toDouble(),
+  score: (json['score'] as num).toInt(),
+  totalNotes: (json['totalNotes'] as num).toInt(),
+  hitNotes: (json['hitNotes'] as num).toInt(),
+  loopStartBeat: (json['loopStartBeat'] as num).toDouble(),
+  loopEndBeat: (json['loopEndBeat'] as num).toDouble(),
+  $type: json['runtimeType'] as String?,
+);
+
+Map<String, dynamic> _$StageEventLoopPassCompletedToJson(
+  _StageEventLoopPassCompleted instance,
+) => <String, dynamic>{
+  'accuracy': instance.accuracy,
+  'score': instance.score,
+  'totalNotes': instance.totalNotes,
+  'hitNotes': instance.hitNotes,
+  'loopStartBeat': instance.loopStartBeat,
+  'loopEndBeat': instance.loopEndBeat,
+  'runtimeType': instance.$type,
+};
+
 _StageEngineConfig _$StageEngineConfigFromJson(Map<String, dynamic> json) =>
     _StageEngineConfig(
       perfectWindow: (json['perfectWindow'] as num?)?.toDouble() ?? 0.1,
@@ -322,3 +346,51 @@ const _$NoteStateEnumMap = {
   NoteState.hitOkay: 'hitOkay',
   NoteState.missed: 'missed',
 };
+
+_AssistanceOffer _$AssistanceOfferFromJson(Map<String, dynamic> json) =>
+    _AssistanceOffer(
+      unsuccessfulAttempts: (json['unsuccessfulAttempts'] as num).toInt(),
+      currentSpeed: (json['currentSpeed'] as num).toDouble(),
+      suggestedSpeed: (json['suggestedSpeed'] as num?)?.toDouble(),
+      currentStartMeasure: (json['currentStartMeasure'] as num?)?.toInt(),
+      currentEndMeasure: (json['currentEndMeasure'] as num?)?.toInt(),
+      suggestedStartMeasure: (json['suggestedStartMeasure'] as num?)?.toInt(),
+      suggestedEndMeasure: (json['suggestedEndMeasure'] as num?)?.toInt(),
+      mostMissedMeasure: (json['mostMissedMeasure'] as num?)?.toInt(),
+      reason: json['reason'] as String,
+      message: json['message'] as String,
+    );
+
+Map<String, dynamic> _$AssistanceOfferToJson(_AssistanceOffer instance) =>
+    <String, dynamic>{
+      'unsuccessfulAttempts': instance.unsuccessfulAttempts,
+      'currentSpeed': instance.currentSpeed,
+      'suggestedSpeed': instance.suggestedSpeed,
+      'currentStartMeasure': instance.currentStartMeasure,
+      'currentEndMeasure': instance.currentEndMeasure,
+      'suggestedStartMeasure': instance.suggestedStartMeasure,
+      'suggestedEndMeasure': instance.suggestedEndMeasure,
+      'mostMissedMeasure': instance.mostMissedMeasure,
+      'reason': instance.reason,
+      'message': instance.message,
+    };
+
+_AppliedAssistance _$AppliedAssistanceFromJson(Map<String, dynamic> json) =>
+    _AppliedAssistance(
+      originalSpeed: (json['originalSpeed'] as num).toDouble(),
+      originalStartMeasure: (json['originalStartMeasure'] as num?)?.toInt(),
+      originalEndMeasure: (json['originalEndMeasure'] as num?)?.toInt(),
+      assistedSpeed: (json['assistedSpeed'] as num?)?.toDouble(),
+      assistedStartMeasure: (json['assistedStartMeasure'] as num?)?.toInt(),
+      assistedEndMeasure: (json['assistedEndMeasure'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$AppliedAssistanceToJson(_AppliedAssistance instance) =>
+    <String, dynamic>{
+      'originalSpeed': instance.originalSpeed,
+      'originalStartMeasure': instance.originalStartMeasure,
+      'originalEndMeasure': instance.originalEndMeasure,
+      'assistedSpeed': instance.assistedSpeed,
+      'assistedStartMeasure': instance.assistedStartMeasure,
+      'assistedEndMeasure': instance.assistedEndMeasure,
+    };

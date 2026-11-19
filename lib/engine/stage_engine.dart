@@ -906,6 +906,28 @@ class StageEngine extends ChangeNotifier {
 
     if (loop != null && newBeat >= loop.end) {
       _checkMissedNotes(loop.end);
+      final loopNotes = _allNotes
+          .where(
+            (n) =>
+                n.startBeat >= loop.start - 1e-9 &&
+                n.startBeat < loop.end &&
+                _isNoteInHand(n),
+          )
+          .length;
+      final hitNotes = _state.hitCount;
+      final totalNotes =
+          loopNotes > 0 ? loopNotes : (hitNotes + _state.missCount);
+      final accuracy = totalNotes > 0 ? hitNotes / totalNotes : 0.0;
+      _eventController.add(
+        StageEvent.loopPassCompleted(
+          accuracy: accuracy,
+          score: _state.score,
+          totalNotes: totalNotes,
+          hitNotes: hitNotes,
+          loopStartBeat: loop.start,
+          loopEndBeat: loop.end,
+        ),
+      );
       _restartLoop();
       _eventController.add(
         StageEvent.playbackPosition(
@@ -1371,6 +1393,25 @@ class StageEngine extends ChangeNotifier {
     final awaited = _getAwaitedNotes();
     if (awaited.isEmpty) {
       if (_loop != null) {
+        final loop = _loop!;
+        final loopNotes = _allNotes
+            .where(
+              (n) =>
+                  n.startBeat >= loop.start - 1e-9 &&
+                  n.startBeat < loop.end &&
+                  _isNoteInHand(n),
+            )
+            .length;
+        _eventController.add(
+          StageEvent.loopPassCompleted(
+            accuracy: 1.0,
+            score: 0,
+            totalNotes: loopNotes,
+            hitNotes: loopNotes,
+            loopStartBeat: loop.start,
+            loopEndBeat: loop.end,
+          ),
+        );
         _restartLoop();
         return;
       } else {

@@ -9,6 +9,7 @@ import '../audio/tone_synthesizer.dart';
 import '../data/level_repository.dart';
 import '../data/progress_repository.dart';
 import '../data/settings_repository.dart';
+import '../engine/difficulty_assistance.dart';
 import '../engine/stage_engine.dart';
 import '../models/audio_models.dart';
 import '../models/engine_models.dart';
@@ -77,6 +78,9 @@ class StageUiState {
     this.isMetronomeEnabled = false,
     this.isCountInEnabled = false,
     this.handSelection = HandSelection.both,
+    this.assistanceOffer,
+    this.appliedAssistance,
+    this.consecutiveUnsuccessfulAttempts = 0,
   }) : _loopMeasure = loopMeasure;
 
   final LevelModel level;
@@ -90,6 +94,21 @@ class StageUiState {
 
   /// Active hand selection for practice: both, right, or left.
   final HandSelection handSelection;
+
+  /// Assistance offer available after repeated unsuccessful attempts, or null.
+  final AssistanceOffer? assistanceOffer;
+
+  /// Active assistance tracking the baseline settings to revert to, or null.
+  final AppliedAssistance? appliedAssistance;
+
+  /// Number of consecutive unsuccessful attempts recorded in the current session.
+  final int consecutiveUnsuccessfulAttempts;
+
+  /// Whether an assistance offer is currently available to the learner.
+  bool get isAssistanceAvailable => assistanceOffer != null;
+
+  /// Whether assistance is currently applied and active.
+  bool get isAssistanceActive => appliedAssistance != null;
 
   /// Whether the hand assignment of the active level is known from authored voice data.
   bool get isHandAssignmentKnown => level.isHandAssignmentKnown;
@@ -194,14 +213,21 @@ class StageUiState {
       HandSelection.left => 'Left hand. ',
     };
 
+    final assistanceSuffix = switch ((appliedAssistance, assistanceOffer)) {
+      (final applied?, _) =>
+        ' (Assisted: ${applied.isSpeedAssisted ? 'speed ${(speed * 100).round()}% (original ${(applied.originalSpeed * 100).round()}%)' : ''}${applied.isSpeedAssisted && applied.isPhraseAssisted ? ', ' : ''}${applied.isPhraseAssisted ? 'shorter phrase' : ''}. Clear way back available.)',
+      (null, final offer?) => ' (Assistance available: ${offer.message})',
+      _ => '',
+    };
+
     if (isCountingIn && countInBeat != null) {
-      return '${handPrefix}Count-in: Beat $countInBeat of $countInTotalBeats. Speed ${(speed * 100).round()}% ($effectiveBpm BPM).';
+      return '${handPrefix}Count-in: Beat $countInBeat of $countInTotalBeats. Speed ${(speed * 100).round()}% ($effectiveBpm BPM).$assistanceSuffix';
     } else if (practiceMode == PracticeMode.waiting && waitingHint != null) {
-      return '$handPrefix$modeStr: $statusStr. $posStr. ${waitingHint!.hintText}';
+      return '$handPrefix$modeStr: $statusStr. $posStr. ${waitingHint!.hintText}$assistanceSuffix';
     } else if (practiceMode == PracticeMode.timed) {
-      return '$handPrefix$modeStr: $statusStr. $posStr. Speed ${(speed * 100).round()}% ($effectiveBpm BPM). Score: $score, accuracy: ${(accuracy * 100).round()}%';
+      return '$handPrefix$modeStr: $statusStr. $posStr. Speed ${(speed * 100).round()}% ($effectiveBpm BPM). Score: $score, accuracy: ${(accuracy * 100).round()}%$assistanceSuffix';
     } else {
-      return '$handPrefix$modeStr: $statusStr. $posStr.';
+      return '$handPrefix$modeStr: $statusStr. $posStr.$assistanceSuffix';
     }
   }
 
@@ -248,6 +274,11 @@ class StageUiState {
     bool? isMetronomeEnabled,
     bool? isCountInEnabled,
     HandSelection? handSelection,
+    AssistanceOffer? assistanceOffer,
+    bool clearAssistanceOffer = false,
+    AppliedAssistance? appliedAssistance,
+    bool clearAppliedAssistance = false,
+    int? consecutiveUnsuccessfulAttempts,
   }) {
     final effectiveRange = clearLoop
         ? null
@@ -280,6 +311,15 @@ class StageUiState {
       isMetronomeEnabled: isMetronomeEnabled ?? this.isMetronomeEnabled,
       isCountInEnabled: isCountInEnabled ?? this.isCountInEnabled,
       handSelection: handSelection ?? this.handSelection,
+      assistanceOffer: clearAssistanceOffer
+          ? null
+          : (assistanceOffer ?? this.assistanceOffer),
+      appliedAssistance: clearAppliedAssistance
+          ? null
+          : (appliedAssistance ?? this.appliedAssistance),
+      consecutiveUnsuccessfulAttempts:
+          consecutiveUnsuccessfulAttempts ??
+          this.consecutiveUnsuccessfulAttempts,
     );
   }
 }
@@ -292,6 +332,10 @@ class StageController extends StateNotifier<StageUiState> {
     StageUiState initial, {
     AudioSynthesizer? synth,
     PracticeInputSource? selectedInputSource,
+    this.difficultyAccuracyThreshold =
+        DifficultyAssistanceEvaluator.defaultDifficultyAccuracyThreshold,
+    this.repeatedAttemptsThreshold =
+        DifficultyAssistanceEvaluator.defaultRepeatedAttemptsThreshold,
   }) : _synth = synth ?? AudioSynthesizer(player: SilentAudioTonePlayer()),
        super(
          selectedInputSource != null &&
@@ -307,6 +351,9 @@ class StageController extends StateNotifier<StageUiState> {
   final String _stageId;
   final ProgressRepository _progress;
   final AudioSynthesizer _synth;
+  final double difficultyAccuracyThreshold;
+  final int repeatedAttemptsThreshold;
+  int _consecutiveUnsuccessfulAttempts = 0;
   StreamSubscription<StageEvent>? _sub;
   Future<void> _progressWrites = Future<void>.value();
   bool _syncEngineEvents = true;
@@ -379,6 +426,133 @@ class StageController extends StateNotifier<StageUiState> {
     if (_disposed || !mounted) return;
     _engine.setHandSelection(selection);
     _sync();
+  }
+
+  /// Available assistance offer formulated after repeated difficulty.
+  AssistanceOffer? get assistanceOffer => state.assistanceOffer;
+
+  /// Currently applied assistance tracking original baseline settings.
+  AppliedAssistance? get appliedAssistance => state.appliedAssistance;
+
+  /// Whether an assistance offer is currently available for application.
+  bool get isAssistanceAvailable => state.isAssistanceAvailable;
+
+  /// Whether assistance is currently applied and active.
+  bool get isAssistanceActive => state.isAssistanceActive;
+
+  /// Consecutive unsuccessful attempts recorded in the current practice session.
+  int get consecutiveUnsuccessfulAttempts =>
+      state.consecutiveUnsuccessfulAttempts;
+
+  /// Applies a recommended slower playback speed from the active assistance offer.
+  ///
+  /// Keeps the change visible and reversible by storing original baseline speed.
+  void applySlowerSpeed() {
+    final offer = state.assistanceOffer;
+    if (offer == null || offer.suggestedSpeed == null) return;
+    final originalSpeed =
+        state.appliedAssistance?.originalSpeed ?? state.speed;
+    final originalStart =
+        state.appliedAssistance?.originalStartMeasure ?? state.loopRange?.$1;
+    final originalEnd =
+        state.appliedAssistance?.originalEndMeasure ?? state.loopRange?.$2;
+    final newSpeed = offer.suggestedSpeed!;
+    setSpeed(newSpeed);
+    state = state.copyWith(
+      appliedAssistance: AppliedAssistance(
+        originalSpeed: originalSpeed,
+        originalStartMeasure: originalStart,
+        originalEndMeasure: originalEnd,
+        assistedSpeed: newSpeed,
+        assistedStartMeasure: state.appliedAssistance?.assistedStartMeasure,
+        assistedEndMeasure: state.appliedAssistance?.assistedEndMeasure,
+      ),
+      clearAssistanceOffer: true,
+    );
+  }
+
+  /// Applies a recommended shorter phrase loop from the active assistance offer.
+  ///
+  /// Keeps the change visible and reversible by storing original baseline loop range.
+  void applyShorterPhrase() {
+    final offer = state.assistanceOffer;
+    if (offer == null || offer.suggestedLoopRange == null) return;
+    final originalSpeed =
+        state.appliedAssistance?.originalSpeed ?? state.speed;
+    final originalStart =
+        state.appliedAssistance?.originalStartMeasure ?? state.loopRange?.$1;
+    final originalEnd =
+        state.appliedAssistance?.originalEndMeasure ?? state.loopRange?.$2;
+    final range = offer.suggestedLoopRange!;
+    loopRange(range.$1, range.$2);
+    state = state.copyWith(
+      appliedAssistance: AppliedAssistance(
+        originalSpeed: originalSpeed,
+        originalStartMeasure: originalStart,
+        originalEndMeasure: originalEnd,
+        assistedSpeed: state.appliedAssistance?.assistedSpeed,
+        assistedStartMeasure: range.$1,
+        assistedEndMeasure: range.$2,
+      ),
+      clearAssistanceOffer: true,
+    );
+  }
+
+  /// Applies assistance options from the active offer (speed, phrase, or both).
+  void applyAssistance({bool speed = true, bool phrase = true}) {
+    final offer = state.assistanceOffer;
+    if (offer == null) return;
+    final originalSpeed =
+        state.appliedAssistance?.originalSpeed ?? state.speed;
+    final originalStart =
+        state.appliedAssistance?.originalStartMeasure ?? state.loopRange?.$1;
+    final originalEnd =
+        state.appliedAssistance?.originalEndMeasure ?? state.loopRange?.$2;
+
+    double? newSpeed = state.appliedAssistance?.assistedSpeed;
+    if (speed && offer.suggestedSpeed != null) {
+      newSpeed = offer.suggestedSpeed;
+      setSpeed(newSpeed!);
+    }
+
+    int? newStart = state.appliedAssistance?.assistedStartMeasure;
+    int? newEnd = state.appliedAssistance?.assistedEndMeasure;
+    if (phrase && offer.suggestedLoopRange != null) {
+      final range = offer.suggestedLoopRange!;
+      newStart = range.$1;
+      newEnd = range.$2;
+      loopRange(newStart, newEnd);
+    }
+
+    state = state.copyWith(
+      appliedAssistance: AppliedAssistance(
+        originalSpeed: originalSpeed,
+        originalStartMeasure: originalStart,
+        originalEndMeasure: originalEnd,
+        assistedSpeed: newSpeed,
+        assistedStartMeasure: newStart,
+        assistedEndMeasure: newEnd,
+      ),
+      clearAssistanceOffer: true,
+    );
+  }
+
+  /// Reverts any applied assistance, restoring the original playback speed and loop range.
+  void revertAssistance() {
+    final applied = state.appliedAssistance;
+    if (applied == null) return;
+    setSpeed(applied.originalSpeed);
+    if (applied.originalLoopRange != null) {
+      loopRange(applied.originalStartMeasure!, applied.originalEndMeasure!);
+    } else {
+      stopLoop();
+    }
+    state = state.copyWith(clearAppliedAssistance: true);
+  }
+
+  /// Dismisses the pending assistance offer without altering speed or loop range.
+  void dismissAssistanceOffer() {
+    state = state.copyWith(clearAssistanceOffer: true);
   }
 
   void updateSelectedInputSource(PracticeInputSource source) {
@@ -648,19 +822,73 @@ class StageController extends StateNotifier<StageUiState> {
     if (!_syncEngineEvents) return;
     _sync();
     event.whenOrNull(
-      stageCompleted: (accuracy, score, totalNotes, hitNotes) =>
-          _progressWrites = _progressWrites.then((_) async {
-            await _progress
-                .record(stageId: _stageId, accuracy: accuracy, score: score)
-                .catchError((_) {});
-            await _progress.setLastPlayed(_stageId).catchError((_) {});
-          }),
+      stageCompleted: (accuracy, score, totalNotes, hitNotes) {
+        _progressWrites = _progressWrites.then((_) async {
+          await _progress
+              .record(stageId: _stageId, accuracy: accuracy, score: score)
+              .catchError((_) {});
+          await _progress.setLastPlayed(_stageId).catchError((_) {});
+        });
+        _handleAttemptFinished(accuracy: accuracy, totalNotes: totalNotes);
+      },
+      loopPassCompleted: (
+        accuracy,
+        score,
+        totalNotes,
+        hitNotes,
+        loopStart,
+        loopEnd,
+      ) {
+        _handleAttemptFinished(accuracy: accuracy, totalNotes: totalNotes);
+      },
       beat: (beat, beatType, measureIndex, beatInMeasure, isCountIn) {
         if (_engine.isMetronomeEnabled || isCountIn) {
           unawaited(_synth.playMetronomeClick(type: beatType));
         }
       },
     );
+  }
+
+  void _handleAttemptFinished({
+    required double accuracy,
+    required int totalNotes,
+  }) {
+    if (_disposed || !mounted) return;
+    if (totalNotes <= 0 || practiceMode == PracticeMode.waiting) return;
+
+    if (accuracy < difficultyAccuracyThreshold) {
+      _consecutiveUnsuccessfulAttempts++;
+      final offer = DifficultyAssistanceEvaluator.evaluate(
+        level: state.level,
+        currentSpeed: state.speed,
+        currentLoopRange: state.loopRange,
+        allNotes: _engine.allNotes,
+        noteStates: _engine.state.noteStates,
+        unsuccessfulAttempts: _consecutiveUnsuccessfulAttempts,
+        handSelection: _engine.handSelection,
+        repeatedAttemptsThreshold: repeatedAttemptsThreshold,
+      );
+      if (offer != null) {
+        state = state.copyWith(
+          assistanceOffer: offer,
+          consecutiveUnsuccessfulAttempts: _consecutiveUnsuccessfulAttempts,
+        );
+      } else {
+        state = state.copyWith(
+          consecutiveUnsuccessfulAttempts: _consecutiveUnsuccessfulAttempts,
+        );
+      }
+    } else {
+      _consecutiveUnsuccessfulAttempts = 0;
+      if (state.assistanceOffer != null) {
+        state = state.copyWith(
+          clearAssistanceOffer: true,
+          consecutiveUnsuccessfulAttempts: 0,
+        );
+      } else if (state.consecutiveUnsuccessfulAttempts != 0) {
+        state = state.copyWith(consecutiveUnsuccessfulAttempts: 0);
+      }
+    }
   }
 
   void _sync() {
@@ -903,3 +1131,41 @@ final isHandAssignmentKnownProvider = Provider.autoDispose.family<bool, String>(
     stageControllerProvider(id).select((s) => s.isHandAssignmentKnown),
   ),
 );
+
+final assistanceOfferProvider = Provider.autoDispose
+    .family<AssistanceOffer?, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.assistanceOffer),
+      ),
+    );
+
+final appliedAssistanceProvider = Provider.autoDispose
+    .family<AppliedAssistance?, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.appliedAssistance),
+      ),
+    );
+
+final isAssistanceAvailableProvider = Provider.autoDispose
+    .family<bool, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.isAssistanceAvailable),
+      ),
+    );
+
+final isAssistanceActiveProvider = Provider.autoDispose
+    .family<bool, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(id).select((s) => s.isAssistanceActive),
+      ),
+    );
+
+final consecutiveUnsuccessfulAttemptsProvider = Provider.autoDispose
+    .family<int, String>(
+      (ref, id) => ref.watch(
+        stageControllerProvider(
+          id,
+        ).select((s) => s.consecutiveUnsuccessfulAttempts),
+      ),
+    );
+
