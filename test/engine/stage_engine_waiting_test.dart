@@ -345,7 +345,7 @@ void main() {
 
       StageEvent? completionEvent;
       engine.events.listen((e) {
-        e.whenOrNull(stageCompleted: (acc, score, total, hit) {
+        e.whenOrNull(stageCompleted: (acc, score, total, hit, attemptDetail) {
           completionEvent = e;
         });
       });
@@ -398,7 +398,7 @@ void main() {
 
       expect(completionEvent, isNotNull);
       completionEvent!.whenOrNull(
-        stageCompleted: (accuracy, score, totalNotes, hitNotes) {
+        stageCompleted: (accuracy, score, totalNotes, hitNotes, attemptDetail) {
           expect(score, 0);
           expect(accuracy, 1.0);
           expect(totalNotes, 3);

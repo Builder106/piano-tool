@@ -68,7 +68,7 @@ void main() {
       final loopEvents = <({double accuracy, int totalNotes, int hitNotes})>[];
       final sub = engine.events.listen((event) {
         event.whenOrNull(
-          loopPassCompleted: (accuracy, score, totalNotes, hitNotes, start, end) {
+          loopPassCompleted: (accuracy, score, totalNotes, hitNotes, start, end, attemptDetail) {
             loopEvents.add((
               accuracy: accuracy,
               totalNotes: totalNotes,
@@ -116,7 +116,7 @@ void main() {
       final loopEvents = <({double accuracy, int totalNotes, int hitNotes})>[];
       final sub = engine.events.listen((event) {
         event.whenOrNull(
-          loopPassCompleted: (accuracy, score, totalNotes, hitNotes, start, end) {
+          loopPassCompleted: (accuracy, score, totalNotes, hitNotes, start, end, attemptDetail) {
             loopEvents.add((
               accuracy: accuracy,
               totalNotes: totalNotes,

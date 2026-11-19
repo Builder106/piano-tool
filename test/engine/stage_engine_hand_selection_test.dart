@@ -398,7 +398,7 @@ void main() {
         StageEvent? completedEvent;
         engine.events.listen((e) {
           e.whenOrNull(
-            stageCompleted: (accuracy, score, totalNotes, hitNotes) {
+            stageCompleted: (accuracy, score, totalNotes, hitNotes, attemptDetail) {
               completedEvent = e;
             },
           );
@@ -418,7 +418,7 @@ void main() {
 
         expect(completedEvent, isNotNull);
         completedEvent!.whenOrNull(
-          stageCompleted: (accuracy, score, totalNotes, hitNotes) {
+          stageCompleted: (accuracy, score, totalNotes, hitNotes, attemptDetail) {
             expect(totalNotes, 3); // exactly 3 right hand notes
             expect(hitNotes, 3);
             expect(accuracy, 1.0); // 100% accuracy

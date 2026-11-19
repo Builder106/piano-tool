@@ -96,7 +96,25 @@ class StageEngine extends ChangeNotifier {
   var _disposed = false;
   final List<LevelNote> _allNotes = [];
   final Map<int, NoteHitResult> _noteResults = {};
+  AttemptDetail? _attemptDetail;
   int _nextNoteIndex = 0;
+
+  /// Detail of the most recently finished attempt, or null.
+  AttemptDetail? get attemptDetail => _attemptDetail;
+
+  /// Immutable snapshot of note hit results for the current attempt.
+  Map<int, NoteHitResult> get noteResults => Map.unmodifiable(_noteResults);
+
+  /// Derives attempt detail from note results and active filters.
+  AttemptDetail _buildAttemptDetail({({double start, double end})? loopRange}) {
+    return AttemptDetail.fromResults(
+      allNotes: _allNotes,
+      noteResults: _noteResults,
+      handSelection: _handSelection,
+      loop: loopRange ?? _loop,
+      score: _state.score,
+    );
+  }
 
   /// Whether the engine is currently demonstrating a phrase using synthesizer audio.
   bool _isDemonstrating = false;
@@ -334,6 +352,7 @@ class StageEngine extends ChangeNotifier {
       waitingHint: null,
       isCountingIn: _isCountingIn,
       countInBeat: _isCountingIn ? 1 : null,
+      noteResults: Map.of(_noteResults),
     );
 
     if (_practiceMode == PracticeMode.waiting) {
@@ -397,6 +416,7 @@ class StageEngine extends ChangeNotifier {
     _loop = null;
     _nextNoteIndex = 0;
     _noteResults.clear();
+    _attemptDetail = null;
     _lastHeard = null;
 
     final initialNoteStates = List.filled(_allNotes.length, NoteState.upcoming);
@@ -414,6 +434,8 @@ class StageEngine extends ChangeNotifier {
       waitingHint: null,
       isCountingIn: false,
       countInBeat: null,
+      noteResults: const {},
+      attemptDetail: null,
     );
     _notifyStateChanged();
   }
@@ -500,6 +522,93 @@ class StageEngine extends ChangeNotifier {
 
     if (bestMatchIndex != null) {
       _registerHit(bestMatchIndex, bestSignedTimingError);
+      return;
+    }
+
+    // If no matching pitch was found among active/upcoming notes:
+    // Check if an unresolved note in the active hand is within its hit window.
+    // The current scorer does NOT classify every unexpected pitch: unexpected
+    // pitches occurring when no expected note is in its hit window (such as during
+    // rests, before the window opens, or far ahead) are ignored. Only pitches
+    // struck within the active hit window of an unresolved expected note are confirmed
+    // as wrong pitches.
+    int? closestWrongIndex;
+    double closestWrongTimingError = double.infinity;
+    double closestSignedTimingError = 0.0;
+
+    for (int i = _nextNoteIndex; i < _allNotes.length; i++) {
+      final note = _allNotes[i];
+      if (_loop case final loop?) {
+        if (note.startBeat < loop.start - 1e-9 || note.startBeat >= loop.end) {
+          continue;
+        }
+      }
+      if (!_isNoteInHand(note)) {
+        continue;
+      }
+      final noteState = _state.noteStates[i];
+
+      if (noteState != NoteState.upcoming && noteState != NoteState.active) {
+        continue;
+      }
+
+      final timingError = currentBeat - note.startBeat;
+      final absError = timingError.abs();
+
+      if (timingError < -_config.okayWindow) continue;
+
+      if (absError <= _config.missWindow) {
+        if (absError < closestWrongTimingError) {
+          closestWrongTimingError = absError;
+          closestSignedTimingError = timingError;
+          closestWrongIndex = i;
+        }
+      }
+    }
+
+    if (closestWrongIndex != null) {
+      _registerWrongPitch(
+        closestWrongIndex,
+        detectedMidiNote,
+        closestSignedTimingError,
+      );
+    }
+  }
+
+  /// Register a confirmed wrong pitch for an expected note
+  void _registerWrongPitch(
+    int noteIndex,
+    int playedMidiNote,
+    double timingError,
+  ) {
+    if (_noteResults.containsKey(noteIndex)) return; // Already processed
+
+    final result = NoteHitResult.wrongPitch(
+      noteIndex: noteIndex,
+      playedMidiNote: playedMidiNote,
+      timingError: timingError,
+    );
+
+    _noteResults[noteIndex] = result;
+    _updateNoteState(noteIndex, NoteState.missed);
+    _state = _state.copyWith(
+      missCount: _state.missCount + 1,
+      noteResults: Map.of(_noteResults),
+    );
+
+    _eventController.add(
+      StageEvent.noteHit(
+        noteIndex: noteIndex,
+        result: result,
+        currentBeat: _state.currentBeat,
+      ),
+    );
+
+    // Advance next note index past resolved notes
+    while (_nextNoteIndex < _allNotes.length &&
+        _state.noteStates[_nextNoteIndex] != NoteState.upcoming &&
+        _state.noteStates[_nextNoteIndex] != NoteState.active) {
+      _nextNoteIndex++;
     }
   }
 
@@ -542,6 +651,7 @@ class StageEngine extends ChangeNotifier {
       missCount: result.noteState == NoteState.missed
           ? _state.missCount + 1
           : _state.missCount,
+      noteResults: Map.of(_noteResults),
     );
 
     _eventController.add(
@@ -759,6 +869,7 @@ class StageEngine extends ChangeNotifier {
       okayCount: 0,
       isCountingIn: _isCountingIn,
       countInBeat: _isCountingIn ? 1 : null,
+      noteResults: Map.of(_noteResults),
     );
     if (_practiceMode == PracticeMode.waiting) {
       _syncWaitingPlayheadAndHint();
@@ -918,6 +1029,8 @@ class StageEngine extends ChangeNotifier {
       final totalNotes =
           loopNotes > 0 ? loopNotes : (hitNotes + _state.missCount);
       final accuracy = totalNotes > 0 ? hitNotes / totalNotes : 0.0;
+      final detail = _buildAttemptDetail(loopRange: loop);
+      _attemptDetail = detail;
       _eventController.add(
         StageEvent.loopPassCompleted(
           accuracy: accuracy,
@@ -926,6 +1039,7 @@ class StageEngine extends ChangeNotifier {
           hitNotes: hitNotes,
           loopStartBeat: loop.start,
           loopEndBeat: loop.end,
+          attemptDetail: detail,
         ),
       );
       _restartLoop();
@@ -995,7 +1109,10 @@ class StageEngine extends ChangeNotifier {
       if (currentBeat > note.startBeat + _config.missWindow) {
         _updateNoteState(i, NoteState.missed);
         _noteResults[i] = NoteHitResult.missed(noteIndex: i);
-        _state = _state.copyWith(missCount: _state.missCount + 1);
+        _state = _state.copyWith(
+          missCount: _state.missCount + 1,
+          noteResults: Map.of(_noteResults),
+        );
 
         _eventController.add(
           StageEvent.noteMissed(noteIndex: i, currentBeat: currentBeat),
@@ -1054,9 +1171,13 @@ class StageEngine extends ChangeNotifier {
   /// Complete the stage
   void _completeStage() {
     _stopPlaybackTimer();
+    final detail = _buildAttemptDetail();
+    _attemptDetail = detail;
     _state = _state.copyWith(
       engineState: StageEngineStatus.completed,
       waitingHint: null,
+      noteResults: Map.of(_noteResults),
+      attemptDetail: detail,
     );
 
     final totalNotes = _allNotes.where(_isNoteInHand).length;
@@ -1069,6 +1190,7 @@ class StageEngine extends ChangeNotifier {
         score: _state.score,
         totalNotes: totalNotes,
         hitNotes: hitNotes,
+        attemptDetail: detail,
       ),
     );
 
@@ -1261,6 +1383,7 @@ class StageEngine extends ChangeNotifier {
         perfectCount: perfectCount,
         goodCount: goodCount,
         okayCount: okayCount,
+        noteResults: Map.of(_noteResults),
       );
     } else {
       final missCount = newStates.indexed
@@ -1272,6 +1395,7 @@ class StageEngine extends ChangeNotifier {
         currentBeat: clampedBeat,
         noteStates: newStates,
         missCount: missCount,
+        noteResults: Map.of(_noteResults),
       );
     }
 
@@ -1402,6 +1526,8 @@ class StageEngine extends ChangeNotifier {
                   _isNoteInHand(n),
             )
             .length;
+        final detail = _buildAttemptDetail(loopRange: loop);
+        _attemptDetail = detail;
         _eventController.add(
           StageEvent.loopPassCompleted(
             accuracy: 1.0,
@@ -1410,6 +1536,7 @@ class StageEngine extends ChangeNotifier {
             hitNotes: loopNotes,
             loopStartBeat: loop.start,
             loopEndBeat: loop.end,
+            attemptDetail: detail,
           ),
         );
         _restartLoop();
@@ -1500,6 +1627,7 @@ class StageEngine extends ChangeNotifier {
 
     _state = _state.copyWith(
       hitCount: _state.hitCount + 1,
+      noteResults: Map.of(_noteResults),
       // score is untouched (no timed score awarded)
     );
 

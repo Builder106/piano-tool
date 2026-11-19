@@ -88,4 +88,19 @@ class TimingAdvice {
       );
     }
   }
+
+  /// Derives timing advice from an [AttemptDetail].
+  static TimingAdvice? evaluateAttempt({
+    required AttemptDetail detail,
+    required bool isCalibrated,
+    double rushingThreshold = -0.05,
+    double draggingThreshold = 0.05,
+  }) {
+    return evaluate(
+      hitResults: detail.noteResults,
+      isCalibrated: isCalibrated,
+      rushingThreshold: rushingThreshold,
+      draggingThreshold: draggingThreshold,
+    );
+  }
 }

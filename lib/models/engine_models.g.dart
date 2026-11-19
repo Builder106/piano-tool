@@ -88,6 +88,24 @@ Map<String, dynamic> _$NoteHitResultMissedToJson(
   'runtimeType': instance.$type,
 };
 
+_NoteHitResultWrongPitch _$NoteHitResultWrongPitchFromJson(
+  Map<String, dynamic> json,
+) => _NoteHitResultWrongPitch(
+  noteIndex: (json['noteIndex'] as num).toInt(),
+  playedMidiNote: (json['playedMidiNote'] as num).toInt(),
+  timingError: (json['timingError'] as num).toDouble(),
+  $type: json['runtimeType'] as String?,
+);
+
+Map<String, dynamic> _$NoteHitResultWrongPitchToJson(
+  _NoteHitResultWrongPitch instance,
+) => <String, dynamic>{
+  'noteIndex': instance.noteIndex,
+  'playedMidiNote': instance.playedMidiNote,
+  'timingError': instance.timingError,
+  'runtimeType': instance.$type,
+};
+
 _NoteHitResultWaiting _$NoteHitResultWaitingFromJson(
   Map<String, dynamic> json,
 ) => _NoteHitResultWaiting(
@@ -101,6 +119,63 @@ Map<String, dynamic> _$NoteHitResultWaitingToJson(
   'noteIndex': instance.noteIndex,
   'runtimeType': instance.$type,
 };
+
+_AttemptDetail _$AttemptDetailFromJson(Map<String, dynamic> json) =>
+    _AttemptDetail(
+      totalNotes: (json['totalNotes'] as num).toInt(),
+      hitNotes: (json['hitNotes'] as num).toInt(),
+      missedNotes: (json['missedNotes'] as num).toInt(),
+      wrongPitchNotes: (json['wrongPitchNotes'] as num).toInt(),
+      accuracy: (json['accuracy'] as num).toDouble(),
+      score: (json['score'] as num).toInt(),
+      noteResults:
+          (json['noteResults'] as List<dynamic>?)
+              ?.map((e) => NoteHitResult.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      noteResultsMap:
+          (json['noteResultsMap'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(
+              int.parse(k),
+              NoteHitResult.fromJson(e as Map<String, dynamic>),
+            ),
+          ) ??
+          const {},
+      signedTimingErrors:
+          (json['signedTimingErrors'] as List<dynamic>?)
+              ?.map((e) => (e as num).toDouble())
+              .toList() ??
+          const [],
+      missedMeasureIndices:
+          (json['missedMeasureIndices'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [],
+      wrongPitchMeasureIndices:
+          (json['wrongPitchMeasureIndices'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [],
+      mostMissedMeasure: (json['mostMissedMeasure'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$AttemptDetailToJson(_AttemptDetail instance) =>
+    <String, dynamic>{
+      'totalNotes': instance.totalNotes,
+      'hitNotes': instance.hitNotes,
+      'missedNotes': instance.missedNotes,
+      'wrongPitchNotes': instance.wrongPitchNotes,
+      'accuracy': instance.accuracy,
+      'score': instance.score,
+      'noteResults': instance.noteResults,
+      'noteResultsMap': instance.noteResultsMap.map(
+        (k, e) => MapEntry(k.toString(), e),
+      ),
+      'signedTimingErrors': instance.signedTimingErrors,
+      'missedMeasureIndices': instance.missedMeasureIndices,
+      'wrongPitchMeasureIndices': instance.wrongPitchMeasureIndices,
+      'mostMissedMeasure': instance.mostMissedMeasure,
+    };
 
 _StageEventNoteHit _$StageEventNoteHitFromJson(Map<String, dynamic> json) =>
     _StageEventNoteHit(
@@ -141,6 +216,9 @@ _StageEventStageCompleted _$StageEventStageCompletedFromJson(
   score: (json['score'] as num).toInt(),
   totalNotes: (json['totalNotes'] as num).toInt(),
   hitNotes: (json['hitNotes'] as num).toInt(),
+  attemptDetail: json['attemptDetail'] == null
+      ? null
+      : AttemptDetail.fromJson(json['attemptDetail'] as Map<String, dynamic>),
   $type: json['runtimeType'] as String?,
 );
 
@@ -151,6 +229,7 @@ Map<String, dynamic> _$StageEventStageCompletedToJson(
   'score': instance.score,
   'totalNotes': instance.totalNotes,
   'hitNotes': instance.hitNotes,
+  'attemptDetail': instance.attemptDetail,
   'runtimeType': instance.$type,
 };
 
@@ -230,6 +309,9 @@ _StageEventLoopPassCompleted _$StageEventLoopPassCompletedFromJson(
   hitNotes: (json['hitNotes'] as num).toInt(),
   loopStartBeat: (json['loopStartBeat'] as num).toDouble(),
   loopEndBeat: (json['loopEndBeat'] as num).toDouble(),
+  attemptDetail: json['attemptDetail'] == null
+      ? null
+      : AttemptDetail.fromJson(json['attemptDetail'] as Map<String, dynamic>),
   $type: json['runtimeType'] as String?,
 );
 
@@ -242,6 +324,7 @@ Map<String, dynamic> _$StageEventLoopPassCompletedToJson(
   'hitNotes': instance.hitNotes,
   'loopStartBeat': instance.loopStartBeat,
   'loopEndBeat': instance.loopEndBeat,
+  'attemptDetail': instance.attemptDetail,
   'runtimeType': instance.$type,
 };
 
@@ -316,6 +399,17 @@ _StageEngineStateModel _$StageEngineStateModelFromJson(
   handSelection:
       $enumDecodeNullable(_$HandSelectionEnumMap, json['handSelection']) ??
       HandSelection.both,
+  noteResults:
+      (json['noteResults'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(
+          int.parse(k),
+          NoteHitResult.fromJson(e as Map<String, dynamic>),
+        ),
+      ) ??
+      const {},
+  attemptDetail: json['attemptDetail'] == null
+      ? null
+      : AttemptDetail.fromJson(json['attemptDetail'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$StageEngineStateModelToJson(
@@ -336,6 +430,8 @@ Map<String, dynamic> _$StageEngineStateModelToJson(
   'isCountingIn': instance.isCountingIn,
   'countInBeat': instance.countInBeat,
   'handSelection': _$HandSelectionEnumMap[instance.handSelection]!,
+  'noteResults': instance.noteResults.map((k, e) => MapEntry(k.toString(), e)),
+  'attemptDetail': instance.attemptDetail,
 };
 
 const _$NoteStateEnumMap = {

@@ -318,6 +318,10 @@ NoteHitResult _$NoteHitResultFromJson(
           return _NoteHitResultMissed.fromJson(
             json
           );
+                case 'wrongPitch':
+          return _NoteHitResultWrongPitch.fromJson(
+            json
+          );
                 case 'waiting':
           return _NoteHitResultWaiting.fromJson(
             json
@@ -411,14 +415,15 @@ extension NoteHitResultPatterns on NoteHitResult {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _NoteHitResultPerfect value)?  perfect,TResult Function( _NoteHitResultGood value)?  good,TResult Function( _NoteHitResultOkay value)?  okay,TResult Function( _NoteHitResultMissed value)?  missed,TResult Function( _NoteHitResultWaiting value)?  waiting,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _NoteHitResultPerfect value)?  perfect,TResult Function( _NoteHitResultGood value)?  good,TResult Function( _NoteHitResultOkay value)?  okay,TResult Function( _NoteHitResultMissed value)?  missed,TResult Function( _NoteHitResultWrongPitch value)?  wrongPitch,TResult Function( _NoteHitResultWaiting value)?  waiting,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _NoteHitResultPerfect() when perfect != null:
 return perfect(_that);case _NoteHitResultGood() when good != null:
 return good(_that);case _NoteHitResultOkay() when okay != null:
 return okay(_that);case _NoteHitResultMissed() when missed != null:
-return missed(_that);case _NoteHitResultWaiting() when waiting != null:
+return missed(_that);case _NoteHitResultWrongPitch() when wrongPitch != null:
+return wrongPitch(_that);case _NoteHitResultWaiting() when waiting != null:
 return waiting(_that);case _:
   return orElse();
 
@@ -437,14 +442,15 @@ return waiting(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _NoteHitResultPerfect value)  perfect,required TResult Function( _NoteHitResultGood value)  good,required TResult Function( _NoteHitResultOkay value)  okay,required TResult Function( _NoteHitResultMissed value)  missed,required TResult Function( _NoteHitResultWaiting value)  waiting,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _NoteHitResultPerfect value)  perfect,required TResult Function( _NoteHitResultGood value)  good,required TResult Function( _NoteHitResultOkay value)  okay,required TResult Function( _NoteHitResultMissed value)  missed,required TResult Function( _NoteHitResultWrongPitch value)  wrongPitch,required TResult Function( _NoteHitResultWaiting value)  waiting,}){
 final _that = this;
 switch (_that) {
 case _NoteHitResultPerfect():
 return perfect(_that);case _NoteHitResultGood():
 return good(_that);case _NoteHitResultOkay():
 return okay(_that);case _NoteHitResultMissed():
-return missed(_that);case _NoteHitResultWaiting():
+return missed(_that);case _NoteHitResultWrongPitch():
+return wrongPitch(_that);case _NoteHitResultWaiting():
 return waiting(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -459,14 +465,15 @@ return waiting(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _NoteHitResultPerfect value)?  perfect,TResult? Function( _NoteHitResultGood value)?  good,TResult? Function( _NoteHitResultOkay value)?  okay,TResult? Function( _NoteHitResultMissed value)?  missed,TResult? Function( _NoteHitResultWaiting value)?  waiting,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _NoteHitResultPerfect value)?  perfect,TResult? Function( _NoteHitResultGood value)?  good,TResult? Function( _NoteHitResultOkay value)?  okay,TResult? Function( _NoteHitResultMissed value)?  missed,TResult? Function( _NoteHitResultWrongPitch value)?  wrongPitch,TResult? Function( _NoteHitResultWaiting value)?  waiting,}){
 final _that = this;
 switch (_that) {
 case _NoteHitResultPerfect() when perfect != null:
 return perfect(_that);case _NoteHitResultGood() when good != null:
 return good(_that);case _NoteHitResultOkay() when okay != null:
 return okay(_that);case _NoteHitResultMissed() when missed != null:
-return missed(_that);case _NoteHitResultWaiting() when waiting != null:
+return missed(_that);case _NoteHitResultWrongPitch() when wrongPitch != null:
+return wrongPitch(_that);case _NoteHitResultWaiting() when waiting != null:
 return waiting(_that);case _:
   return null;
 
@@ -484,13 +491,14 @@ return waiting(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int noteIndex,  double timingError)?  perfect,TResult Function( int noteIndex,  double timingError)?  good,TResult Function( int noteIndex,  double timingError)?  okay,TResult Function( int noteIndex)?  missed,TResult Function( int noteIndex)?  waiting,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int noteIndex,  double timingError)?  perfect,TResult Function( int noteIndex,  double timingError)?  good,TResult Function( int noteIndex,  double timingError)?  okay,TResult Function( int noteIndex)?  missed,TResult Function( int noteIndex,  int playedMidiNote,  double timingError)?  wrongPitch,TResult Function( int noteIndex)?  waiting,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NoteHitResultPerfect() when perfect != null:
 return perfect(_that.noteIndex,_that.timingError);case _NoteHitResultGood() when good != null:
 return good(_that.noteIndex,_that.timingError);case _NoteHitResultOkay() when okay != null:
 return okay(_that.noteIndex,_that.timingError);case _NoteHitResultMissed() when missed != null:
-return missed(_that.noteIndex);case _NoteHitResultWaiting() when waiting != null:
+return missed(_that.noteIndex);case _NoteHitResultWrongPitch() when wrongPitch != null:
+return wrongPitch(_that.noteIndex,_that.playedMidiNote,_that.timingError);case _NoteHitResultWaiting() when waiting != null:
 return waiting(_that.noteIndex);case _:
   return orElse();
 
@@ -509,13 +517,14 @@ return waiting(_that.noteIndex);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int noteIndex,  double timingError)  perfect,required TResult Function( int noteIndex,  double timingError)  good,required TResult Function( int noteIndex,  double timingError)  okay,required TResult Function( int noteIndex)  missed,required TResult Function( int noteIndex)  waiting,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int noteIndex,  double timingError)  perfect,required TResult Function( int noteIndex,  double timingError)  good,required TResult Function( int noteIndex,  double timingError)  okay,required TResult Function( int noteIndex)  missed,required TResult Function( int noteIndex,  int playedMidiNote,  double timingError)  wrongPitch,required TResult Function( int noteIndex)  waiting,}) {final _that = this;
 switch (_that) {
 case _NoteHitResultPerfect():
 return perfect(_that.noteIndex,_that.timingError);case _NoteHitResultGood():
 return good(_that.noteIndex,_that.timingError);case _NoteHitResultOkay():
 return okay(_that.noteIndex,_that.timingError);case _NoteHitResultMissed():
-return missed(_that.noteIndex);case _NoteHitResultWaiting():
+return missed(_that.noteIndex);case _NoteHitResultWrongPitch():
+return wrongPitch(_that.noteIndex,_that.playedMidiNote,_that.timingError);case _NoteHitResultWaiting():
 return waiting(_that.noteIndex);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -530,13 +539,14 @@ return waiting(_that.noteIndex);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int noteIndex,  double timingError)?  perfect,TResult? Function( int noteIndex,  double timingError)?  good,TResult? Function( int noteIndex,  double timingError)?  okay,TResult? Function( int noteIndex)?  missed,TResult? Function( int noteIndex)?  waiting,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int noteIndex,  double timingError)?  perfect,TResult? Function( int noteIndex,  double timingError)?  good,TResult? Function( int noteIndex,  double timingError)?  okay,TResult? Function( int noteIndex)?  missed,TResult? Function( int noteIndex,  int playedMidiNote,  double timingError)?  wrongPitch,TResult? Function( int noteIndex)?  waiting,}) {final _that = this;
 switch (_that) {
 case _NoteHitResultPerfect() when perfect != null:
 return perfect(_that.noteIndex,_that.timingError);case _NoteHitResultGood() when good != null:
 return good(_that.noteIndex,_that.timingError);case _NoteHitResultOkay() when okay != null:
 return okay(_that.noteIndex,_that.timingError);case _NoteHitResultMissed() when missed != null:
-return missed(_that.noteIndex);case _NoteHitResultWaiting() when waiting != null:
+return missed(_that.noteIndex);case _NoteHitResultWrongPitch() when wrongPitch != null:
+return wrongPitch(_that.noteIndex,_that.playedMidiNote,_that.timingError);case _NoteHitResultWaiting() when waiting != null:
 return waiting(_that.noteIndex);case _:
   return null;
 
@@ -846,6 +856,83 @@ as int,
 /// @nodoc
 @JsonSerializable()
 
+class _NoteHitResultWrongPitch extends NoteHitResult {
+  const _NoteHitResultWrongPitch({required this.noteIndex, required this.playedMidiNote, required this.timingError, final  String? $type}): $type = $type ?? 'wrongPitch',super._();
+  factory _NoteHitResultWrongPitch.fromJson(Map<String, dynamic> json) => _$NoteHitResultWrongPitchFromJson(json);
+
+@override final  int noteIndex;
+ final  int playedMidiNote;
+ final  double timingError;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
+/// Create a copy of NoteHitResult
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$NoteHitResultWrongPitchCopyWith<_NoteHitResultWrongPitch> get copyWith => __$NoteHitResultWrongPitchCopyWithImpl<_NoteHitResultWrongPitch>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$NoteHitResultWrongPitchToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NoteHitResultWrongPitch&&(identical(other.noteIndex, noteIndex) || other.noteIndex == noteIndex)&&(identical(other.playedMidiNote, playedMidiNote) || other.playedMidiNote == playedMidiNote)&&(identical(other.timingError, timingError) || other.timingError == timingError));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,noteIndex,playedMidiNote,timingError);
+
+@override
+String toString() {
+  return 'NoteHitResult.wrongPitch(noteIndex: $noteIndex, playedMidiNote: $playedMidiNote, timingError: $timingError)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$NoteHitResultWrongPitchCopyWith<$Res> implements $NoteHitResultCopyWith<$Res> {
+  factory _$NoteHitResultWrongPitchCopyWith(_NoteHitResultWrongPitch value, $Res Function(_NoteHitResultWrongPitch) _then) = __$NoteHitResultWrongPitchCopyWithImpl;
+@override @useResult
+$Res call({
+ int noteIndex, int playedMidiNote, double timingError
+});
+
+
+
+
+}
+/// @nodoc
+class __$NoteHitResultWrongPitchCopyWithImpl<$Res>
+    implements _$NoteHitResultWrongPitchCopyWith<$Res> {
+  __$NoteHitResultWrongPitchCopyWithImpl(this._self, this._then);
+
+  final _NoteHitResultWrongPitch _self;
+  final $Res Function(_NoteHitResultWrongPitch) _then;
+
+/// Create a copy of NoteHitResult
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? noteIndex = null,Object? playedMidiNote = null,Object? timingError = null,}) {
+  return _then(_NoteHitResultWrongPitch(
+noteIndex: null == noteIndex ? _self.noteIndex : noteIndex // ignore: cast_nullable_to_non_nullable
+as int,playedMidiNote: null == playedMidiNote ? _self.playedMidiNote : playedMidiNote // ignore: cast_nullable_to_non_nullable
+as int,timingError: null == timingError ? _self.timingError : timingError // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
 class _NoteHitResultWaiting extends NoteHitResult {
   const _NoteHitResultWaiting({required this.noteIndex, final  String? $type}): $type = $type ?? 'waiting',super._();
   factory _NoteHitResultWaiting.fromJson(Map<String, dynamic> json) => _$NoteHitResultWaitingFromJson(json);
@@ -910,6 +997,326 @@ class __$NoteHitResultWaitingCopyWithImpl<$Res>
   return _then(_NoteHitResultWaiting(
 noteIndex: null == noteIndex ? _self.noteIndex : noteIndex // ignore: cast_nullable_to_non_nullable
 as int,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$AttemptDetail {
+
+ int get totalNotes; int get hitNotes; int get missedNotes; int get wrongPitchNotes; double get accuracy; int get score; List<NoteHitResult> get noteResults; Map<int, NoteHitResult> get noteResultsMap; List<double> get signedTimingErrors; List<int> get missedMeasureIndices; List<int> get wrongPitchMeasureIndices; int? get mostMissedMeasure;
+/// Create a copy of AttemptDetail
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AttemptDetailCopyWith<AttemptDetail> get copyWith => _$AttemptDetailCopyWithImpl<AttemptDetail>(this as AttemptDetail, _$identity);
+
+  /// Serializes this AttemptDetail to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttemptDetail&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes)&&(identical(other.missedNotes, missedNotes) || other.missedNotes == missedNotes)&&(identical(other.wrongPitchNotes, wrongPitchNotes) || other.wrongPitchNotes == wrongPitchNotes)&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&const DeepCollectionEquality().equals(other.noteResults, noteResults)&&const DeepCollectionEquality().equals(other.noteResultsMap, noteResultsMap)&&const DeepCollectionEquality().equals(other.signedTimingErrors, signedTimingErrors)&&const DeepCollectionEquality().equals(other.missedMeasureIndices, missedMeasureIndices)&&const DeepCollectionEquality().equals(other.wrongPitchMeasureIndices, wrongPitchMeasureIndices)&&(identical(other.mostMissedMeasure, mostMissedMeasure) || other.mostMissedMeasure == mostMissedMeasure));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,totalNotes,hitNotes,missedNotes,wrongPitchNotes,accuracy,score,const DeepCollectionEquality().hash(noteResults),const DeepCollectionEquality().hash(noteResultsMap),const DeepCollectionEquality().hash(signedTimingErrors),const DeepCollectionEquality().hash(missedMeasureIndices),const DeepCollectionEquality().hash(wrongPitchMeasureIndices),mostMissedMeasure);
+
+@override
+String toString() {
+  return 'AttemptDetail(totalNotes: $totalNotes, hitNotes: $hitNotes, missedNotes: $missedNotes, wrongPitchNotes: $wrongPitchNotes, accuracy: $accuracy, score: $score, noteResults: $noteResults, noteResultsMap: $noteResultsMap, signedTimingErrors: $signedTimingErrors, missedMeasureIndices: $missedMeasureIndices, wrongPitchMeasureIndices: $wrongPitchMeasureIndices, mostMissedMeasure: $mostMissedMeasure)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AttemptDetailCopyWith<$Res>  {
+  factory $AttemptDetailCopyWith(AttemptDetail value, $Res Function(AttemptDetail) _then) = _$AttemptDetailCopyWithImpl;
+@useResult
+$Res call({
+ int totalNotes, int hitNotes, int missedNotes, int wrongPitchNotes, double accuracy, int score, List<NoteHitResult> noteResults, Map<int, NoteHitResult> noteResultsMap, List<double> signedTimingErrors, List<int> missedMeasureIndices, List<int> wrongPitchMeasureIndices, int? mostMissedMeasure
+});
+
+
+
+
+}
+/// @nodoc
+class _$AttemptDetailCopyWithImpl<$Res>
+    implements $AttemptDetailCopyWith<$Res> {
+  _$AttemptDetailCopyWithImpl(this._self, this._then);
+
+  final AttemptDetail _self;
+  final $Res Function(AttemptDetail) _then;
+
+/// Create a copy of AttemptDetail
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? totalNotes = null,Object? hitNotes = null,Object? missedNotes = null,Object? wrongPitchNotes = null,Object? accuracy = null,Object? score = null,Object? noteResults = null,Object? noteResultsMap = null,Object? signedTimingErrors = null,Object? missedMeasureIndices = null,Object? wrongPitchMeasureIndices = null,Object? mostMissedMeasure = freezed,}) {
+  return _then(_self.copyWith(
+totalNotes: null == totalNotes ? _self.totalNotes : totalNotes // ignore: cast_nullable_to_non_nullable
+as int,hitNotes: null == hitNotes ? _self.hitNotes : hitNotes // ignore: cast_nullable_to_non_nullable
+as int,missedNotes: null == missedNotes ? _self.missedNotes : missedNotes // ignore: cast_nullable_to_non_nullable
+as int,wrongPitchNotes: null == wrongPitchNotes ? _self.wrongPitchNotes : wrongPitchNotes // ignore: cast_nullable_to_non_nullable
+as int,accuracy: null == accuracy ? _self.accuracy : accuracy // ignore: cast_nullable_to_non_nullable
+as double,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as int,noteResults: null == noteResults ? _self.noteResults : noteResults // ignore: cast_nullable_to_non_nullable
+as List<NoteHitResult>,noteResultsMap: null == noteResultsMap ? _self.noteResultsMap : noteResultsMap // ignore: cast_nullable_to_non_nullable
+as Map<int, NoteHitResult>,signedTimingErrors: null == signedTimingErrors ? _self.signedTimingErrors : signedTimingErrors // ignore: cast_nullable_to_non_nullable
+as List<double>,missedMeasureIndices: null == missedMeasureIndices ? _self.missedMeasureIndices : missedMeasureIndices // ignore: cast_nullable_to_non_nullable
+as List<int>,wrongPitchMeasureIndices: null == wrongPitchMeasureIndices ? _self.wrongPitchMeasureIndices : wrongPitchMeasureIndices // ignore: cast_nullable_to_non_nullable
+as List<int>,mostMissedMeasure: freezed == mostMissedMeasure ? _self.mostMissedMeasure : mostMissedMeasure // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AttemptDetail].
+extension AttemptDetailPatterns on AttemptDetail {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AttemptDetail value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AttemptDetail() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AttemptDetail value)  $default,){
+final _that = this;
+switch (_that) {
+case _AttemptDetail():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AttemptDetail value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AttemptDetail() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int totalNotes,  int hitNotes,  int missedNotes,  int wrongPitchNotes,  double accuracy,  int score,  List<NoteHitResult> noteResults,  Map<int, NoteHitResult> noteResultsMap,  List<double> signedTimingErrors,  List<int> missedMeasureIndices,  List<int> wrongPitchMeasureIndices,  int? mostMissedMeasure)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AttemptDetail() when $default != null:
+return $default(_that.totalNotes,_that.hitNotes,_that.missedNotes,_that.wrongPitchNotes,_that.accuracy,_that.score,_that.noteResults,_that.noteResultsMap,_that.signedTimingErrors,_that.missedMeasureIndices,_that.wrongPitchMeasureIndices,_that.mostMissedMeasure);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int totalNotes,  int hitNotes,  int missedNotes,  int wrongPitchNotes,  double accuracy,  int score,  List<NoteHitResult> noteResults,  Map<int, NoteHitResult> noteResultsMap,  List<double> signedTimingErrors,  List<int> missedMeasureIndices,  List<int> wrongPitchMeasureIndices,  int? mostMissedMeasure)  $default,) {final _that = this;
+switch (_that) {
+case _AttemptDetail():
+return $default(_that.totalNotes,_that.hitNotes,_that.missedNotes,_that.wrongPitchNotes,_that.accuracy,_that.score,_that.noteResults,_that.noteResultsMap,_that.signedTimingErrors,_that.missedMeasureIndices,_that.wrongPitchMeasureIndices,_that.mostMissedMeasure);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int totalNotes,  int hitNotes,  int missedNotes,  int wrongPitchNotes,  double accuracy,  int score,  List<NoteHitResult> noteResults,  Map<int, NoteHitResult> noteResultsMap,  List<double> signedTimingErrors,  List<int> missedMeasureIndices,  List<int> wrongPitchMeasureIndices,  int? mostMissedMeasure)?  $default,) {final _that = this;
+switch (_that) {
+case _AttemptDetail() when $default != null:
+return $default(_that.totalNotes,_that.hitNotes,_that.missedNotes,_that.wrongPitchNotes,_that.accuracy,_that.score,_that.noteResults,_that.noteResultsMap,_that.signedTimingErrors,_that.missedMeasureIndices,_that.wrongPitchMeasureIndices,_that.mostMissedMeasure);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AttemptDetail extends AttemptDetail {
+  const _AttemptDetail({required this.totalNotes, required this.hitNotes, required this.missedNotes, required this.wrongPitchNotes, required this.accuracy, required this.score, final  List<NoteHitResult> noteResults = const [], final  Map<int, NoteHitResult> noteResultsMap = const {}, final  List<double> signedTimingErrors = const [], final  List<int> missedMeasureIndices = const [], final  List<int> wrongPitchMeasureIndices = const [], this.mostMissedMeasure}): _noteResults = noteResults,_noteResultsMap = noteResultsMap,_signedTimingErrors = signedTimingErrors,_missedMeasureIndices = missedMeasureIndices,_wrongPitchMeasureIndices = wrongPitchMeasureIndices,super._();
+  factory _AttemptDetail.fromJson(Map<String, dynamic> json) => _$AttemptDetailFromJson(json);
+
+@override final  int totalNotes;
+@override final  int hitNotes;
+@override final  int missedNotes;
+@override final  int wrongPitchNotes;
+@override final  double accuracy;
+@override final  int score;
+ final  List<NoteHitResult> _noteResults;
+@override@JsonKey() List<NoteHitResult> get noteResults {
+  if (_noteResults is EqualUnmodifiableListView) return _noteResults;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_noteResults);
+}
+
+ final  Map<int, NoteHitResult> _noteResultsMap;
+@override@JsonKey() Map<int, NoteHitResult> get noteResultsMap {
+  if (_noteResultsMap is EqualUnmodifiableMapView) return _noteResultsMap;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_noteResultsMap);
+}
+
+ final  List<double> _signedTimingErrors;
+@override@JsonKey() List<double> get signedTimingErrors {
+  if (_signedTimingErrors is EqualUnmodifiableListView) return _signedTimingErrors;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_signedTimingErrors);
+}
+
+ final  List<int> _missedMeasureIndices;
+@override@JsonKey() List<int> get missedMeasureIndices {
+  if (_missedMeasureIndices is EqualUnmodifiableListView) return _missedMeasureIndices;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_missedMeasureIndices);
+}
+
+ final  List<int> _wrongPitchMeasureIndices;
+@override@JsonKey() List<int> get wrongPitchMeasureIndices {
+  if (_wrongPitchMeasureIndices is EqualUnmodifiableListView) return _wrongPitchMeasureIndices;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_wrongPitchMeasureIndices);
+}
+
+@override final  int? mostMissedMeasure;
+
+/// Create a copy of AttemptDetail
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AttemptDetailCopyWith<_AttemptDetail> get copyWith => __$AttemptDetailCopyWithImpl<_AttemptDetail>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AttemptDetailToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttemptDetail&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes)&&(identical(other.missedNotes, missedNotes) || other.missedNotes == missedNotes)&&(identical(other.wrongPitchNotes, wrongPitchNotes) || other.wrongPitchNotes == wrongPitchNotes)&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&const DeepCollectionEquality().equals(other._noteResults, _noteResults)&&const DeepCollectionEquality().equals(other._noteResultsMap, _noteResultsMap)&&const DeepCollectionEquality().equals(other._signedTimingErrors, _signedTimingErrors)&&const DeepCollectionEquality().equals(other._missedMeasureIndices, _missedMeasureIndices)&&const DeepCollectionEquality().equals(other._wrongPitchMeasureIndices, _wrongPitchMeasureIndices)&&(identical(other.mostMissedMeasure, mostMissedMeasure) || other.mostMissedMeasure == mostMissedMeasure));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,totalNotes,hitNotes,missedNotes,wrongPitchNotes,accuracy,score,const DeepCollectionEquality().hash(_noteResults),const DeepCollectionEquality().hash(_noteResultsMap),const DeepCollectionEquality().hash(_signedTimingErrors),const DeepCollectionEquality().hash(_missedMeasureIndices),const DeepCollectionEquality().hash(_wrongPitchMeasureIndices),mostMissedMeasure);
+
+@override
+String toString() {
+  return 'AttemptDetail(totalNotes: $totalNotes, hitNotes: $hitNotes, missedNotes: $missedNotes, wrongPitchNotes: $wrongPitchNotes, accuracy: $accuracy, score: $score, noteResults: $noteResults, noteResultsMap: $noteResultsMap, signedTimingErrors: $signedTimingErrors, missedMeasureIndices: $missedMeasureIndices, wrongPitchMeasureIndices: $wrongPitchMeasureIndices, mostMissedMeasure: $mostMissedMeasure)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AttemptDetailCopyWith<$Res> implements $AttemptDetailCopyWith<$Res> {
+  factory _$AttemptDetailCopyWith(_AttemptDetail value, $Res Function(_AttemptDetail) _then) = __$AttemptDetailCopyWithImpl;
+@override @useResult
+$Res call({
+ int totalNotes, int hitNotes, int missedNotes, int wrongPitchNotes, double accuracy, int score, List<NoteHitResult> noteResults, Map<int, NoteHitResult> noteResultsMap, List<double> signedTimingErrors, List<int> missedMeasureIndices, List<int> wrongPitchMeasureIndices, int? mostMissedMeasure
+});
+
+
+
+
+}
+/// @nodoc
+class __$AttemptDetailCopyWithImpl<$Res>
+    implements _$AttemptDetailCopyWith<$Res> {
+  __$AttemptDetailCopyWithImpl(this._self, this._then);
+
+  final _AttemptDetail _self;
+  final $Res Function(_AttemptDetail) _then;
+
+/// Create a copy of AttemptDetail
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? totalNotes = null,Object? hitNotes = null,Object? missedNotes = null,Object? wrongPitchNotes = null,Object? accuracy = null,Object? score = null,Object? noteResults = null,Object? noteResultsMap = null,Object? signedTimingErrors = null,Object? missedMeasureIndices = null,Object? wrongPitchMeasureIndices = null,Object? mostMissedMeasure = freezed,}) {
+  return _then(_AttemptDetail(
+totalNotes: null == totalNotes ? _self.totalNotes : totalNotes // ignore: cast_nullable_to_non_nullable
+as int,hitNotes: null == hitNotes ? _self.hitNotes : hitNotes // ignore: cast_nullable_to_non_nullable
+as int,missedNotes: null == missedNotes ? _self.missedNotes : missedNotes // ignore: cast_nullable_to_non_nullable
+as int,wrongPitchNotes: null == wrongPitchNotes ? _self.wrongPitchNotes : wrongPitchNotes // ignore: cast_nullable_to_non_nullable
+as int,accuracy: null == accuracy ? _self.accuracy : accuracy // ignore: cast_nullable_to_non_nullable
+as double,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as int,noteResults: null == noteResults ? _self._noteResults : noteResults // ignore: cast_nullable_to_non_nullable
+as List<NoteHitResult>,noteResultsMap: null == noteResultsMap ? _self._noteResultsMap : noteResultsMap // ignore: cast_nullable_to_non_nullable
+as Map<int, NoteHitResult>,signedTimingErrors: null == signedTimingErrors ? _self._signedTimingErrors : signedTimingErrors // ignore: cast_nullable_to_non_nullable
+as List<double>,missedMeasureIndices: null == missedMeasureIndices ? _self._missedMeasureIndices : missedMeasureIndices // ignore: cast_nullable_to_non_nullable
+as List<int>,wrongPitchMeasureIndices: null == wrongPitchMeasureIndices ? _self._wrongPitchMeasureIndices : wrongPitchMeasureIndices // ignore: cast_nullable_to_non_nullable
+as List<int>,mostMissedMeasure: freezed == mostMissedMeasure ? _self.mostMissedMeasure : mostMissedMeasure // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -1085,16 +1492,16 @@ return loopPassCompleted(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int noteIndex,  NoteHitResult result,  double currentBeat)?  noteHit,TResult Function( int noteIndex,  double currentBeat)?  noteMissed,TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes)?  stageCompleted,TResult Function( double currentBeat,  double progress,  bool isPlaying)?  playbackPosition,TResult Function( StageEngineStatus state)?  stateChanged,TResult Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)?  beat,TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat)?  loopPassCompleted,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int noteIndex,  NoteHitResult result,  double currentBeat)?  noteHit,TResult Function( int noteIndex,  double currentBeat)?  noteMissed,TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  AttemptDetail? attemptDetail)?  stageCompleted,TResult Function( double currentBeat,  double progress,  bool isPlaying)?  playbackPosition,TResult Function( StageEngineStatus state)?  stateChanged,TResult Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)?  beat,TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat,  AttemptDetail? attemptDetail)?  loopPassCompleted,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StageEventNoteHit() when noteHit != null:
 return noteHit(_that.noteIndex,_that.result,_that.currentBeat);case _StageEventNoteMissed() when noteMissed != null:
 return noteMissed(_that.noteIndex,_that.currentBeat);case _StageEventStageCompleted() when stageCompleted != null:
-return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes);case _StageEventPlaybackPosition() when playbackPosition != null:
+return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.attemptDetail);case _StageEventPlaybackPosition() when playbackPosition != null:
 return playbackPosition(_that.currentBeat,_that.progress,_that.isPlaying);case _StageEventStateChanged() when stateChanged != null:
 return stateChanged(_that.state);case _StageEventBeat() when beat != null:
 return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);case _StageEventLoopPassCompleted() when loopPassCompleted != null:
-return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat);case _:
+return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat,_that.attemptDetail);case _:
   return orElse();
 
 }
@@ -1112,16 +1519,16 @@ return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int noteIndex,  NoteHitResult result,  double currentBeat)  noteHit,required TResult Function( int noteIndex,  double currentBeat)  noteMissed,required TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes)  stageCompleted,required TResult Function( double currentBeat,  double progress,  bool isPlaying)  playbackPosition,required TResult Function( StageEngineStatus state)  stateChanged,required TResult Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)  beat,required TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat)  loopPassCompleted,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int noteIndex,  NoteHitResult result,  double currentBeat)  noteHit,required TResult Function( int noteIndex,  double currentBeat)  noteMissed,required TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  AttemptDetail? attemptDetail)  stageCompleted,required TResult Function( double currentBeat,  double progress,  bool isPlaying)  playbackPosition,required TResult Function( StageEngineStatus state)  stateChanged,required TResult Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)  beat,required TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat,  AttemptDetail? attemptDetail)  loopPassCompleted,}) {final _that = this;
 switch (_that) {
 case _StageEventNoteHit():
 return noteHit(_that.noteIndex,_that.result,_that.currentBeat);case _StageEventNoteMissed():
 return noteMissed(_that.noteIndex,_that.currentBeat);case _StageEventStageCompleted():
-return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes);case _StageEventPlaybackPosition():
+return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.attemptDetail);case _StageEventPlaybackPosition():
 return playbackPosition(_that.currentBeat,_that.progress,_that.isPlaying);case _StageEventStateChanged():
 return stateChanged(_that.state);case _StageEventBeat():
 return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);case _StageEventLoopPassCompleted():
-return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat);}
+return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat,_that.attemptDetail);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1135,16 +1542,16 @@ return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int noteIndex,  NoteHitResult result,  double currentBeat)?  noteHit,TResult? Function( int noteIndex,  double currentBeat)?  noteMissed,TResult? Function( double accuracy,  int score,  int totalNotes,  int hitNotes)?  stageCompleted,TResult? Function( double currentBeat,  double progress,  bool isPlaying)?  playbackPosition,TResult? Function( StageEngineStatus state)?  stateChanged,TResult? Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)?  beat,TResult? Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat)?  loopPassCompleted,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int noteIndex,  NoteHitResult result,  double currentBeat)?  noteHit,TResult? Function( int noteIndex,  double currentBeat)?  noteMissed,TResult? Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  AttemptDetail? attemptDetail)?  stageCompleted,TResult? Function( double currentBeat,  double progress,  bool isPlaying)?  playbackPosition,TResult? Function( StageEngineStatus state)?  stateChanged,TResult? Function( double beat,  MetronomeBeatType beatType,  int measureIndex,  int beatInMeasure,  bool isCountIn)?  beat,TResult? Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  double loopStartBeat,  double loopEndBeat,  AttemptDetail? attemptDetail)?  loopPassCompleted,}) {final _that = this;
 switch (_that) {
 case _StageEventNoteHit() when noteHit != null:
 return noteHit(_that.noteIndex,_that.result,_that.currentBeat);case _StageEventNoteMissed() when noteMissed != null:
 return noteMissed(_that.noteIndex,_that.currentBeat);case _StageEventStageCompleted() when stageCompleted != null:
-return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes);case _StageEventPlaybackPosition() when playbackPosition != null:
+return stageCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.attemptDetail);case _StageEventPlaybackPosition() when playbackPosition != null:
 return playbackPosition(_that.currentBeat,_that.progress,_that.isPlaying);case _StageEventStateChanged() when stateChanged != null:
 return stateChanged(_that.state);case _StageEventBeat() when beat != null:
 return beat(_that.beat,_that.beatType,_that.measureIndex,_that.beatInMeasure,_that.isCountIn);case _StageEventLoopPassCompleted() when loopPassCompleted != null:
-return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat);case _:
+return loopPassCompleted(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.loopStartBeat,_that.loopEndBeat,_that.attemptDetail);case _:
   return null;
 
 }
@@ -1317,13 +1724,14 @@ as double,
 @JsonSerializable()
 
 class _StageEventStageCompleted implements StageEvent {
-  const _StageEventStageCompleted({required this.accuracy, required this.score, required this.totalNotes, required this.hitNotes, final  String? $type}): $type = $type ?? 'stageCompleted';
+  const _StageEventStageCompleted({required this.accuracy, required this.score, required this.totalNotes, required this.hitNotes, this.attemptDetail, final  String? $type}): $type = $type ?? 'stageCompleted';
   factory _StageEventStageCompleted.fromJson(Map<String, dynamic> json) => _$StageEventStageCompletedFromJson(json);
 
  final  double accuracy;
  final  int score;
  final  int totalNotes;
  final  int hitNotes;
+ final  AttemptDetail? attemptDetail;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -1342,16 +1750,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEventStageCompleted&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEventStageCompleted&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes)&&(identical(other.attemptDetail, attemptDetail) || other.attemptDetail == attemptDetail));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accuracy,score,totalNotes,hitNotes);
+int get hashCode => Object.hash(runtimeType,accuracy,score,totalNotes,hitNotes,attemptDetail);
 
 @override
 String toString() {
-  return 'StageEvent.stageCompleted(accuracy: $accuracy, score: $score, totalNotes: $totalNotes, hitNotes: $hitNotes)';
+  return 'StageEvent.stageCompleted(accuracy: $accuracy, score: $score, totalNotes: $totalNotes, hitNotes: $hitNotes, attemptDetail: $attemptDetail)';
 }
 
 
@@ -1362,11 +1770,11 @@ abstract mixin class _$StageEventStageCompletedCopyWith<$Res> implements $StageE
   factory _$StageEventStageCompletedCopyWith(_StageEventStageCompleted value, $Res Function(_StageEventStageCompleted) _then) = __$StageEventStageCompletedCopyWithImpl;
 @useResult
 $Res call({
- double accuracy, int score, int totalNotes, int hitNotes
+ double accuracy, int score, int totalNotes, int hitNotes, AttemptDetail? attemptDetail
 });
 
 
-
+$AttemptDetailCopyWith<$Res>? get attemptDetail;
 
 }
 /// @nodoc
@@ -1379,17 +1787,30 @@ class __$StageEventStageCompletedCopyWithImpl<$Res>
 
 /// Create a copy of StageEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? accuracy = null,Object? score = null,Object? totalNotes = null,Object? hitNotes = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? accuracy = null,Object? score = null,Object? totalNotes = null,Object? hitNotes = null,Object? attemptDetail = freezed,}) {
   return _then(_StageEventStageCompleted(
 accuracy: null == accuracy ? _self.accuracy : accuracy // ignore: cast_nullable_to_non_nullable
 as double,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
 as int,totalNotes: null == totalNotes ? _self.totalNotes : totalNotes // ignore: cast_nullable_to_non_nullable
 as int,hitNotes: null == hitNotes ? _self.hitNotes : hitNotes // ignore: cast_nullable_to_non_nullable
-as int,
+as int,attemptDetail: freezed == attemptDetail ? _self.attemptDetail : attemptDetail // ignore: cast_nullable_to_non_nullable
+as AttemptDetail?,
   ));
 }
 
+/// Create a copy of StageEvent
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AttemptDetailCopyWith<$Res>? get attemptDetail {
+    if (_self.attemptDetail == null) {
+    return null;
+  }
 
+  return $AttemptDetailCopyWith<$Res>(_self.attemptDetail!, (value) {
+    return _then(_self.copyWith(attemptDetail: value));
+  });
+}
 }
 
 /// @nodoc
@@ -1628,7 +2049,7 @@ as bool,
 @JsonSerializable()
 
 class _StageEventLoopPassCompleted implements StageEvent {
-  const _StageEventLoopPassCompleted({required this.accuracy, required this.score, required this.totalNotes, required this.hitNotes, required this.loopStartBeat, required this.loopEndBeat, final  String? $type}): $type = $type ?? 'loopPassCompleted';
+  const _StageEventLoopPassCompleted({required this.accuracy, required this.score, required this.totalNotes, required this.hitNotes, required this.loopStartBeat, required this.loopEndBeat, this.attemptDetail, final  String? $type}): $type = $type ?? 'loopPassCompleted';
   factory _StageEventLoopPassCompleted.fromJson(Map<String, dynamic> json) => _$StageEventLoopPassCompletedFromJson(json);
 
  final  double accuracy;
@@ -1637,6 +2058,7 @@ class _StageEventLoopPassCompleted implements StageEvent {
  final  int hitNotes;
  final  double loopStartBeat;
  final  double loopEndBeat;
+ final  AttemptDetail? attemptDetail;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -1655,16 +2077,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEventLoopPassCompleted&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes)&&(identical(other.loopStartBeat, loopStartBeat) || other.loopStartBeat == loopStartBeat)&&(identical(other.loopEndBeat, loopEndBeat) || other.loopEndBeat == loopEndBeat));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEventLoopPassCompleted&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes)&&(identical(other.loopStartBeat, loopStartBeat) || other.loopStartBeat == loopStartBeat)&&(identical(other.loopEndBeat, loopEndBeat) || other.loopEndBeat == loopEndBeat)&&(identical(other.attemptDetail, attemptDetail) || other.attemptDetail == attemptDetail));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accuracy,score,totalNotes,hitNotes,loopStartBeat,loopEndBeat);
+int get hashCode => Object.hash(runtimeType,accuracy,score,totalNotes,hitNotes,loopStartBeat,loopEndBeat,attemptDetail);
 
 @override
 String toString() {
-  return 'StageEvent.loopPassCompleted(accuracy: $accuracy, score: $score, totalNotes: $totalNotes, hitNotes: $hitNotes, loopStartBeat: $loopStartBeat, loopEndBeat: $loopEndBeat)';
+  return 'StageEvent.loopPassCompleted(accuracy: $accuracy, score: $score, totalNotes: $totalNotes, hitNotes: $hitNotes, loopStartBeat: $loopStartBeat, loopEndBeat: $loopEndBeat, attemptDetail: $attemptDetail)';
 }
 
 
@@ -1675,11 +2097,11 @@ abstract mixin class _$StageEventLoopPassCompletedCopyWith<$Res> implements $Sta
   factory _$StageEventLoopPassCompletedCopyWith(_StageEventLoopPassCompleted value, $Res Function(_StageEventLoopPassCompleted) _then) = __$StageEventLoopPassCompletedCopyWithImpl;
 @useResult
 $Res call({
- double accuracy, int score, int totalNotes, int hitNotes, double loopStartBeat, double loopEndBeat
+ double accuracy, int score, int totalNotes, int hitNotes, double loopStartBeat, double loopEndBeat, AttemptDetail? attemptDetail
 });
 
 
-
+$AttemptDetailCopyWith<$Res>? get attemptDetail;
 
 }
 /// @nodoc
@@ -1692,7 +2114,7 @@ class __$StageEventLoopPassCompletedCopyWithImpl<$Res>
 
 /// Create a copy of StageEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? accuracy = null,Object? score = null,Object? totalNotes = null,Object? hitNotes = null,Object? loopStartBeat = null,Object? loopEndBeat = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? accuracy = null,Object? score = null,Object? totalNotes = null,Object? hitNotes = null,Object? loopStartBeat = null,Object? loopEndBeat = null,Object? attemptDetail = freezed,}) {
   return _then(_StageEventLoopPassCompleted(
 accuracy: null == accuracy ? _self.accuracy : accuracy // ignore: cast_nullable_to_non_nullable
 as double,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
@@ -1700,11 +2122,24 @@ as int,totalNotes: null == totalNotes ? _self.totalNotes : totalNotes // ignore:
 as int,hitNotes: null == hitNotes ? _self.hitNotes : hitNotes // ignore: cast_nullable_to_non_nullable
 as int,loopStartBeat: null == loopStartBeat ? _self.loopStartBeat : loopStartBeat // ignore: cast_nullable_to_non_nullable
 as double,loopEndBeat: null == loopEndBeat ? _self.loopEndBeat : loopEndBeat // ignore: cast_nullable_to_non_nullable
-as double,
+as double,attemptDetail: freezed == attemptDetail ? _self.attemptDetail : attemptDetail // ignore: cast_nullable_to_non_nullable
+as AttemptDetail?,
   ));
 }
 
+/// Create a copy of StageEvent
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AttemptDetailCopyWith<$Res>? get attemptDetail {
+    if (_self.attemptDetail == null) {
+    return null;
+  }
 
+  return $AttemptDetailCopyWith<$Res>(_self.attemptDetail!, (value) {
+    return _then(_self.copyWith(attemptDetail: value));
+  });
+}
 }
 
 
@@ -2012,7 +2447,7 @@ as HandSelection,
 /// @nodoc
 mixin _$StageEngineStateModel {
 
- StageEngineStatus get engineState; LevelModel get level; double get currentBeat; List<NoteState> get noteStates; int get score; int get hitCount; int get missCount; int get perfectCount; int get goodCount; int get okayCount; PracticeMode get practiceMode; WaitingHint? get waitingHint; bool get isCountingIn; int? get countInBeat; HandSelection get handSelection;
+ StageEngineStatus get engineState; LevelModel get level; double get currentBeat; List<NoteState> get noteStates; int get score; int get hitCount; int get missCount; int get perfectCount; int get goodCount; int get okayCount; PracticeMode get practiceMode; WaitingHint? get waitingHint; bool get isCountingIn; int? get countInBeat; HandSelection get handSelection; Map<int, NoteHitResult> get noteResults; AttemptDetail? get attemptDetail;
 /// Create a copy of StageEngineStateModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2025,16 +2460,16 @@ $StageEngineStateModelCopyWith<StageEngineStateModel> get copyWith => _$StageEng
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageEngineStateModel&&(identical(other.engineState, engineState) || other.engineState == engineState)&&(identical(other.level, level) || other.level == level)&&(identical(other.currentBeat, currentBeat) || other.currentBeat == currentBeat)&&const DeepCollectionEquality().equals(other.noteStates, noteStates)&&(identical(other.score, score) || other.score == score)&&(identical(other.hitCount, hitCount) || other.hitCount == hitCount)&&(identical(other.missCount, missCount) || other.missCount == missCount)&&(identical(other.perfectCount, perfectCount) || other.perfectCount == perfectCount)&&(identical(other.goodCount, goodCount) || other.goodCount == goodCount)&&(identical(other.okayCount, okayCount) || other.okayCount == okayCount)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.waitingHint, waitingHint) || other.waitingHint == waitingHint)&&(identical(other.isCountingIn, isCountingIn) || other.isCountingIn == isCountingIn)&&(identical(other.countInBeat, countInBeat) || other.countInBeat == countInBeat)&&(identical(other.handSelection, handSelection) || other.handSelection == handSelection));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageEngineStateModel&&(identical(other.engineState, engineState) || other.engineState == engineState)&&(identical(other.level, level) || other.level == level)&&(identical(other.currentBeat, currentBeat) || other.currentBeat == currentBeat)&&const DeepCollectionEquality().equals(other.noteStates, noteStates)&&(identical(other.score, score) || other.score == score)&&(identical(other.hitCount, hitCount) || other.hitCount == hitCount)&&(identical(other.missCount, missCount) || other.missCount == missCount)&&(identical(other.perfectCount, perfectCount) || other.perfectCount == perfectCount)&&(identical(other.goodCount, goodCount) || other.goodCount == goodCount)&&(identical(other.okayCount, okayCount) || other.okayCount == okayCount)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.waitingHint, waitingHint) || other.waitingHint == waitingHint)&&(identical(other.isCountingIn, isCountingIn) || other.isCountingIn == isCountingIn)&&(identical(other.countInBeat, countInBeat) || other.countInBeat == countInBeat)&&(identical(other.handSelection, handSelection) || other.handSelection == handSelection)&&const DeepCollectionEquality().equals(other.noteResults, noteResults)&&(identical(other.attemptDetail, attemptDetail) || other.attemptDetail == attemptDetail));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,engineState,level,currentBeat,const DeepCollectionEquality().hash(noteStates),score,hitCount,missCount,perfectCount,goodCount,okayCount,practiceMode,waitingHint,isCountingIn,countInBeat,handSelection);
+int get hashCode => Object.hash(runtimeType,engineState,level,currentBeat,const DeepCollectionEquality().hash(noteStates),score,hitCount,missCount,perfectCount,goodCount,okayCount,practiceMode,waitingHint,isCountingIn,countInBeat,handSelection,const DeepCollectionEquality().hash(noteResults),attemptDetail);
 
 @override
 String toString() {
-  return 'StageEngineStateModel(engineState: $engineState, level: $level, currentBeat: $currentBeat, noteStates: $noteStates, score: $score, hitCount: $hitCount, missCount: $missCount, perfectCount: $perfectCount, goodCount: $goodCount, okayCount: $okayCount, practiceMode: $practiceMode, waitingHint: $waitingHint, isCountingIn: $isCountingIn, countInBeat: $countInBeat, handSelection: $handSelection)';
+  return 'StageEngineStateModel(engineState: $engineState, level: $level, currentBeat: $currentBeat, noteStates: $noteStates, score: $score, hitCount: $hitCount, missCount: $missCount, perfectCount: $perfectCount, goodCount: $goodCount, okayCount: $okayCount, practiceMode: $practiceMode, waitingHint: $waitingHint, isCountingIn: $isCountingIn, countInBeat: $countInBeat, handSelection: $handSelection, noteResults: $noteResults, attemptDetail: $attemptDetail)';
 }
 
 
@@ -2045,11 +2480,11 @@ abstract mixin class $StageEngineStateModelCopyWith<$Res>  {
   factory $StageEngineStateModelCopyWith(StageEngineStateModel value, $Res Function(StageEngineStateModel) _then) = _$StageEngineStateModelCopyWithImpl;
 @useResult
 $Res call({
- StageEngineStatus engineState, LevelModel level, double currentBeat, List<NoteState> noteStates, int score, int hitCount, int missCount, int perfectCount, int goodCount, int okayCount, PracticeMode practiceMode, WaitingHint? waitingHint, bool isCountingIn, int? countInBeat, HandSelection handSelection
+ StageEngineStatus engineState, LevelModel level, double currentBeat, List<NoteState> noteStates, int score, int hitCount, int missCount, int perfectCount, int goodCount, int okayCount, PracticeMode practiceMode, WaitingHint? waitingHint, bool isCountingIn, int? countInBeat, HandSelection handSelection, Map<int, NoteHitResult> noteResults, AttemptDetail? attemptDetail
 });
 
 
-$LevelModelCopyWith<$Res> get level;$WaitingHintCopyWith<$Res>? get waitingHint;
+$LevelModelCopyWith<$Res> get level;$WaitingHintCopyWith<$Res>? get waitingHint;$AttemptDetailCopyWith<$Res>? get attemptDetail;
 
 }
 /// @nodoc
@@ -2062,7 +2497,7 @@ class _$StageEngineStateModelCopyWithImpl<$Res>
 
 /// Create a copy of StageEngineStateModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? engineState = null,Object? level = null,Object? currentBeat = null,Object? noteStates = null,Object? score = null,Object? hitCount = null,Object? missCount = null,Object? perfectCount = null,Object? goodCount = null,Object? okayCount = null,Object? practiceMode = null,Object? waitingHint = freezed,Object? isCountingIn = null,Object? countInBeat = freezed,Object? handSelection = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? engineState = null,Object? level = null,Object? currentBeat = null,Object? noteStates = null,Object? score = null,Object? hitCount = null,Object? missCount = null,Object? perfectCount = null,Object? goodCount = null,Object? okayCount = null,Object? practiceMode = null,Object? waitingHint = freezed,Object? isCountingIn = null,Object? countInBeat = freezed,Object? handSelection = null,Object? noteResults = null,Object? attemptDetail = freezed,}) {
   return _then(_self.copyWith(
 engineState: null == engineState ? _self.engineState : engineState // ignore: cast_nullable_to_non_nullable
 as StageEngineStatus,level: null == level ? _self.level : level // ignore: cast_nullable_to_non_nullable
@@ -2079,7 +2514,9 @@ as PracticeMode,waitingHint: freezed == waitingHint ? _self.waitingHint : waitin
 as WaitingHint?,isCountingIn: null == isCountingIn ? _self.isCountingIn : isCountingIn // ignore: cast_nullable_to_non_nullable
 as bool,countInBeat: freezed == countInBeat ? _self.countInBeat : countInBeat // ignore: cast_nullable_to_non_nullable
 as int?,handSelection: null == handSelection ? _self.handSelection : handSelection // ignore: cast_nullable_to_non_nullable
-as HandSelection,
+as HandSelection,noteResults: null == noteResults ? _self.noteResults : noteResults // ignore: cast_nullable_to_non_nullable
+as Map<int, NoteHitResult>,attemptDetail: freezed == attemptDetail ? _self.attemptDetail : attemptDetail // ignore: cast_nullable_to_non_nullable
+as AttemptDetail?,
   ));
 }
 /// Create a copy of StageEngineStateModel
@@ -2102,6 +2539,18 @@ $WaitingHintCopyWith<$Res>? get waitingHint {
 
   return $WaitingHintCopyWith<$Res>(_self.waitingHint!, (value) {
     return _then(_self.copyWith(waitingHint: value));
+  });
+}/// Create a copy of StageEngineStateModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AttemptDetailCopyWith<$Res>? get attemptDetail {
+    if (_self.attemptDetail == null) {
+    return null;
+  }
+
+  return $AttemptDetailCopyWith<$Res>(_self.attemptDetail!, (value) {
+    return _then(_self.copyWith(attemptDetail: value));
   });
 }
 }
@@ -2182,10 +2631,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection,  Map<int, NoteHitResult> noteResults,  AttemptDetail? attemptDetail)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StageEngineStateModel() when $default != null:
-return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection);case _:
+return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection,_that.noteResults,_that.attemptDetail);case _:
   return orElse();
 
 }
@@ -2203,10 +2652,10 @@ return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection,  Map<int, NoteHitResult> noteResults,  AttemptDetail? attemptDetail)  $default,) {final _that = this;
 switch (_that) {
 case _StageEngineStateModel():
-return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection);}
+return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection,_that.noteResults,_that.attemptDetail);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2220,10 +2669,10 @@ return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( StageEngineStatus engineState,  LevelModel level,  double currentBeat,  List<NoteState> noteStates,  int score,  int hitCount,  int missCount,  int perfectCount,  int goodCount,  int okayCount,  PracticeMode practiceMode,  WaitingHint? waitingHint,  bool isCountingIn,  int? countInBeat,  HandSelection handSelection,  Map<int, NoteHitResult> noteResults,  AttemptDetail? attemptDetail)?  $default,) {final _that = this;
 switch (_that) {
 case _StageEngineStateModel() when $default != null:
-return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection);case _:
+return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates,_that.score,_that.hitCount,_that.missCount,_that.perfectCount,_that.goodCount,_that.okayCount,_that.practiceMode,_that.waitingHint,_that.isCountingIn,_that.countInBeat,_that.handSelection,_that.noteResults,_that.attemptDetail);case _:
   return null;
 
 }
@@ -2235,7 +2684,7 @@ return $default(_that.engineState,_that.level,_that.currentBeat,_that.noteStates
 @JsonSerializable()
 
 class _StageEngineStateModel extends StageEngineStateModel {
-  const _StageEngineStateModel({required this.engineState, required this.level, required this.currentBeat, required final  List<NoteState> noteStates, required this.score, required this.hitCount, required this.missCount, this.perfectCount = 0, this.goodCount = 0, this.okayCount = 0, this.practiceMode = PracticeMode.timed, this.waitingHint = null, this.isCountingIn = false, this.countInBeat, this.handSelection = HandSelection.both}): _noteStates = noteStates,super._();
+  const _StageEngineStateModel({required this.engineState, required this.level, required this.currentBeat, required final  List<NoteState> noteStates, required this.score, required this.hitCount, required this.missCount, this.perfectCount = 0, this.goodCount = 0, this.okayCount = 0, this.practiceMode = PracticeMode.timed, this.waitingHint = null, this.isCountingIn = false, this.countInBeat, this.handSelection = HandSelection.both, final  Map<int, NoteHitResult> noteResults = const {}, this.attemptDetail = null}): _noteStates = noteStates,_noteResults = noteResults,super._();
   factory _StageEngineStateModel.fromJson(Map<String, dynamic> json) => _$StageEngineStateModelFromJson(json);
 
 @override final  StageEngineStatus engineState;
@@ -2259,6 +2708,14 @@ class _StageEngineStateModel extends StageEngineStateModel {
 @override@JsonKey() final  bool isCountingIn;
 @override final  int? countInBeat;
 @override@JsonKey() final  HandSelection handSelection;
+ final  Map<int, NoteHitResult> _noteResults;
+@override@JsonKey() Map<int, NoteHitResult> get noteResults {
+  if (_noteResults is EqualUnmodifiableMapView) return _noteResults;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_noteResults);
+}
+
+@override@JsonKey() final  AttemptDetail? attemptDetail;
 
 /// Create a copy of StageEngineStateModel
 /// with the given fields replaced by the non-null parameter values.
@@ -2273,16 +2730,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEngineStateModel&&(identical(other.engineState, engineState) || other.engineState == engineState)&&(identical(other.level, level) || other.level == level)&&(identical(other.currentBeat, currentBeat) || other.currentBeat == currentBeat)&&const DeepCollectionEquality().equals(other._noteStates, _noteStates)&&(identical(other.score, score) || other.score == score)&&(identical(other.hitCount, hitCount) || other.hitCount == hitCount)&&(identical(other.missCount, missCount) || other.missCount == missCount)&&(identical(other.perfectCount, perfectCount) || other.perfectCount == perfectCount)&&(identical(other.goodCount, goodCount) || other.goodCount == goodCount)&&(identical(other.okayCount, okayCount) || other.okayCount == okayCount)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.waitingHint, waitingHint) || other.waitingHint == waitingHint)&&(identical(other.isCountingIn, isCountingIn) || other.isCountingIn == isCountingIn)&&(identical(other.countInBeat, countInBeat) || other.countInBeat == countInBeat)&&(identical(other.handSelection, handSelection) || other.handSelection == handSelection));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageEngineStateModel&&(identical(other.engineState, engineState) || other.engineState == engineState)&&(identical(other.level, level) || other.level == level)&&(identical(other.currentBeat, currentBeat) || other.currentBeat == currentBeat)&&const DeepCollectionEquality().equals(other._noteStates, _noteStates)&&(identical(other.score, score) || other.score == score)&&(identical(other.hitCount, hitCount) || other.hitCount == hitCount)&&(identical(other.missCount, missCount) || other.missCount == missCount)&&(identical(other.perfectCount, perfectCount) || other.perfectCount == perfectCount)&&(identical(other.goodCount, goodCount) || other.goodCount == goodCount)&&(identical(other.okayCount, okayCount) || other.okayCount == okayCount)&&(identical(other.practiceMode, practiceMode) || other.practiceMode == practiceMode)&&(identical(other.waitingHint, waitingHint) || other.waitingHint == waitingHint)&&(identical(other.isCountingIn, isCountingIn) || other.isCountingIn == isCountingIn)&&(identical(other.countInBeat, countInBeat) || other.countInBeat == countInBeat)&&(identical(other.handSelection, handSelection) || other.handSelection == handSelection)&&const DeepCollectionEquality().equals(other._noteResults, _noteResults)&&(identical(other.attemptDetail, attemptDetail) || other.attemptDetail == attemptDetail));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,engineState,level,currentBeat,const DeepCollectionEquality().hash(_noteStates),score,hitCount,missCount,perfectCount,goodCount,okayCount,practiceMode,waitingHint,isCountingIn,countInBeat,handSelection);
+int get hashCode => Object.hash(runtimeType,engineState,level,currentBeat,const DeepCollectionEquality().hash(_noteStates),score,hitCount,missCount,perfectCount,goodCount,okayCount,practiceMode,waitingHint,isCountingIn,countInBeat,handSelection,const DeepCollectionEquality().hash(_noteResults),attemptDetail);
 
 @override
 String toString() {
-  return 'StageEngineStateModel(engineState: $engineState, level: $level, currentBeat: $currentBeat, noteStates: $noteStates, score: $score, hitCount: $hitCount, missCount: $missCount, perfectCount: $perfectCount, goodCount: $goodCount, okayCount: $okayCount, practiceMode: $practiceMode, waitingHint: $waitingHint, isCountingIn: $isCountingIn, countInBeat: $countInBeat, handSelection: $handSelection)';
+  return 'StageEngineStateModel(engineState: $engineState, level: $level, currentBeat: $currentBeat, noteStates: $noteStates, score: $score, hitCount: $hitCount, missCount: $missCount, perfectCount: $perfectCount, goodCount: $goodCount, okayCount: $okayCount, practiceMode: $practiceMode, waitingHint: $waitingHint, isCountingIn: $isCountingIn, countInBeat: $countInBeat, handSelection: $handSelection, noteResults: $noteResults, attemptDetail: $attemptDetail)';
 }
 
 
@@ -2293,11 +2750,11 @@ abstract mixin class _$StageEngineStateModelCopyWith<$Res> implements $StageEngi
   factory _$StageEngineStateModelCopyWith(_StageEngineStateModel value, $Res Function(_StageEngineStateModel) _then) = __$StageEngineStateModelCopyWithImpl;
 @override @useResult
 $Res call({
- StageEngineStatus engineState, LevelModel level, double currentBeat, List<NoteState> noteStates, int score, int hitCount, int missCount, int perfectCount, int goodCount, int okayCount, PracticeMode practiceMode, WaitingHint? waitingHint, bool isCountingIn, int? countInBeat, HandSelection handSelection
+ StageEngineStatus engineState, LevelModel level, double currentBeat, List<NoteState> noteStates, int score, int hitCount, int missCount, int perfectCount, int goodCount, int okayCount, PracticeMode practiceMode, WaitingHint? waitingHint, bool isCountingIn, int? countInBeat, HandSelection handSelection, Map<int, NoteHitResult> noteResults, AttemptDetail? attemptDetail
 });
 
 
-@override $LevelModelCopyWith<$Res> get level;@override $WaitingHintCopyWith<$Res>? get waitingHint;
+@override $LevelModelCopyWith<$Res> get level;@override $WaitingHintCopyWith<$Res>? get waitingHint;@override $AttemptDetailCopyWith<$Res>? get attemptDetail;
 
 }
 /// @nodoc
@@ -2310,7 +2767,7 @@ class __$StageEngineStateModelCopyWithImpl<$Res>
 
 /// Create a copy of StageEngineStateModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? engineState = null,Object? level = null,Object? currentBeat = null,Object? noteStates = null,Object? score = null,Object? hitCount = null,Object? missCount = null,Object? perfectCount = null,Object? goodCount = null,Object? okayCount = null,Object? practiceMode = null,Object? waitingHint = freezed,Object? isCountingIn = null,Object? countInBeat = freezed,Object? handSelection = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? engineState = null,Object? level = null,Object? currentBeat = null,Object? noteStates = null,Object? score = null,Object? hitCount = null,Object? missCount = null,Object? perfectCount = null,Object? goodCount = null,Object? okayCount = null,Object? practiceMode = null,Object? waitingHint = freezed,Object? isCountingIn = null,Object? countInBeat = freezed,Object? handSelection = null,Object? noteResults = null,Object? attemptDetail = freezed,}) {
   return _then(_StageEngineStateModel(
 engineState: null == engineState ? _self.engineState : engineState // ignore: cast_nullable_to_non_nullable
 as StageEngineStatus,level: null == level ? _self.level : level // ignore: cast_nullable_to_non_nullable
@@ -2327,7 +2784,9 @@ as PracticeMode,waitingHint: freezed == waitingHint ? _self.waitingHint : waitin
 as WaitingHint?,isCountingIn: null == isCountingIn ? _self.isCountingIn : isCountingIn // ignore: cast_nullable_to_non_nullable
 as bool,countInBeat: freezed == countInBeat ? _self.countInBeat : countInBeat // ignore: cast_nullable_to_non_nullable
 as int?,handSelection: null == handSelection ? _self.handSelection : handSelection // ignore: cast_nullable_to_non_nullable
-as HandSelection,
+as HandSelection,noteResults: null == noteResults ? _self._noteResults : noteResults // ignore: cast_nullable_to_non_nullable
+as Map<int, NoteHitResult>,attemptDetail: freezed == attemptDetail ? _self.attemptDetail : attemptDetail // ignore: cast_nullable_to_non_nullable
+as AttemptDetail?,
   ));
 }
 
@@ -2351,6 +2810,18 @@ $WaitingHintCopyWith<$Res>? get waitingHint {
 
   return $WaitingHintCopyWith<$Res>(_self.waitingHint!, (value) {
     return _then(_self.copyWith(waitingHint: value));
+  });
+}/// Create a copy of StageEngineStateModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AttemptDetailCopyWith<$Res>? get attemptDetail {
+    if (_self.attemptDetail == null) {
+    return null;
+  }
+
+  return $AttemptDetailCopyWith<$Res>(_self.attemptDetail!, (value) {
+    return _then(_self.copyWith(attemptDetail: value));
   });
 }
 }
