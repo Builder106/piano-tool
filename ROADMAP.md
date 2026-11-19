@@ -169,9 +169,21 @@ reliability so the interaction is both expressive and accurate.
   and pitch scoring suppression, and computes `effectiveBpm`; `StageController` and
   `StageUiState` expose `effectiveBpm`, `speedMultiplierLabel`, count-in state tracking,
   synthesizer click triggering, and microphone scoring suspension during count-in.
-- [ ] **Hand selection:** Offer left, right, or both hands where authored
+- [x] **Hand selection:** Offer left, right, or both hands where authored
   voice data supports it. Filter playback, hints, and scoring consistently;
   identify content whose hand assignment is unknown.
+  Implemented: `HandSelection` (`both`, `right`, `left`) and `NoteHand` (`right`,
+  `left`, `unknown`) support hand filtering where authored voice data exists
+  (`LevelHandSupport` extension classifies `hasAuthoredVoices`, `isHandAssignmentKnown`,
+  `isHandAssignmentUnknown`, and `supportedHands`); content without distinct authored
+  voices is cleanly identified as `isHandAssignmentUnknown` and restricted to `both`;
+  `StageEngine` validates hand selection against supported hands and filters phrase
+  demonstration playback, waiting-mode playhead progression and contextual hints,
+  timed-mode pitch matching, miss checking, seeking, and stage completion stats
+  (`accuracy`, `totalNotes`, `hitNotes`) to strictly include notes of the active hand;
+  `StageController` and `StageUiState` expose `handSelection`, `supportedHands`,
+  `isHandAssignmentKnown`, and reactive Riverpod providers, with screen reader
+  announcements in `accessibleDescription` prefixed by active hand context.
 - [ ] **Assistance after difficulty:** After repeated unsuccessful attempts,
   offer a shorter phrase or slower speed with a clear way back. Keep the
   change visible and reversible; do not silently change mode or tempo.

@@ -1,5 +1,25 @@
 # Journal
 
+## 2026-11-19: hand selection, consistent playback/hint/scoring filtering, and unknown hand assignment identification #engine #practice #models #decision
+
+Learners practicing multi-voice piano pieces need the ability to isolate hands (left hand only, right hand only, or both hands together), while content lacking authored hand assignments must be cleanly identified and guarded:
+- `NoteHand` (`right`, `left`, `unknown`) and `HandSelection` (`both`, `right`, `left`) model hand assignments based on authored voice data (`voiceIndex: 0` maps to right hand / treble staff; `voiceIndex >= 1` maps to left hand / bass staff).
+- `LevelHandSupport` extension on `LevelModel` inspects notes to determine whether distinct voice data was authored:
+  - When notes only use default voice 0 without multi-voice structure, `isHandAssignmentKnown` is false, `isHandAssignmentUnknown` is true, and `supportedHands` is strictly `{HandSelection.both}`.
+  - When multi-voice structure is present across staves, `isHandAssignmentKnown` is true, `isHandAssignmentUnknown` is false, and `supportedHands` offers `{HandSelection.both, HandSelection.right, HandSelection.left}`.
+- In `StageEngine`:
+  - `setHandSelection(selection)` validates requested selections against `_level.supportedHands`, throwing `ArgumentError` if an unsupported hand is requested, and falls back to `HandSelection.both` if invalid hands are configured.
+  - Dynamically changing hand selection recalculates scores, hit/miss tallies, and resets note states for unselected hand notes to `upcoming` so previous practice in one hand does not pollute another.
+  - Playback filtering: `_soundNotesForBeat` in phrase demonstration sounds only notes matching the active hand selection.
+  - Waiting mode hint and playhead filtering: `_getAwaitedNotes` and `_syncWaitingPlayheadAndHint` only await and guide notes in the active hand. Playhead advances directly across beats relevant to the selected hand, and wrong-note hints guide the learner back to expected hand pitches.
+  - Timed mode scoring and accuracy filtering: `_tryMatchNote`, `_checkMissedNotes`, and `_updateNoteStatesForBeat` only match, score, activate, or miss notes belonging to the selected hand. Notes in unselected hands remain inert in `NoteState.upcoming`.
+  - Seeking filtering: `seekToBeat` skips unselected notes, preventing unpracticed hands from being marked missed.
+  - Stage completion metrics: `StageEvent.stageCompleted` calculates `totalNotes`, `hitNotes`, and `accuracy` strictly against notes in the selected hand.
+- In `StageController` and `StageUiState`:
+  - `StageUiState` exposes `handSelection`, `isHandAssignmentKnown`, `isHandAssignmentUnknown`, and `supportedHands`.
+  - `accessibleDescription` prefixes screen reader announcements with "Right hand. " or "Left hand. " when isolated hands are active.
+  - Sliced Riverpod providers (`handSelectionProvider`, `supportedHandsProvider`, `isHandAssignmentKnownProvider`) enable UI components to reactively observe hand assignment support and selection state without unnecessary rebuilds.
+
 ## 2026-11-19: count-in, metronome beat reference, 6/8 meter grouping, and effective BPM #engine #practice #audio #decision
 
 Learners practicing in time need an audible beat reference and a preparatory count-in that respect musical meter and tempo adjustments:
