@@ -121,6 +121,73 @@ const _$DifficultyEnumMap = {
   Difficulty.expert: 'expert',
 };
 
+_AttemptResult _$AttemptResultFromJson(Map<String, dynamic> json) =>
+    _AttemptResult(
+      accuracy: (json['accuracy'] as num).toDouble(),
+      score: (json['score'] as num).toInt(),
+      totalNotes: (json['totalNotes'] as num?)?.toInt() ?? 0,
+      hitNotes: (json['hitNotes'] as num?)?.toInt() ?? 0,
+      missedNotes: (json['missedNotes'] as num?)?.toInt() ?? 0,
+      completed: json['completed'] as bool? ?? false,
+      passed: json['passed'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$AttemptResultToJson(_AttemptResult instance) =>
+    <String, dynamic>{
+      'accuracy': instance.accuracy,
+      'score': instance.score,
+      'totalNotes': instance.totalNotes,
+      'hitNotes': instance.hitNotes,
+      'missedNotes': instance.missedNotes,
+      'completed': instance.completed,
+      'passed': instance.passed,
+    };
+
+_AttemptRecord _$AttemptRecordFromJson(Map<String, dynamic> json) =>
+    _AttemptRecord(
+      exercise: json['exercise'] as String,
+      startMeasure: (json['startMeasure'] as num?)?.toInt(),
+      endMeasure: (json['endMeasure'] as num?)?.toInt(),
+      hand:
+          $enumDecodeNullable(_$HandSelectionEnumMap, json['hand']) ??
+          HandSelection.both,
+      mode:
+          $enumDecodeNullable(_$PracticeModeEnumMap, json['mode']) ??
+          PracticeMode.timed,
+      tempo: (json['tempo'] as num).toInt(),
+      targetTempo: (json['targetTempo'] as num?)?.toInt(),
+      speed: (json['speed'] as num?)?.toDouble() ?? 1.0,
+      result: AttemptResult.fromJson(json['result'] as Map<String, dynamic>),
+      date: DateTime.parse(json['date'] as String),
+      isAssisted: json['isAssisted'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$AttemptRecordToJson(_AttemptRecord instance) =>
+    <String, dynamic>{
+      'exercise': instance.exercise,
+      'startMeasure': instance.startMeasure,
+      'endMeasure': instance.endMeasure,
+      'hand': _$HandSelectionEnumMap[instance.hand]!,
+      'mode': _$PracticeModeEnumMap[instance.mode]!,
+      'tempo': instance.tempo,
+      'targetTempo': instance.targetTempo,
+      'speed': instance.speed,
+      'result': instance.result,
+      'date': instance.date.toIso8601String(),
+      'isAssisted': instance.isAssisted,
+    };
+
+const _$HandSelectionEnumMap = {
+  HandSelection.both: 'both',
+  HandSelection.right: 'right',
+  HandSelection.left: 'left',
+};
+
+const _$PracticeModeEnumMap = {
+  PracticeMode.timed: 'timed',
+  PracticeMode.waiting: 'waiting',
+};
+
 _StageProgress _$StageProgressFromJson(Map<String, dynamic> json) =>
     _StageProgress(
       stageId: json['stageId'] as String,
@@ -135,6 +202,21 @@ _StageProgress _$StageProgressFromJson(Map<String, dynamic> json) =>
       lastAttemptAt: json['lastAttemptAt'] == null
           ? null
           : DateTime.parse(json['lastAttemptAt'] as String),
+      targetTempoReady: json['targetTempoReady'] as bool? ?? false,
+      targetTempoReadyAt: json['targetTempoReadyAt'] == null
+          ? null
+          : DateTime.parse(json['targetTempoReadyAt'] as String),
+      bestTargetTempoAccuracy:
+          (json['bestTargetTempoAccuracy'] as num?)?.toDouble() ?? 0,
+      bestTargetTempoScore:
+          (json['bestTargetTempoScore'] as num?)?.toInt() ?? 0,
+      assistedCompletions: (json['assistedCompletions'] as num?)?.toInt() ?? 0,
+      timedCompletions: (json['timedCompletions'] as num?)?.toInt() ?? 0,
+      history:
+          (json['history'] as List<dynamic>?)
+              ?.map((e) => AttemptRecord.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$StageProgressToJson(_StageProgress instance) =>
@@ -147,4 +229,11 @@ Map<String, dynamic> _$StageProgressToJson(_StageProgress instance) =>
       'unlocked': instance.unlocked,
       'completedAt': instance.completedAt?.toIso8601String(),
       'lastAttemptAt': instance.lastAttemptAt?.toIso8601String(),
+      'targetTempoReady': instance.targetTempoReady,
+      'targetTempoReadyAt': instance.targetTempoReadyAt?.toIso8601String(),
+      'bestTargetTempoAccuracy': instance.bestTargetTempoAccuracy,
+      'bestTargetTempoScore': instance.bestTargetTempoScore,
+      'assistedCompletions': instance.assistedCompletions,
+      'timedCompletions': instance.timedCompletions,
+      'history': instance.history,
     };

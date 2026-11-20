@@ -1,117 +1,14 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'level_models.dart';
 
+export 'level_models.dart'
+    show HandSelection, LevelHandSupport, NoteHand, PracticeMode;
+
 part 'engine_models.freezed.dart';
 part 'engine_models.g.dart';
 
 /// State of a note during gameplay
 enum NoteState { upcoming, active, hitPerfect, hitGood, hitOkay, missed }
-
-/// Practice modes supported by the game engine.
-enum PracticeMode {
-  /// Timed mode: playhead advances with tempo, scoring timing accuracy.
-  timed,
-
-  /// Waiting mode: playhead waits at each note until the correct pitch is struck,
-  /// offering contextual hints without awarding timed scores.
-  waiting;
-
-  bool get isTimed => this == timed;
-  bool get isWaiting => this == waiting;
-  String get label => switch (this) {
-    timed => 'Play in time',
-    waiting => 'Learn notes (waiting)',
-  };
-}
-
-/// Hand classification for an individual note or hand assignment.
-enum NoteHand {
-  @JsonValue('right')
-  right,
-  @JsonValue('left')
-  left,
-  @JsonValue('unknown')
-  unknown;
-
-  bool get isRight => this == right;
-  bool get isLeft => this == left;
-  bool get isUnknown => this == unknown;
-}
-
-/// Target hand selection for practice.
-enum HandSelection {
-  @JsonValue('both')
-  both,
-  @JsonValue('right')
-  right,
-  @JsonValue('left')
-  left;
-
-  bool get isBoth => this == both;
-  bool get isRight => this == right;
-  bool get isLeft => this == left;
-
-  String get label => switch (this) {
-    both => 'Both hands',
-    right => 'Right hand',
-    left => 'Left hand',
-  };
-
-  /// Whether a voice index (0 = right hand, 1+ = left hand) matches this selection.
-  bool matchesVoice(int voiceIndex) => switch (this) {
-    both => true,
-    right => voiceIndex == 0,
-    left => voiceIndex > 0,
-  };
-
-  /// Whether a note matches this hand selection.
-  bool matchesNote(LevelNote note) => matchesVoice(note.voiceIndex);
-}
-
-/// Extension providing hand assignment inspection and supported hand queries on [LevelModel].
-extension LevelHandSupport on LevelModel {
-  /// Whether this level has authored voice data distinguishing hands.
-  bool get hasAuthoredVoices =>
-      measures.any((m) => m.notes.any((n) => !n.isRest && n.voiceIndex > 0));
-
-  /// Whether the hand assignment of notes in this level is known.
-  bool get isHandAssignmentKnown => hasAuthoredVoices;
-
-  /// Whether the hand assignment of notes in this level is unknown.
-  bool get isHandAssignmentUnknown => !isHandAssignmentKnown;
-
-  /// Returns the hands supported by this level's authored voice data.
-  Set<HandSelection> get supportedHands {
-    if (!isHandAssignmentKnown) {
-      return const {HandSelection.both};
-    }
-    final hasRight = measures.any(
-      (m) => m.notes.any((n) => !n.isRest && n.voiceIndex == 0),
-    );
-    final hasLeft = measures.any(
-      (m) => m.notes.any((n) => !n.isRest && n.voiceIndex > 0),
-    );
-    if (hasRight && hasLeft) {
-      return const {
-        HandSelection.both,
-        HandSelection.right,
-        HandSelection.left,
-      };
-    } else if (hasRight) {
-      return const {HandSelection.right};
-    } else if (hasLeft) {
-      return const {HandSelection.left};
-    }
-    return const {HandSelection.both};
-  }
-
-  /// Identifies the authored hand for a specific note in this level,
-  /// or [NoteHand.unknown] if hand assignment is not authored/known.
-  NoteHand handForNote(LevelNote note) {
-    if (!isHandAssignmentKnown) return NoteHand.unknown;
-    return note.voiceIndex > 0 ? NoteHand.left : NoteHand.right;
-  }
-}
 
 extension LevelNoteHand on LevelNote {
   /// The hand assigned to this note based on authored voice index.

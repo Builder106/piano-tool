@@ -1217,9 +1217,613 @@ $LevelModelCopyWith<$Res> get level {
 
 
 /// @nodoc
+mixin _$AttemptResult implements DiagnosticableTreeMixin {
+
+ double get accuracy; int get score; int get totalNotes; int get hitNotes; int get missedNotes; bool get completed; bool get passed;
+/// Create a copy of AttemptResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AttemptResultCopyWith<AttemptResult> get copyWith => _$AttemptResultCopyWithImpl<AttemptResult>(this as AttemptResult, _$identity);
+
+  /// Serializes this AttemptResult to a JSON map.
+  Map<String, dynamic> toJson();
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AttemptResult'))
+    ..add(DiagnosticsProperty('accuracy', accuracy))..add(DiagnosticsProperty('score', score))..add(DiagnosticsProperty('totalNotes', totalNotes))..add(DiagnosticsProperty('hitNotes', hitNotes))..add(DiagnosticsProperty('missedNotes', missedNotes))..add(DiagnosticsProperty('completed', completed))..add(DiagnosticsProperty('passed', passed));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttemptResult&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes)&&(identical(other.missedNotes, missedNotes) || other.missedNotes == missedNotes)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.passed, passed) || other.passed == passed));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,accuracy,score,totalNotes,hitNotes,missedNotes,completed,passed);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'AttemptResult(accuracy: $accuracy, score: $score, totalNotes: $totalNotes, hitNotes: $hitNotes, missedNotes: $missedNotes, completed: $completed, passed: $passed)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AttemptResultCopyWith<$Res>  {
+  factory $AttemptResultCopyWith(AttemptResult value, $Res Function(AttemptResult) _then) = _$AttemptResultCopyWithImpl;
+@useResult
+$Res call({
+ double accuracy, int score, int totalNotes, int hitNotes, int missedNotes, bool completed, bool passed
+});
+
+
+
+
+}
+/// @nodoc
+class _$AttemptResultCopyWithImpl<$Res>
+    implements $AttemptResultCopyWith<$Res> {
+  _$AttemptResultCopyWithImpl(this._self, this._then);
+
+  final AttemptResult _self;
+  final $Res Function(AttemptResult) _then;
+
+/// Create a copy of AttemptResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? accuracy = null,Object? score = null,Object? totalNotes = null,Object? hitNotes = null,Object? missedNotes = null,Object? completed = null,Object? passed = null,}) {
+  return _then(_self.copyWith(
+accuracy: null == accuracy ? _self.accuracy : accuracy // ignore: cast_nullable_to_non_nullable
+as double,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as int,totalNotes: null == totalNotes ? _self.totalNotes : totalNotes // ignore: cast_nullable_to_non_nullable
+as int,hitNotes: null == hitNotes ? _self.hitNotes : hitNotes // ignore: cast_nullable_to_non_nullable
+as int,missedNotes: null == missedNotes ? _self.missedNotes : missedNotes // ignore: cast_nullable_to_non_nullable
+as int,completed: null == completed ? _self.completed : completed // ignore: cast_nullable_to_non_nullable
+as bool,passed: null == passed ? _self.passed : passed // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AttemptResult].
+extension AttemptResultPatterns on AttemptResult {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AttemptResult value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AttemptResult() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AttemptResult value)  $default,){
+final _that = this;
+switch (_that) {
+case _AttemptResult():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AttemptResult value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AttemptResult() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  int missedNotes,  bool completed,  bool passed)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AttemptResult() when $default != null:
+return $default(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.missedNotes,_that.completed,_that.passed);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  int missedNotes,  bool completed,  bool passed)  $default,) {final _that = this;
+switch (_that) {
+case _AttemptResult():
+return $default(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.missedNotes,_that.completed,_that.passed);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double accuracy,  int score,  int totalNotes,  int hitNotes,  int missedNotes,  bool completed,  bool passed)?  $default,) {final _that = this;
+switch (_that) {
+case _AttemptResult() when $default != null:
+return $default(_that.accuracy,_that.score,_that.totalNotes,_that.hitNotes,_that.missedNotes,_that.completed,_that.passed);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AttemptResult with DiagnosticableTreeMixin implements AttemptResult {
+  const _AttemptResult({required this.accuracy, required this.score, this.totalNotes = 0, this.hitNotes = 0, this.missedNotes = 0, this.completed = false, this.passed = false});
+  factory _AttemptResult.fromJson(Map<String, dynamic> json) => _$AttemptResultFromJson(json);
+
+@override final  double accuracy;
+@override final  int score;
+@override@JsonKey() final  int totalNotes;
+@override@JsonKey() final  int hitNotes;
+@override@JsonKey() final  int missedNotes;
+@override@JsonKey() final  bool completed;
+@override@JsonKey() final  bool passed;
+
+/// Create a copy of AttemptResult
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AttemptResultCopyWith<_AttemptResult> get copyWith => __$AttemptResultCopyWithImpl<_AttemptResult>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AttemptResultToJson(this, );
+}
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AttemptResult'))
+    ..add(DiagnosticsProperty('accuracy', accuracy))..add(DiagnosticsProperty('score', score))..add(DiagnosticsProperty('totalNotes', totalNotes))..add(DiagnosticsProperty('hitNotes', hitNotes))..add(DiagnosticsProperty('missedNotes', missedNotes))..add(DiagnosticsProperty('completed', completed))..add(DiagnosticsProperty('passed', passed));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttemptResult&&(identical(other.accuracy, accuracy) || other.accuracy == accuracy)&&(identical(other.score, score) || other.score == score)&&(identical(other.totalNotes, totalNotes) || other.totalNotes == totalNotes)&&(identical(other.hitNotes, hitNotes) || other.hitNotes == hitNotes)&&(identical(other.missedNotes, missedNotes) || other.missedNotes == missedNotes)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.passed, passed) || other.passed == passed));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,accuracy,score,totalNotes,hitNotes,missedNotes,completed,passed);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'AttemptResult(accuracy: $accuracy, score: $score, totalNotes: $totalNotes, hitNotes: $hitNotes, missedNotes: $missedNotes, completed: $completed, passed: $passed)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AttemptResultCopyWith<$Res> implements $AttemptResultCopyWith<$Res> {
+  factory _$AttemptResultCopyWith(_AttemptResult value, $Res Function(_AttemptResult) _then) = __$AttemptResultCopyWithImpl;
+@override @useResult
+$Res call({
+ double accuracy, int score, int totalNotes, int hitNotes, int missedNotes, bool completed, bool passed
+});
+
+
+
+
+}
+/// @nodoc
+class __$AttemptResultCopyWithImpl<$Res>
+    implements _$AttemptResultCopyWith<$Res> {
+  __$AttemptResultCopyWithImpl(this._self, this._then);
+
+  final _AttemptResult _self;
+  final $Res Function(_AttemptResult) _then;
+
+/// Create a copy of AttemptResult
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? accuracy = null,Object? score = null,Object? totalNotes = null,Object? hitNotes = null,Object? missedNotes = null,Object? completed = null,Object? passed = null,}) {
+  return _then(_AttemptResult(
+accuracy: null == accuracy ? _self.accuracy : accuracy // ignore: cast_nullable_to_non_nullable
+as double,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as int,totalNotes: null == totalNotes ? _self.totalNotes : totalNotes // ignore: cast_nullable_to_non_nullable
+as int,hitNotes: null == hitNotes ? _self.hitNotes : hitNotes // ignore: cast_nullable_to_non_nullable
+as int,missedNotes: null == missedNotes ? _self.missedNotes : missedNotes // ignore: cast_nullable_to_non_nullable
+as int,completed: null == completed ? _self.completed : completed // ignore: cast_nullable_to_non_nullable
+as bool,passed: null == passed ? _self.passed : passed // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$AttemptRecord implements DiagnosticableTreeMixin {
+
+ String get exercise; int? get startMeasure; int? get endMeasure; HandSelection get hand; PracticeMode get mode; int get tempo; int? get targetTempo; double get speed; AttemptResult get result; DateTime get date; bool get isAssisted;
+/// Create a copy of AttemptRecord
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AttemptRecordCopyWith<AttemptRecord> get copyWith => _$AttemptRecordCopyWithImpl<AttemptRecord>(this as AttemptRecord, _$identity);
+
+  /// Serializes this AttemptRecord to a JSON map.
+  Map<String, dynamic> toJson();
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AttemptRecord'))
+    ..add(DiagnosticsProperty('exercise', exercise))..add(DiagnosticsProperty('startMeasure', startMeasure))..add(DiagnosticsProperty('endMeasure', endMeasure))..add(DiagnosticsProperty('hand', hand))..add(DiagnosticsProperty('mode', mode))..add(DiagnosticsProperty('tempo', tempo))..add(DiagnosticsProperty('targetTempo', targetTempo))..add(DiagnosticsProperty('speed', speed))..add(DiagnosticsProperty('result', result))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('isAssisted', isAssisted));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttemptRecord&&(identical(other.exercise, exercise) || other.exercise == exercise)&&(identical(other.startMeasure, startMeasure) || other.startMeasure == startMeasure)&&(identical(other.endMeasure, endMeasure) || other.endMeasure == endMeasure)&&(identical(other.hand, hand) || other.hand == hand)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.tempo, tempo) || other.tempo == tempo)&&(identical(other.targetTempo, targetTempo) || other.targetTempo == targetTempo)&&(identical(other.speed, speed) || other.speed == speed)&&(identical(other.result, result) || other.result == result)&&(identical(other.date, date) || other.date == date)&&(identical(other.isAssisted, isAssisted) || other.isAssisted == isAssisted));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,exercise,startMeasure,endMeasure,hand,mode,tempo,targetTempo,speed,result,date,isAssisted);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'AttemptRecord(exercise: $exercise, startMeasure: $startMeasure, endMeasure: $endMeasure, hand: $hand, mode: $mode, tempo: $tempo, targetTempo: $targetTempo, speed: $speed, result: $result, date: $date, isAssisted: $isAssisted)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AttemptRecordCopyWith<$Res>  {
+  factory $AttemptRecordCopyWith(AttemptRecord value, $Res Function(AttemptRecord) _then) = _$AttemptRecordCopyWithImpl;
+@useResult
+$Res call({
+ String exercise, int? startMeasure, int? endMeasure, HandSelection hand, PracticeMode mode, int tempo, int? targetTempo, double speed, AttemptResult result, DateTime date, bool isAssisted
+});
+
+
+$AttemptResultCopyWith<$Res> get result;
+
+}
+/// @nodoc
+class _$AttemptRecordCopyWithImpl<$Res>
+    implements $AttemptRecordCopyWith<$Res> {
+  _$AttemptRecordCopyWithImpl(this._self, this._then);
+
+  final AttemptRecord _self;
+  final $Res Function(AttemptRecord) _then;
+
+/// Create a copy of AttemptRecord
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? exercise = null,Object? startMeasure = freezed,Object? endMeasure = freezed,Object? hand = null,Object? mode = null,Object? tempo = null,Object? targetTempo = freezed,Object? speed = null,Object? result = null,Object? date = null,Object? isAssisted = null,}) {
+  return _then(_self.copyWith(
+exercise: null == exercise ? _self.exercise : exercise // ignore: cast_nullable_to_non_nullable
+as String,startMeasure: freezed == startMeasure ? _self.startMeasure : startMeasure // ignore: cast_nullable_to_non_nullable
+as int?,endMeasure: freezed == endMeasure ? _self.endMeasure : endMeasure // ignore: cast_nullable_to_non_nullable
+as int?,hand: null == hand ? _self.hand : hand // ignore: cast_nullable_to_non_nullable
+as HandSelection,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as PracticeMode,tempo: null == tempo ? _self.tempo : tempo // ignore: cast_nullable_to_non_nullable
+as int,targetTempo: freezed == targetTempo ? _self.targetTempo : targetTempo // ignore: cast_nullable_to_non_nullable
+as int?,speed: null == speed ? _self.speed : speed // ignore: cast_nullable_to_non_nullable
+as double,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
+as AttemptResult,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
+as DateTime,isAssisted: null == isAssisted ? _self.isAssisted : isAssisted // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+/// Create a copy of AttemptRecord
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AttemptResultCopyWith<$Res> get result {
+  
+  return $AttemptResultCopyWith<$Res>(_self.result, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [AttemptRecord].
+extension AttemptRecordPatterns on AttemptRecord {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AttemptRecord value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AttemptRecord() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AttemptRecord value)  $default,){
+final _that = this;
+switch (_that) {
+case _AttemptRecord():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AttemptRecord value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AttemptRecord() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String exercise,  int? startMeasure,  int? endMeasure,  HandSelection hand,  PracticeMode mode,  int tempo,  int? targetTempo,  double speed,  AttemptResult result,  DateTime date,  bool isAssisted)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AttemptRecord() when $default != null:
+return $default(_that.exercise,_that.startMeasure,_that.endMeasure,_that.hand,_that.mode,_that.tempo,_that.targetTempo,_that.speed,_that.result,_that.date,_that.isAssisted);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String exercise,  int? startMeasure,  int? endMeasure,  HandSelection hand,  PracticeMode mode,  int tempo,  int? targetTempo,  double speed,  AttemptResult result,  DateTime date,  bool isAssisted)  $default,) {final _that = this;
+switch (_that) {
+case _AttemptRecord():
+return $default(_that.exercise,_that.startMeasure,_that.endMeasure,_that.hand,_that.mode,_that.tempo,_that.targetTempo,_that.speed,_that.result,_that.date,_that.isAssisted);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String exercise,  int? startMeasure,  int? endMeasure,  HandSelection hand,  PracticeMode mode,  int tempo,  int? targetTempo,  double speed,  AttemptResult result,  DateTime date,  bool isAssisted)?  $default,) {final _that = this;
+switch (_that) {
+case _AttemptRecord() when $default != null:
+return $default(_that.exercise,_that.startMeasure,_that.endMeasure,_that.hand,_that.mode,_that.tempo,_that.targetTempo,_that.speed,_that.result,_that.date,_that.isAssisted);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AttemptRecord extends AttemptRecord with DiagnosticableTreeMixin {
+  const _AttemptRecord({required this.exercise, this.startMeasure, this.endMeasure, this.hand = HandSelection.both, this.mode = PracticeMode.timed, required this.tempo, this.targetTempo, this.speed = 1.0, required this.result, required this.date, this.isAssisted = false}): super._();
+  factory _AttemptRecord.fromJson(Map<String, dynamic> json) => _$AttemptRecordFromJson(json);
+
+@override final  String exercise;
+@override final  int? startMeasure;
+@override final  int? endMeasure;
+@override@JsonKey() final  HandSelection hand;
+@override@JsonKey() final  PracticeMode mode;
+@override final  int tempo;
+@override final  int? targetTempo;
+@override@JsonKey() final  double speed;
+@override final  AttemptResult result;
+@override final  DateTime date;
+@override@JsonKey() final  bool isAssisted;
+
+/// Create a copy of AttemptRecord
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AttemptRecordCopyWith<_AttemptRecord> get copyWith => __$AttemptRecordCopyWithImpl<_AttemptRecord>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AttemptRecordToJson(this, );
+}
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AttemptRecord'))
+    ..add(DiagnosticsProperty('exercise', exercise))..add(DiagnosticsProperty('startMeasure', startMeasure))..add(DiagnosticsProperty('endMeasure', endMeasure))..add(DiagnosticsProperty('hand', hand))..add(DiagnosticsProperty('mode', mode))..add(DiagnosticsProperty('tempo', tempo))..add(DiagnosticsProperty('targetTempo', targetTempo))..add(DiagnosticsProperty('speed', speed))..add(DiagnosticsProperty('result', result))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('isAssisted', isAssisted));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttemptRecord&&(identical(other.exercise, exercise) || other.exercise == exercise)&&(identical(other.startMeasure, startMeasure) || other.startMeasure == startMeasure)&&(identical(other.endMeasure, endMeasure) || other.endMeasure == endMeasure)&&(identical(other.hand, hand) || other.hand == hand)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.tempo, tempo) || other.tempo == tempo)&&(identical(other.targetTempo, targetTempo) || other.targetTempo == targetTempo)&&(identical(other.speed, speed) || other.speed == speed)&&(identical(other.result, result) || other.result == result)&&(identical(other.date, date) || other.date == date)&&(identical(other.isAssisted, isAssisted) || other.isAssisted == isAssisted));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,exercise,startMeasure,endMeasure,hand,mode,tempo,targetTempo,speed,result,date,isAssisted);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'AttemptRecord(exercise: $exercise, startMeasure: $startMeasure, endMeasure: $endMeasure, hand: $hand, mode: $mode, tempo: $tempo, targetTempo: $targetTempo, speed: $speed, result: $result, date: $date, isAssisted: $isAssisted)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AttemptRecordCopyWith<$Res> implements $AttemptRecordCopyWith<$Res> {
+  factory _$AttemptRecordCopyWith(_AttemptRecord value, $Res Function(_AttemptRecord) _then) = __$AttemptRecordCopyWithImpl;
+@override @useResult
+$Res call({
+ String exercise, int? startMeasure, int? endMeasure, HandSelection hand, PracticeMode mode, int tempo, int? targetTempo, double speed, AttemptResult result, DateTime date, bool isAssisted
+});
+
+
+@override $AttemptResultCopyWith<$Res> get result;
+
+}
+/// @nodoc
+class __$AttemptRecordCopyWithImpl<$Res>
+    implements _$AttemptRecordCopyWith<$Res> {
+  __$AttemptRecordCopyWithImpl(this._self, this._then);
+
+  final _AttemptRecord _self;
+  final $Res Function(_AttemptRecord) _then;
+
+/// Create a copy of AttemptRecord
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? exercise = null,Object? startMeasure = freezed,Object? endMeasure = freezed,Object? hand = null,Object? mode = null,Object? tempo = null,Object? targetTempo = freezed,Object? speed = null,Object? result = null,Object? date = null,Object? isAssisted = null,}) {
+  return _then(_AttemptRecord(
+exercise: null == exercise ? _self.exercise : exercise // ignore: cast_nullable_to_non_nullable
+as String,startMeasure: freezed == startMeasure ? _self.startMeasure : startMeasure // ignore: cast_nullable_to_non_nullable
+as int?,endMeasure: freezed == endMeasure ? _self.endMeasure : endMeasure // ignore: cast_nullable_to_non_nullable
+as int?,hand: null == hand ? _self.hand : hand // ignore: cast_nullable_to_non_nullable
+as HandSelection,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as PracticeMode,tempo: null == tempo ? _self.tempo : tempo // ignore: cast_nullable_to_non_nullable
+as int,targetTempo: freezed == targetTempo ? _self.targetTempo : targetTempo // ignore: cast_nullable_to_non_nullable
+as int?,speed: null == speed ? _self.speed : speed // ignore: cast_nullable_to_non_nullable
+as double,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
+as AttemptResult,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
+as DateTime,isAssisted: null == isAssisted ? _self.isAssisted : isAssisted // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+/// Create a copy of AttemptRecord
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AttemptResultCopyWith<$Res> get result {
+  
+  return $AttemptResultCopyWith<$Res>(_self.result, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}
+}
+
+
+/// @nodoc
 mixin _$StageProgress implements DiagnosticableTreeMixin {
 
- String get stageId; double get bestAccuracy; int get bestScore; int get attempts; bool get completed; bool get unlocked; DateTime? get completedAt; DateTime? get lastAttemptAt;
+ String get stageId; double get bestAccuracy; int get bestScore; int get attempts; bool get completed; bool get unlocked; DateTime? get completedAt; DateTime? get lastAttemptAt; bool get targetTempoReady; DateTime? get targetTempoReadyAt; double get bestTargetTempoAccuracy; int get bestTargetTempoScore; int get assistedCompletions; int get timedCompletions; List<AttemptRecord> get history;
 /// Create a copy of StageProgress
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1233,21 +1837,21 @@ $StageProgressCopyWith<StageProgress> get copyWith => _$StageProgressCopyWithImp
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'StageProgress'))
-    ..add(DiagnosticsProperty('stageId', stageId))..add(DiagnosticsProperty('bestAccuracy', bestAccuracy))..add(DiagnosticsProperty('bestScore', bestScore))..add(DiagnosticsProperty('attempts', attempts))..add(DiagnosticsProperty('completed', completed))..add(DiagnosticsProperty('unlocked', unlocked))..add(DiagnosticsProperty('completedAt', completedAt))..add(DiagnosticsProperty('lastAttemptAt', lastAttemptAt));
+    ..add(DiagnosticsProperty('stageId', stageId))..add(DiagnosticsProperty('bestAccuracy', bestAccuracy))..add(DiagnosticsProperty('bestScore', bestScore))..add(DiagnosticsProperty('attempts', attempts))..add(DiagnosticsProperty('completed', completed))..add(DiagnosticsProperty('unlocked', unlocked))..add(DiagnosticsProperty('completedAt', completedAt))..add(DiagnosticsProperty('lastAttemptAt', lastAttemptAt))..add(DiagnosticsProperty('targetTempoReady', targetTempoReady))..add(DiagnosticsProperty('targetTempoReadyAt', targetTempoReadyAt))..add(DiagnosticsProperty('bestTargetTempoAccuracy', bestTargetTempoAccuracy))..add(DiagnosticsProperty('bestTargetTempoScore', bestTargetTempoScore))..add(DiagnosticsProperty('assistedCompletions', assistedCompletions))..add(DiagnosticsProperty('timedCompletions', timedCompletions))..add(DiagnosticsProperty('history', history));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageProgress&&(identical(other.stageId, stageId) || other.stageId == stageId)&&(identical(other.bestAccuracy, bestAccuracy) || other.bestAccuracy == bestAccuracy)&&(identical(other.bestScore, bestScore) || other.bestScore == bestScore)&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.unlocked, unlocked) || other.unlocked == unlocked)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StageProgress&&(identical(other.stageId, stageId) || other.stageId == stageId)&&(identical(other.bestAccuracy, bestAccuracy) || other.bestAccuracy == bestAccuracy)&&(identical(other.bestScore, bestScore) || other.bestScore == bestScore)&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.unlocked, unlocked) || other.unlocked == unlocked)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.targetTempoReady, targetTempoReady) || other.targetTempoReady == targetTempoReady)&&(identical(other.targetTempoReadyAt, targetTempoReadyAt) || other.targetTempoReadyAt == targetTempoReadyAt)&&(identical(other.bestTargetTempoAccuracy, bestTargetTempoAccuracy) || other.bestTargetTempoAccuracy == bestTargetTempoAccuracy)&&(identical(other.bestTargetTempoScore, bestTargetTempoScore) || other.bestTargetTempoScore == bestTargetTempoScore)&&(identical(other.assistedCompletions, assistedCompletions) || other.assistedCompletions == assistedCompletions)&&(identical(other.timedCompletions, timedCompletions) || other.timedCompletions == timedCompletions)&&const DeepCollectionEquality().equals(other.history, history));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,stageId,bestAccuracy,bestScore,attempts,completed,unlocked,completedAt,lastAttemptAt);
+int get hashCode => Object.hash(runtimeType,stageId,bestAccuracy,bestScore,attempts,completed,unlocked,completedAt,lastAttemptAt,targetTempoReady,targetTempoReadyAt,bestTargetTempoAccuracy,bestTargetTempoScore,assistedCompletions,timedCompletions,const DeepCollectionEquality().hash(history));
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'StageProgress(stageId: $stageId, bestAccuracy: $bestAccuracy, bestScore: $bestScore, attempts: $attempts, completed: $completed, unlocked: $unlocked, completedAt: $completedAt, lastAttemptAt: $lastAttemptAt)';
+  return 'StageProgress(stageId: $stageId, bestAccuracy: $bestAccuracy, bestScore: $bestScore, attempts: $attempts, completed: $completed, unlocked: $unlocked, completedAt: $completedAt, lastAttemptAt: $lastAttemptAt, targetTempoReady: $targetTempoReady, targetTempoReadyAt: $targetTempoReadyAt, bestTargetTempoAccuracy: $bestTargetTempoAccuracy, bestTargetTempoScore: $bestTargetTempoScore, assistedCompletions: $assistedCompletions, timedCompletions: $timedCompletions, history: $history)';
 }
 
 
@@ -1258,7 +1862,7 @@ abstract mixin class $StageProgressCopyWith<$Res>  {
   factory $StageProgressCopyWith(StageProgress value, $Res Function(StageProgress) _then) = _$StageProgressCopyWithImpl;
 @useResult
 $Res call({
- String stageId, double bestAccuracy, int bestScore, int attempts, bool completed, bool unlocked, DateTime? completedAt, DateTime? lastAttemptAt
+ String stageId, double bestAccuracy, int bestScore, int attempts, bool completed, bool unlocked, DateTime? completedAt, DateTime? lastAttemptAt, bool targetTempoReady, DateTime? targetTempoReadyAt, double bestTargetTempoAccuracy, int bestTargetTempoScore, int assistedCompletions, int timedCompletions, List<AttemptRecord> history
 });
 
 
@@ -1275,7 +1879,7 @@ class _$StageProgressCopyWithImpl<$Res>
 
 /// Create a copy of StageProgress
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? stageId = null,Object? bestAccuracy = null,Object? bestScore = null,Object? attempts = null,Object? completed = null,Object? unlocked = null,Object? completedAt = freezed,Object? lastAttemptAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? stageId = null,Object? bestAccuracy = null,Object? bestScore = null,Object? attempts = null,Object? completed = null,Object? unlocked = null,Object? completedAt = freezed,Object? lastAttemptAt = freezed,Object? targetTempoReady = null,Object? targetTempoReadyAt = freezed,Object? bestTargetTempoAccuracy = null,Object? bestTargetTempoScore = null,Object? assistedCompletions = null,Object? timedCompletions = null,Object? history = null,}) {
   return _then(_self.copyWith(
 stageId: null == stageId ? _self.stageId : stageId // ignore: cast_nullable_to_non_nullable
 as String,bestAccuracy: null == bestAccuracy ? _self.bestAccuracy : bestAccuracy // ignore: cast_nullable_to_non_nullable
@@ -1285,7 +1889,14 @@ as int,completed: null == completed ? _self.completed : completed // ignore: cas
 as bool,unlocked: null == unlocked ? _self.unlocked : unlocked // ignore: cast_nullable_to_non_nullable
 as bool,completedAt: freezed == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,lastAttemptAt: freezed == lastAttemptAt ? _self.lastAttemptAt : lastAttemptAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,targetTempoReady: null == targetTempoReady ? _self.targetTempoReady : targetTempoReady // ignore: cast_nullable_to_non_nullable
+as bool,targetTempoReadyAt: freezed == targetTempoReadyAt ? _self.targetTempoReadyAt : targetTempoReadyAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,bestTargetTempoAccuracy: null == bestTargetTempoAccuracy ? _self.bestTargetTempoAccuracy : bestTargetTempoAccuracy // ignore: cast_nullable_to_non_nullable
+as double,bestTargetTempoScore: null == bestTargetTempoScore ? _self.bestTargetTempoScore : bestTargetTempoScore // ignore: cast_nullable_to_non_nullable
+as int,assistedCompletions: null == assistedCompletions ? _self.assistedCompletions : assistedCompletions // ignore: cast_nullable_to_non_nullable
+as int,timedCompletions: null == timedCompletions ? _self.timedCompletions : timedCompletions // ignore: cast_nullable_to_non_nullable
+as int,history: null == history ? _self.history : history // ignore: cast_nullable_to_non_nullable
+as List<AttemptRecord>,
   ));
 }
 
@@ -1367,10 +1978,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String stageId,  double bestAccuracy,  int bestScore,  int attempts,  bool completed,  bool unlocked,  DateTime? completedAt,  DateTime? lastAttemptAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String stageId,  double bestAccuracy,  int bestScore,  int attempts,  bool completed,  bool unlocked,  DateTime? completedAt,  DateTime? lastAttemptAt,  bool targetTempoReady,  DateTime? targetTempoReadyAt,  double bestTargetTempoAccuracy,  int bestTargetTempoScore,  int assistedCompletions,  int timedCompletions,  List<AttemptRecord> history)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StageProgress() when $default != null:
-return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,_that.completed,_that.unlocked,_that.completedAt,_that.lastAttemptAt);case _:
+return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,_that.completed,_that.unlocked,_that.completedAt,_that.lastAttemptAt,_that.targetTempoReady,_that.targetTempoReadyAt,_that.bestTargetTempoAccuracy,_that.bestTargetTempoScore,_that.assistedCompletions,_that.timedCompletions,_that.history);case _:
   return orElse();
 
 }
@@ -1388,10 +1999,10 @@ return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String stageId,  double bestAccuracy,  int bestScore,  int attempts,  bool completed,  bool unlocked,  DateTime? completedAt,  DateTime? lastAttemptAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String stageId,  double bestAccuracy,  int bestScore,  int attempts,  bool completed,  bool unlocked,  DateTime? completedAt,  DateTime? lastAttemptAt,  bool targetTempoReady,  DateTime? targetTempoReadyAt,  double bestTargetTempoAccuracy,  int bestTargetTempoScore,  int assistedCompletions,  int timedCompletions,  List<AttemptRecord> history)  $default,) {final _that = this;
 switch (_that) {
 case _StageProgress():
-return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,_that.completed,_that.unlocked,_that.completedAt,_that.lastAttemptAt);}
+return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,_that.completed,_that.unlocked,_that.completedAt,_that.lastAttemptAt,_that.targetTempoReady,_that.targetTempoReadyAt,_that.bestTargetTempoAccuracy,_that.bestTargetTempoScore,_that.assistedCompletions,_that.timedCompletions,_that.history);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1405,10 +2016,10 @@ return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String stageId,  double bestAccuracy,  int bestScore,  int attempts,  bool completed,  bool unlocked,  DateTime? completedAt,  DateTime? lastAttemptAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String stageId,  double bestAccuracy,  int bestScore,  int attempts,  bool completed,  bool unlocked,  DateTime? completedAt,  DateTime? lastAttemptAt,  bool targetTempoReady,  DateTime? targetTempoReadyAt,  double bestTargetTempoAccuracy,  int bestTargetTempoScore,  int assistedCompletions,  int timedCompletions,  List<AttemptRecord> history)?  $default,) {final _that = this;
 switch (_that) {
 case _StageProgress() when $default != null:
-return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,_that.completed,_that.unlocked,_that.completedAt,_that.lastAttemptAt);case _:
+return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,_that.completed,_that.unlocked,_that.completedAt,_that.lastAttemptAt,_that.targetTempoReady,_that.targetTempoReadyAt,_that.bestTargetTempoAccuracy,_that.bestTargetTempoScore,_that.assistedCompletions,_that.timedCompletions,_that.history);case _:
   return null;
 
 }
@@ -1420,7 +2031,7 @@ return $default(_that.stageId,_that.bestAccuracy,_that.bestScore,_that.attempts,
 @JsonSerializable()
 
 class _StageProgress with DiagnosticableTreeMixin implements StageProgress {
-  const _StageProgress({required this.stageId, this.bestAccuracy = 0, this.bestScore = 0, this.attempts = 0, this.completed = false, this.unlocked = false, this.completedAt, this.lastAttemptAt});
+  const _StageProgress({required this.stageId, this.bestAccuracy = 0, this.bestScore = 0, this.attempts = 0, this.completed = false, this.unlocked = false, this.completedAt, this.lastAttemptAt, this.targetTempoReady = false, this.targetTempoReadyAt, this.bestTargetTempoAccuracy = 0, this.bestTargetTempoScore = 0, this.assistedCompletions = 0, this.timedCompletions = 0, final  List<AttemptRecord> history = const []}): _history = history;
   factory _StageProgress.fromJson(Map<String, dynamic> json) => _$StageProgressFromJson(json);
 
 @override final  String stageId;
@@ -1431,6 +2042,19 @@ class _StageProgress with DiagnosticableTreeMixin implements StageProgress {
 @override@JsonKey() final  bool unlocked;
 @override final  DateTime? completedAt;
 @override final  DateTime? lastAttemptAt;
+@override@JsonKey() final  bool targetTempoReady;
+@override final  DateTime? targetTempoReadyAt;
+@override@JsonKey() final  double bestTargetTempoAccuracy;
+@override@JsonKey() final  int bestTargetTempoScore;
+@override@JsonKey() final  int assistedCompletions;
+@override@JsonKey() final  int timedCompletions;
+ final  List<AttemptRecord> _history;
+@override@JsonKey() List<AttemptRecord> get history {
+  if (_history is EqualUnmodifiableListView) return _history;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_history);
+}
+
 
 /// Create a copy of StageProgress
 /// with the given fields replaced by the non-null parameter values.
@@ -1446,21 +2070,21 @@ Map<String, dynamic> toJson() {
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'StageProgress'))
-    ..add(DiagnosticsProperty('stageId', stageId))..add(DiagnosticsProperty('bestAccuracy', bestAccuracy))..add(DiagnosticsProperty('bestScore', bestScore))..add(DiagnosticsProperty('attempts', attempts))..add(DiagnosticsProperty('completed', completed))..add(DiagnosticsProperty('unlocked', unlocked))..add(DiagnosticsProperty('completedAt', completedAt))..add(DiagnosticsProperty('lastAttemptAt', lastAttemptAt));
+    ..add(DiagnosticsProperty('stageId', stageId))..add(DiagnosticsProperty('bestAccuracy', bestAccuracy))..add(DiagnosticsProperty('bestScore', bestScore))..add(DiagnosticsProperty('attempts', attempts))..add(DiagnosticsProperty('completed', completed))..add(DiagnosticsProperty('unlocked', unlocked))..add(DiagnosticsProperty('completedAt', completedAt))..add(DiagnosticsProperty('lastAttemptAt', lastAttemptAt))..add(DiagnosticsProperty('targetTempoReady', targetTempoReady))..add(DiagnosticsProperty('targetTempoReadyAt', targetTempoReadyAt))..add(DiagnosticsProperty('bestTargetTempoAccuracy', bestTargetTempoAccuracy))..add(DiagnosticsProperty('bestTargetTempoScore', bestTargetTempoScore))..add(DiagnosticsProperty('assistedCompletions', assistedCompletions))..add(DiagnosticsProperty('timedCompletions', timedCompletions))..add(DiagnosticsProperty('history', history));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageProgress&&(identical(other.stageId, stageId) || other.stageId == stageId)&&(identical(other.bestAccuracy, bestAccuracy) || other.bestAccuracy == bestAccuracy)&&(identical(other.bestScore, bestScore) || other.bestScore == bestScore)&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.unlocked, unlocked) || other.unlocked == unlocked)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StageProgress&&(identical(other.stageId, stageId) || other.stageId == stageId)&&(identical(other.bestAccuracy, bestAccuracy) || other.bestAccuracy == bestAccuracy)&&(identical(other.bestScore, bestScore) || other.bestScore == bestScore)&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.unlocked, unlocked) || other.unlocked == unlocked)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.targetTempoReady, targetTempoReady) || other.targetTempoReady == targetTempoReady)&&(identical(other.targetTempoReadyAt, targetTempoReadyAt) || other.targetTempoReadyAt == targetTempoReadyAt)&&(identical(other.bestTargetTempoAccuracy, bestTargetTempoAccuracy) || other.bestTargetTempoAccuracy == bestTargetTempoAccuracy)&&(identical(other.bestTargetTempoScore, bestTargetTempoScore) || other.bestTargetTempoScore == bestTargetTempoScore)&&(identical(other.assistedCompletions, assistedCompletions) || other.assistedCompletions == assistedCompletions)&&(identical(other.timedCompletions, timedCompletions) || other.timedCompletions == timedCompletions)&&const DeepCollectionEquality().equals(other._history, _history));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,stageId,bestAccuracy,bestScore,attempts,completed,unlocked,completedAt,lastAttemptAt);
+int get hashCode => Object.hash(runtimeType,stageId,bestAccuracy,bestScore,attempts,completed,unlocked,completedAt,lastAttemptAt,targetTempoReady,targetTempoReadyAt,bestTargetTempoAccuracy,bestTargetTempoScore,assistedCompletions,timedCompletions,const DeepCollectionEquality().hash(_history));
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'StageProgress(stageId: $stageId, bestAccuracy: $bestAccuracy, bestScore: $bestScore, attempts: $attempts, completed: $completed, unlocked: $unlocked, completedAt: $completedAt, lastAttemptAt: $lastAttemptAt)';
+  return 'StageProgress(stageId: $stageId, bestAccuracy: $bestAccuracy, bestScore: $bestScore, attempts: $attempts, completed: $completed, unlocked: $unlocked, completedAt: $completedAt, lastAttemptAt: $lastAttemptAt, targetTempoReady: $targetTempoReady, targetTempoReadyAt: $targetTempoReadyAt, bestTargetTempoAccuracy: $bestTargetTempoAccuracy, bestTargetTempoScore: $bestTargetTempoScore, assistedCompletions: $assistedCompletions, timedCompletions: $timedCompletions, history: $history)';
 }
 
 
@@ -1471,7 +2095,7 @@ abstract mixin class _$StageProgressCopyWith<$Res> implements $StageProgressCopy
   factory _$StageProgressCopyWith(_StageProgress value, $Res Function(_StageProgress) _then) = __$StageProgressCopyWithImpl;
 @override @useResult
 $Res call({
- String stageId, double bestAccuracy, int bestScore, int attempts, bool completed, bool unlocked, DateTime? completedAt, DateTime? lastAttemptAt
+ String stageId, double bestAccuracy, int bestScore, int attempts, bool completed, bool unlocked, DateTime? completedAt, DateTime? lastAttemptAt, bool targetTempoReady, DateTime? targetTempoReadyAt, double bestTargetTempoAccuracy, int bestTargetTempoScore, int assistedCompletions, int timedCompletions, List<AttemptRecord> history
 });
 
 
@@ -1488,7 +2112,7 @@ class __$StageProgressCopyWithImpl<$Res>
 
 /// Create a copy of StageProgress
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? stageId = null,Object? bestAccuracy = null,Object? bestScore = null,Object? attempts = null,Object? completed = null,Object? unlocked = null,Object? completedAt = freezed,Object? lastAttemptAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? stageId = null,Object? bestAccuracy = null,Object? bestScore = null,Object? attempts = null,Object? completed = null,Object? unlocked = null,Object? completedAt = freezed,Object? lastAttemptAt = freezed,Object? targetTempoReady = null,Object? targetTempoReadyAt = freezed,Object? bestTargetTempoAccuracy = null,Object? bestTargetTempoScore = null,Object? assistedCompletions = null,Object? timedCompletions = null,Object? history = null,}) {
   return _then(_StageProgress(
 stageId: null == stageId ? _self.stageId : stageId // ignore: cast_nullable_to_non_nullable
 as String,bestAccuracy: null == bestAccuracy ? _self.bestAccuracy : bestAccuracy // ignore: cast_nullable_to_non_nullable
@@ -1498,7 +2122,14 @@ as int,completed: null == completed ? _self.completed : completed // ignore: cas
 as bool,unlocked: null == unlocked ? _self.unlocked : unlocked // ignore: cast_nullable_to_non_nullable
 as bool,completedAt: freezed == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,lastAttemptAt: freezed == lastAttemptAt ? _self.lastAttemptAt : lastAttemptAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,targetTempoReady: null == targetTempoReady ? _self.targetTempoReady : targetTempoReady // ignore: cast_nullable_to_non_nullable
+as bool,targetTempoReadyAt: freezed == targetTempoReadyAt ? _self.targetTempoReadyAt : targetTempoReadyAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,bestTargetTempoAccuracy: null == bestTargetTempoAccuracy ? _self.bestTargetTempoAccuracy : bestTargetTempoAccuracy // ignore: cast_nullable_to_non_nullable
+as double,bestTargetTempoScore: null == bestTargetTempoScore ? _self.bestTargetTempoScore : bestTargetTempoScore // ignore: cast_nullable_to_non_nullable
+as int,assistedCompletions: null == assistedCompletions ? _self.assistedCompletions : assistedCompletions // ignore: cast_nullable_to_non_nullable
+as int,timedCompletions: null == timedCompletions ? _self.timedCompletions : timedCompletions // ignore: cast_nullable_to_non_nullable
+as int,history: null == history ? _self._history : history // ignore: cast_nullable_to_non_nullable
+as List<AttemptRecord>,
   ));
 }
 

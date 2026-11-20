@@ -4,6 +4,69 @@ import 'package:flutter/foundation.dart';
 part 'level_models.freezed.dart';
 part 'level_models.g.dart';
 
+/// Practice modes supported by the game engine.
+enum PracticeMode {
+  /// Timed mode: playhead advances with tempo, scoring timing accuracy.
+  @JsonValue('timed')
+  timed,
+
+  /// Waiting mode: playhead waits at each note until the correct pitch is struck,
+  /// offering contextual hints without awarding timed scores.
+  @JsonValue('waiting')
+  waiting;
+
+  bool get isTimed => this == timed;
+  bool get isWaiting => this == waiting;
+  String get label => switch (this) {
+    timed => 'Play in time',
+    waiting => 'Learn notes (waiting)',
+  };
+}
+
+/// Hand classification for an individual note or hand assignment.
+enum NoteHand {
+  @JsonValue('right')
+  right,
+  @JsonValue('left')
+  left,
+  @JsonValue('unknown')
+  unknown;
+
+  bool get isRight => this == right;
+  bool get isLeft => this == left;
+  bool get isUnknown => this == unknown;
+}
+
+/// Target hand selection for practice.
+enum HandSelection {
+  @JsonValue('both')
+  both,
+  @JsonValue('right')
+  right,
+  @JsonValue('left')
+  left;
+
+  bool get isBoth => this == both;
+  bool get isRight => this == right;
+  bool get isLeft => this == left;
+
+  String get label => switch (this) {
+    both => 'Both hands',
+    right => 'Right hand',
+    left => 'Left hand',
+  };
+
+  /// Whether a voice index (0 = right hand, 1+ = left hand) matches this selection.
+  bool matchesVoice(int voiceIndex) => switch (this) {
+    both => true,
+    right => voiceIndex == 0,
+    left => voiceIndex > 0,
+  };
+
+  /// Whether a note matches this hand selection.
+  bool matchesNote(LevelNote note) => matchesVoice(note.voiceIndex);
+}
+
 /// Represents a single note in a level
 @freezed
 sealed class LevelNote with _$LevelNote {
@@ -132,6 +195,120 @@ extension StageMidiRequirement on StageModel {
       effectiveRequiresMidi ? 'Digital piano (MIDI) required' : null;
 }
 
+/// Extension providing hand assignment inspection and supported hand queries on [LevelModel].
+extension LevelHandSupport on LevelModel {
+  /// Whether this level has authored voice data distinguishing hands.
+  bool get hasAuthoredVoices =>
+      measures.any((m) => m.notes.any((n) => !n.isRest && n.voiceIndex > 0));
+
+  /// Whether the hand assignment of notes in this level is known.
+  bool get isHandAssignmentKnown => hasAuthoredVoices;
+
+  /// Whether the hand assignment of notes in this level is unknown.
+  bool get isHandAssignmentUnknown => !isHandAssignmentKnown;
+
+  /// Returns the hands supported by this level's authored voice data.
+  Set<HandSelection> get supportedHands {
+    if (!isHandAssignmentKnown) {
+      return const {HandSelection.both};
+    }
+    final hasRight = measures.any(
+      (m) => m.notes.any((n) => !n.isRest && n.voiceIndex == 0),
+    );
+    final hasLeft = measures.any(
+      (m) => m.notes.any((n) => !n.isRest && n.voiceIndex > 0),
+    );
+    if (hasRight && hasLeft) {
+      return const {
+        HandSelection.both,
+        HandSelection.right,
+        HandSelection.left,
+      };
+    } else if (hasRight) {
+      return const {HandSelection.right};
+    } else if (hasLeft) {
+      return const {HandSelection.left};
+    }
+    return const {HandSelection.both};
+  }
+
+  /// Identifies the authored hand for a specific note in this level,
+  /// or [NoteHand.unknown] if hand assignment is not authored/known.
+  NoteHand handForNote(LevelNote note) {
+    if (!isHandAssignmentKnown) return NoteHand.unknown;
+    return note.voiceIndex > 0 ? NoteHand.left : NoteHand.right;
+  }
+}
+
+/// The outcome and scoring of an individual exercise attempt.
+@freezed
+sealed class AttemptResult with _$AttemptResult {
+  const factory AttemptResult({
+    required double accuracy,
+    required int score,
+    @Default(0) int totalNotes,
+    @Default(0) int hitNotes,
+    @Default(0) int missedNotes,
+    @Default(false) bool completed,
+    @Default(false) bool passed,
+  }) = _AttemptResult;
+
+  factory AttemptResult.fromJson(Map<String, dynamic> json) =>
+      _$AttemptResultFromJson(json);
+}
+
+/// Record of an individual practice attempt storing exercise, range, hand,
+/// mode, tempo, result, and timestamp.
+@freezed
+sealed class AttemptRecord with _$AttemptRecord {
+  const AttemptRecord._();
+
+  const factory AttemptRecord({
+    required String exercise,
+    int? startMeasure,
+    int? endMeasure,
+    @Default(HandSelection.both) HandSelection hand,
+    @Default(PracticeMode.timed) PracticeMode mode,
+    required int tempo,
+    int? targetTempo,
+    @Default(1.0) double speed,
+    required AttemptResult result,
+    required DateTime date,
+    @Default(false) bool isAssisted,
+  }) = _AttemptRecord;
+
+  factory AttemptRecord.fromJson(Map<String, dynamic> json) =>
+      _$AttemptRecordFromJson(json);
+
+  String get stageId => exercise;
+
+  (int, int)? get range => (startMeasure != null && endMeasure != null)
+      ? (startMeasure!, endMeasure!)
+      : null;
+
+  bool get isFullExercise => startMeasure == null || endMeasure == null;
+
+  double get accuracy => result.accuracy;
+
+  int get score => result.score;
+
+  bool get isTimedPerformance =>
+      mode == PracticeMode.timed && speed >= 1.0 && !isAssisted;
+
+  bool get isTargetTempo =>
+      targetTempo != null ? tempo >= targetTempo! : speed >= 1.0;
+
+  bool get establishesTargetTempoReadiness =>
+      isTimedPerformance &&
+      isTargetTempo &&
+      isFullExercise &&
+      (result.passed || result.accuracy >= 0.9);
+
+  bool get isAssistedCompletion =>
+      (isAssisted || speed < 1.0 || mode == PracticeMode.waiting) &&
+      (result.completed || result.accuracy >= 0.9);
+}
+
 /// Game progress for a stage
 @freezed
 sealed class StageProgress with _$StageProgress {
@@ -144,6 +321,13 @@ sealed class StageProgress with _$StageProgress {
     @Default(false) bool unlocked,
     DateTime? completedAt,
     DateTime? lastAttemptAt,
+    @Default(false) bool targetTempoReady,
+    DateTime? targetTempoReadyAt,
+    @Default(0) double bestTargetTempoAccuracy,
+    @Default(0) int bestTargetTempoScore,
+    @Default(0) int assistedCompletions,
+    @Default(0) int timedCompletions,
+    @Default([]) List<AttemptRecord> history,
   }) = _StageProgress;
 
   factory StageProgress.fromJson(Map<String, dynamic> json) =>
