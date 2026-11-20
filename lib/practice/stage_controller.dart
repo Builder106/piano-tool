@@ -933,6 +933,9 @@ class StageController extends StateNotifier<StageUiState> {
     state = state.copyWith(speed: clamped);
   }
 
+  @visibleForTesting
+  void handleEventForTesting(StageEvent event) => _onEvent(event);
+
   void _onEvent(StageEvent event) {
     if (!_syncEngineEvents) return;
     _sync();
@@ -940,7 +943,24 @@ class StageController extends StateNotifier<StageUiState> {
       stageCompleted: (accuracy, score, totalNotes, hitNotes, attemptDetail) {
         _progressWrites = _progressWrites.then((_) async {
           await _progress
-              .record(stageId: _stageId, accuracy: accuracy, score: score)
+              .record(
+                stageId: _stageId,
+                accuracy: accuracy,
+                score: score,
+                totalNotes: totalNotes,
+                hitNotes: hitNotes,
+                range: state.loopRange,
+                hand: _engine.handSelection,
+                mode: _engine.practiceMode,
+                tempo: _engine.effectiveBpm.round(),
+                targetTempo: _engine.level.tempo.round(),
+                speed: state.speed,
+                isAssisted:
+                    state.isAssistanceActive ||
+                    state.speed < 1.0 ||
+                    state.isWaitingMode ||
+                    state.loopRange != null,
+              )
               .catchError((_) {});
           await _progress.setLastPlayed(_stageId).catchError((_) {});
         });
@@ -956,6 +976,26 @@ class StageController extends StateNotifier<StageUiState> {
             loopEnd,
             attemptDetail,
           ) {
+            if (totalNotes > 0) {
+              _progressWrites = _progressWrites.then((_) async {
+                await _progress
+                    .record(
+                      stageId: _stageId,
+                      accuracy: accuracy,
+                      score: score,
+                      totalNotes: totalNotes,
+                      hitNotes: hitNotes,
+                      range: state.loopRange,
+                      hand: _engine.handSelection,
+                      mode: _engine.practiceMode,
+                      tempo: _engine.effectiveBpm.round(),
+                      targetTempo: _engine.level.tempo.round(),
+                      speed: state.speed,
+                      isAssisted: true,
+                    )
+                    .catchError((_) {});
+              });
+            }
             _handleAttemptFinished(accuracy: accuracy, totalNotes: totalNotes);
           },
       beat: (beat, beatType, measureIndex, beatInMeasure, isCountIn) {
