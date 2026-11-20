@@ -1,5 +1,23 @@
 # Journal
 
+## 2026-11-20: mastery at a tempo, bounded attempt history, and assisted completion vs timed performance #engine #storage #models #decision
+
+Learners practicing at reduced tempos, in waiting mode, or with targeted phrase assistance need credit for completion without falsely establishing readiness for playing in time at full speed:
+- In `lib/models/level_models.dart`:
+  - `PracticeMode`, `HandSelection`, `NoteHand`, and `LevelHandSupport` are centralized in level models and re-exported by engine models.
+  - `AttemptResult` models attempt outcomes (`accuracy`, `score`, `totalNotes`, `hitNotes`, `missedNotes`, `completed`, `passed`).
+  - `AttemptRecord` encapsulates individual attempt history across exercise (`stageId`), phrase range (`startMeasure`, `endMeasure`), `hand`, `mode`, `tempo`, `targetTempo`, `speed`, `result`, `date`, and `isAssisted`. Getters `isTimedPerformance`, `isTargetTempo`, `establishesTargetTempoReadiness`, and `isAssistedCompletion` enforce strict domain boundaries between assisted practice and target tempo mastery.
+  - `StageProgress` gains bounded `history` (`List<AttemptRecord>`), `targetTempoReady`, `targetTempoReadyAt`, `bestTargetTempoAccuracy`, `bestTargetTempoScore`, `assistedCompletions`, and `timedCompletions`.
+- In `lib/data/progress_repository.dart`:
+  - `record` and `recordAttempt` distinguish assisted completion from timed performance:
+    - High scores earned slowly (speed < 1.0 or effective BPM below target) or in waiting mode record as assisted completions, preserving overall best accuracy and stage completion without establishing target tempo readiness (`targetTempoReady` remains false, `bestTargetTempoAccuracy` is unmutated).
+    - Only unassisted timed mode runs clearing the full exercise at target tempo with passing accuracy (>= 90%) establish `targetTempoReady` and update target tempo bests.
+    - History is bounded to a configurable capacity (default 50 entries per exercise) by trimming oldest attempts upon insert.
+    - Legacy storage migration: decoding legacy JSON without history or readiness fields cleanly initializes defaults while strictly preserving existing bests (`bestAccuracy`, `bestScore`, `attempts`, `completed`, `completedAt`). `migrateLegacy` provides explicit migration re-saving.
+    - Reactive Riverpod providers `isTargetTempoReadyProvider` and `stageHistoryProvider` provide direct access for UI observation.
+- In `lib/practice/stage_controller.dart`:
+  - Emits full attempt parameters (`exercise`, `range`, `hand`, `mode`, `tempo`, `targetTempo`, `speed`, `isAssisted`) on `stageCompleted` and `loopPassCompleted` events.
+
 ## 2026-11-19: assistance after difficulty, visible and reversible offers, and loop pass attempt tracking #engine #practice #models #decision
 
 Learners struggling through repeated unsuccessful attempts need targeted assistance options (slower tempo, focused phrase drill) without silent mode or tempo mutations, paired with a clear and reversible way back:

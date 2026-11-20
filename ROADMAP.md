@@ -219,10 +219,22 @@ reliability so the interaction is both expressive and accurate.
   (return-to-desk) actions; `StageController` and `StageUiState` expose
   `difficultMeasureRange`, `specificObservation`, `nextStageId`, `nextStageTitle`,
   and `practiceDifficultRange()` with reactive Riverpod providers.
-- [ ] **Mastery at a tempo:** Store a bounded history of exercise, range,
+- [x] **Mastery at a tempo:** Store a bounded history of exercise, range,
   hand, mode, tempo, result, and date. Distinguish assisted completion from
   timed performance; a high score earned slowly does not establish target
   tempo readiness. Preserve existing bests during any storage migration.
+  Implemented: `AttemptRecord` and `AttemptResult` capture exercise, measure
+  range, hand selection, practice mode, effective and target tempo, speed,
+  scoring result, timestamp, and assisted status; `StageProgress` stores a
+  bounded attempt history (default 50 entries) per exercise, with
+  `targetTempoReady`, `targetTempoReadyAt`, `bestTargetTempoAccuracy`, and
+  `bestTargetTempoScore`; `ProgressRepository` distinguishes assisted completion
+  (waiting mode, slow tempo < 1.0, or active difficulty assistance) from timed
+  performance, preventing slow runs from establishing target tempo readiness
+  while preserving existing bests across legacy storage decoding;
+  `StageController` records full attempt context on stage completion and loop
+  pass boundaries; reactive providers (`isTargetTempoReadyProvider`,
+  `stageHistoryProvider`) expose mastery and history.
 - [ ] **A useful Continue suggestion:** Use recent phrase errors and
   successful tempos to suggest one activity on the current lesson sheet.
   Start with a small deterministic rule and a measurable session goal.
